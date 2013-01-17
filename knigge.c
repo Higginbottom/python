@@ -49,6 +49,8 @@ History:
 	04jun	ksl	Moved readding wind_mdot to this routine
         04Sep   SS      Changed finite disk case to cut off wind
                         at the top (rather than bottom) outer edge of disk.
+	080518	ksl	60a - Fixed to account for fact that geo.wind_mdot 
+			has been initialized in cgs units
 **************************************************************/
 
 int
@@ -61,6 +63,7 @@ get_knigge_wind_params ()
 
   Log ("Creating Knigge's wind description for Cataclysmic Variable\n");
 
+  geo.wind_mdot /= MSOL / YR;
   rddoub ("wind.mdot(msol/yr)", &geo.wind_mdot);
   geo.wind_mdot *= MSOL / YR;
 
@@ -82,7 +85,7 @@ As now represented geo.kn_dratio is the distance to the focus point in stellar r
 
 */
   rddoub ("kn.d", &geo.kn_dratio);
-  Log ("dmin = %f so the ratio d/dmin here is %f  (%.2e %.2e) \n", dmin,
+  Log_silent ("dmin = %f so the ratio d/dmin here is %f  (%.2e %.2e) \n", dmin,
        geo.kn_dratio / dmin, geo.diskrad, geo.rstar);
 
 
@@ -91,7 +94,7 @@ As now represented geo.kn_dratio is the distance to the focus point in stellar r
   if (geo.kn_v_infinity < 0)
     {
       Log
-	("Since geo.kn_v_infinity is less than zero, will use SV prescription for velocity law.\n Velocity at base remanis the soundspeed\n");
+	("Since geo.kn_v_infinity is less than zero, will use SV prescription for velocity law.\n Velocity at base remains the soundspeed\n");
     }
 
   rddoub ("kn.acceleration_length(cm)", &geo.kn_r_scale);	/*Accleration length scale for wind */
@@ -131,7 +134,7 @@ in units of WD radii */
     }
 
   geo.xlog_scale = geo.rstar;
-  geo.zlog_scale = 1e7;
+  geo.zlog_scale = 1e8;
 
 
 /*Now calculate the normalization factor for the wind*/

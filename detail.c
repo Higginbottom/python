@@ -6,7 +6,6 @@
 #include "python.h"
 #include "recipes.h"
 
-#define LINELENGTH 132
 
 
 /***********************************************************

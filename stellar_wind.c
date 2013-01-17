@@ -71,6 +71,7 @@ get_stellar_wind_params ()
   geo.cl_v_zero = 200e5;
   geo.cl_v_infinity = 3000e5;
 
+  geo.stellar_wind_mdot /= MSOL / YR;
   rddoub ("stellar_wind_mdot(msol/yr)", &geo.stellar_wind_mdot);
   geo.stellar_wind_mdot *= MSOL / YR;
 

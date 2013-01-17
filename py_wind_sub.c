@@ -7,12 +7,12 @@
 	as calculated by python.  This file contains many of the subroutiens
 	used
 
-Arguments:		
+Arguments:
 
 
 Returns:
- 
-Description:	
+
+Description:
 	
 		
 Notes:
@@ -31,24 +31,21 @@ History:
 #include "atomic.h"
 #include "python.h"
 
-#define LINELENGTH 132
 
 
-/* This routine controls what is displayed on the screen.  
-There are basically two options, determined by the variable
-"determine"
-
-If determine==1, then zoom sets up the variables py_wind_min,
-py_wind_max and py_wind_delta so that the the entire wind is
-displayed, but it is subsampled in the x direction.
-
-If determine!=1, then a section of the wind is displayed at
-full resolution
-
-History:
-	07jul	ksl	Made modifications to allow for the possibility that the
-			wind has fewer than 10 elemetns in the x direction
-*/
+/*
+ * This routine controls what is displayed on the screen.  There are
+ * basically two options, determined by the variable "determine"
+ * 
+ * If determine==1, then zoom sets up the variables py_wind_min, py_wind_max and
+ * py_wind_delta so that the the entire wind is displayed, but it is
+ * subsampled in the x direction.
+ * 
+ * If determine!=1, then a section of the wind is displayed at full resolution
+ * 
+ * History: 07jul	ksl	Made modifications to allow for the possibility that
+ * the wind has fewer than 10 elemetns in the x direction
+ */
 int
 zoom (direction)
      int direction;
@@ -60,7 +57,10 @@ zoom (direction)
       py_wind_min = 0;
       py_wind_max = NDIM;
       py_wind_delta = NDIM / 10;
-/* Allow for the possibility that the wind has an xdimension < 10 */
+      /*
+       * Allow for the possibility that the wind has an xdimension
+       * < 10
+       */
       if (py_wind_delta < 1)
 	py_wind_delta = 1;
     }
@@ -183,6 +183,7 @@ abs_summary (w, rootname, ochoice)
   int nplasma;
 
   c = 't';
+  xtot = 0.0;
 
   printf
     ("Absorption tot=t, lines=l,f=ff,b=fb,h=hydrogen,i=he1,j=he2,z=heavy elements\n");
@@ -192,10 +193,10 @@ abs_summary (w, rootname, ochoice)
     case 't':			/* Total  Absorption */
       strcpy (name, "Total Absorbtion");
       break;
-    case 'f':			/*ff */
+    case 'f':			/* ff */
       strcpy (name, "Free Free Absorbtion");
       break;
-    case 'b':			/*Photoionization */
+    case 'b':			/* Photoionization */
       strcpy (name, "Total photoionization Heating");
       break;
     case 'l':			/* Line  heating */
@@ -234,11 +235,11 @@ abs_summary (w, rootname, ochoice)
 		x = plasmamain[nplasma].heat_tot;
 		strcat (filename, "heat_tot");
 		break;
-	    case 'f':		/*ff heating */
+	    case 'f':		/* ff heating */
 		x = plasmamain[nplasma].heat_ff;
 		strcat (filename, "heat_ff");
 		break;
-	    case 'b':		/*photoionization heating */
+	    case 'b':		/* photoionization heating */
 		x = plasmamain[nplasma].heat_photo;
 		strcat (filename, "heat_photo");
 		break;
@@ -353,15 +354,15 @@ lum_summary (w, rootname, ochoice)
       strcpy (name, "Total Luminosity");
       strcat (filename, ".tot_lum");
       break;
-    case 'r':			/*Radiative energo loss total */
+    case 'r':			/* Radiative energo loss total */
       strcpy (name, "Total Radiative Luminosity");
       strcat (filename, ".rad_lum");
       break;
-    case 'f':			/*Radiative energo loss total */
+    case 'f':			/* Radiative energo loss total */
       strcpy (name, "Free Free Luminosity");
       strcat (filename, ".ff_lum");
       break;
-    case 'b':			/*Radiative energo loss total */
+    case 'b':			/* Radiative energo loss total */
       strcpy (name, "Free Bound (Total Recombination) Luminosity");
       strcat (filename, ".fb_lum");
       break;
@@ -406,13 +407,13 @@ lum_summary (w, rootname, ochoice)
 	    case 't':		/* Total luminosity */
 	      x = plasmamain[nplasma].lum_rad;
 	      break;
-	    case 'r':		/*Radiative energo loss total */
+	    case 'r':		/* Radiative energo loss total */
 	      x = plasmamain[nplasma].lum_rad;
 	      break;
-	    case 'f':		/*Radiative energo loss total */
+	    case 'f':		/* Radiative energo loss total */
 	      x = plasmamain[nplasma].lum_ff;
 	      break;
-	    case 'b':		/*Radiative energo loss total */
+	    case 'b':		/* Radiative energo loss total */
 	      x = plasmamain[nplasma].lum_fb;
 	      break;
 	    case 'l':		/* Line luminosity */
@@ -472,8 +473,6 @@ photo_summary (w, rootname, ochoice)
       Log ("ion out of range\n");
       return (0);
     }
-
-
   for (n = 0; n < NDIM2; n++)
     {
       aaa[n] = 0;
@@ -483,8 +482,6 @@ photo_summary (w, rootname, ochoice)
 	  aaa[n] =
 	    plasmamain[nplasma].ioniz[ion] * plasmamain[nplasma].density[ion];
 	}
-
-
     }
   display ("No of ionizations per second in cell");
 
@@ -517,8 +514,6 @@ recomb_summary (w, rootname, ochoice)
       Log ("recomb_summary: ioniz out of range\n");
       return (0);
     }
-
-
   for (n = 0; n < NDIM2; n++)
     {
       aaa[n] = 0;
@@ -538,7 +533,6 @@ recomb_summary (w, rootname, ochoice)
       strcat (filename, ".recomb");
       write_array (filename, ochoice);
     }
-
   return (0);
 
 }
@@ -660,7 +654,6 @@ temp_summary (w, rootname, ochoice)
       strcat (filename, ".te");
       write_array (filename, ochoice);
     }
-
   return (0);
 
 }
@@ -695,7 +688,6 @@ temp_rad (w, rootname, ochoice)
       write_array (filename, ochoice);
 
     }
-
   return (0);
 
 }
@@ -802,7 +794,6 @@ velocity_summary (w, rootname, ochoice)
 	      strcat (filename, ".vz");
 	      write_array (filename, ochoice);
 	    }
-
 	}
     }
 
@@ -872,7 +863,12 @@ mo_summary (w, rootname, ochoice)
 
 }
 
-/* A summary of the volumes of each cell */
+/* A summary of the volumes of each cell 
+
+	080811	ksl	Add lines from Stuart's version of this
+			routine to bring this version into 
+			compliance with it.
+*/
 
 int
 vol_summary (w, rootname, ochoice)
@@ -881,6 +877,8 @@ vol_summary (w, rootname, ochoice)
      int ochoice;
 {
   int n;
+
+  char filename[LINELENGTH];
 
   for (n = 0; n < NDIM2; n++)
     {
@@ -892,16 +890,45 @@ vol_summary (w, rootname, ochoice)
     }
   display ("Volumes");
 
+  if (ochoice)
+    {
+      strcpy (filename, rootname);
+      strcat (filename, ".vol");
+      write_array (filename, ochoice);
+    }
+
   return (0);
 
 }
+
+
+/***********************************************************
+                                       Space Telescope Science Institute
+
+Synopsis:
+	wind_element provides a detailed look at a single cell
+
+Arguments:
+
+
+Returns:
+
+Description:
+	
+		
+Notes:
+
+History:
+	080804	ksl	60b -- Added reporting of partition function
+
+**************************************************************/
 
 int
 wind_element (w)
      WindPtr w;
 {
   PlasmaPtr xplasma;
-  int m, n, i, j, nn;
+  int m, n, i, j, nn, mm;
   int first, last;
   n = 50;
 a:rdint ("element", &n);
@@ -937,7 +964,8 @@ a:rdint ("element", &n);
      xplasma->converge_whole, xplasma->converging, xplasma->converge_t_r,
      xplasma->converge_t_e, xplasma->converge_hc);
 
-  for (nn = 0; nn < 4; nn++)
+  Log ("Densities:\n");
+  for (nn = 0; nn < 5; nn++)
     {
       first = ele[nn].firstion;
       last = first + ele[nn].nions;
@@ -945,6 +973,40 @@ a:rdint ("element", &n);
       for (m = first; m < last; m++)
 	Log (" %8.2e", xplasma->density[m]);
       Log ("\n");
+    }
+
+
+  Log ("Partition function:\n");
+  for (nn = 0; nn < 5; nn++)
+    {
+      first = ele[nn].firstion;
+      last = first + ele[nn].nions;
+      Log ("%-5s ", ele[nn].name);
+      for (m = first; m < last; m++)
+	Log (" %8.2e", xplasma->partition[m]);
+      Log ("\n");
+    }
+
+
+  Log ("Non LTE Level densities:\n");
+
+
+  mm = 0;
+  for (nn = 0; nn < 10; nn++)
+    {
+      while (ion[mm].nlte <= 0 && mm < nions)
+	mm++;
+      if (mm == nions)
+	break;
+
+      //Old      first = ion[mm].first_nlte_level;
+      first = ion[mm].first_levden;
+      last = first + ion[mm].nlte;
+      Log ("ion %3d %3d", ion[mm].z, ion[mm].istate);
+      for (m = first; m < last; m++)
+	Log (" %8.2e", xplasma->levden[m]);
+      Log ("\n");
+      mm++;
     }
 
   goto a;
@@ -1015,6 +1077,21 @@ complete_file_summary (w, root, ochoice)
   temp_summary (w, root, ochoice);
   temp_rad (w, root, ochoice);
   electron_summary (w, root, ochoice);
+  ion_summary (w, 6, 3, 0, root, ochoice);
+  ion_summary (w, 6, 4, 0, root, ochoice);
+  ion_summary (w, 6, 5, 0, root, ochoice);
+  ion_summary (w, 7, 4, 0, root, ochoice);
+  ion_summary (w, 7, 5, 0, root, ochoice);
+  ion_summary (w, 7, 6, 0, root, ochoice);
+  ion_summary (w, 8, 4, 0, root, ochoice);
+  ion_summary (w, 8, 5, 0, root, ochoice);
+  ion_summary (w, 8, 6, 0, root, ochoice);
+  ion_summary (w, 8, 7, 0, root, ochoice);
+  ion_summary (w, 14, 3, 0, root, ochoice);
+  ion_summary (w, 14, 4, 0, root, ochoice);
+  ion_summary (w, 14, 5, 0, root, ochoice);
+
+ /* Before 68c, this is what we printed out */ 
   ion_summary (w, 6, 3, 1, root, ochoice);
   ion_summary (w, 6, 4, 1, root, ochoice);
   ion_summary (w, 6, 5, 1, root, ochoice);
@@ -1024,9 +1101,40 @@ complete_file_summary (w, root, ochoice)
   ion_summary (w, 8, 4, 1, root, ochoice);
   ion_summary (w, 8, 5, 1, root, ochoice);
   ion_summary (w, 8, 6, 1, root, ochoice);
+  ion_summary (w, 8, 7, 1, root, ochoice);
   ion_summary (w, 14, 3, 1, root, ochoice);
   ion_summary (w, 14, 4, 1, root, ochoice);
   ion_summary (w, 14, 5, 1, root, ochoice);
+
+  
+  ion_summary (w, 6, 3, 2, root, ochoice);
+  ion_summary (w, 6, 4, 2, root, ochoice);
+  ion_summary (w, 6, 5, 2, root, ochoice);
+  ion_summary (w, 7, 4, 2, root, ochoice);
+  ion_summary (w, 7, 5, 2, root, ochoice);
+  ion_summary (w, 7, 6, 2, root, ochoice);
+  ion_summary (w, 8, 4, 2, root, ochoice);
+  ion_summary (w, 8, 5, 2, root, ochoice);
+  ion_summary (w, 8, 6, 2, root, ochoice);
+  ion_summary (w, 8, 7, 2, root, ochoice);
+  ion_summary (w, 14, 3, 2, root, ochoice);
+  ion_summary (w, 14, 4, 2, root, ochoice);
+  ion_summary (w, 14, 5, 2, root, ochoice);
+
+  
+  ion_summary (w, 6, 3, 3, root, ochoice);
+  ion_summary (w, 6, 4, 3, root, ochoice);
+  ion_summary (w, 6, 5, 3, root, ochoice);
+  ion_summary (w, 7, 4, 3, root, ochoice);
+  ion_summary (w, 7, 5, 3, root, ochoice);
+  ion_summary (w, 7, 6, 3, root, ochoice);
+  ion_summary (w, 8, 4, 3, root, ochoice);
+  ion_summary (w, 8, 5, 3, root, ochoice);
+  ion_summary (w, 8, 6, 3, root, ochoice);
+  ion_summary (w, 8, 7, 3, root, ochoice);
+  ion_summary (w, 14, 3, 3, root, ochoice);
+  ion_summary (w, 14, 4, 3, root, ochoice);
+  ion_summary (w, 14, 5, 3, root, ochoice);
   return (0);
 }
 
@@ -1080,3 +1188,37 @@ dvds_summary (w, rootname, ochoice)
 
   return (0);
 }
+
+/* A summary of inner shell ionization */
+
+int
+inner_shell_summary (w, rootname, ochoice)
+     WindPtr w;
+     char rootname[];
+     int ochoice;
+{
+  int n;
+  char filename[LINELENGTH];
+  int nplasma;
+
+
+  for (n = 0; n < NDIM2; n++)
+    {
+      aaa[n] = 0.0;
+      if (w[n].vol > 0.0)
+	{
+	  nplasma = w[n].nplasma;
+	  aaa[n] = plasmamain[nplasma].gamma_inshl[0];
+	}
+    }
+  display ("Inner_shell");
+  if (ochoice)
+    {
+      strcpy (filename, rootname);
+      strcat (filename, ".is");
+      write_array (filename, ochoice);
+    }
+  return (0);
+
+}
+

@@ -26,7 +26,6 @@
 #include <math.h>
 #include "atomic.h"
 
-#define LINELENGTH 160
 
 #include "python.h"
 

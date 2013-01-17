@@ -243,6 +243,10 @@ model_velocity (x, v)
     {
       speed = yso_velocity (x, v);
     }
+  else if (geo.wind_type == 8)
+    {
+      speed = elvis_velocity (x, v);
+    }
   else
     {
       Error ("wind: Unknown windtype %d\n", geo.wind_type);
@@ -347,6 +351,10 @@ model_rho (x)
   else if (geo.wind_type == 7)
     {
       rho = yso_rho (x);
+    }
+  else if (geo.wind_type == 8)
+    {
+      rho = elvis_rho (x);
     }
   else
     {

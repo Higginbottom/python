@@ -124,11 +124,7 @@ bilin (x, x00, x01, x10, x11, f, g)
   int i, xquadratic ();
 
 
-//  printf ("x01 %10.5e %10.5e   x11 %10.5e %10.5e  \n", x01[0], x01[2], x11[0],
-//        x11[2]);
-//  printf ("x                 %10.5e %10.5e\n", x[0], x[2]);
-//  printf ("x00 %10.5e %10.5e   x10 %10.5e %10.5e  \n", x00[0], x00[2], x10[0],
-//        x10[2]);
+  z = 0;			/* Initialize z to prevent warning on compilation */
 
   if (x00[0] == x01[0] && x10[0] == x11[0])
     {

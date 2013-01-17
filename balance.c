@@ -28,6 +28,12 @@ History:
 	02jun	ksl	Added an option to set the total heating
 	02jun	ksl	Added a subroutine to calculate what the derived values
 			for the radiation field would be after photon passage.
+	06nov	ksl	58b -- Began work to upgrade this so it will work
+			again.  Note that we have not tried to keep this program
+			working for some time.
+	07jul	ksl	58e -- It is unclear where I ended up with this, but
+			program does compile and seem to run on OSX, except
+			for VERY_BIG warning.
  
 **************************************************************/
 
@@ -43,14 +49,17 @@ History:
 
 
 
-#define LINELENGTH 132
 
 
 int
-main ()
+main (argc, argv)
+     int argc;
+     char *argv[];
+
 {
 
   WindPtr w;
+  PlasmaPtr wplasma;
   PhotPtr p;
   double t_r, t_e;
   double nh, heat;
@@ -62,6 +71,7 @@ main ()
   int check_field ();
   int do_detail ();
   int cmode;
+  int i;
 
   NPHOT = 100000;
 
@@ -71,18 +81,25 @@ main ()
   NDIM = ndim;
   MDIM = mdim;
   NDIM2 = ndim * mdim;
+  NPLASMA = NDIM2;
   dfudge = 0.0001;
   DFUDGE = dfudge;
 /* End of definition of wind array size */
 
 /* Get the atomic data */
 
-  strcpy (atomic_filename, "atomic/standard");
+  strcpy (atomic_filename, "atomic/standard39");
   rdstr ("Atomic_data", atomic_filename);
   get_atomic_data (atomic_filename);
-
+  strcpy (geo.atomic_filename, atomic_filename);
 /* Create the photon array */
-  w = (WindPtr) calloc (sizeof (wind_dummy), NDIM2);
+  wmain = w = (WindPtr) calloc (sizeof (wind_dummy), NDIM2);
+  plasmamain = wplasma = (PlasmaPtr) calloc (sizeof (plasma_dummy), NPLASMA);
+
+  for (i = 0; i < NDIM2; i++)
+    {
+      w[i].nplasma = wplasma[i].nwind = i;
+    }
 
   if (w == NULL)
     {
@@ -90,6 +107,10 @@ main ()
 	("There is a problem in allocating memory for the wind structure\n");
       exit (0);
     }
+
+/* Note above that we have created two variables that do the same thing, e.g wmain and w, and plasmamain and wplasam
+ * The difference is that wamain and plasmamain are held in common, wherease the other two are not
+ */
 
   p = (PhotPtr) calloc (sizeof (p_dummy), NPHOT);
   if (p == NULL)
@@ -114,8 +135,13 @@ main ()
   choice = 'l';
 
   pl_wind_define (w);
-  levels (w, 1);
-  print_levels (w);
+
+  /* 080802 - ksl - It's unclear to me why call to levels is needed here, as I would have thought
+   * it would have been called by pl_wind_define, which does the ionzation balance
+   */
+
+  levels (wplasma, 1);
+  print_levels (wplasma);
 /* Completed the initialization */
 
 a:
@@ -133,13 +159,13 @@ a:
   Log_silent ("Choice %c\n", choice);
 
 /* Initialize the wind structure */
-  w[0].w = weight;
-  w[0].t_e = t_e;
-  w[0].t_r = t_r;
-  w[0].vol = vol;
+  wplasma[0].w = weight;
+  wplasma[0].t_e = t_e;
+  wplasma[0].t_r = t_r;
+  w[0].vol = wplasma[0].vol = vol;
 //      w[0].dvds_ave=1.0;
-  w[0].rho = nh / rho2nh;
-  w[0].gain = 0.5;
+  wplasma[0].rho = nh / rho2nh;
+  wplasma[0].gain = 0.5;
 
   switch (choice)
     {
@@ -157,20 +183,23 @@ a:
       geo.pl_w = weight = 1.;
       geo.pl_vol = vol;
       geo.pl_vmax = vmax;
-//              w[0].dvds_ave=1.0;
       pl_wind_define (w);
 
       Log
 	("Calculating heating and cooling with t_e=t_r, LTE ionization & LTE exited state populations\n");
-      absolute_saha (&w[0], p, nh, t_e, t_e, weight, freq_sampling);
+      absolute_saha (&wplasma[0], p, nh, t_e, t_e, weight, freq_sampling);
       break;
 
     case 'A':
 // Calculate the levels with various options
-      rdint ("Level_calc(0=onthespot,1=lte)", &lmode);
 
-      levels (w, lmode);
-      print_levels (w);
+      lmode = 1;
+
+      rdint ("Level_calc(0=on.the.spot,1=lte)", &lmode);
+
+      partition_functions (wplasma, lmode);
+      levels (wplasma, lmode);
+      print_levels (wplasma);
       break;
 
     case 'b':			// freqmode
@@ -195,7 +224,7 @@ a:
 // Modify the current abundances to produce detail balance, and then recalculate
 // the heating and cooling without modifying the abundances
 //
-      do_detail (&w[0]);
+      do_detail (&wplasma[0]);
       xsaha (&w[0], p, nh, t_r, t_e, weight, -1, freq_sampling);
       break;
     case 'e':			// Set the electron temperature
@@ -209,7 +238,7 @@ a:
       Log
 	("Adjusting t_e to balance heating and cooling without changing the abundances\n");
       find_te (&w[0]);
-      t_e = w[0].t_e;
+      t_e = wplasma[0].t_e;
       break;
 
     case 'g':			// Adjust t_e and abundances using python's one_shot routine.  
@@ -221,16 +250,22 @@ Note that the ionization mode is not changed by this routine.  */
 	cmode = 3;
       if (geo.ioniz_mode == 4)
 	cmode = 4;
-      cycle (&w[0], p, nh, t_r, t_e, weight, cmode, freq_sampling);
-      t_e = w[0].t_e;
+      cycle (&wplasma[0], p, nh, t_r, t_e, weight, cmode, freq_sampling);
+      t_e = wplasma[0].t_e;
       break;
 
-    case 'G':			// Calculate lots of cases at once 
+
+/* Calculate ionization fractions as a function of T and W.  This is the option that
+ * was used to calculate ionization fractions in the figure which is in
+ * Long and Knigge 2002
+ */
+
+    case 'G':
       if (geo.ioniz_mode == 0)
 	cmode = 3;
       if (geo.ioniz_mode == 4)
 	cmode = 4;
-      multicycle (&w[0], p, cmode, freq_sampling);
+      multicycle (&wplasma[0], p, cmode, freq_sampling);
       break;
 
     case 'h':			//Set the hydrogen density
@@ -241,7 +276,7 @@ Note that the ionization mode is not changed by this routine.  */
 
     case 'H':
       rddoub ("Total_heating", &heat);
-      w[0].heat_tot = heat;
+      wplasma[0].heat_tot = heat;
       break;
 
     case 'i':			//Set the mode for which ionization abundances will be calculated, e.g. saha abundances
@@ -261,7 +296,7 @@ Note that the ionization mode is not changed by this routine.  */
       break;
 
     case 'I':
-      multi_concen (&w[0]);
+      multi_concen (&wplasma[0]);
       break;
 
     case 'j':
@@ -281,9 +316,9 @@ answers, except for statistical changes */
 
 
 /* Assure that www is initialized before going into xsaha */
-      w[0].t_e = t_e;
-      w[0].t_r = t_r;
-      w[0].w = weight;
+      wplasma[0].t_e = t_e;
+      wplasma[0].t_r = t_r;
+      wplasma[0].w = weight;
 
 
 
@@ -297,7 +332,7 @@ answers, except for statistical changes */
       xsaha (&w[0], p, nh, t_r, t_e, weight, geo.ioniz_mode, freq_sampling);
 
 
-      check_field (&w[0]);
+      check_field (&wplasma[0]);
 
       break;
 
@@ -337,9 +372,9 @@ answers, except for statistical changes */
       Log
 	("Calculating heating and cooling with t_e=t_r and Saha=LTE ionization\n");
 /* Assure that www is initialized before going into xsaha */
-      w[0].t_e = t_e;
-      w[0].t_r = t_e;
-      w[0].w = weight;
+      wplasma[0].t_e = t_e;
+      wplasma[0].t_r = t_e;
+      wplasma[0].w = weight;
 
       xsaha (&w[0], p, nh, t_e, t_e, weight, 1, freq_sampling);
       break;
@@ -378,7 +413,7 @@ answers, except for statistical changes */
     case 'v':			//Set the volume
 
       rddoub ("volume", &vol);
-      w[0].vol = vol;
+      w[0].vol = wplasma[0].vol;
       geo.pl_nh = nh;
       geo.pl_t_r = t_r;
       geo.pl_t_e = t_e;
@@ -408,15 +443,40 @@ answers, except for statistical changes */
     }
   goto a;
 
-b:exit (0);
+b:
+  fb_save ("recomb.save");
+  exit (0);
 
 }
 
 
+/***********************************************************
+                                       Space Telescope Science Institute
+
+ Synopsis:  multicycle calculates abundances of the light elements in a variety of situations, for comparison
+              with other routines like Cloudy
+   
+ Arguments:		
+
+Returns:
+ 
+ 
+Description:	
+
+	Results of this routine always appear in bal_summary.out
+		
+Notes:
+	Most of the options are hardcoded.
+
+History:
+	0810	ksl	67- Relooked at routine in effort to 
+			begin studying ionization balance again
+ 
+**************************************************************/
 
 int
 multicycle (www, p, mode, freq_sampling)
-     WindPtr www;
+     PlasmaPtr www;
      PhotPtr p;
      int mode;
      int freq_sampling;
@@ -434,6 +494,7 @@ multicycle (www, p, mode, freq_sampling)
 
   int n, m, first, last, nn;
 
+  /* Set hardcoded limits */
   nh = 1e12;
   t_r = 30000;
   t_e = 20000;
@@ -443,13 +504,12 @@ multicycle (www, p, mode, freq_sampling)
   t_rmax = 100000;
   t_rdelt = 2000;
 
-//  t_rmin = 50000;
-//  t_rmax = 100000;
-//  t_rdelt = 10000;
 
   w_max = 0;
   w_min = -6;
   w_delt = 2;
+
+  /* Finished with inputs */
 
   fptr = fopen ("bal_summary.out", "w");
 
@@ -462,23 +522,25 @@ multicycle (www, p, mode, freq_sampling)
 	  www->dt_e_old = 0.0;
 	  www->dt_e = 0.0;
 	  www->t_e = www->t_e_old = 0.9 * t_r;	//Lucy guess
-//        for (n = 0; n < 5; n++)
+
+	  /* Find the ionization fractions and electron temperature */
 	  for (n = 0; n < 10; n++)
 	    {
-	      Log ("multiCycle %d\n", n);
+	      Log ("multicycle %d\n", n);
 
 	      www->rho = nh / rho2nh;
 	      cycle (www, p, nh, t_r, t_e, weight, mode, freq_sampling);
 	      t_e = www->t_e;
 
-	      Log ("Mo  %2d %.1f %.0f %.1f %8.0f %5.2f\n", n, log10 (nh),
+	      Log ("Mo  %2d %.1f %.0f %.1f %8.0f %5.2g\n", n, log10 (nh),
 		   t_r, (ww), t_e, www->heat_tot / www->lum_rad);
 
 	    }
 
+	  /* Write out the results */
 	  fprintf (fptr, "Mod   %.1f %.0f %.1f %8.0f %5.2f \n", log10 (nh),
 		   t_r, (ww), t_e, www->heat_tot / www->lum_rad);
-	  Log ("Mod    %.1f %.0f %.1f %8.0f %5.2f\n", log10 (nh), t_r, (ww),
+	  Log ("Mod    %.1f %.0f %.1f %8.0f %5.2g\n", log10 (nh), t_r, (ww),
 	       t_e, www->heat_tot / www->lum_rad);
 
 	  for (nn = 0; nn < 5; nn++)
@@ -507,7 +569,7 @@ multicycle (www, p, mode, freq_sampling)
 
 int
 print_levels (w)
-     WindPtr w;
+     PlasmaPtr w;
 {
   int n, m;
   for (n = 0; n < nions; n++)
@@ -517,10 +579,10 @@ print_levels (w)
 	  m = 0;
 	  while (ion[n].z != ele[m].z)
 	    m++;
-	  printf ("%-10s ", ele[m].name);
+	  printf ("%-5s %3d %3d  ", ele[m].name, ion[n].nlevels, ion[n].nlte);
 
 	  for (m = 0; m < ion[n].nlte; m++)
-	    printf ("%8.2e ", w->levden[ion[n].nlte_first + m]);
+	    printf ("%8.2e ", w->levden[ion[n].first_levden + m]);
 	  printf ("\n");
 	}
     }
@@ -529,7 +591,7 @@ print_levels (w)
 
 int
 multi_concen (www)
-     WindPtr www;
+     PlasmaPtr www;
 
 {
   FILE *fopen (), *fptr;
@@ -552,9 +614,6 @@ multi_concen (www)
   t_rmin = 10000;
   t_rmax = 100000;
   t_rdelt = 2000;
-//  t_rmin = 50000;
-//  t_rmax = 100000;
-//  t_rdelt = 10000;
 
   w_max = 0;
   w_min = -6;
@@ -571,7 +630,6 @@ multi_concen (www)
 	  www->dt_e_old = 0.0;
 	  www->dt_e = 0.0;
 	  www->t_e = www->t_e_old = 0.9 * t_r;	//Lucy guess
-//        for (n = 0; n < 5; n++)
 	  for (n = 0; n < 10; n++)
 	    {
 	      Log ("multiCycle %d\n", n);
@@ -616,12 +674,17 @@ multi_concen (www)
 
 int
 check_field (one)
-     WindPtr one;
+     PlasmaPtr one;
 {
 
   double trad;
+  double vol;
+
+  vol = one->vol;
+
+
   one->ave_freq /= one->j;
-  one->j /= (4. * PI * one->vol);
+  one->j /= (4. * PI * vol);
   one->t_r = H * one->ave_freq / (BOLTZMANN * 3.832);
   one->w = PI * one->j / (STEFAN_BOLTZMANN * trad * trad * trad * trad);
 
@@ -631,7 +694,7 @@ check_field (one)
 
 int
 do_detail (one)
-     WindPtr one;
+     PlasmaPtr one;
 {
   double newden[NIONS];
   int n, nelem;

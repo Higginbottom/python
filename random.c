@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <math.h>
 
-#define INFINITY 1e50
 
 #include "atomic.h"
 #include "python.h"

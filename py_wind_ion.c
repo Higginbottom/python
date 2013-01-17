@@ -6,13 +6,21 @@
  
  	This file contains various subroutines of py_wind.  It is not part of python!
  	
-	int ion_summary(w,element,istate,filename) calculates and displays ion fractions
-	for a specific element and ionization state.
+	ion_summary (w, element, istate, iswitch, rootname, ochoice) calculates and 
+	displays information for a specific element and ionization state.  The information
+	displayed depends upon the value of iswitch  
+	
 
 Arguments:		
 	WindPtr w;
 	int element,istate;
 	char filename[]			Output file name, if "none" then nothing is written;
+	int iswitch                     0 = ion fraction
+					1 = ion density
+					2 = number of scatters 
+     	char rootname[];                rootname of the output file
+     	int ochoice;			The screen display is always the actual value. If ochoice
+					is non-zere an output file is written.
 
 Returns:
  
@@ -23,10 +31,6 @@ Notes:
 
 History:
  	97jun	ksl	Coding on py_wind began.
- 	98feb	ksl	Added a capability to print of the cellxcell luminosity of CIV.  (Note this
- 				is the luminosity in half of the wind!)
- 	98feb	ksl	Added capability to see how much the temperature had to be lowered so that
- 				the emission from the plasma equalled the absorption.
 	01sep	ksl	Added switch to ion summary so that ion density rather than ion fraction could
 			be printed out.  iswitch==0 --> fraction, otherwise density
 	01dec	ksl	Updated for new calling structure for two_level_atom & scattering_fraction.
@@ -34,6 +38,8 @@ History:
 			Note that many of these summaries seem quite dated, and I have really not 
 			checked what they are supposed to do.
 	05apr	ksl	Eliminated MDIM references
+	090125	ksl	Added capability to display the number of scatters of an ion taking
+			place in a cell.
 **************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
@@ -43,7 +49,6 @@ History:
 
 #include "atomic.h"
 #include "python.h"
-#define LINELENGTH 80
 
 
 int
@@ -90,11 +95,26 @@ ion_summary (w, element, istate, iswitch, rootname, ochoice)
       nplasma = w[n].nplasma;
       if (w[n].vol > 0.0 && plasmamain[nplasma].ne > 1.0)
 	{
-	  aaa[n] = plasmamain[nplasma].density[nion];
 	  if (iswitch == 0)
+	  {
+	  	aaa[n] = plasmamain[nplasma].density[nion];
 	    aaa[n] /=
 	      ((plasmamain[nplasma].density[0] +
 		plasmamain[nplasma].density[1]) * ele[nelem].abun);
+	  }
+	  else if (iswitch==1){
+	  	aaa[n] = plasmamain[nplasma].density[nion];
+	  }
+	  else if (iswitch==2) {
+	  	aaa[n] = plasmamain[nplasma].scatters[nion];
+	  }
+	  else if (iswitch==3) {
+	  	aaa[n] = plasmamain[nplasma].xscatters[nion];
+	  }
+	  else {
+		  Error("ion_summary : Unknown switch %d \n",iswitch);
+		  exit(0);
+	  }
 	}
     }
 
@@ -111,13 +131,26 @@ ion_summary (w, element, istate, iswitch, rootname, ochoice)
 	  nplasma = w[n].nplasma;
 	  if (w[n].vol > 0.0 && plasmamain[nplasma].ne > 1.0)
 	    {
-	      x = plasmamain[nplasma].density[nion];
 	      if (iswitch == 0)
 		x /=
 		  ((plasmamain[nplasma].density[0] +
 		    plasmamain[nplasma].density[1]) * ele[nelem].abun);
-	      else
+	      else if (iswitch==1){
+	      x = plasmamain[nplasma].density[nion];
 		x = log10 (x);
+	      }
+	      else if (iswitch==2) {
+		      x=plasmamain[nplasma].scatters[nion];
+	      }
+	      else if (iswitch==3) {
+		      x=plasmamain[nplasma].xscatters[nion];
+	      }
+      else {
+		  Error("ion_summary : Unknown switch %d \n",iswitch);
+		  exit(0);
+      }
+
+
 	    }
 	  else
 	    x = 0.0;
@@ -128,8 +161,17 @@ ion_summary (w, element, istate, iswitch, rootname, ochoice)
       strcpy (filename, rootname);
       if (iswitch == 0)
 	strcpy (choice, ".ion");
-      else
+      else if (iswitch==1)
 	strcpy (choice, ".ionc");
+      else if (iswitch==2) 
+	strcpy (choice, ".ions");
+      else if (iswitch==3) 
+	strcpy (choice, ".iona");
+      else {
+		  Error("ion_summary : Unknown switch %d \n",iswitch);
+		  exit(0);
+      }
+
       strcat (choice, ele[nelem].name);
       sprintf (iname, "%d", istate);
       strcat (choice, iname);

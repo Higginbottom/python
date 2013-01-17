@@ -57,6 +57,12 @@ Notes:
 
 ?? I have a suspicion that these wavelengths are off by half a bin in one direction or the other ???
 
+	Warning - Do not put anything in this routine that does anything but initialize
+	or reinitialize the spectrum structure s. This is important because this routine
+	is not accessed if one is continuing an old calculation of the detailed spectrum.
+	It is still use on a restart where the detailed spectral cycles have not begun
+	because in that case the spectra are not saved.
+
 History:
  	97jan   ksl	Coded and debugged as part of Python effort. 
  	97jul	ksl	Updated to allow extraction of photons at specific phases
@@ -122,10 +128,7 @@ spectrum_init (f1, f2, nangle, angle, phase, scat_select, top_bot_select,
 
   for (i = 0; i <= MAXSCAT; i++)
     nscat[i] = nres[i] = 0;
-  //  05apr -- ksl -- 55d -- Eliminated initialization of shell since no longer used
-  //            See other comments on same topic in spectra_create
-//  for (i = 0; i <= NDIM2; i++)
-//    shell[i] = 0;
+
   for (i = 0; i < NSTAT; i++)
     nstat[i] = 0;
 
@@ -303,7 +306,8 @@ History:
 			the last scattering occurred, as not sufficiently
 			important to retain given the desire to deal with
 			both 1-d and 2-d grids simulataneouly.  
-
+	08mar	ksl	Fixed up spectrum types to account for tracking
+			of photons which had been scattered by the wind
 **************************************************************/
 
 int
@@ -315,9 +319,8 @@ spectrum_create (p, f1, f2, nangle, select_extract)
 
 {
   int nphot, i, j, k, n;
-  int nspec;
+  int nspec, spectype;
   double freqmin, freqmax, dfreq;
-//  int shellsum[10][10], idelt, jdelt;
   double x1;
   int wind_n_to_ij ();
   int mscat, mtopbot;
@@ -348,7 +351,7 @@ spectrum_create (p, f1, f2, nangle, select_extract)
  * so far out of bounds (>3000 km/s) that it suggests a real error.
 */
 
-	  if ((1. - p[nphot].freq / freqmin) > 0.01)
+	  if (((1. - p[nphot].freq / freqmin) > 0.01) && (geo.rt_mode != 2))
 	    Error_silent
 	      ("spectrum_create: photon %6d freq low  %g < %g v %.2e scat %d n res scat %d origin %d\n",
 	       nphot, p[nphot].freq, freqmin,
@@ -358,7 +361,7 @@ spectrum_create (p, f1, f2, nangle, select_extract)
 	}
       else if (k > NWAVE - 1)
 	{
-	  if ((1. - freqmax / p[nphot].freq) > 0.01)
+	  if (((1. - freqmax / p[nphot].freq) > 0.01) && (geo.rt_mode != 2))
 	    Error_silent
 	      ("spectrum_create: photon %6d freq high %g > %g v %.2e scat %d  res scat %d origin %d\n",
 	       nphot, p[nphot].freq, freqmax,
@@ -371,25 +374,27 @@ spectrum_create (p, f1, f2, nangle, select_extract)
 	{
 	  s[0].f[k] += p[nphot].w;	/* emitted spectrum */
 	  s[0].nphot[i]++;
-	  if (p[nphot].origin == PTYPE_STAR || p[nphot].origin == PTYPE_BL)	// Then it came from the bl or the star
+	  spectype = p[nphot].origin;
+	  if (spectype >= 10)
+	    spectype -= 10;
+	  if (spectype == PTYPE_STAR || spectype == PTYPE_BL)	// Then it came from the bl or the star
 	    {
 	      s[1].f[k] += p[nphot].w;	/* emitted star (+bl) spectrum */
 	      s[1].nphot[i]++;
 	    }
-	  else if (p[nphot].origin == PTYPE_DISK)	// Then it was a disk photon 
+	  else if (spectype == PTYPE_DISK)	// Then it was a disk photon 
 	    {
 	      s[2].f[k] += p[nphot].w;	/* transmitted disk spectrum */
 	      s[2].nphot[i]++;
 	    }
-	  else if (p[nphot].origin == PTYPE_WIND)
+	  else if (spectype == PTYPE_WIND)
 	    {
 	      s[3].f[k] += p[nphot].w;	/* wind spectrum */
 	      s[3].nphot[i]++;
 	    }
 	  else
 	    {
-	      Error ("spectrum_create: Unknown photon type %d\n",
-		     p[nphot].origin);
+	      Error ("spectrum_create: Unknown photon type %d\n", spectype);
 	    }
 
 	  /* For Live or Die option, increment the spectra here */
@@ -545,7 +550,6 @@ History:
 
 **************************************************************/
 
-#define LINELENGTH 160
 
 
 int
@@ -563,6 +567,7 @@ spectrum_summary (filename, mode, nspecmin, nspecmax, select_spectype, renorm)
   double x, dd;
 
 
+
   /* Open or reopen a file for writing the spectrum */
   if ((fptr = fopen (filename, "w")) == NULL)
     {
@@ -572,24 +577,36 @@ spectrum_summary (filename, mode, nspecmin, nspecmax, select_spectype, renorm)
 
   /* Check that nspecmin and nspecmax are reasonable */
   if (nspecmin < 0 || nspecmax < 0 || nspecmin > nspecmax
-      || nspecmax > NSPEC - 1)
-    {
+      ) {
       Error
-	("spectrum_summary: nspecmin %d or nspecmax %d not reasonable (NSPEC %d\n",
-	 nspecmin, nspecmax, NSPEC);
+	("spectrum_summary: nspecmin %d or nspecmax %d not reasonable \n",
+	 nspecmin, nspecmax);
       exit (0);
     }
 
   /* Construct and write a header string  for the output file */
   fprintf (fptr, "# Python Version %s\n", VERSION);
-  strcpy (string, "# Freq.        Lambda");
+
+  get_time (string);
+  fprintf (fptr, "# Date	%s\n#  \n", string);
+
+  /* Save all of the parameter file information to the spectrum file */
+
+  rdpar_save (fptr);
+
+
+  /* Write the rest of the header for the spectrum file */
+
+  fprintf (fptr, "# \n# Freq.        Lambda");
+
   for (n = nspecmin; n <= nspecmax; n++)
     {
-      strcat (string, "  ");
-      strncat (string, s[n].name, 15);
+      fprintf(fptr," %8s",s[n].name);
     }
+    
 
-  fprintf (fptr, "%s\n", string);
+  fprintf (fptr, "\n");
+
 
   /* Don't print out the end bins because they include all photons outside the frequency range and there may be some
      as a result of the fact that the bb function generate some IR photons */
@@ -612,8 +629,10 @@ spectrum_summary (filename, mode, nspecmin, nspecmax, select_spectype, renorm)
 	    {			/*fnu */
 	      x /= (dfreq * dd);
 	    }
-	  fprintf (fptr, "%8.3g ", x * renorm);
+	  fprintf (fptr, " %8.3g", x * renorm);
 	}
+
+
       fprintf (fptr, "\n");
     }
 

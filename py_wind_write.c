@@ -34,7 +34,6 @@
 #include	"atomic.h"
 #include	"python.h"
 #include        "templates.h"
-#define LINELENGTH 132
 
 
 

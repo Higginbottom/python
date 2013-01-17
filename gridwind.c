@@ -146,8 +146,8 @@ calloc_wind (nelem)
     }
   else
     {
-      Log
-	("Allocated %10d bytes for each of %5d elements of      w totaling %10.1f Mb\n",
+      Log_silent
+	("Allocated %10d bytes for each of %5d elements of           w totaling %10.1f Mb\n",
 	 sizeof (wind_dummy), nelem, 1.e-6 * nelem * sizeof (wind_dummy));
     }
 
@@ -169,6 +169,9 @@ calloc_wind (nelem)
 Description:	
 
 Notes:
+
+	This only allocates elements.  It does not populate them
+	with any information.
 
 
 History:
@@ -194,8 +197,8 @@ calloc_plasma (nelem)
     }
   else
     {
-      Log
-	("Allocated %10d bytes for each of %5d elements of plasma totaling %10.1f Mb \n",
+      Log_silent
+	("Allocated %10d bytes for each of %5d elements of      plasma totaling %10.1f Mb \n",
 	 sizeof (plasma_dummy), (nelem + 1),
 	 1.e-6 * (nelem + 1) * sizeof (plasma_dummy));
     }
@@ -212,7 +215,7 @@ calloc_plasma (nelem)
     }
   else
     {
-      Log
+      Log_silent
 	("Allocated %10d bytes for each of %5d elements of photonstore totaling %10.1f Mb \n",
 	 sizeof (photon_store_dummy), (nelem + 1),
 	 1.e-6 * (nelem + 1) * sizeof (photon_store_dummy));
@@ -336,15 +339,17 @@ calloc_macro (nelem)
 {
 
 
-  if (nlevels_macro == 0)
+  if (nlevels_macro == 0 && geo.nmacro == 0)
     {
-      Log ("Allocated no space for macro since nlevels_macro==0\n");
+      geo.nmacro = 0;
+      Log_silent
+	("Allocated no space for macro since nlevels_macro==0 and geo.nmacro==0\n");
       return (0);
     }
 // Allocate one extra element to store data where there is no volume
 
   macromain = (MacroPtr) calloc (sizeof (macro_dummy), (nelem + 1));
-  geo.nplasma = nelem;
+  geo.nmacro = nelem;
 
   if (macromain == NULL)
     {
@@ -352,17 +357,151 @@ calloc_macro (nelem)
 	("There is a problem in allocating memory for the macro structure\n");
       exit (0);
     }
-  else if (nlevels_macro > 0)
+  else if (nlevels_macro > 0 || geo.nmacro > 0)
     {
-      Log
-	("Allocated %10d bytes for each of %5d elements of macro  totaling %10.1f Mb \n",
+      Log_silent
+	("Allocated %10d bytes for each of %5d elements of       macro totaling %10.1f Mb \n",
 	 sizeof (macro_dummy), (nelem + 1),
 	 1.e-6 * (nelem + 1) * sizeof (macro_dummy));
     }
   else
     {
-      Log ("Allocated no space for macro since nlevels_macro==0\n");
+      Log_silent ("Allocated no space for macro since nlevels_macro==0\n");
     }
 
   return (0);
 }
+ 
+
+/**************************************************************/
+
+
+int
+calloc_estimators (nelem)
+     int nelem;
+{
+  int n;
+
+  if (nlevels_macro == 0 && geo.nmacro == 0)
+    {
+      geo.nmacro = 0;
+      Log_silent
+	("Allocated no space for MA estimators since nlevels_macro==0 and geo.nmacro==0\n");
+      return (0);
+    }
+// Allocate one extra element to store data where there is no volume
+
+  
+
+
+  //printf("nlevels_macro %d\n", nlevels_macro);
+  size_Jbar_est = 0;
+  size_gamma_est = 0;
+  size_alpha_est = 0;
+  for (n = 0; n < nlevels_macro; n++)
+    {
+      //printf("level %d has n_bbu_jump %d  n_bbd_jump %d n_bfu_jump %d n_bfd_jump %d\n", n,config[n].n_bbu_jump,config[n].n_bbd_jump,config[n].n_bfu_jump,config[n].n_bfd_jump );
+      config[n].bbu_indx_first=size_Jbar_est;
+      size_Jbar_est += config[n].n_bbu_jump;
+      config[n].bfu_indx_first=size_gamma_est;
+      size_gamma_est += config[n].n_bfu_jump;
+      config[n].bfd_indx_first=size_alpha_est;
+      size_alpha_est += config[n].n_bfd_jump;
+    }
+
+
+  
+
+  //  printf("size_Jbar_est %d size_gamma_est %d size_alpha_est %d\n",size_Jbar_est, size_gamma_est, size_alpha_est);
+
+  
+  for (n=0; n < nelem; n++)
+    {
+      if ((macromain[n].jbar = calloc(sizeof(double),size_Jbar_est)) == NULL)
+	{
+	  Error("Error in allocating memory for MA estimators\n");
+	  exit(0);
+	}
+      if ((macromain[n].jbar_old = calloc(sizeof(double),size_Jbar_est)) == NULL)
+	{
+	  Error("Error in allocating memory for MA estimators\n");
+	  exit(0);
+	}
+       if ((macromain[n].gamma = calloc(sizeof(double),size_gamma_est)) == NULL)
+	{
+	  Error("Error in allocating memory for MA estimators\n");
+	  exit(0);
+	}
+       if ((macromain[n].gamma_old = calloc(sizeof(double),size_gamma_est)) == NULL)
+	{
+	  Error("Error in allocating memory for MA estimators\n");
+	  exit(0);
+	}
+       if ((macromain[n].gamma_e = calloc(sizeof(double),size_gamma_est)) == NULL)
+	{
+	  Error("Error in allocating memory for MA estimators\n");
+	  exit(0);
+	}
+       if ((macromain[n].gamma_e_old = calloc(sizeof(double),size_gamma_est)) == NULL)
+	{
+	  Error("Error in allocating memory for MA estimators\n");
+	  exit(0);
+	}
+       if ((macromain[n].alpha_st = calloc(sizeof(double),size_gamma_est)) == NULL)
+	{
+	  Error("Error in allocating memory for MA estimators\n");
+	  exit(0);
+	}
+       if ((macromain[n].alpha_st_old = calloc(sizeof(double),size_gamma_est)) == NULL)
+	{
+	  Error("Error in allocating memory for MA estimators\n");
+	  exit(0);
+	}
+       if ((macromain[n].alpha_st_e = calloc(sizeof(double),size_gamma_est)) == NULL)
+	{
+	  Error("Error in allocating memory for MA estimators\n");
+	  exit(0);
+	}
+       if ((macromain[n].alpha_st_e_old = calloc(sizeof(double),size_gamma_est)) == NULL)
+	{
+	  Error("Error in allocating memory for MA estimators\n");
+	  exit(0);
+	}
+       if ((macromain[n].recomb_sp = calloc(sizeof(double),size_alpha_est)) == NULL)
+	{
+	  Error("Error in allocating memory for MA estimators\n");
+	  exit(0);
+	}
+       if ((macromain[n].recomb_sp_e = calloc(sizeof(double),size_alpha_est)) == NULL)
+	{
+	  Error("Error in allocating memory for MA estimators\n");
+	  exit(0);
+	}
+       if ((macromain[n].matom_emiss = calloc(sizeof(double),nlevels_macro)) == NULL)
+	{
+	  Error("Error in allocating memory for MA estimators\n");
+	  exit(0);
+	}
+       if ((macromain[n].matom_abs = calloc(sizeof(double),nlevels_macro)) == NULL)
+	{
+	  Error("Error in allocating memory for MA estimators\n");
+	  exit(0);
+	}
+    }
+  
+	     
+
+   if (nlevels_macro > 0 || geo.nmacro > 0)
+    {
+      Log_silent
+	("Allocated %10.1f Mb for MA estimators \n",
+	 1.e-6 * (nelem + 1) * (2.*nlevels_macro + 2.*size_alpha_est + 8.*size_gamma_est + 2.*size_Jbar_est) * sizeof (double));
+    }
+  else
+    {
+      Log_silent ("Allocated no space for macro since nlevels_macro==0\n");
+    }
+
+  return (0);
+}
+ 

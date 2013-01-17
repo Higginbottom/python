@@ -57,9 +57,9 @@ main (argc, argv)
 
   FILE *fptr, *fopen ();
   char parfile[LINELENGTH];
-  char infile[LINELENGTH];
-  char line[LINELENGTH];
-  char firstword[LINELENGTH];
+//OLD  char infile[LINELENGTH];
+//OLD  char line[LINELENGTH];
+//OLD  char firstword[LINELENGTH];
   double lambda_min, lambda_max, t;
   double freq_min, freq_max;
   double freq;

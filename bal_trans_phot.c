@@ -104,7 +104,7 @@ trans_phot (w, p, iextract)
 	  if (pp.w < weight_min)
 	    {
 	      istat = pp.istat = P_ABSORB;	/*This photon was absorbed within the wind */
-	      pp.tau = INFINITY;
+	      pp.tau = VERY_BIG;
 	      stuff_phot (&pp, &p[nphot]);
 	      break;
 	    }
@@ -146,14 +146,16 @@ trans_phot (w, p, iextract)
 		{
 		  if (nres > -1)
 		    {
-		      line_heat (&w[n], &pp, nres);
+		      line_heat (&plasmamain[w[n].nplasma], &pp, nres);
+//OLD                 line_heat (&w[n], &pp, nres);
 		      Log
 			("Scattered photon: %8.2f resonance %3d %8.2f element %2d ion %2d density %8.2e\n",
 			 C / pp.freq * 1e8, nres,
 			 C / lin_ptr[nres]->freq * 1e8,
 			 ion[lin_ptr[n]->nion].z,
 			 ion[lin_ptr[n]->nion].istate,
-			 w[n].density[lin_ptr[n]->nion]);
+			 plasmamain[w[n].nplasma].density[lin_ptr[n]->nion]);
+//                       w[n].density[lin_ptr[n]->nion]);
 		    }
 		  if (where_in_grid (pp.x) != n)
 		    Error

@@ -2,6 +2,7 @@
 calculations 
 	01dec	ksl	Updated to reflect new calls to various routines, notably  
 			scattering_fraction.
+	06nov	ksl	58b -- Began to try to get this to work again
 */
 
 #include <stdio.h>
@@ -12,13 +13,13 @@ calculations
 #include "atomic.h"
 #include "python.h"
 
-#define LINELENGTH 132
+//OLD #define LINELENGTH 132
 
 
 
 int
 summary (one)
-     WindPtr one;
+     PlasmaPtr one;
 {
   int n, first, last, nn, m;
   int nmax, n_tenth, n_hundredth;
@@ -52,7 +53,7 @@ summary (one)
     {
       first = ele[nn].firstion;
       last = first + ele[nn].nions;
-      Log ("%-5s :  Ioniz ", ele[nn].name);
+      Log ("%-5s : Ioniz  ", ele[nn].name);
       for (m = first; m < last; m++)
 	Log (" %8.2e", one->ioniz[m]);
       Log ("\n");
@@ -121,7 +122,7 @@ ksl 01 aug
 
 double
 line_heating (w, p, ds)
-     WindPtr w;
+     PlasmaPtr w;
      PhotPtr p;
      double ds;
 {
@@ -167,7 +168,7 @@ ksl 01sep
 */
 double
 sobolev_line_heating (w, p, ds)
-     WindPtr w;
+     PlasmaPtr w;
      PhotPtr p;
      double ds;
 {
@@ -186,7 +187,7 @@ sobolev_line_heating (w, p, ds)
       return (w->heat_lines);	//there were no interesting lines
 
     }
-//      limit_lines(0,INFINITY);
+//      limit_lines(0,VERY_BIG);
 
   tau = 0;
   for (n = nline_min; n <= nline_max; n++)

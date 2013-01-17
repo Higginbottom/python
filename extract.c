@@ -1,8 +1,4 @@
 
-
-
-
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -66,6 +62,9 @@ History:
 			that a lot of the absorption in extract is fairly local and
 			that the blue wing structure could be fairly sensitive to how
 			the doppler shift is carried out.)
+	09feb	ksl	68b - Added hooks to track energy deposition of extracted photons
+			in the wind 
+
 **************************************************************/
 
 
@@ -84,11 +83,14 @@ extract (w, p, itype)
   double xdiff[3];
 
 
+  /* 68b -09021 - ksl - The next line selects the middle inclination angle for recording the absorbed enery */
+  phot_history_spectrum=0.5*(MSPEC+nspectra);
+
   for (n = MSPEC; n < nspectra; n++)
     {
       /* If statement allows one to choose whether to construct the spectrum
          from all photons or just from photons that have scattered a specific number
-         of times. */
+         of times or in specific regions of the wind. */
 
       yep = 1;			// Start by assuming it is a good photon for extraction
 
@@ -123,11 +125,17 @@ extract (w, p, itype)
 	{
 
 
+/* Create a photon pp to use here and in extract_one.  This assures we
+ * have not modified p as part of extract
+ */
+
 	  stuff_phot (p, &pp);
 	  stuff_v (s[n].lmn, pp.lmn);	/* Stuff new photon direction into pp */
+
 /* Python 41 -- modified to frequency shift the disk photons as well as the wind 
 photons.    Note also that splitting the modifications of pp between this and extract 
-one is odd. We do frequency hear but weighting in extract!! */
+one is odd. We do frequency here but weighting in extract!! */
+
 	  if (itype == PTYPE_DISK)
 	    {
 	      vdisk (pp.x, v);
@@ -139,7 +147,6 @@ one is odd. We do frequency hear but weighting in extract!! */
 				   the frequency also must be shifted */
 	      vwind_xyz (&pp, v);	/*  Get the velocity at the position of pp */
 	      doppler (p, &pp, v, pp.nres);	/*  Doppler shift the photon -- test! */
-//            doppler (p, &pp, v, -1);  
 /*  Doppler shift the photon 
 					   (as nonresonant scatter) 
 					   to new direction */
@@ -156,7 +163,22 @@ one is odd. We do frequency hear but weighting in extract!! */
 		       pp.lmn[1], pp.lmn[2], 2.997925e18 / p->freq,
 		       2.997925e18 / pp.freq);
 	    }
+
+/* 68b - 0902 - ksl - turn phot_history on for the middle spectrum.  Note that we have to wait
+ * to actually initialize phot_hist because the photon bundle is reweighted in extract_one */
+
+	  if (phot_history_spectrum==n){
+		  phot_hist_on=1;  // Start recording the history of the photon
+	  }
+
+	  /* Now extract the photon */
+
 	  extract_one (w, &pp, itype, n);
+
+	 /* Make sure phot_hist is on, for just one extraction */
+	  
+	  phot_hist_on=0;
+
 	}
 
     }
@@ -224,15 +246,11 @@ extract_one (w, pp, itype, nspec)
   double weight_min;
   int icell;
   int k;
-  double dot ();
   double x[3];
   double tau;
   double zz;
-  double reweightwind ();
   double dvds;
   int ishell;
-  double get_ion_density ();
-//  double v[3];
 
 
   weight_min = EPSILON * pp->w;
@@ -240,34 +258,40 @@ extract_one (w, pp, itype, nspec)
   tau = 0;
   icell = 0;
 
+/* Preserve the original position of the photon so one can use this to determine whether the
+ * photon encountered the disk or star as it tried to exist the wind.
+ */
+
   stuff_phot (pp, &pstart);
 
-/* Reweight the photons 
- Note that photons have already been frequency shifted in extract */
+/* Reweight the photons. Note that photons have already been frequency shifted prior 
+to entering extract */
 
   if (itype == PTYPE_STAR || itype == PTYPE_BL)
-    {				/* Then it was an unscattered photon from the star */
+    {				/* It was an unscattered photon from the star */
       stuff_v (pp->x, x);
       renorm (x, 1.);
       zz = fabs (dot (x, s[nspec].lmn));
       pp->w *= zz * (2.0 + 3.0 * zz);	/* Eqn 2.19 Knigge's thesis */
     }
   else if (itype == PTYPE_DISK)
-    {				/* The it was an unscattered photon from the disk */
+    {				/* It was an unscattered photon from the disk */
       zz = fabs (s[nspec].lmn[2]);
       pp->w *= zz * (2.0 + 3.0 * zz);	/* Eqn 2.19 Knigge's thesis */
     }
   else if (pp->nres > -1 && pp->nres < NLINES)	// added < NLINES condition for macro atoms (SS)
     {
-/* It is a wind photon if it reached this point and so what we do depends
+
+/* It was a wind photon.  In this case, what we do depends
 on whether it is a photon which arose via line radiation or some other process.
+
 If geo.scatter_mode==0 then there is no need to reweight.  This is the
 isotropic assumption.
 
 NB--It is important that reweightwind be called after scatter, as there
 are variables which are set in scatter and in aniosowind that are
 used by reweightwind.  02may ksl
- */
+*/
 
       if (geo.scatter_mode == 1)
 	{			// Then we have anisotropic scattering
@@ -301,11 +325,20 @@ the same resonance again */
   else if (geo.binary_system)
     istat = hit_secondary (pp);	/* Check to see if it hit secondary */
 
+ 
+/* 68b - 0902 - ksl If we are trying to track the history of this photon, we need to initialize the
+ * phot_hist.  We had to do this here, because we have just rewighed the photon
+ */
+
+	  if (phot_hist_on){
+		  phot_hist(pp,0); // Initialize the photon history
+	  }
+
+/* Now we can actually extract the reweighted photon */
 
   while (istat == P_INWIND)
     {
       istat = translate (w, pp, 20., &tau, &nres);
-// if(icell==0) tau=0.0;  // Do not allow any absorption in first cell  // TEST
       icell++;
 
       istat = walls (pp, &pstart);
@@ -337,6 +370,9 @@ the same resonance again */
 
   if (istat == P_ESCAPE)
     {
+
+      /* This seems very defensive.  Is tau ever less than 0? */
+
       if (!(0 <= tau && tau < 1.e4))
 	Error_silent
 	  ("Warning: extract_one: ignoring very high tau  %8.2e at %g\n",
@@ -344,33 +380,48 @@ the same resonance again */
       else
 	{
 	  k = (pp->freq - s[nspec].freqmin) / s[nspec].dfreq;
+
+	  /* Force the frequency to be in range of that recorded in the spectrum */
+
 	  if (k < 0)
 	    k = 0;
 	  else if (k > NWAVE - 1)
 	    k = NWAVE - 1;
+
+	  /* Increment the spectrum.  Note that the photon weight has not been diminished
+	   * by its passage through th wind, even though it may have encounterd a number
+	   * of resonance, and so the weight must be reduced by tau
+	   */
+
 	  s[nspec].f[k] += pp->w * exp (-(tau));	//OK increment the spectrum in question
 
-//        s[nspec].f[k] += pp->w ;      //TEST increment the spectrum in question  with no abs
 
-	  if (diag_on_off && 1530.0 < 2.997925e18 / pp->freq
-	      && 2.997925e18 / pp->freq < 1570.0)
-	    {
-	      fprintf (epltptr,
-		       "f%2d %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %6.3f %6.3f %6.3f %7.2f %7.2f %10.3e\n",
-		       nspec, pstart.x[0], pstart.x[1], pstart.x[2],
-		       pp->x[0], pp->x[1], pp->x[2], pp->lmn[0],
-		       pp->lmn[1], pp->lmn[2], 2.997925e18 / pp->freq,
-		       tau, pp->w);
-	    }
+
+/* 68b -0902 - ksl - turn phot_history off and store the information in the appropriate locations in the PlasmaPtrs
+ * The reason this is here is that we only summarizes the history if the photon actually got to the observer
+ */
+
+	  if(phot_hist_on){
+		  phot_history_summarize();
+		  phot_hist_on=0;
+	  }
+
+	  //68c  Commented out these steps as no longer likely to ever be used again
+//OLD68c	  if (diag_on_off && 1530.0 < 2.997925e18 / pp->freq
+//OLD68c	      && 2.997925e18 / pp->freq < 1570.0)
+//OLD68c	    {
+//OLD68c	      fprintf (epltptr,
+//OLD68c		       "f%2d %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %6.3f %6.3f %6.3f %7.2f %7.2f %10.3e\n",
+//OLD68c		       nspec, pstart.x[0], pstart.x[1], pstart.x[2],
+//OLD68c		       pp->x[0], pp->x[1], pp->x[2], pp->lmn[0],
+//OLD68c		       pp->lmn[1], pp->lmn[2], 2.997925e18 / pp->freq,
+//OLD68c		       tau, pp->w);
+//OLD68c	    }
 
 	}
+
     }
 
-  else
-    {
-//      if (diag_on_off)
-//      fprintf (epltptr, "%3d %3d Not.counted\n", nspec,istat);
-    }
 
   if (istat > -1 && istat < 9)
     s[nspec].nphot[istat]++;

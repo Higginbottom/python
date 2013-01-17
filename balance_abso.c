@@ -2,6 +2,7 @@
 	01dec	ksl	Updated for changes in calls to various routines, including nebular_concentrations,
 			scattering_fraction.  Note that abso_two_level_atom was not updated
 			and this likely is a problem in terms of accurate comparisons to python.
+	06nov	ksl	58b -- began to try to get balance to work once abain
 */
 
 #include <stdio.h>
@@ -13,13 +14,13 @@
 #include "python.h"
 #include "balance_templates.h"
 
-#define LINELENGTH 132
+//OLD #define LINELENGTH 132
 #define NP    10000
 
 
 int
 absolute_saha (www, p, nh, t_r, t_e, weight, freq_sampling)
-     WindPtr www;
+     PlasmaPtr www;
      PhotPtr p;
      double nh;
      double t_r;
@@ -37,6 +38,7 @@ absolute_saha (www, p, nh, t_r, t_e, weight, freq_sampling)
   double planck (), kappa_ff ();
   double luminosity;
   double fb_cooling (), fb_h, fb_he1, fb_he2;
+  double vol;
   int n;
 
 /* OK make some photons which comprise a BB distribution */
@@ -75,7 +77,9 @@ absolute_saha (www, p, nh, t_r, t_e, weight, freq_sampling)
   www->ntot = www->nioniz = 0;
   www->t_e = t_e;
   www->t_r = t_r;
-  s = www->vol;
+  vol = wmain[www->nwind].vol;
+  s = vol;
+//OLD  s = www->vol;
 
   for (n = 0; n < nions; n++)
     {
@@ -91,11 +95,15 @@ absolute_saha (www, p, nh, t_r, t_e, weight, freq_sampling)
     {
 // this call will certainly only work if p[n].grid==0
       xheat_lines = absolute_line_heating (www, &p[n], s);
-      radiation (www, &p[n], s);
+      radiation (&p[n], s);
     }
 
 
-  luminosity = absolute_total_emission (www, xband.f1[0], xband.f2[0]);
+
+  luminosity =
+    absolute_total_emission (&wmain[www->nwind], t_e, xband.f1[0],
+			     xband.f2[0]);
+//OLD  luminosity = absolute_total_emission (www, xband.f1[0], xband.f2[0]);
 //  luminosity = absolute_total_emission (www, t_e, freqmin, freqmax);
 
   summary (www);
@@ -117,8 +125,8 @@ absolute_saha (www, p, nh, t_r, t_e, weight, freq_sampling)
 
 //??? I have changed the calls to total_emission but not absolute_total_emission ksl 
 double
-absolute_total_emission (ww, t_e, f1, f2)
-     WindPtr ww;		/* WindPtr to a specific cell in the wind */
+absolute_total_emission (one, t_e, f1, f2)
+     WindPtr one;		/* WindPtr to a specific cell in the wind */
      double t_e;		/* The electron temperature of the gas, which can be different from
 				   the value stored in ww */
      double f1, f2;		/* The minimum and maximum frequency over which the emission is
@@ -126,6 +134,13 @@ absolute_total_emission (ww, t_e, f1, f2)
 {
   double absolute_total_line_emission (), total_free (), total_fb ();
   double ffmax;
+  int nplasma;
+  PlasmaPtr xplasma;
+
+
+  nplasma = one->nplasma;
+  xplasma = &plasmamain[nplasma];
+
 
   if (f1 < 0.05 * BOLTZMANN * t_e / H)
     f1 = 0.05 * BOLTZMANN * t_e / H;
@@ -137,24 +152,25 @@ absolute_total_emission (ww, t_e, f1, f2)
 
   if (ffmax < f1)
     {
-      ww->lum_rad = ww->lum_lines = ww->lum_ff = ww->lum_fb = 0;
+      xplasma->lum_rad = xplasma->lum_lines = xplasma->lum_ff =
+	xplasma->lum_fb = 0;
     }
   else
     {
-      ww->lum_rad = ww->lum_lines =
-	absolute_total_line_emission (ww, t_e, f1, ffmax);
-      ww->lum_rad += ww->lum_ff = total_free (ww, t_e, f1, ffmax);
-      ww->lum_rad += ww->lum_fb = total_fb (ww, t_e, f1, ffmax);
+      xplasma->lum_rad = xplasma->lum_lines =
+	absolute_total_line_emission (xplasma, t_e, f1, ffmax);
+      xplasma->lum_rad += xplasma->lum_ff = total_free (one, t_e, f1, ffmax);
+      xplasma->lum_rad += xplasma->lum_fb = total_fb (one, t_e, f1, ffmax);
     }
 
-  return (ww->lum_rad);
+  return (xplasma->lum_rad);
 
 
 }
 
 double
 absolute_total_line_emission (ww, t_e, f1, f2)
-     WindPtr ww;		/* WindPtr to a specific cell in the wind */
+     PlasmaPtr ww;		/* WindPtr to a specific cell in the wind */
      double t_e;		/* The electron temperature of the gas, which can be different from
 				   the value stored in ww */
      double f1, f2;		/* Minimum and maximum frequency */
@@ -168,6 +184,7 @@ absolute_total_line_emission (ww, t_e, f1, f2)
   double a, a21 ();
   char dummy[20];
   double weight_hold, te_hold, tr_hold;
+  double vol;
 
 
   if (t_e <= 0 || f2 < f1)
@@ -214,7 +231,9 @@ absolute_total_line_emission (ww, t_e, f1, f2)
       ww->t_e = te_hold;
       ww->t_r = tr_hold;
 
-      x = d2 * a * H * lin_ptr[n]->freq * ww->vol * (1. - sf);
+      vol = wmain[ww->nwind].vol;
+      x = d2 * a * H * lin_ptr[n]->freq * vol * (1. - sf);
+//OLD x = d2 * a * H * lin_ptr[n]->freq * ww->vol * (1. - sf);
 
       lum += lin_ptr[n]->pow = x;
 
@@ -237,7 +256,7 @@ int ialh = 0;
 /* Calculate line heating in the cell for one photon */
 double
 absolute_line_heating (w, p, ds)
-     WindPtr w;
+     PlasmaPtr w;
      PhotPtr p;
      double ds;
 {
@@ -296,7 +315,7 @@ absolute_line_heating (w, p, ds)
 double
 absolute_line_nsigma (line_ptr, w)
      struct lines *line_ptr;
-     WindPtr w;
+     PlasmaPtr w;
 {
   double d1, d2, x;
   int ion;
@@ -320,7 +339,7 @@ absolute_line_nsigma (line_ptr, w)
 double
 absolute_two_level_atom (line_ptr, www, d1, d2)
      struct lines *line_ptr;
-     WindPtr www;
+     PlasmaPtr www;
      double *d1, *d2;
 {
   double freq, te;

@@ -5,9 +5,11 @@
 
 /* Note that there is some overlap between these definitions and those in python.h and so mixing these two
  * header files can be dangerous.  
+ *
+ * NDIM --> MOD_NDIM  -- 081026
  */
 
-#define NWAVES 	2000
+#define NWAVES 	4100
 #define NDIM	10	// The maximum number of free parameters
 #define NCOMPS	10     //The maximum number of separate components
 #define NPARS	10     //The maximum number of parameters in a component (not all variable)

@@ -88,7 +88,6 @@ in python.h
 #include "recipes.h"
 
 
-#define LINELENGTH 132
 
 // Next line is left in to be sure that nfb is initialized properly at
 // the beginning of the program
@@ -802,8 +801,16 @@ recombination rates and band-limited luminosities.
                                                                                                    
   History:
 	02jul	ksl	Coding began
+	0810	ksl	67 - Modified routine so that instead of exiting
+			when there are more than NFB sets of data, it 
+			creates a new set of data and assumes the oldest
+			set can be discarded.  This was done primarily
+			to accommodate some runs of balance.
                                                                                                    
  ************************************************************************/
+
+int init_freebound_nfb;		/*Indicates the total number of freebound sets that
+				   could be used */
 
 int
 init_freebound (t1, t2, f1, f2)
@@ -813,6 +820,7 @@ init_freebound (t1, t2, f1, f2)
   int i, j, nion;
   double ltmin, ltmax, dlt;
   double xinteg_fb ();
+  int nput;
 
 /* If init-freebound has never been called before initialize
    the temperatures and calculate the
@@ -874,12 +882,28 @@ been calculated for these conditions, and if so simply return.
     {
       return (0);
     }
+
+/* We have to calculate a new set of freebound data */
   if (i == NFB)
     {
+      /* We've filled all the available space in freebound so we start recycling elements, assuming that the latest
+       * ones are still likelyt to be needed
+       */
+      nput = init_freebound_nfb % NFB;
+      init_freebound_nfb++;
+
       Error
-	("init_freebound: Cannot calculate more than NFB sets of free_bound emissivities\n");
-      exit (0);
+	("init_freebound: Recycling freebound, storage for NFB (%d), need %d to avoid \n",
+	 NFB, init_freebound_nfb);
+
     }
+  else
+    {
+      nput = init_freebound_nfb = nfb;
+      nfb++;
+    }
+
+
 
 /* Having reach this point, a new set of fb emissivities
 must be calculated.  Note that old information is not destroyed
@@ -887,8 +911,8 @@ unless nfb had been set to 0.  The new set is added to the old
 on the assumption that the fb information will be reused.
 */
 
-  freebound[nfb].f1 = f1;
-  freebound[nfb].f2 = f2;
+  freebound[nput].f1 = f1;
+  freebound[nput].f2 = f2;
 
 /* So at this point, we know exactly what needs to be calculated */
 
@@ -902,12 +926,11 @@ on the assumption that the fb information will be reused.
       for (j = 0; j < NTEMPS; j++)
 	{			//j covers the temps
 	  t = fb_t[j];
-	  freebound[nfb].emiss[nion][j] = xinteg_fb (t, f1, f2, nion, 1);
+	  freebound[nput].emiss[nion][j] = xinteg_fb (t, f1, f2, nion, 1);
 
 	}
     }
 
-  nfb++;
 
   // OK we are done
   return (0);
@@ -1111,9 +1134,19 @@ Description:
         idea
                                                                                                                                       
 Notes:
+	ksl 0810 - The freebound structure could be done in a way
+	that saves space on disk and in the program.  To save
+	space on disk one just needs to write and read the array
+	one elment at a time.  
                                                                                                                                       
 History:
-        07jul   ksl     57h -- Began coding
+        06jul   ksl     57h -- Began coding
+	08may	ksl	60a -- Added code to make sure that one
+			was only checking the first word in VERSION.
+			Previously, there was a problem with VERSION
+			having an extra space compared to the version
+			that was read back.  May be just an OS X
+			problem.
                                                                                                                                       
 **************************************************************/
 
@@ -1128,7 +1161,7 @@ fb_save (filename)
 
   if ((fptr = fopen (filename, "w")) == NULL)
     {
-      Error ("wind_save: Unable to open %s\n", filename);
+      Error ("fb_save: Unable to open %s\n", filename);
       exit (0);
     }
 
@@ -1162,7 +1195,7 @@ fb_read (filename)
   FILE *fptr, *fopen ();
   int n;
   char line[LINELENGTH];
-  char version[LINELENGTH];
+  char version[LINELENGTH], oldversion[LINELENGTH];
   char atomic_filename[LINELENGTH];
 
   int xnelements, xnions, xnlevels, xnxphot, xntopphot, xnfb;
@@ -1181,7 +1214,7 @@ have to calcuate the coefficients */
   n = fread (line, sizeof (line), 1, fptr);
   sscanf (line, "%*s %s", version);
   Log
-    ("Reading Windfile %s created with python version %s with py_wind version %s\n",
+    ("Reading Windfile %s created with python version %s with python version %s\n",
      filename, version, VERSION);
   n += fread (line, sizeof (line), 1, fptr);
   sscanf (line, "%s %d %d %d %d %d %d\n", atomic_filename, &xnelements,
@@ -1192,17 +1225,20 @@ have to calcuate the coefficients */
     ("There are  %d elem, %d ions, %d levels, %d Verner, %d topbase, and %d freq intervals\n",
      xnelements, xnions, xnlevels, xnxphot, xntopphot, xnfb);
 
-/* Check insofar as possible that this reconcination file was created with the same 
-inputs */
+/* Check insofar as possible that this reconbination file was created with the same 
+inputs.  The next statement is intended to handle problems with extra spaces on the
+string that constitutes VERSION*/
 
-  if (strcmp (version, VERSION))
+  sscanf (VERSION, "%s", oldversion);
+  if (strcmp (version, oldversion))
     {
-      Log ("fb_read: Different versions of python");
+      Log ("fb_read: Different versions of python  %s != %s or %d !=d %d \n",
+	   version, oldversion, strlen (version), strlen (oldversion));
       return (0);
     }
   if (strcmp (atomic_filename, geo.atomic_filename) != 0)
     {
-      Log ("fb_read: Different atomic_filename");
+      Log ("fb_read: Different atomic_filename\n");
       return (0);
     }
   if (xnelements != nelements)

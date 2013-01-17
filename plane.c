@@ -27,12 +27,13 @@ Notes:
 History:
  	97jan	ksl	Coding on python began.
  	98dec	ksl	Coding on these routines begain
+	07jul	ksl	58f - Still only applies to balance
  
 **************************************************************/
 
 int
 pl_wind_define (w)
-     WindPtr w;
+     WindPtr w;			// This is the entire grid
 {
   double x[3], vmid[3], vbot[3], diff[3];
   double xmin, xmax, zmin, zmax;
@@ -60,14 +61,14 @@ pl_wind_define (w)
 	  x[0] = wind_midx[i];
 	  x[1] = 0;
 	  x[2] = wind_midz[j];
-	  w[n].rho = pl_rho (x);
-	  w[n].t_r = geo.pl_t_r;
-	  w[n].t_e = geo.pl_t_e;
-	  w[n].w = geo.pl_w;
+	  plasmamain[n].rho = pl_rho (x);
+	  plasmamain[n].t_r = geo.pl_t_r;
+	  plasmamain[n].t_e = geo.pl_t_e;
+	  plasmamain[n].w = geo.pl_w;
 	  x[0] = wind_x[i];
 	  x[1] = 0;
 	  x[2] = wind_z[j];
-	  pl_velocity (x, w[n].v);
+	  pl_velocity (x, wmain[w[n].nwind].v);
 	}
     }
 
@@ -76,7 +77,7 @@ pl_wind_define (w)
       for (j = 0; j < MDIM - 1; j++)
 	{
 	  n = i * MDIM + j;
-	  w[n].vol = geo.pl_vol;
+	  wmain[w[n].nwind].vol = geo.pl_vol;
 	}
     }
 
@@ -96,20 +97,26 @@ pl_wind_define (w)
 	  x[2] = wind_z[j];
 	  pl_velocity (x, vbot);
 	  vsub (vmid, vbot, diff);
-	  w[n].dvds_ave = length (diff) / (wind_midz[j] - wind_z[j]);
+	  wmain[w[n].nwind].dvds_ave =
+	    length (diff) / (wind_midz[j] - wind_z[j]);
 	}
     }
 
 
-  if (ion_abundances (&w[0], geo.ioniz_mode) != 0)
+  if (ion_abundances (&plasmamain[0], geo.ioniz_mode) != 0)
     {
       Error
 	("pl_wind_define: Error code on return from ion_abundances %d\n",
 	 ierr);
     }
+
+  /* 07jul - ksl - As written all of the plasma conditions should be the same in 
+   * all of the cells
+   */
+
   for (n = 1; n < NDIM2; n++)
     {
-      pl_copy_conditions (&w[0], &w[n]);
+      pl_copy_conditions (&plasmamain[0], &plasmamain[n]);
 
     }
 
@@ -266,7 +273,7 @@ define_wind_grid (w, xmin, xmax, zmin, zmax)
 
 int
 pl_copy_conditions (win, wout)
-     WindPtr win, wout;
+     PlasmaPtr win, wout;
 {
   int n;
   wout->rho = win->rho;

@@ -48,7 +48,6 @@ History:
 #include "python.h"
 #include "recipes.h"
 
-#define LINELENGTH 132
 
 /* Calculate the total line emission from a wind cell
 
@@ -106,6 +105,7 @@ lum_lines (one, nmin, nmax)
   double t_e;			/* The electron temperature of the gas, which can be different from
 				   the value stored in ww */
   int nplasma;
+  double foo1, foo2, foo3, foo4;
   PlasmaPtr xplasma;
 
 
@@ -122,7 +122,7 @@ lum_lines (one, nmin, nmax)
 	{			/* potentially dangerous step to avoid lines with no power */
 	  two_level_atom (lin_ptr[n], xplasma, &d1, &d2);
 
-	  x = lin_ptr[n]->gu / lin_ptr[n]->gl * d1 - d2;
+	  x = foo1 = lin_ptr[n]->gu / lin_ptr[n]->gl * d1 - d2;
 
 	  z = exp (-H_OVER_K * lin_ptr[n]->freq / t_e);
 
@@ -131,14 +131,24 @@ lum_lines (one, nmin, nmax)
 
 	  q = 1. - scattering_fraction (lin_ptr[n], xplasma);
 
-	  x *= q * a21 (lin_ptr[n]) * z / (1. - z);
-	  x *= H * lin_ptr[n]->freq * one->vol;
+	  x *= foo2 = q * a21 (lin_ptr[n]) * z / (1. - z);
+	  x *= foo3 = H * lin_ptr[n]->freq * one->vol;
 	  if (geo.line_mode == 3)
-	    x *= p_escape (lin_ptr[n], xplasma);	// Include effects of line trapping 
+	    x *= foo4 = p_escape (lin_ptr[n], xplasma);	// Include effects of line trapping 
+	  else
+	    {
+	      foo4 = 0.0;	// Added to prevent compilation warning
+	    }
 
 	  lum += lin_ptr[n]->pow = x;
 	  if (x < 0)
-	    mytrap ();
+	    {
+	      Log
+		("lum_lines: foo %10.3g (%10.3g %10.3g %10.3g) %10.3g %10.3g %10.3g %10.3g %10.3g %10.3g %10.3g\n",
+		 foo1, d1, d2, dd, foo2, foo3, foo4, lin_ptr[n]->el,
+		 xplasma->t_r, t_e, xplasma->w);
+	      mytrap ();
+	    }
 	  if (sane_check (x) != 0)
 	    {
 	      printf ("total_line_emission %e %e\n", x, z);
@@ -300,7 +310,7 @@ a21 (line_ptr)
 
    History:
 	98Aug	ksl	Coded and debugged
-	99jan	ksl	Tried to improve spped by assuring that it does not
+	99jan	ksl	Tried to improve speed by assuring that it does not
 			calculate exactly the same atom twice in a row
 	00nov	ksl	Adopted a very simple radiated domininated model for 
 			transitions from excited state to excited state. 
@@ -311,6 +321,9 @@ a21 (line_ptr)
 			have all of the level information at hand.  
 	01dec	ksl	Modified calling scheme and added partionion functions
 	06may	ksl	57+ -- Modified to use plasma structue
+	07mar	ksl	58c -- Tried to address problems associated with our 
+			inconsistent treatment of level populations for two
+			level atoms, This is at best a bandaide.
  */
 
 struct lines *old_line_ptr;
@@ -337,7 +350,7 @@ two_level_atom (line_ptr, xplasma, d1, d2)
   double ne, te, w, tr, dd;
   int nion;
 
-  //Check added since this shouldn't be used for macro atoms. SS
+  //Check and exit if this routine is called for a macro atom, since this should never happen
 
   if (line_ptr->macro_info == 1 && geo.rt_mode == 2 && geo.macro_simple == 0)
     {
@@ -345,23 +358,26 @@ two_level_atom (line_ptr, xplasma, d1, d2)
       exit (0);
     }
 
-//Populate variable from previous calling structure
+/* Move variables used in the calculation from the xplasma structure into subroutine variables */
   ne = xplasma->ne;
   te = xplasma->t_e;
   tr = xplasma->t_r;
   w = xplasma->w;
-//OLD dd=xplasma->density[line_ptr->nion];
   nion = line_ptr->nion;
   dd = xplasma->density[nion];
+
+  /* Calculate the number density of the lower level for the transition using the partition function */
+    ;
   if (ion[nion].nlevels > 0)
-    {				//Correct for the fact that not all ions in groundstate
+    {
       dd *= config[ion[nion].firstlevel].g / xplasma->partition[nion];
     }
+
 
   if (old_line_ptr == line_ptr
       && old_ne == ne
       && old_te == te && old_w == w && old_tr == tr && old_dd == dd)
-    {
+    {				// Then there is no need to recalculate eveything
       *d1 = old_d1;
       *d2 = old_d2;
     }
@@ -385,10 +401,7 @@ in the configuration structure. 01dec ksl */
 
 
 	  c21 = ne * q;
-//Problem
-	  //c12=exp(-H_OVER_K*freq/te);
 	  c12 = c21 * g2_over_g1 * exp (-H_OVER_K * freq / te);
-
 
 	  if (w < 1.e-6)
 	    {			// Radiation is unimportant
@@ -422,14 +435,9 @@ is matastable in which case we set the weight to 1 and force equlibrium
 Othewise, assert that the lower level is metastable and set the radiative weight to 1 
 ERROR -- At present I don't believe what one should do with metastable lower levels is
 ERROR -- worked out, either in the program... where are we getting radiative rates
-ERRROR -- or conceptually
+ERROR -- or conceptually
+07mar - ksl - We still need to determine whether this makes sense at all !!
 */
-
-//        if (line_ptr->nconfigl == (-9999)
-//            || config[line_ptr->nconfigl].rad_rate < 1e4)
-//          xw = 1;
-//        else
-//          xw = w;
 
 	  xw = w;		// Assume all lower levels are allowed at present
 

@@ -1,5 +1,6 @@
 
 #define DEBUG 				0	/* 0 means do not debug */
+int verbosity;                   /* verbosity level. 0 low, 10 is high */
 
 #include "log.h"
 
@@ -11,7 +12,7 @@ int mdim;
 int NDIM, MDIM, NDIM2;
 int NPLASMA;                    //The number of cells with non-zero volume or the size of plasma structure
 
-char basename[132];   // The root of the parameter file name being used by python
+char basename[132];		// The root of the parameter file name being used by python
 
 /* These are tunable parameters that control various aspects of python
  * and the assorted programs.  In some cases they affect the "care" with
@@ -22,9 +23,9 @@ char basename[132];   // The root of the parameter file name being used by pytho
  * 
  * */
 
-double dfudge;                     // This is the push-through distance
+double dfudge;			// This is the push-through distance
 double DFUDGE;
-#define VCHECK	1.e6     // The maximum allowable error in calculation of the velocity in calculate_ds
+#define VCHECK	1.e6		// The maximum allowable error in calculation of the velocity in calculate_ds
 
 /* 57h -- Changed several defined variables to numbers to allow one to vary them 
 in the process of running the code */
@@ -45,7 +46,6 @@ double DENSITY_PHOT_MIN; 		/* This constant is a minimum density for the purpose
 //#define SMAX_FRAC	0.1  
 #define LDEN_MIN        1e-3   /* The minimum density required for a line to be conidered for scattering
 				  or emission in calculate_ds and lum_lines */
-//#define DENSITY_PHOT_MIN	1.e-8     
 
 
 /* End of "care factor" definition */
@@ -97,8 +97,29 @@ int NPHOT;			/* As of python_40, NPHOT must be defined in the main program using
 #define	RTHETA			2
 #define	CYLVAR                  3
 
+/* Definitions of spectral types, which are all negative because when
+ * one reads a spectrum from a list of models these are numbered beginning
+ * with zero, see the discussion in get_models.c   080518 - ksl - 60a
+ */
+
+#define SPECTYPE_BB      -1
+#define SPECTYPE_UNIFORM -2
+#define SPECTYPE_NONE	 -3
+
+/* Number of model_lists that one can have, should be the same as NCOMPS in models.h */
+#define NCOMPS 	10
+#define LINELENGTH 	160
+
 struct geometry
 {
+/* 67 - ksl This section added to allow for restarting the program, and adds parameters used
+ * in the calculation */
+
+	int wcycle, pcycle;      /* The number of completed ionization and spectrum cycles */
+	int wcycles, pcycles;	/* The number of ionization and spectrum cycles desired */
+
+/* Begin description of the actual geometery */
+
   int coord_type, ndim,mdim;      /* The type of geometry and dimensionality of the wind array. 
 				0=1-d spherical, 1=cylindrical, 2 = spherical polar, 3=cylindrical
 				but the z coordiante changes with rho in an attempt to allow for
@@ -106,7 +127,7 @@ struct geometry
 				ndim is the dimensionality of the first dimension.  In the CV case
 				it is in the plane of the disk. Mdim is generally along the z axis
 				*/
-  int nplasma;                   /*The number of cells in the plasma structure 06may ksl*/
+  int nplasma, nmacro;          /*The number of cells in the plasma and macro structures 08mar ksl*/
   double rmax, rmax_sq;		/* The maximum distance to which a photon should be followed */
   double mstar, rstar, rstar_sq, tstar, gstar;	/* Basic parameters for the WD */
   double twind;			/* temperature of wind */
@@ -125,6 +146,7 @@ struct geometry
 				  3--> Disk illumination is treated in terms of an analytic approximation
 				  04Aug ksl -- this parameter added for Python52
 				*/
+  int disk_tprofile;
   double disk_mdot;		/* mdot of  DISK */
   double diskrad, diskrad_sq;
   double disk_z0,disk_z1;	/* For vertically extended disk, z=disk_z0*(r/diskrad)**disk_z1 */
@@ -182,14 +204,16 @@ struct geometry
   int rt_mode;			/* radiative transfer mode (0=Sobolev,1=simple (used only by balance) */
                                 /* This IS now used by Python - set to 2 for Macro Atom method. Set to 1
 				   for non-Macro Atom methods (SS) */
-  /* The spectral types are -1 for bb, -2 for a uniform spectral distribution, 0 or more from a filelist.
-   * A value of -3 indicates no emission is expected from this particular source */
+  /* The spectral types are SPECTYPE_BB for bb, SPECTYPE_UNIFORM for a uniform spectral distribution, 0 or more from a filelist.
+   * A value of SPECTYPE_NONE indicates no emission is expected from this particular source */
   int star_ion_spectype, star_spectype;	/* The type of spectrum used to create the continuum
 					   for the star in the ionization and final spectrum calculation */
   int disk_ion_spectype, disk_spectype;	/* The type of spectrum used to create the continuum
 					   for the disk in the ionization and final spectrum calculation */
   int bl_ion_spectype, bl_spectype;	/* The type of spectrum used to create the continuum
 					   for the bl in the ionization and final spectrum calculation */
+  char model_list[NCOMPS][LINELENGTH];	/* The file which contains the model names and the associated values for the model */
+
   /* Generic parameters for the wind */
   double wind_mdot, stellar_wind_mdot;		/* Mass loss rate in disk and stellar wind */
   double wind_rmin, wind_rmax;	/*Spherical extent of the wind */
@@ -199,7 +223,7 @@ struct geometry
   int adiabatic;                 /*0-> Do not include adiabatic heating in calculating the cooling of the wind
 				  1-> Use adiabatic heating in calculating the cooling of the wind
 				  */
-
+  int auger_ionization;          /*0 -> Do not include innershell photoionization /Auger effects; 1-> include them*/
   /* Parameters defining Shlossman & Vitello Wind */
   double sv_lambda;		/* power law exponent describing from  what portion of disk wind is radiated */
   double sv_rmin, sv_rmax, sv_thetamin, sv_thetamax, sv_gamma;	/* parameters defining the goemetry of the wind */
@@ -207,6 +231,10 @@ struct geometry
   double sv_r_scale, sv_alpha;	/* the scale length and power law exponent for the velocity law */
   double sv_v_infinity;		/* the factor by which the velocity at infinity exceeds the excape velocity */
 
+  /* Paramater for the Elvis AGN wind - closely based on SV */
+  double elvis_offset;   /*This is a vertical offset for a region where the
+			   wind rises vertically from the disk*/
+ 
   /* Parameters defining Knigge Wind */
   double kn_dratio;		/* parameter describing collimation of wind */
   double kn_lambda;		/* power law exponent describing from  what portion of disk wind is radiated */
@@ -303,11 +331,27 @@ struct xdisk
   double g[NRINGS];		/* The gravity at the middle of the annulus */
   double v[NRINGS];		/* The velocity at the middle of the annulus */
   double heat[NRINGS];		/* The total energy flux of photons hitting each annulus */
+  double ave_freq[NRINGS];	/* The flux weighted average of frequency of photons hiiting each annulus */
+  double w[NRINGS];		/* The radiative weight of the photons that hit the disk */
+  double t_hit[NRINGS];		/* The effective T of photons hitting the disk*/
   int nphot[NRINGS];		/*The number of photons created in each annulus */
   int nhit[NRINGS];		/*The number of photons which hit each annulus */
 }
 disk, qdisk;			/* disk defines zones in the disk which in a specified frequency band emit equal amounts
-				   of radiation */
+				   of radiation. qdisk stores the amount of heating of the disk as a result of
+				  illumination by the star or wind */
+
+#define NBLMODEL 100
+
+struct blmodel
+{
+   int n_blpts;
+   float r[NBLMODEL];
+   float t[NBLMODEL];
+}
+blmod;
+
+
 
 
 /* 	This structure defines the wind.  The structure w is allocated in the main
@@ -333,6 +377,13 @@ done to make it easier to control the size of the entire structure   06jul-ksl
 				Reduced from 10 to 3 by SS for testing data with few lines.*/
                             
 
+/* 061104 -- 58b -- ksl -- Added definitions to characterize whether a cell is in the wind. */
+#define W_ALL_INWIND   0	//Entire grid cell is in the wind
+#define W_PART_INWIND  1	//Part of gridcell is in the wind
+#define W_NOT_INWIND  -1        //None of gridcell is in the wind
+#define W_IGNORE      -2	//Even though the wind may occupy a small part of this cell, assume
+				//photons simply pass through the cell.  This is new in 58b
+
 typedef struct wind
 {
   int nwind;                   /*A self-reference to this cell in the wind structure*/
@@ -350,13 +401,10 @@ typedef struct wind
   double div_v;			/*Divergence of v at center of cell */
   double dvds_ave;		/* Average value of dvds */
   double dvds_max, lmn[3];	/*The maximum value of dvds, and the direction in a cell in cylindrical coords */
-  double vol;			/* valid volume of this cell (more specifically the volome of one of the
+  double vol;			/* valid volume of this cell (more specifically the volume of one of the
 				   two annular regions that this cell represents). */
-  int inwind;			/* 52 -- ksl -- Changed meanings of inwind to allow more extensive use 
-				   0 --> entire gridcell is inwind
-				   1 --> part of gridcell is in wind
-				   -1 --> none of cell is in the wind
-				   */
+  int inwind;			/* 061104 -- 58b -- ksl -- Moved definitioins of for whether a cell is or is not
+				inwind to #define statements above */
 
 }
 wind_dummy, *WindPtr;
@@ -364,13 +412,21 @@ wind_dummy, *WindPtr;
 WindPtr wmain;
 
 /* 57+ - 06jun -- plasma is a new structure that contains information about the properties of the
-plasma in regions of the geometry that are actually included n the wind */
+plasma in regions of the geometry that are actually included n the wind 
+
+	07jul	ksl	Added volume to the structure.  The value of this should be the same
+			as the corresponding volume in the Wind structure, as we are still
+			using the Wind volume for some tests of whether the a photon can
+			interact in a cell.
+*/
 
 typedef struct plasma {
   int nwind;                   /*A cross reference to the corresponding cell in the  wind structure*/
   int nplasma;                 /*A self reference to this  in the plasma structure */
   double ne;			/* electron density in the shell */
   double rho;			/*density at the center of the cell */
+  double vol;			/* valid volume of this cell (more specifically the volume of one of the
+				   two annular regions that this cell represents). */
   double density[NIONS];	/*The number density of a specific ion.  This needs to correspond
 				   to the ion order obtained by get_atomic_data */
   double partition[NIONS];	/*The partition function for each  ion */
@@ -386,13 +442,13 @@ typedef struct plasma {
   double kpkt_abs;                   /* k-packet equivalent of matom_abs. (SS) */
 
   int kbf_use[NTOP_PHOT];            /* List of the indices of the photoionization processes to be used for kappa_bf. (SS) */
-  int kbf_nuse;                      /* Total number of photoionization processes to be used for kappa_bf. (SS) */
+   int kbf_nuse;                      /* Total number of photoionization processes to be used for kappa_bf. (SS) */
 
 /* End of macro information */
 
 
-  double t_r, t_r_old;		/*radiation temperature of shell */
-  double t_e, t_e_old;		/*electron temperature of shell */
+  double t_r, t_r_old;		/*radiation temperature of cell */
+  double t_e, t_e_old;		/*electron temperature of cell */
   double dt_e, dt_e_old;	/*How much t_e changed in the previous iteration */
   double heat_tot, heat_tot_old;	/* heating from all sources */
   double heat_lines, heat_ff;
@@ -406,6 +462,8 @@ typedef struct plasma {
   double ioniz[NIONS], recomb[NIONS];	/* Number of ionizations and recombinations for each ion.
 					   The sense is ionization from ion[n], and recombinations 
 					   to each ion[n] */
+  int scatters[NIONS];			/* 68b - The number of scatters in this cell for each ion.*/
+  double xscatters[NIONS];	/* 68b - Diagnostic measure of energy scattered out of beam on extract */
   double heat_ion[NIONS];       /* The amount of energy being transferred to the electron pool
 				   by this ion via photoionization*/
   double lum_ion[NIONS];       /* The amount of energy being released from the electron pool
@@ -414,7 +472,7 @@ typedef struct plasma {
 				intensity_averaged frequency, 
 				   luminosity and       absorbed luminosity of shell */
   double lum_lines, lum_ff, lum_adiabatic;
-  double lum_fb, lum_z;	/*fb luminosity & fb of metals metals */
+  double lum_fb, lum_z;		/*fb luminosity & fb of metals metals */
   double lum_rad, lum_rad_old;	/* The specfic radiative luminosity in frequencies defined by freqmin
 				   and freqmax.  This will depend on the last call to total_emission */
   double dmo_dt[3];		/*Radiative force of wind */
@@ -425,6 +483,9 @@ typedef struct plasma {
   double converge_t_r, converge_t_e, converge_hc;	/* Three measures of whether the program believes the grid is converged */
   int converge_whole, converging;	/* converge_whole=0 if subroutine convergence feels point is converged, converging is an
 				   indicator of whether the program thought the cell is on the way to convergence 0 implies converging */
+  double gamma_inshl[NAUGER]; /*MC estimator that will record the inner shell ionization rate - very similar to macro atom-style estimators */
+  //int kpkt_rates_known;
+  //COOLSTR kpkt_rates;
 } plasma_dummy, *PlasmaPtr;
 
 PlasmaPtr plasmamain;
@@ -451,41 +512,71 @@ executable much smaller for the simple atom case.
 
 0608 -- ksl -- 57h -- There is now and extended  discussion in gridwind.c about possible ways to restructure 
 the macro structure in order to dynamically set the size of arrays like jbar and jbar_old.  For now, recompilation 
-of the code is requird.  
+of the code is required.  
+
+0803 -- ksl -- 60 -- The first index is the level, or config  number.  get_atomicdata assures that macro levels, 
+if they exist have lower level numbers than other types of levels.  
+
 */
 
 
 typedef struct macro {
-  double jbar[NLEVELS_MACRO][NBBJUMPS]; /* This will store the Sobolev mean intensity in transitions which is needed 
+  double *jbar;
+  //[NLEVELS_MACRO][NBBJUMPS]; 
+  /* This will store the Sobolev mean intensity in transitions which is needed 
 				       for Macro Atom jumping probabilities. The indexing is by configuration (the 
 				       NLTE_LEVELS) and then by the upward bound-bound jumps from that level 
 				       (the NBBJUMPS) (SS)*/
-  double jbar_old[NLEVELS_MACRO][NBBJUMPS];
+  double *jbar_old;
+  //[NLEVELS_MACRO][NBBJUMPS];
 
-  double gamma[NLEVELS_MACRO][NBFJUMPS]; /* This is similar to the jbar but for bound-free transitions. It records the 
+  double *gamma;
+  //[NLEVELS_MACRO][NBFJUMPS]; 
+  /* This is similar to the jbar but for bound-free transitions. It records the 
 					 appropriate photoionisation rate co-efficient. (SS)*/
-  double gamma_old[NLEVELS_MACRO][NBFJUMPS];
-  double gamma_e[NLEVELS_MACRO][NBFJUMPS]; /* This is Leon's gamma_e: very similar to gamma but energy weighted. Needed
+  double *gamma_old;
+  //[NLEVELS_MACRO][NBFJUMPS];
+  double *gamma_e;
+  //[NLEVELS_MACRO][NBFJUMPS]; 
+  /* This is Leon's gamma_e: very similar to gamma but energy weighted. Needed
 					   for division of photoionisation energy into excitation and k-packets. (SS)*/
-  double gamma_e_old[NLEVELS_MACRO][NBFJUMPS];
+  double *gamma_e_old;
+  //[NLEVELS_MACRO][NBFJUMPS];
 
-  double alpha_st[NLEVELS_MACRO][NBFJUMPS]; /* Same as gamma but for stimulated recombination rather than photoionisation. (SS)*/
-  double alpha_st_old[NLEVELS_MACRO][NBFJUMPS];
-  double alpha_st_e[NLEVELS_MACRO][NBFJUMPS]; /* Same as gamma_e but for stimulated recombination rather than photoionisation. (SS)*/
-  double alpha_st_e_old[NLEVELS_MACRO][NBFJUMPS];
+  double *alpha_st;
+  //[NLEVELS_MACRO][NBFJUMPS]; /* Same as gamma but for stimulated recombination rather than photoionisation. (SS)*/
+  double *alpha_st_old;
+  //[NLEVELS_MACRO][NBFJUMPS];
+  double *alpha_st_e;
+  //[NLEVELS_MACRO][NBFJUMPS]; 
+  /* Same as gamma_e but for stimulated recombination rather than photoionisation. (SS)*/
+  double *alpha_st_e_old;
+  //[NLEVELS_MACRO][NBFJUMPS];
 
-  double recomb_sp[NLEVELS_MACRO][NBFJUMPS]; /* Spontaneous recombination. (SS) */
-  double recomb_sp_e[NLEVELS_MACRO][NBFJUMPS]; /* "e" version of the spontaneous recombination coefficient. (SS) */
+  double *recomb_sp;
+  //[NLEVELS_MACRO][NBFJUMPS]; 
+  /* Spontaneous recombination. (SS) */
+  double *recomb_sp_e;
+  //[NLEVELS_MACRO][NBFJUMPS]; 
+  /* "e" version of the spontaneous recombination coefficient. (SS) */
 
-  double matom_emiss[NLEVELS_MACRO]; /* This is the specific emissivity due to the de-activation of macro atoms in the cell
+  double *matom_emiss;
+  //[NLEVELS_MACRO]; 
+  /* This is the specific emissivity due to the de-activation of macro atoms in the cell
 					in the frequency range that is required for the final spectral synthesis. (SS) */
-  double matom_abs[NLEVELS_MACRO];   /* This is the energy absorbed by the macro atom levels - recorded during the ionization 
+  double *matom_abs;
+  //[NLEVELS_MACRO];  
+  /* This is the energy absorbed by the macro atom levels - recorded during the ionization 
 					cycles and used to get matom_emiss (SS) */
+  int kpkt_rates_known;
+  COOLSTR kpkt_rates;
 } macro_dummy, *MacroPtr;
 
 MacroPtr macromain;
 
 int xxxpdfwind;			// When 1, line luminosity calculates pdf
+
+int size_Jbar_est,  size_gamma_est, size_alpha_est;
 
 // These definitions define a photon type, generally it's origin
 #define PTYPE_STAR	    0
@@ -553,6 +644,16 @@ typedef struct photon
 p_dummy, *PhotPtr;
 
 
+
+/* 68b - ksl - This is a structure in which the history of a single photon bundle can be recorded
+ * See phot_util   phot_hist().  It needs to be used carefully.  if phot_hist_on is true
+ * then photon histories will be attempted.
+ */
+
+#define MAX_PHOT_HIST	1000
+int n_phot_hist, phot_hist_on,phot_history_spectrum;
+struct photon  xphot_hist[MAX_PHOT_HIST];
+
 struct basis
 {
   double a[3][3];
@@ -564,16 +665,23 @@ basis_cartesian;
 /* The next section defines the spectrum arrays.  The spectrum structure contains
    the selection criteria for each spectrum as well as the array in which to store the
    spectrum.  The first MSPEC spectra are reserved for the total emitted spectrum, the
-   spectrum.  The first MSPEC spectra are reserved for the total emitted spectrum, the
    total spectrum of photons which are scattered and the total spectrum of photons which
    are absorbed.  The remainder of the spectra pertain to the spectrum as seen from various
-   directions, so if NSPEC is 7 and NSPEC is 3 then 4 specific spectra can be extraced. */
+   directions. Note that the space for the spectra are allocated using a calloc statement
+   in spectrum_init*/
 
-#define NSPEC 				14
+
+/* NSPEC has been removed from python.h because it was not really needed */
+//0ld68c #define NSPEC 				14
+
 #define MSPEC                            6
+int nspectra;			/* After create_spectrum, the number of elements allocated for s, or 
+				   alternatively the number of spectra one has to work with.  Note that
+				   general s[0],s[1] and s[2] are the escaping, scattered and absorbed photons,
+				   while elements higher than this will contain spectra as seen by different observers */
+
 
 int nscat[MAXSCAT + 1], nres[MAXSCAT + 1], nstat[NSTAT];
-// int shell[NDIM_MAX * NDIM_MAX + 1];
 
 typedef struct spectrum
 {
@@ -596,14 +704,9 @@ typedef struct spectrum
 				   >0     -> select only photons whose "last" position is above the disk
 				   <0    -> select only photons whose last position is below the disk */
   double x[3],r;               /* The position and radius of a special region from which to extract spectra  */
-  float f[NWAVE];
+  double f[NWAVE];
 }
 spectrum_dummy, *SpecPtr;
-
-int nspectra;			/* After create_spectrum, the number of elements allocated for s, or 
-				   althernatively the number of spectra one has to work with.  Note that
-				   general s[0],s[1] and s[2] are the escaping, scattered and absorbed photons,
-				   while elements higher than this will contain spectra as seen by different observers */
 
 SpecPtr s;
 
@@ -731,3 +834,5 @@ em_rnge;
 #include "templates.h"
 #include "recipes.h"
 
+// 04apr ksl -- made kap_bf external so can be passed around variables
+double kap_bf[NLEVELS];

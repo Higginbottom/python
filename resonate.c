@@ -90,8 +90,6 @@ struct photon cds_phot_old;
 double cds_v2_old, cds_dvds2_old;
 
 
-// 04apr ksl -- made kap_bf external so can be passed around variables
-double kap_bf[NLEVELS];
 
 double
 calculate_ds (w, p, tau_scat, tau, nres, smax, istat)
@@ -102,7 +100,6 @@ calculate_ds (w, p, tau_scat, tau, nres, smax, istat)
      double smax;
      int *istat;
 {
-//OLD  int ishell, kkk;
   int kkk;
   double kap_es;
   double freq_inner, freq_outer, dfreq, ttau, freq_av;
@@ -112,7 +109,7 @@ calculate_ds (w, p, tau_scat, tau, nres, smax, istat)
   double v_inner[3], v_outer[3], v1, v2, dvds, dd;
   double v_check[3], vch, vc;
   double dvds1, dvds2;
-  struct photon phot, ppp;
+  struct photon phot, p_now; 
   int init_dvds;
   double kap_bf_tot, kap_ff, kap_cont;
   double tau_sobolev;
@@ -126,8 +123,6 @@ calculate_ds (w, p, tau_scat, tau, nres, smax, istat)
   nplasma = one->nplasma;
   xplasma = &plasmamain[nplasma];
 
-//OLD  ishell = p->grid;
-//OLD  kap_es = THOMPSON * w[ishell].ne;
   kap_es = THOMPSON * xplasma->ne;
   /* This is the electron scattering opacity per unit length. For the Macro Atom approach we need an 
      equivalent opacity per unit length due to each of the b-f continuua. Call it kap_bf. (SS) */
@@ -149,7 +144,7 @@ calculate_ds (w, p, tau_scat, tau, nres, smax, istat)
 
 
 /* So "phot"  is a photon vector at the far edge of the cell, while p remains the photon 
-   vector at the near edge of the cell, and ppp is the midpoint. */
+   vector at the near edge of the cell, and p_now is the midpoint. */
 
   if (comp_phot (&cds_phot_old, p))
     {
@@ -162,46 +157,57 @@ calculate_ds (w, p, tau_scat, tau, nres, smax, istat)
 
     }
 
+  /* Create phot, a photon at the far side of the cell */
   stuff_phot (p, &phot);
   move_phot (&phot, smax);
   vwind_xyz (&phot, v_outer);
   v2 = dot (phot.lmn, v_outer);
 
+  /* Check to see that the velocity is monotonic across the cell
+   * by calculating the velocity at the midpoint of the path
+   *
+   * If it is, then reduce smax
+   */
   vc = C;
   while (vc > VCHECK && smax > DFUDGE)
     {
-      stuff_phot (p, &ppp);
-      move_phot (&ppp, smax / 2.);
-      vwind_xyz (&ppp, v_check);
-      vch = dot (ppp.lmn, v_check);
+      stuff_phot (p, &p_now);
+      move_phot (&p_now, smax / 2.);
+      vwind_xyz (&p_now, v_check);
+      vch = dot (p_now.lmn, v_check);
 
       vc = fabs (vch - 0.5 * (v1 + v2));
 
       if (vc > VCHECK)
 	{
-	  stuff_phot (&ppp, &phot);
+	  stuff_phot (&p_now, &phot);
 	  smax *= 0.5;
 	  v2 = vch;
 	}
     }
 
 
-/* 02feb: The sign appears correct.  If the photon is moving in the same direction as v, then in the
-rest frame of the ions,  the photon frequency will be less. */
-
 /* This Doppler shift shifts the photon from the global to the local 
-frame of rest. Therefore multiply. See doppler notes for a discussion*/
-//Note, these lines were not really changed in the attempt to fix the doppler shifts
+frame of rest. Therefore multiply. See doppler notes for a discussion
+
+02feb: The sign appears correct.  If the photon is moving in the same 
+direction as v, then in the rest frame of the ions, 
+then the photon frequency will be less. */
+
 
   freq_inner = p->freq * (1. - v1 / C);
   freq_outer = phot.freq * (1. - v2 / C);
   dfreq = freq_outer - freq_inner;
 
+/* The next section checks to see if the frequency difference on
+ * the two sides is very small and if not limits the resonances
+ * one has to worry about
+ */
+
   if (fabs (dfreq) < EPSILON)
     {
       Error
 	("translate: v same at both sides of cell %d %2g,\n %.2g %.2g %.2g %.2g %.2g %.2g \n",
-//       ishell, dfreq, v_inner[0], v_inner[1], v_inner[2], v_outer[0],
 	 one->nwind, dfreq, v_inner[0], v_inner[1], v_inner[2], v_outer[0],
 	 v_outer[1], v_outer[2]);
       x = -1;
@@ -238,10 +244,8 @@ method). If the macro atom method is not used just get kap_bf to 0 and move on).
          Also need to store the total - kap_bf_tot. */
 
 
-      freq_av = (freq_inner + freq_outer) * 0.5;	//need to do better than this perhaps but okay for star - comoving frequency (SS)
+      freq_av = freq_inner;	//(freq_inner + freq_outer) * 0.5;  //need to do better than this perhaps but okay for star - comoving frequency (SS)
 
-// 04apr ksl -- Replaced this section with a routine 
-// which calculates kap_bf_tot and populates the partial kappas for bf 
 
       kap_bf_tot = kappa_bf (xplasma, freq_av, 0);
       kap_ff = kappa_ff (xplasma, freq_av);
@@ -261,6 +265,9 @@ method). If the macro atom method is not used just get kap_bf to 0 and move on).
 
 
   kap_cont = kap_es + kap_bf_tot + kap_ff;	//total continuum opacity 
+
+/* Finally begin the loop over the resonances that can interact with the
+     photon in the cell */
 
   for (n = 0; n < nline_delt; n++)
     {
@@ -304,15 +311,15 @@ process. */
 	         can do better except  at the edges of the grid.   01apr07 ksl.  ??? One could still do 
 	         better than this since even if we can usually interpolate in one direction if not two ???
 	       */
-	      stuff_phot (p, &ppp);
-	      move_phot (&ppp, ds_current);	// So ppp contains the current position of the photon
+	      stuff_phot (p, &p_now);
+	      move_phot (&p_now, ds_current);	// So p_now contains the current position of the photon
 
 
 	      //?? It looks like this if statement could be moved up higher, possibly above the xrho line if willing to accept cruder dd estimate
 	      //If the density of the ion is very small we shouldn't have to worry about a resonance, but otherwise
 	      // ?? This seems like an incredibly small number; how can anything this small affect anything ??
 
-	      dd = get_ion_density (&ppp, kkk);
+	      dd = get_ion_density (&p_now, kkk);
 
 	      if (dd > LDEN_MIN)
 		{
@@ -331,11 +338,15 @@ process. */
 		  /* Add the line optical depth  Note that one really should translate the photon to this point 
 		     before doing this (?? What is "this"??)as p-> x is being used to calculate direction of the wind */
 
-		  ttau += tau_sobolev =
-//OLD               sobolev (w[ishell], p, dd, lin_ptr[nn], dvds);
+		  ttau+=tau_sobolev =
 		    sobolev (one, p, dd, lin_ptr[nn], dvds);
+
 		  /* tau_sobolev now stores the optical depth. This is fed into the next statement for the bb estimator
 		     calculation. SS March 2004 */
+
+		  /* ksl - ??? 0902 - Stuart it looks to mee as if this is being run in the Macro case even during the 
+		   * exraction cycles.  Could you check. It shouldn't be necessary.  ???
+		   */
 
 		  if (geo.rt_mode == 2)	//Macro Atom case (SS)
 		    {
@@ -346,13 +357,13 @@ process. */
 		         it's still in the wind and second get a pointer to the grid cell where the resonance really happens.
 		       */
 
-		      check_in_grid = walls (&ppp, p);
+		      check_in_grid = walls (&p_now, p);
 
 		      if (check_in_grid != P_HIT_STAR
 			  && check_in_grid != P_HIT_DISK
 			  && check_in_grid != P_ESCAPE)
 			{
-			  two = &w[where_in_grid (ppp.x)];
+			  two = &w[where_in_grid (p_now.x)];
 			  xplasma2 = &plasmamain[two->nplasma];
 
 			  if (lin_ptr[nn]->macro_info == 1
@@ -376,17 +387,37 @@ process. */
 			    }
 			}
 		    }
+		  /* Completed special calculateions for the Macro Atom case */
+
+		  /* 68b - 0902 - The next section is to track where absorption is taking place along the line of sight
+		   * to the observer.  It is probably possibly to simplify some of what is happening here, as we
+		   * have various photons real and imaginary in this subroutine.  p, the orginal photon, phot the
+		   * photon at the opposide edge of the cell and p_now hte photon at its current position.  Some
+		   * of these could be used to store information needed in phot_hist.
+		   */
+
+		  if (phot_hist_on){
+			  p_now.tau=ttau;
+			  p_now.nres=nn;
+			  phot_hist(&p_now,1);
+		  }
+
+
 		}
 
 
+
+	      /* Check to see whether the photon should scatter at this point */
 	      if (ttau > tau_scat)
 		{
 		  *istat = P_SCAT;
 		  *nres = nn;
 		  *tau = ttau;
 
-		  return (ds_current);	/* And the line should scatter at this point */
+		  return (ds_current);	
 		}
+
+		 /* End of loop to process an individual resonance */
 	    }
 	  *tau = ttau;
 	}
@@ -394,10 +425,9 @@ process. */
 
 
 
-
 /* If the photon reaches this point it was not scattered by resonances.  
-   ds_current is either 0 if there were no resonances or the postion of the 
-   "last" resonance if there were resonances.  But we need to check one
+ds_current is either 0 if there were no resonances or the postion of the 
+"last" resonance if there were resonances.  But we need to check one
 last time to see if it was scattered by continuum process.
 Note: ksl -- It is generally a bad policy to have a bunch of repeated code
 like this.  We should probably rewrite some of this in terms of subroutines
@@ -606,7 +636,7 @@ kappa_bf (xplasma, freq, macro_all)
 	  density = den_config (xplasma, nconf);	//Need to check what this does (SS)
 
 
-	  if (density > DENSITY_PHOT_MIN)
+	  if (density > DENSITY_PHOT_MIN || phot_top[n].macro_info == 1)
 	    {
 
 	      /*          kap_tot += x = (delete) */
@@ -638,7 +668,7 @@ Arguments:
 
 Returns:
 	For each cell, the routine determines what bf transitons are inportant
-	and stores them in one->kbf_use[n].  The total number of such transitins
+	and stores them in one->kbf_use[n].  The total number of such transitions
 	is given in one->kbf_nuse.
 
 
@@ -651,7 +681,7 @@ Description:
       10^-6.
 
       The need for the routine is just to prevent wasting time on unimportant bf
-      transitions.  It is called (currenatly from resonate).
+      transitions.  It is called (currently from resonate).
 
 
 Notes:
@@ -709,7 +739,7 @@ kbf_need (fmin, fmax)
 		phot_top[n].x[0] * density * SMAX_FRAC * length (one->xcen);
 
 
-	      if (tau_test > 1.e-6)
+	      if (tau_test > 1.e-6 || phot_top[n].macro_info == 1)
 		{
 		  /* Store the bf transition and increment nuse */
 		  xplasma->kbf_use[nuse] = n;
@@ -731,7 +761,10 @@ kbf_need (fmin, fmax)
  Synopsis:
 
 double sobolev(p,w,l,dvds)  calculates tau associated with a resonance, given the 
-conditions in the wind  and the direction of the photon.
+conditions in the wind and the direction of the photon.
+
+It does not modify any of the variables that are passed to it, including for example
+the photon.  
 
 Arguments:
 
@@ -793,8 +826,8 @@ sobolev (one, p, den_ion, lptr, dvds)
 
   if ((dvds = fabs (dvds)) == 0.0)	// This forces dvds to be positive -- a good thing!
     {
-      tau = INFINITY;
-      Error ("Sobolev: Surprize tau = INFINITY\n");
+      tau = VERY_BIG;
+      Error ("Sobolev: Surprize tau = VERY_BIG\n");
     }
 
   else if (lptr->macro_info == 1 && geo.rt_mode == 2 && geo.macro_simple == 0)
@@ -834,14 +867,30 @@ calls to two_level atom
     {
       Error ("sobolev: den_ion has negative density %g %g %g %g %g %g\n",
 	     d1, d2, lptr->gl, lptr->gu, lptr->freq, lptr->f);
-      exit (0);
+
+      /*SS July 08: With macro atoms, the population solver can default to d2 = gu/gl * d1 which should
+         give exactly zero here but can be negative, numerically. 
+         So I'm modyfying this to set tau to zero in such cases, when the populations are vanishingly small anyway. */
+      tau_x_dvds = PI_E2_OVER_M * d1 * lptr->f / (lptr->freq);
+      tau = tau_x_dvds / dvds;
+      if (tau > 1.e-3)
+	{
+	  exit (0);
+	}
+      else
+	{
+	  Error ("sobolev: continuing by setting tau to zero\n");
+	  return (0.0);
+	}
     }
 
 //  tau = PI_E2_OVER_M * xden_ion * lptr->f ;
 //  tau /= (lptr->freq*dvds);
 
 // N.B. tau_x_dvds is an external variable and is used in anisotropic
-// scattering  ????
+// scattering  0902 - ksl - I believe the question here, which has
+// been here for a long time  is whether this is 
+// good programming practice ????
   tau_x_dvds = PI_E2_OVER_M * xden_ion * lptr->f / (lptr->freq);
   tau = tau_x_dvds / dvds;
 
@@ -1139,11 +1188,11 @@ scatter (p, nres, nnscat)
 							 llvl) / xplasma->ne;
 
 	      gamma_twiddle =
-		mplasma->gamma_old[llvl][m] -
-		(mplasma->alpha_st_old[llvl][m] * stim_fact);
+		mplasma->gamma_old[config[llvl].bfu_indx_first + m] -
+		(mplasma->alpha_st_old[config[llvl].bfu_indx_first+m] * stim_fact);
 	      gamma_twiddle_e =
-		mplasma->gamma_e_old[llvl][m] -
-		(mplasma->alpha_st_e_old[llvl][m] * stim_fact);
+		mplasma->gamma_e_old[config[llvl].bfu_indx_first + m] -
+		(mplasma->alpha_st_e_old[config[llvl].bfu_indx_first+m] * stim_fact);
 
 	      // Both gamma_twiddles must be greater that zero if this is going to work. If they 
 	      // are zero then it's probably because this is the first iteration and so the've not

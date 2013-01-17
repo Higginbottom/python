@@ -8,7 +8,7 @@
 #include "python.h"
 #include "balance_templates.h"
 
-#define LINELENGTH 132
+//OLD #define LINELENGTH 132
 #define NP    10000
 
 /* xsaha determines the abundances using the electron temperature and the Saha equation
@@ -17,11 +17,12 @@
   02jun	ksl	Moved initializations of heading etc. after ionization calculation in
  		an attempt to get xsaha to behave more like python since some of ionization
 	        calculations use the current value of the the total heating.	
+	06nov	ksl	58b - Began work to get this to work again
  */
 
 int
-xsaha (www, p, nh, t_r, t_e, weight, ioniz_mode, freq_sampling)
-     WindPtr www;
+xsaha (one, p, nh, t_r, t_e, weight, ioniz_mode, freq_sampling)
+     WindPtr one;
      PhotPtr p;
      double nh;
      double t_r;
@@ -39,8 +40,13 @@ xsaha (www, p, nh, t_r, t_e, weight, ioniz_mode, freq_sampling)
   double planck (), kappa_ff ();
   double luminosity;
   double fb_cooling ();
+  double vol;
 //  double freqmin, freqmax;
   int n;
+  PlasmaPtr xplasma;
+
+
+  xplasma = &plasmamain[one->nplasma];
 
 /* Now determine the abundances, concentrations, and partition functions based
 on the conditions as currently defined.
@@ -92,33 +98,36 @@ It is far from clear that all of these will work at present with balance.
 	  Error ("xsaha: ioniz_mode unknown. Good luck!\n");
 	}
 
-      ion_abundances (www, ioniz_mode);
+      ion_abundances (xplasma, ioniz_mode);
     }
 
 
 /* initialize some parts of the wind ptr (see wind_rad_init) */
 
-  www->j = www->ave_freq = www->lum = www->heat_tot = www->ntot = 0;
-  www->heat_ff = www->heat_photo = www->heat_lines = 0.0;
-  www->heat_z = 0;
-  www->lum_z = 0.0;
-  www->ntot = www->nioniz = 0;
+  xplasma->j = xplasma->ave_freq = xplasma->lum = xplasma->heat_tot =
+    xplasma->ntot = 0;
+  xplasma->heat_ff = xplasma->heat_photo = xplasma->heat_lines = 0.0;
+  xplasma->heat_z = 0;
+  xplasma->lum_z = 0.0;
+  xplasma->ntot = xplasma->nioniz = 0;
   for (n = 0; n < nions; n++)
     {
-      www->ioniz[n] = 0;
-      www->recomb[n] = 0;
-      www->heat_ion[n] = 0;
-      www->lum_ion[n] = 0;
+      xplasma->ioniz[n] = 0;
+      xplasma->recomb[n] = 0;
+      xplasma->heat_ion[n] = 0;
+      xplasma->lum_ion[n] = 0;
     }
 
-  if (www->t_e != t_e)
-    Error ("xsaha www->t_e %f != t_e %f. Why?\n", www->t_e, t_e);
-  if (www->t_r != t_r)
-    Error ("xsaha www->t_r %f != t_r %f. Why?\n", www->t_r, t_r);
-  if (www->w != weight)
-    Error ("xsaha www->w %f != weight %f. Why?\n", www->w, weight);
+  if (xplasma->t_e != t_e)
+    Error ("xsaha xplasma->t_e %f != t_e %f. Why?\n", xplasma->t_e, t_e);
+  if (xplasma->t_r != t_r)
+    Error ("xsaha xplasma->t_r %f != t_r %f. Why?\n", xplasma->t_r, t_r);
+  if (xplasma->w != weight)
+    Error ("xsaha xplasma->w %f != weight %f. Why?\n", xplasma->w, weight);
 
-  s = www->vol;
+  vol = wmain[xplasma->nwind].vol;
+  s = vol;
+//  s = xplasma->vol;
 
 /* Now calculate the heating  based on these abundances, etc.
 
@@ -135,8 +144,12 @@ the choices actually matched what was said.  I fixed this.  01sept ksl
 
 /* Create photons which comprise a weighted BB distribution */
 
+/* 0810 - ksl - with next call xband->nbands, is set to 1, and the 
+ * frequency limites depned on t_r 
+ */
+
   init_bands (t_r, 0.0, 1e50, 0, &xband);
-//  set_freq_lim (t_r, &freqmin, &freqmax);
+
 //???? New  make_bb (p, t_r, weight);
   xbb (p, t_r, weight, xband.f1[0], xband.f2[0], 1);
 
@@ -144,57 +157,74 @@ the choices actually matched what was said.  I fixed this.  01sept ksl
     {
       for (n = 0; n < NPHOT; n++)
 	{
-	  sobolev_line_heating (www, &p[n], s);
-	  radiation (www, &p[n], s);
+	  sobolev_line_heating (xplasma, &p[n], s);
+	  radiation (&p[n], s);
 	}
     }
   else if (geo.rt_mode == 1)
     {
-      trans_phot (www, p, 0);
-      www[0].heat_tot += www[0].heat_lines;
+      trans_phot (one, p, 0);
+      xplasma[0].heat_tot += xplasma[0].heat_lines;
     }
   else
     {
       for (n = 0; n < NPHOT; n++)
 	{
-	  line_heating (www, &p[n], s);
-	  radiation (www, &p[n], s);
+	  line_heating (xplasma, &p[n], s);
+	  radiation (&p[n], s);
 	}
     }
 
-  luminosity = total_emission (www, 0.0, INFINITY);
-  num_recomb (&www[0], www->t_e);
+  luminosity = total_emission (one, 0.0, VERY_BIG);
+  num_recomb (&xplasma[0], xplasma->t_e);
 
-  summary (www);
+  summary (xplasma);
 
   return (0);
 }
 
 
-/* 
-The routine cycle is intended to mimic what happens in Python in
-a very simple way, updating the ion abundances, etc. in a single
-cell, calculating the heating of the cell based on the updated
-abundances and then calling one shot to try to adjust the temperature.
+/***********************************************************
+               Space Telescope Science Institute
 
-If t_r or t_e are changed then the routine will initialize everything
-to LTE, but otherwise it will go straight to the heating, and updating
-of abundances based on the new value of the heating.
+Synopsis: 
+	The routine cycle is intended to mimic what happens in Python in
+	a very simple way, updating the ion abundances, etc. in a single
+	cell, calculating the heating of the cell based on the updated
+	abundances and then calling one shot to try to adjust the temperature.
 
-NB: t_r, t_e, weight are only used for generating the photon field. 
-The ionization calculation is based solely on what is contained in
-www.
+   
+Arguments:		
 
-	01dec	ksl Updated to reflect new ways of calling routines
-		    like concentrations.	
-*/
+Returns:
+ 
+ 
+Description:	
+
+		
+Notes:
+	If t_r or t_e are changed then the routine will initialize everything
+	to LTE, but otherwise it will go straight to the heating, and updating
+	of abundances based on the new value of the heating.
+
+	NB: t_r, t_e, weight are only used for generating the photon field. 
+	The ionization calculation is based solely on what is contained in
+	xplasma.
+
+
+History:
+	01dec	ksl	Updated to reflect new ways of calling routines
+		    	like concentrations.	
+	0810	ksl	67 - Relook and slight cleanup
+ 
+**************************************************************/
 
 double cy_tr = 0.0;
 double cy_nh = 0.0;
 
 int
-cycle (www, p, nh, t_r, t_e, weight, mode, freq_sampling)
-     WindPtr www;
+cycle (xplasma, p, nh, t_r, t_e, weight, mode, freq_sampling)
+     PlasmaPtr xplasma;
      PhotPtr p;
      double nh;
      double t_r;
@@ -211,51 +241,60 @@ cycle (www, p, nh, t_r, t_e, weight, mode, freq_sampling)
   double alpha_recomb ();
   double planck (), kappa_ff ();
   double luminosity;
-//  double freqmin, freqmax;
+  double vol;
   int n;
+  WindPtr one;
 
+  one = &wmain[xplasma->nwind];
 
 /* initialize some parts of the wind ptr (see wind_rad_init) */
 
-  www->j = www->ave_freq = www->lum = www->heat_tot = www->ntot = 0;
-  www->heat_ff = www->heat_photo = www->heat_lines = 0.0;
-  www->heat_z = 0;
-  www->lum_z = 0.0;
-  www->ntot = www->nioniz = 0;
+  xplasma->j = xplasma->ave_freq = xplasma->lum = xplasma->heat_tot =
+    xplasma->ntot = 0;
+  xplasma->heat_ff = xplasma->heat_photo = xplasma->heat_lines = 0.0;
+  xplasma->heat_z = 0;
+  xplasma->lum_z = 0.0;
+  xplasma->ntot = xplasma->nioniz = 0;
   for (n = 0; n < nions; n++)
     {
-      www->ioniz[n] = 0;
-      www->recomb[n] = 0;
-      www->heat_ion[n] = 0;
-      www->lum_ion[n] = 0;
+      xplasma->ioniz[n] = 0;
+      xplasma->recomb[n] = 0;
+      xplasma->heat_ion[n] = 0;
+      xplasma->lum_ion[n] = 0;
     }
 
-  if (www->t_e != t_e)
-    Error ("xsaha www->t_e %f != t_e %f. Why?\n", www->t_e, t_e);
-  if (www->t_r != t_r)
-    Error ("xsaha www->t_r %f != t_r %f. Why?\n", www->t_r, t_r);
-  if (www->w != weight)
-    Error ("xsaha www->w %f != weight %f. Why?\n", www->w, weight);
+  if (xplasma->t_e != t_e)
+    Error ("cycle: xsaha xplasma->t_e %f != t_e %f. Why?\n", xplasma->t_e,
+	   t_e);
+  if (xplasma->t_r != t_r)
+    Error ("cycle: xsaha xplasma->t_r %f != t_r %f. Why?\n", xplasma->t_r,
+	   t_r);
+  if (xplasma->w != weight)
+    Error ("cycle: xsaha xplasma->w %f != weight %f. Why?\n", xplasma->w,
+	   weight);
 
-  s = www->vol;
+  vol = wmain[xplasma->nwind].vol;
+  s = vol;
 
 
-/* Now set up the initial concentrations.  This is to parallel what is
+/* 
+Now set up the initial concentrations.  This is to parallel what is
 done in python where we initially begin with an LTE like assumption.
-On successive calls to cycle this section should be jumped by the if
-statement
+On successive calls to cycle this section will be skipped as a result
+of the if statement
  */
+
   if (t_r != cy_tr || nh != cy_nh)
     {
       Log
 	("Cycle: Fixing abundances to Saha values since new t_r %g or nh %g\n",
 	 t_r, nh);
-      www->t_e = 0.9 * t_e;	// Lucy guess
-      nebular_concentrations (www, 2);
-      Log ("On the spot estimage  t_r of %g gives ne %g\n", t_r, ne);
+      xplasma->t_e = 0.9 * t_e;	// Lucy guess
+      nebular_concentrations (xplasma, 2);
+      Log ("Cycle: On the spot estimate  t_r of %g gives ne %g\n", t_r, ne);
       cy_tr = t_r;
       cy_nh = nh;
-      www->dt_e = 0.0;		// Allow restart of oneshot limits
+      xplasma->dt_e = 0.0;	// Allow restart of oneshot limits
     }
 
 
@@ -263,52 +302,51 @@ statement
 
 /* First make some photons which comprise a BB distribution */
 
+/* Set the frequency limits and then generate the photons */
+
   init_bands (t_r, 0.0, 1e50, 0, &xband);
-//  set_freq_lim (t_r, &freqmin, &freqmax);     //Needed even if you don't want to regenerate photons
-//Error?? Uncommment line below to get photon distrubutions regenerated.
   xbb (p, t_r, weight, xband.f1[0], xband.f2[0], freq_sampling);
 
 
 /* Shift values to old */
-  www->heat_tot_old = www->heat_tot;
-  www->dt_e_old = www->dt_e;
+  xplasma->heat_tot_old = xplasma->heat_tot;
+  xplasma->dt_e_old = xplasma->dt_e;
 
 /* Next calculate the heating for this distribution */
   for (n = 0; n < NPHOT; n++)
     {
-      line_heating (www, &p[n], s);
-      radiation (www, &p[n], s);
+      line_heating (xplasma, &p[n], s);
+      radiation (&p[n], s);
     }
 
 /* Now calculate the luminosity for these conditions */
 
-//  luminosity = total_emission (www, freqmin, freqmax);
-  luminosity = total_emission (www, xband.f1[0], xband.f2[0]);
-  num_recomb (&www[0], www->t_e);
+  luminosity = total_emission (one, xband.f1[0], xband.f2[0]);
+  num_recomb (&xplasma[0], xplasma->t_e);
 
-  summary (www);
+  summary (xplasma);
 
 /* Shift values to old */
-  www->dt_e = www->t_e - www->t_e_old;	//Must store this before others
-  www->t_e_old = www->t_e;
-  www->t_r_old = www->t_r;
-  www->lum_rad_old = www->lum_rad;
+  xplasma->dt_e = xplasma->t_e - xplasma->t_e_old;	//Must store this before others
+  xplasma->t_e_old = xplasma->t_e;
+  xplasma->t_r_old = xplasma->t_r;
+  xplasma->lum_rad_old = xplasma->lum_rad;
 
-  one_shot (www, mode);
+  one_shot (xplasma, mode);
 
 
   Log ("Cycle: one_shot old t_r t_e %8.2g %8.2g, new t_r t_e %8.2g %8.2g\n",
-       t_r, t_e, www->t_r, www->t_e);
+       t_r, t_e, xplasma->t_r, xplasma->t_e);
 
-//Error ?? -- Next statement is probably superfluous, since calc_te, called by oneshot calculated total emission
-//  luminosity = total_emission (www, freqmin, freqmax);
-  luminosity = total_emission (www, xband.f1[0], xband.f2[0]);
-  num_recomb (&www[0], www->t_e);
+//  Error ?? -- Next statement is probably superfluous, since calc_te, called by oneshot calculated total emission
+//  luminosity = total_emission (xplasma, freqmin, freqmax);
+  luminosity = total_emission (one, xband.f1[0], xband.f2[0]);
+  num_recomb (&xplasma[0], xplasma->t_e);
 
-  summary (www);
+  summary (xplasma);
 
 /* Convergence check */
-  convergence (www);
+  convergence (xplasma);
 
   return (0);
 
@@ -326,72 +364,79 @@ recalculate the heating at any point.   The resulting te is incorporated into th
 */
 
 int
-dumb_step (www, te)
-     WindPtr www;
+dumb_step (one, te)
+     WindPtr one;
      double *te;
 {
   double lum_current, lum_hotter, lum_cooler;
   double tstep, hardness;
   double total_emission ();
+  PlasmaPtr xplasma;
+
+  xplasma = &plasmamain[one->nplasma];
 
   if (*te > 20000.)
     tstep = 0.1 * (*te);
   else
     tstep = 0.05 * (*te);
 
-  www->t_e = *te;
-  lum_current = total_emission (www, 0.0, INFINITY);
-  num_recomb (&www[0], www->t_e);
+  xplasma->t_e = *te;
+  lum_current = total_emission (one, 0.0, VERY_BIG);
+  num_recomb (&xplasma[0], xplasma->t_e);
 
   Log
     ("Current values of luminosities compared to previously calculated heating\n");
   Log
     ("t_e %8.2e lum_tot  %8.2e lum_lines  %8.2e lum_ff  %8.2e lum_fb     %8.2e %8.2e %8.2e %8.2e %8.2e\n",
-     www->t_e, www->lum_rad, www->lum_lines, www->lum_ff, www->lum_fb,
-     www->lum_ion[0], www->lum_ion[2], www->lum_ion[3], www->lum_z);
+     xplasma->t_e, xplasma->lum_rad, xplasma->lum_lines, xplasma->lum_ff,
+     xplasma->lum_fb, xplasma->lum_ion[0], xplasma->lum_ion[2],
+     xplasma->lum_ion[3], xplasma->lum_z);
   Log
     ("t_r %8.2e heat_tot %8.2e heat_lines %8.2e heat_ff %8.2e heat_photo %8.2e %8.2e %8.2e %8.2e %8.2e\n",
-     www->t_r, www->heat_tot, www->heat_lines, www->heat_ff,
-     www->heat_photo, www->heat_ion[0], www->heat_ion[2], www->heat_ion[3],
-     www->heat_z);
+     xplasma->t_r, xplasma->heat_tot, xplasma->heat_lines, xplasma->heat_ff,
+     xplasma->heat_photo, xplasma->heat_ion[0], xplasma->heat_ion[2],
+     xplasma->heat_ion[3], xplasma->heat_z);
 
-  www->t_e = *te + tstep;
-  lum_hotter = total_emission (www, 0.0, INFINITY);
-  num_recomb (&www[0], www->t_e);
+  xplasma->t_e = *te + tstep;
+  lum_hotter = total_emission (one, 0.0, VERY_BIG);
+  num_recomb (&xplasma[0], xplasma->t_e);
 
   Log ("Results of raising t_e\n");
   Log
     ("t_e %8.2e lum_tot  %8.2e lum_lines  %8.2e lum_ff  %8.2e lum_fb     %8.2e %8.2e %8.2e %8.2e %8.2e\n",
-     www->t_e, www->lum_rad, www->lum_lines, www->lum_ff, www->lum_fb,
-     www->lum_ion[0], www->lum_ion[2], www->lum_ion[3], www->lum_z);
+     xplasma->t_e, xplasma->lum_rad, xplasma->lum_lines, xplasma->lum_ff,
+     xplasma->lum_fb, xplasma->lum_ion[0], xplasma->lum_ion[2],
+     xplasma->lum_ion[3], xplasma->lum_z);
   Log
     ("t_r %8.2e heat_tot %8.2e heat_lines %8.2e heat_ff %8.2e heat_photo %8.2e %8.2e %8.2e %8.2e %8.2e\n",
-     www->t_r, www->heat_tot, www->heat_lines, www->heat_ff,
-     www->heat_photo, www->heat_ion[0], www->heat_ion[2], www->heat_ion[3],
-     www->heat_z);
+     xplasma->t_r, xplasma->heat_tot, xplasma->heat_lines, xplasma->heat_ff,
+     xplasma->heat_photo, xplasma->heat_ion[0], xplasma->heat_ion[2],
+     xplasma->heat_ion[3], xplasma->heat_z);
 
-  www->t_e = *te - tstep;
-  lum_cooler = total_emission (www, 0.0, INFINITY);
-  num_recomb (&www[0], www->t_e);
+  xplasma->t_e = *te - tstep;
+  lum_cooler = total_emission (one, 0.0, VERY_BIG);
+  num_recomb (&xplasma[0], xplasma->t_e);
 
   Log ("Results of lowering t_e\n");
   Log
     ("t_e %8.2e lum_tot  %8.2e lum_lines  %8.2e lum_ff  %8.2e lum_fb     %8.2e %8.2e %8.2e %8.2e %8.2e\n",
-     www->t_e, www->lum_rad, www->lum_lines, www->lum_ff, www->lum_fb,
-     www->lum_ion[0], www->lum_ion[2], www->lum_ion[3], www->lum_z);
+     xplasma->t_e, xplasma->lum_rad, xplasma->lum_lines, xplasma->lum_ff,
+     xplasma->lum_fb, xplasma->lum_ion[0], xplasma->lum_ion[2],
+     xplasma->lum_ion[3], xplasma->lum_z);
   Log
     ("t_r %8.2e heat_tot %8.2e heat_lines %8.2e heat_ff %8.2e heat_photo %8.2e %8.2e %8.2e %8.2e %8.2e\n",
-     www->t_r, www->heat_tot, www->heat_lines, www->heat_ff,
-     www->heat_photo, www->heat_ion[0], www->heat_ion[2], www->heat_ion[3],
-     www->heat_z);
+     xplasma->t_r, xplasma->heat_tot, xplasma->heat_lines, xplasma->heat_ff,
+     xplasma->heat_photo, xplasma->heat_ion[0], xplasma->heat_ion[2],
+     xplasma->heat_ion[3], xplasma->heat_z);
 
   Log ("te %8.2g lum  %8.2e\n", *te, lum_current);
   Log ("te %8.2g lum  %8.2e\n", *te + tstep, lum_hotter);
   Log ("te %8.2g lum  %8.2e\n", *te - tstep, lum_cooler);
 
-  Log ("tr %8.2g heat %8.2e\n", www->t_r, www->heat_tot);
+  Log ("tr %8.2g heat %8.2e\n", xplasma->t_r, xplasma->heat_tot);
 
-  hardness = (lum_current - www->heat_tot) / (lum_current + www->heat_tot);
+  hardness =
+    (lum_current - xplasma->heat_tot) / (lum_current + xplasma->heat_tot);
 
   if (fabs (hardness) < 0.1)
     {
@@ -426,28 +471,31 @@ dumb_step (www, te)
 	}
     }
 
-  www->t_e = *te;
+  xplasma->t_e = *te;
   return (0);
 }
 
 int
-find_te (www)
-     WindPtr www;
+find_te (one)
+     WindPtr one;
 {
   double calc_te ();
   double luminosity, total_emission ();
+  PlasmaPtr xplasma;
 
-  luminosity = total_emission (www, 0.0, INFINITY);
-  num_recomb (&www[0], www->t_e);
+  xplasma = &plasmamain[one->nplasma];
 
-  summary (www);
+  luminosity = total_emission (one, 0.0, VERY_BIG);
+  num_recomb (&xplasma[0], xplasma->t_e);
 
-  www->t_e = calc_te (www, TMIN, 1.2 * www->t_r);
+  summary (xplasma);
 
-  luminosity = total_emission (www, 0.0, INFINITY);
-  num_recomb (&www[0], www->t_e);
+  xplasma->t_e = calc_te (xplasma, TMIN, 1.2 * xplasma->t_r);
 
-  summary (www);
+  luminosity = total_emission (one, 0.0, VERY_BIG);
+  num_recomb (&xplasma[0], xplasma->t_e);
+
+  summary (xplasma);
 
   return (0);
 }

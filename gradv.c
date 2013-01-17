@@ -153,9 +153,13 @@ the routine is used I believe . ksl
 			in cases where not needed.  
 	06may	ksl	57+ -- Have not changed except to fix call since it is
 			claimed that one needs this everywhere.
+	0903	ksl	68c -- This routine appears to have been wrotng since
+			at least the last time it was changed, although it is
+			not clear what the effect of the error was.  pp was not
+			intialized in the statements below
  */
 
-#define LINELENGTH 132
+#define N_DVDS_AVE	10000
 int
 dvds_ave ()
 {
@@ -185,22 +189,24 @@ dvds_ave ()
       dvds_min = 1.e30;		// TEST
 
 
-/* Occasionally photons are scattering just outside the wind.  I believe
-this is due to DFUDGE, but in any event this was causing problems in
-anisotropic scattering...so calculate in all cells 02may ksl ???*/
       /* Find the center of the cell */
-
 
       stuff_v (wmain[icell].xcen, p.x);
 
+      /* Define a small length */
+
       vsub (p.x, wmain[icell].x, diff);
-      ds = 0.001 * length (diff);	// Define a small length
+      ds = 0.001 * length (diff);
+
+      /* Find the velocity at the center of the cell */
       vwind_xyz (&p, v_zero);
+
       sum = 0.0;
-      for (n = 0; n < 10000; n++)
+      for (n = 0; n < N_DVDS_AVE; n++)
 	{
 	  randvec (delta, ds);
-	  if (pp.x[2] + delta[2] < 0)
+//OLD68c	  if (pp.x[2] + delta[2] < 0)
+	  if (p.x[2] + delta[2] < 0)
 	    {			// Then the new position would punch through the disk
 	      delta[0] = (-delta[0]);	// So we reverse the direction of the vector
 	      delta[1] = (-delta[1]);
@@ -210,23 +216,29 @@ anisotropic scattering...so calculate in all cells 02may ksl ???*/
 	  vwind_xyz (&pp, vdelta);
 	  vsub (vdelta, v_zero, diff);
 	  dvds = length (diff);
+
+	  /* Find the maximum and minimum values of dvds and the direction
+	   * for this
+	   */
+
 	  if (dvds > dvds_max)
-	    {			// Find the maximum dvds
+	    {		
 	      dvds_max = dvds;
 	      renorm (delta, 1.0);
 	      stuff_v (delta, lmn);
 	    }
 	  if (dvds < dvds_min)
-	    {			//TEST          
-	      dvds_min = dvds;	//TEST
-	      renorm (delta, 1.0);	//TEST
-	      stuff_v (delta, lmn_min);	//TEST
-	    }			//TEST
+	    {			          
+	      dvds_min = dvds;	
+	      renorm (delta, 1.0);	
+	      stuff_v (delta, lmn_min);	
+	    }		
 
 	  sum += dvds;
+
 	}
-// 04aug -- ksl -- 52a -- Prior to this next lines was 1000 which was wrong
-      wmain[icell].dvds_ave = sum / (10000 * ds);	/* 10000 pts and ds */
+
+      wmain[icell].dvds_ave = sum / (N_DVDS_AVE * ds);	/* 10000 pts and ds */
 
 //Store the maximum and the direction of the maximum
       wmain[icell].dvds_max = dvds_max / ds;

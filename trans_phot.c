@@ -98,10 +98,11 @@ trans_phot (w, p, iextract)
 
   for (nphot = 0; nphot < NPHOT; nphot++)
     {
+      //      printf("nphot %d %g\n", nphot, (C/p[nphot].freq)/ANGSTROM);
 
-//This is just a watchdog method to tell the user the program is still running
+      //This is just a watchdog method to tell the user the program is still running
       if (nphot % 10000 == 0)
-	printf ("Photon %5d %9.2e %9.2e %9.2e %9.2e %9.2e %9.2e %9.2e\n",
+	printf ("Photon %7d %9.2e %9.2e %9.2e %9.2e %9.2e %9.2e %9.2e\n",
 		nphot, p[nphot].x[0], p[nphot].x[1], p[nphot].x[2],
 		p[nphot].lmn[0], p[nphot].lmn[1], p[nphot].lmn[2],
 		p[nphot].freq);
@@ -133,7 +134,12 @@ trans_phot (w, p, iextract)
       stuff_phot (&p[nphot], &pp);
       disk_illum = geo.disk_illum;
 
-      if (iextract)		// Have to extract the original photon no matter what!
+      /* The next if statement is executed if we are calculating the detailed spectrum and
+       * makes sure we always run extract on the original photon no matter where it was
+       * generated 
+       */
+
+      if (iextract)		
 	{
 	  //SS - for reflecting disk have to make sure disk photons are only extracted once!
 	  if (disk_illum == 1 && p[nphot].origin == PTYPE_DISK)
@@ -154,11 +160,20 @@ trans_phot (w, p, iextract)
 	    }
 	}
 
+      /* Initialize parameters that are needed for the flight of the photon through the
+       * wind
+       */
+
       tau_scat = -log (1. - (rand () + 0.5) / MAXRAND);
       weight_min = EPSILON * pp.w;
       istat = P_INWIND;
       tau = 0;
       icell = 0;
+
+      /* This is the beginning of the loop for each photon and executes until the photon leaves the wind */
+
+      while (istat == P_INWIND)
+	{
 
       /* translate involves only a single shell (or alternatively a single tranfer in the windless region).
          istat as returned by should either be 
@@ -166,25 +181,22 @@ trans_phot (w, p, iextract)
          1 in which case there was a scattering event in the shell, 
          2 in which case the photon reached the outside edge of the grid and escaped, 
          3 in which case it reach the inner edge and was reabsorbed.  
-         If the photon escapes then we leave the photon at the postion of it's last scatter.  In most other cases 
+         If the photon escapes then we leave the photon at the position of it's last scatter.  In most other cases 
          though we store the final position of the photon. */
 
-      while (istat == P_INWIND)
-	{
 
 	  istat = translate (w, &pp, tau_scat, &tau, &nres);
+
 /* nres is the resonance at which the photon was stopped.  At present the
 same value is also stored in pp->nres, but I have not yet eliminated 
 it from translate. ?? 02jan ksl */
 
-//  if(icell==0) tau=0;  // Eliminate if fix works 
 
 
 	  icell++;
 	  istat = walls (&pp, &p[nphot]);
 //pp is where the photon is going, p is where it was
 
-// ?? I don't really understand why n is set further down in the loop.  ksl 00nov18
 
 
 #if DEBUG
@@ -202,7 +214,7 @@ it from translate. ?? 02jan ksl */
 	  if (pp.w < weight_min)
 	    {
 	      istat = pp.istat = P_ABSORB;	/*This photon was absorbed by continuum opacity within the wind */
-	      pp.tau = INFINITY;
+	      pp.tau = VERY_BIG;
 	      stuff_phot (&pp, &p[nphot]);
 	      break;
 	    }
@@ -232,7 +244,8 @@ it from translate. ?? 02jan ksl */
 		kkk++;
 	      kkk--;		// So that the heating refers to the heating between kkk and kkk+1
 	      qdisk.nhit[kkk]++;
-	      qdisk.heat[kkk] += pp.w;
+	      qdisk.heat[kkk] += pp.w;	// 60a - ksl - Added to be able to calculate illum of disk
+	      qdisk.ave_freq[kkk] += pp.w * pp.freq;
 	      break;
 	    }
 
@@ -245,7 +258,7 @@ it from translate. ?? 02jan ksl */
 		  if ((n = where_in_grid (pp.x)) != pp.grid)
 		    {
 /* This error condition happens occassionally.  The reason is that we have added a "push through 
- * distance" to get a photon to move on to the next cell, andlhave not updated the grid cell 
+ * distance" to get a photon to move on to the next cell, and have not updated the grid cell 
  * before returning from translate. If one is concerned about this restore some of the lines
  * that can befound in trans_phot in versions up through 54a.  04dec -- ksl
  */
@@ -264,6 +277,7 @@ it from translate. ?? 02jan ksl */
 		  stuff_phot (&pp, &p[nphot]);
 		  break;
 		}
+	     
 /*57+ -- ksl -- Add check to see if there is a cell in the plasma structure for this.  This is
 a problem that needs fixing */
 
@@ -277,7 +291,6 @@ a problem that needs fixing */
 		  istat = pp.istat = p[nphot].istat = P_ERROR;
 		  stuff_phot (&pp, &p[nphot]);
 		  break;
-
 		}
 
 /*57h -- ksl -- Add check to verify the cell has some volume */
@@ -294,16 +307,6 @@ a problem that needs fixing */
 		  break;
 
 		}
-
-
-
-/* The order of events in the new schema needs to be
-	Decide to scatter, calculate heating (which diminishes the photon weight) 
-      extract, get new scatter direction, estimate tau to excape local region, scatter again
-	if tau_scat < tau_local 
-
-	This was a py46 and earlier comment -- ksl. 
-*/
 
 
 /* SS July 04 - next lines modified so that the "thermal trapping" model of anisotropic
@@ -335,7 +338,7 @@ the current version of scattering really does what the old code did for two-leve
 		/* Flag for the spectrum calculations in a macro atom calculation SS */
 		{
 		  istat = pp.istat = P_ABSORB;
-		  pp.tau = INFINITY;
+		  pp.tau = VERY_BIG;
 		  stuff_phot (&pp, &p[nphot]);
 		  break;
 		}
@@ -351,10 +354,11 @@ the current version of scattering really does what the old code did for two-leve
 		  if (diag_on_off)
 		    fprintf (pltptr, "%.2e %.2e %.2e\n", pp.x[0], pp.x[1],
 			     pp.x[2]);
-		  /* I'm removing the next line for the moment so that the
-		     photon packet weights don't get changed (SS). 
-		     geo.rt_mode controls this
-		     This must be sorted out soon. */
+
+		  /* 68a - 090124 - ksl - Increment the number of scatters by this ion in this cell */
+		  /* 68c - 090408 - ksl - Changed this to the weight of the photon at the time of the scatter */
+
+		  plasmamain[wmain[n].nplasma].scatters[line[nres].nion]+=pp.w;
 
 		  if (geo.rt_mode == 1)	//only do next line for non-macro atom case
 		    {
@@ -364,25 +368,31 @@ the current version of scattering really does what the old code did for two-leve
 		  if (pp.w < weight_min)
 		    {
 		      istat = pp.istat = P_ABSORB;	/*This photon was absorbed by continuum opacity within the wind */
-		      pp.tau = INFINITY;
+		      pp.tau = VERY_BIG;
 		      stuff_phot (&pp, &p[nphot]);
 		      break;
 		    }
 		}
+
+
+/* The next if statement causes photons to be extracted during the creation of the detailed spectrum
+ * portion of the program
+ */
+
 /* N.B. To use the anisotropic scattering option, extract needs to follow scatter.  This
 is because the reweighting which occurs in extract needs the pdf for scattering to have
 been initialized. 02may ksl.  This seems to be OK at present.*/
 
 	      if (iextract)
 		{
-//?? This may actually be a problem because of the way extract reweights.
 		  stuff_phot (&pp, &pextract);
 		  pextract.w *= nnscat;	// Increase weight to account for number of scatters
 		  extract (w, &pextract, PTYPE_WIND);	// Treat as wind photon for purpose of extraction
 		}
 
-/*?? Only reposition a photon once */
-// OK ready to restart
+/* OK we are ready to continue the processing of a photon which has scattered. The next steps
+   reinitialize parameters so that the photon can continue throug the wind */
+
 	      tau_scat = -log (1. - (rand () + 0.5) / MAXRAND);
 	      istat = P_INWIND;
 	      tau = 0;
@@ -391,8 +401,8 @@ been initialized. 02may ksl.  This seems to be OK at present.*/
 	      icell = 0;
 	    }
 
-/* This completes the portion of the code that handles the scttering of a photon
- * What follows is a simple check to see if this particulary photon got stuck
+/* This completes the portion of the code that handles the scattering of a photon
+ * What follows is a simple check to see if this particular photon has gotten stuck
  * in the wind  54b-ksl */
 
 	  if (pp.nscat == MAXSCAT)
@@ -407,9 +417,11 @@ been initialized. 02may ksl.  This seems to be OK at present.*/
 	  p[nphot].nscat = pp.nscat;
 	  p[nphot].nrscat = pp.nrscat;
 	  p[nphot].w = pp.w;	// Assure that final weight of photon is returned.
-	}
-    }
 
+	}
+      /* This is the end of the loop over individual photons */
+
+    }
   /* This is the end of the loop over all of the photons; after this the routine returns */
 
   return (0);

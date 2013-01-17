@@ -96,7 +96,6 @@ History:
 #include "atomic.h"
 #include "python.h"
 
-//#define COLMIN        1.e10
 #define COLMIN	0.01
 
 int iicount = 0;
@@ -107,7 +106,6 @@ radiation (p, ds)
      double ds;
 {
   PhotoionizationPtr x_ptr;
-//OLD  struct photoionization *x_ptr;
   TopPhotPtr x_top_ptr;
 
   WindPtr one;
@@ -125,6 +123,7 @@ radiation (p, ds)
   double w_ave, w_in, w_out;
   double den_config ();
   int nconf;
+  double weight_of_packet, y;
 
   one = &wmain[p->grid];	/* So one is the grid cell of interest */
   xplasma = &plasmamain[one->nplasma];
@@ -132,6 +131,8 @@ radiation (p, ds)
 
   freq = p->freq;
   kappa_tot = frac_ff = kappa_ff (xplasma, freq);	/* Add ff opacity */
+  frac_tot = frac_z = 0;	/* 59a - ksl - Moved this line out of loop to avoid warning, but notes 
+				   indicate this is all disagnostic and might be removed */
 
 
   if (freq > phot_freq_min)
@@ -147,7 +148,7 @@ radiation (p, ds)
 
       if (geo.ioniz_or_extract)	// 57h -- ksl -- 060715
 	{			// Initialize during ionization cycles only
-	  frac_tot = frac_z = 0;
+	  //OLD  frac_tot = frac_z = 0;
 	  for (nion = 0; nion < nions; nion++)
 	    {
 	      kappa_ion[nion] = 0;
@@ -168,22 +169,18 @@ of the energy that goes into heating electrons carefully.  */
 	  for (n = 0; n < ntop_phot; n++)
 	    {
 	      x_top_ptr = phot_top_ptr[n];
-//OLD         ft = phot_top[n].freq[0];
 	      ft = x_top_ptr->freq[0];
 	      if (ft > freq)
 		break;		// The remaining transitions will have higher thresholds
-//OLD         if (freq > ft && freq < phot_top[n].freq[phot_top[n].np - 1])
 	      if (freq < x_top_ptr->freq[x_top_ptr->np - 1])
 		{
 /*Need the appropriate density at this point. */
 
-//OLD             nconf = phot_top[n].nlev;
 		  nconf = x_top_ptr->nlev;
 		  density = den_config (xplasma, nconf);
 
 		  if (density > DENSITY_PHOT_MIN)
 		    {
-//OLD                 kappa_tot += x = sigma_phot_topbase (&phot_top[n], freq) * density;
 		      kappa_tot += x =
 			sigma_phot_topbase (x_top_ptr, freq) * density;
 
@@ -216,8 +213,6 @@ statement could be deleted entirely 060802 -- ksl */
 		  ft = x_ptr->freq_t;
 		  if (ft > freq)
 		    break;	// The remaining transitions will have higher thresholds
-//OLD             if (freq > ft)
-//OLD               {
 
 		  density =
 		    xplasma->density[nion] * ion[nion].g /
@@ -239,7 +234,6 @@ statement could be deleted entirely 060802 -- ksl */
 			  frac_ion[nion] += z;
 			  kappa_ion[nion] += x;
 			}
-//OLD                   }
 		    }
 		}
 	    }
@@ -325,6 +319,26 @@ statement could be deleted entirely 060802 -- ksl */
 	}
     }
 
+  /* Now for contribution to inner shell ionization estimators (SS, Dec 08) */
+  
+  for (n = 0; n < nauger; n++)
+    {
+      ft = augerion[n].freq_t;
+      //printf("Auger tests: %g %g %g\n", augerion[n].freq_t, freq, p->freq);
+      if (p->freq > ft)
+ 	{
+ 	  //	  printf("Adding a packet to AUGER via radiation %g \n", freq);
+	  
+ 	  weight_of_packet = w_ave;
+ 	  x = sigma_phot_verner(&augerion[n], freq); //this is the cross section
+ 	  y = weight_of_packet * x * ds;
+	  
+ 	  xplasma->gamma_inshl[n] += y / (freq * H * one->vol);
+ 	}
+    }
+  
+  
+  
   return (0);
 }
 
@@ -523,6 +537,52 @@ sigma_phot_topbase (x_ptr, freq)
 
   return (xsection);
 
+}
+
+/***********************************************************
+
+  Synopsis: 
+ 	double sigma_phot_verner(x_ptr,freq)	calculates the photionization crossection due to the transition 
+ 	associated with x_ptr at frequency freq
+ Arguments:
+ 
+ Returns:
+ 
+ Description:	 
+        Same as sigma_phot but using the older compitation from Verner that includes inner shells
+ 
+ Notes:
+ 
+ History:
+ 	08dec	SS	Coded (actually mostly copied from sigma_phot)
+ 
+**************************************************************/
+
+double
+sigma_phot_verner (x_ptr, freq)
+     struct innershell *x_ptr;
+     double freq;
+{
+  double ft;
+  double y;
+  double f1, f2, f3;
+  double xsection;
+  
+  ft = x_ptr->freq_t;		/* threshold frequency */
+  
+  if (ft < freq)
+    {
+      y = freq/x_ptr->E_0*HEV;
+      
+      f1 = ((y - 1.0) * (y - 1.0)) + (x_ptr->yw * x_ptr->yw);
+      f2 = pow (y, 0.5 * x_ptr->P - 5.5 - x_ptr->l);
+      f3 = pow (1.0 + sqrt (y / x_ptr->ya), -x_ptr->P);
+      xsection = x_ptr->Sigma * f1 * f2 * f3;	// the photoinization xsection
+      
+      return (xsection);
+    }
+  else
+    return (0.0);
 }
 
 

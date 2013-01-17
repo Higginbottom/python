@@ -47,6 +47,8 @@
 	02feb	ksl	Eliminated the MAC bits
 	04dec	ksl	Added a few lines to eliminate warnings when compiled
 			with -O3
+	090304	ksl	Added command line options to make it easier to do many spectra
+			at once
 
    *********************************************************************** */
 
@@ -60,7 +62,7 @@
 #include "python.h"
 
 
-#define LINELENGTH 132
+//OLD #define LINELENGTH 132
 #define NW		10000
 
 
@@ -119,20 +121,6 @@ main (argc, argv)
     }
 
 
-
-  if (argc == 1)
-    strcpy (pffile, "py_smooth.pf");
-  else
-    {
-      strcpy (pffile, argv[1]);
-      if (strstr (pffile, ".pf") == NULL)
-	strcat (pffile, ".pf");
-    }
-  printf ("Opening parameter file %s\n", pffile);
-
-  opar (pffile);
-
-
 /* Set initial values for everything */
   wavmin = 850;
   wavmax = 1850;
@@ -142,6 +130,66 @@ main (argc, argv)
   fwhm = 3;
   strcpy (cont_file, "mod.spec");
   strcpy (out_file, "mod.spec_smo");
+
+
+/* Now read the command line */
+
+  if (argc == 1)
+    strcpy (pffile, "py_smooth.pf");
+  else
+    {
+
+      for (i = 1; i < argc; i++)
+	{
+
+	  if (strcmp (argv[i], "-h") == 0)
+	    {
+	      printf ("Usage: py_smooth [-s spec]  [file.pf]\n");
+	      exit (0);
+	    }
+	  else if (strcmp (argv[i], "-s") == 0)
+	    {
+	      if (sscanf (argv[i + 1], "%s", cont_file) != 1)
+		{
+		  Error
+		    ("py_smooth: Expected source spectrum  after -s switch\n");
+		  exit (0);
+		}
+	      if (strcmp (out_file, "mod.spec_smo") == 0)
+		{
+		  strcpy (out_file, "construct");
+		}
+	      i++;
+
+	    }
+	  else if (strcmp (argv[i], "-o") == 0)
+	    {
+	      if (sscanf (argv[i + 1], "%s", out_file) != 1)
+		{
+		  Error
+		    ("py_smooth: Expected output file  after -o switch\n");
+		  exit (0);
+		}
+	      i++;
+
+	    }
+	  else if (strncmp (argv[i], "-", 1) == 0)
+	    {
+	      Error ("python: Unknown switch %s\n", argv[i]);
+	      exit (0);
+	    }
+
+
+
+	}
+      /* The last argument is always the pf file */
+      strcpy (pffile, argv[argc - 1]);
+      if (strstr (pffile, ".pf") == NULL)
+	strcat (pffile, ".pf");
+    }
+  printf ("Opening parameter file %s\n", pffile);
+
+  opar (pffile);
 
 
 /* Now read the input data */
@@ -174,14 +222,29 @@ main (argc, argv)
   printf ("Number of points in output spectrum %d\n", npts);
 
 
-  rdstr ("cont.file", cont_file);
+  if (strcmp (cont_file, "mod.spec") == 0)
+    {
+      rdstr ("cont.file", cont_file);
+    }
+  else
+    {
+      Log ("Using spectrum %s\n", cont_file);
+    }
 
-  strcpy (out_file, "");
-  get_root (out_file, cont_file);
-  strcat (out_file, ".spec_smo");
 
-
-  rdstr ("out.file", out_file);
+  if (strcmp (out_file, "construct") == 0)
+    {
+      strcpy (out_file, "");
+      strcpy (out_file, cont_file);
+      strcat (out_file, "_smo");
+    }
+  else if (strcmp(out_file,"mod.spec_smo")==0)
+    {
+      strcpy (out_file, "");
+      get_root (out_file, cont_file);
+      strcat (out_file, ".spec_smo");
+      rdstr ("out.file", out_file);
+    }
 
 
   if (strncmp (root, "mod", 3) == 0)
@@ -280,10 +343,10 @@ main (argc, argv)
 
   for (i = 0; i < npts; i++)
     {
-      fprintf (fout, "%e %e", spec_out[i].freq, spec_out[i].wav);
+      fprintf (fout, "%e %8.3f", spec_out[i].freq, spec_out[i].wav);
       for (nn = 0; nn < nspec; nn++)
 	{
-	  fprintf (fout, " %e", spec_out[i].x[nn]);
+	  fprintf (fout, " %8.2e", spec_out[i].x[nn]);
 	}
       fprintf (fout, "\n");
 

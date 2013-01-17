@@ -73,9 +73,8 @@ double f2_old = 0;
 int iwind_old = 0;
 
 int
-define_phot (p, w, f1, f2, nphot_tot, ioniz_or_final, iwind, freq_sampling)
+define_phot (p, f1, f2, nphot_tot, ioniz_or_final, iwind, freq_sampling)
      PhotPtr p;
-     WindPtr w;
      double f1, f2;
      int nphot_tot;
      int ioniz_or_final;
@@ -87,32 +86,30 @@ define_phot (p, w, f1, f2, nphot_tot, ioniz_or_final, iwind, freq_sampling)
   double ftot;
   int n;
   int iphot_start;
-  double populate_bands ();
-  int xdefine_phot (), xmake_phot (), set_bands ();
 
   if (freq_sampling == 0)
     {				/* Original approach, uniform sampling of entire wavelenght interval, 
 				   used for detailed spectrum calculaation */
       if (f1 != f1_old || f2 != f2_old || iwind != iwind_old)
 	{			// The reinitialization is required
-	  xdefine_phot (w, f1, f2, ioniz_or_final, iwind);
+	  xdefine_phot (f1, f2, ioniz_or_final, iwind);
 	}
       /* The weight of each photon is designed so that all of the photons add up to the
          luminosity of the photosphere.  This implies that photons must be generated in such
          a way that it mimics the energy distribution of the star. */
 
       geo.weight = (weight) = (geo.f_tot) / (nphot_tot);
-      xmake_phot (p, w, f1, f2, ioniz_or_final, iwind, weight, 0, NPHOT);
+      xmake_phot (p, f1, f2, ioniz_or_final, iwind, weight, 0, NPHOT);
     }
   else
     {				/* Use banding, create photons with different weithst in different wavelength
 				   bands.  this is used for the for ionization calculation where one wants to assure
 				   that you have "enough" photons at high energy */
-      if (xband.nbands == 0)
-	{
-	  init_bands (0.0, f1, f2, 2, &xband);
-	}
-      ftot = populate_bands (w, f1, f2, ioniz_or_final, iwind, &xband);
+//OLD      if (xband.nbands == 0)
+//OLD	{
+//OLD	  init_bands (0.0, f1, f2, 2, &xband);
+//OLD	}
+      ftot = populate_bands (f1, f2, ioniz_or_final, iwind, &xband);
 
 // Now generate the photons
       iphot_start = 0;
@@ -123,7 +120,7 @@ define_phot (p, w, f1, f2, nphot_tot, ioniz_or_final, iwind, freq_sampling)
 	    {
 
 /*Reinitialization is required here always because we are changing the frequencies around all the time */
-	      xdefine_phot (w, xband.f1[n], xband.f2[n], ioniz_or_final,
+	      xdefine_phot (xband.f1[n], xband.f2[n], ioniz_or_final,
 			    iwind);
 
 	      /* The weight of each photon is designed so that all of the photons add up to the
@@ -136,7 +133,7 @@ define_phot (p, w, f1, f2, nphot_tot, ioniz_or_final, iwind, freq_sampling)
 		natural_weight * xband.nat_fraction[n] /
 		xband.used_fraction[n];
 
-	      xmake_phot (p, w, xband.f1[n], xband.f2[n],
+	      xmake_phot (p, xband.f1[n], xband.f2[n],
 			  ioniz_or_final, iwind, weight, iphot_start,
 			  xband.nphot[n]);
 
@@ -172,8 +169,7 @@ History:
 
 
 double
-populate_bands (w, f1, f2, ioniz_or_final, iwind, band)
-     WindPtr w;
+populate_bands (f1, f2, ioniz_or_final, iwind, band)
      double f1, f2;
      int ioniz_or_final;
      int iwind;
@@ -191,7 +187,7 @@ populate_bands (w, f1, f2, ioniz_or_final, iwind, band)
     {
       if (band->f1[n] < band->f2[n])
 	{
-	  xdefine_phot (w, band->f1[n], band->f2[n], ioniz_or_final, iwind);
+	  xdefine_phot (band->f1[n], band->f2[n], ioniz_or_final, iwind);
 	  ftot += band->flux[n] = geo.f_tot;
 	}
       else
@@ -270,15 +266,12 @@ History:
 
 
 int
-xdefine_phot (w, f1, f2, ioniz_or_final, iwind)
-     WindPtr w;
+xdefine_phot (f1, f2, ioniz_or_final, iwind)
      double f1, f2;
      int ioniz_or_final;
      int iwind;
 
 {
-  double star_init (), disk_init (), bl_init (), wind_luminosity ();
-  double get_kpkt_f (), get_matom_f ();
 
   /* First determine if you need to reinitialize because the frequency boundaries are 
      different than previously */
@@ -315,7 +308,7 @@ iwind = -1 	Don't generate any wind photons at all
     geo.f_wind = geo.lum_wind = 0.0;
   if (iwind == 1 || (iwind == 0))
     {				/* Then find the luminosity and flux of the wind */
-      geo.lum_wind = wind_luminosity (0.0, INFINITY);
+      geo.lum_wind = wind_luminosity (0.0, VERY_BIG);
       xxxpdfwind = 1;		// Turn on the portion of the line luminosity routine which creates pdfs
       geo.f_wind = wind_luminosity (f1, f2);
       xxxpdfwind = 0;		// Turn off the portion of the line luminosity routine which creates pdfs
@@ -329,12 +322,12 @@ iwind = -1 	Don't generate any wind photons at all
       //spectral band of interest.
     }
 
-  Log
-    ("!!define_phot: lum_star %8.2e lum_disk %8.2e lum_bl %8.2e lum_wind %8.2e\n!!               f_star %8.2e   f_disk %8.2e   f_bl %8.2e   f_wind %8.2e   f_matom %8.2e   f_kpkt %8.2e \n",
+  Log_silent
+    ("define_phot: lum_star %8.2e lum_disk %8.2e lum_bl %8.2e lum_wind %8.2e\n!!               f_star %8.2e   f_disk %8.2e   f_bl %8.2e   f_wind %8.2e   f_matom %8.2e   f_kpkt %8.2e \n",
      geo.lum_star, geo.lum_disk, geo.lum_bl, geo.lum_wind, geo.f_star,
      geo.f_disk, geo.f_bl, geo.f_wind, geo.f_matom, geo.f_kpkt);
 
-  Log ("!!define_phot: wind  ff %8.2e       fb %8.2e   lines %8.2e \n",
+  Log_silent ("define_phot: wind  ff %8.2e       fb %8.2e   lines %8.2e \n",
        geo.lum_ff, geo.lum_fb, geo.lum_lines);
 
   geo.f_tot =
@@ -381,10 +374,9 @@ History:
 
 
 int
-xmake_phot (p, w, f1, f2, ioniz_or_final, iwind, weight, iphot_start,
+xmake_phot (p, f1, f2, ioniz_or_final, iwind, weight, iphot_start,
 	    nphotons)
      PhotPtr p;
-     WindPtr w;
      double f1, f2;
      int ioniz_or_final;
      int iwind;
@@ -541,7 +533,7 @@ stellar photons */
 	    }
 	  else
 	    {
-	      photo_gen_matom (p, w, weight, iphot_start, nphot);
+	      photo_gen_matom (p, weight, iphot_start, nphot);
 	    }
 	}
       iphot_start += nphot;
@@ -635,6 +627,8 @@ Description:
 Notes:
 
 History:
+	080518	ksl	60a - Modified to use SPECTYPE_BB, SPECTYPE_UNIFORM, and 
+			SPECTYPE_NONE in photon gen instead of hardcoded values
 
 **************************************************************/
 
@@ -664,7 +658,7 @@ photo_gen_star (p, r, t, weight, f1, f2, spectype, istart, nphot)
 	("photo_gen_star: Cannot generate photons if freqmax %g < freqmin %g\n",
 	 f2, f1);
     }
-  Log ("photo_gen_star creates nphot %5d photons from %5d to %5d \n", nphot,
+  Log_silent ("photo_gen_star creates nphot %5d photons from %5d to %5d \n", nphot,
        istart, iend);
   freqmin = f1;
   freqmax = f2;
@@ -680,11 +674,11 @@ photo_gen_star (p, r, t, weight, f1, f2, spectype, istart, nphot)
       p[i].nres = -1;		// It's a continuum photon
       p[i].nnscat = 1;
 
-      if (spectype == -1)
+      if (spectype == SPECTYPE_BB)
 	{
 	  p[i].freq = planck (t, freqmin, freqmax);
 	}
-      else if (spectype == -2)
+      else if (spectype == SPECTYPE_UNIFORM)
 	{			/* Kurucz spectrum */
 	  /*Produce a uniform distribution of frequencies */
 	  p[i].freq = freqmin + rand () * dfreq;
@@ -759,6 +753,9 @@ Notes:
 	The positional parameters x and v are at the edge of the ring,
 	but many of the other parameters are at the mid point.
 
+	Bug 	disk_init	This routine gets similar information throuh geo and through the call
+	Bug	........	Need to adopt a consistent philosophy, and come in through one or the other
+
 History:
  	97jan	ksl	Coded and debugged as part of Python effort. 
  	97oct8	ksl	Added velocity to the disk structure calculation
@@ -809,7 +806,7 @@ disk_init (rmin, rmax, m, mdot, freqmin, freqmax, ioniz_or_final, ftot)
 
 //?? Erorr -- ksl -- problem in new schema when we put energy bands to arbitrary high freqencies
 //>? Error -- Need to do something like pdf where can force some boundaries at parts of disk
-//   to prevent his problem
+//   to prevent this problem
 
   /* Now compute the apparent luminosity of the disk */
   ltot = 0;
@@ -854,7 +851,7 @@ extra factor of two arises because the disk radiates from both of its sides.  */
   /* If *ftot is 0 in this energy range then all the photons come from the star */
   if ((*ftot) < EPSILON)
     {
-      Log
+      Log_silent
 	("disk_init: Warning! Disk does not radiate enough to matter in this wavelength range\n");
       return (ltot);
     }
@@ -862,7 +859,6 @@ extra factor of two arises because the disk radiates from both of its sides.  */
   /* Now go back and find the boundaries of the each radial ring */
 
   disk.r[0] = rmin;
-  //Next line added SS Nov 04
   disk.v[0] = sqrt (G * geo.mstar / rmin);
   nrings = 1;
   f = 0;
@@ -909,17 +905,29 @@ extra factor of two arises because the disk radiates from both of its sides.  */
       exit (0);
     }
 
+
   disk.r[NRINGS - 1] = rmax;
   disk.v[NRINGS - 1] = sqrt (G * geo.mstar / rmax);
-
 
   for (nrings = 0; nrings < NRINGS - 1; nrings++)
     {
       r = 0.5 * (disk.r[nrings + 1] + disk.r[nrings]);
       disk.t[nrings] = teff (tref, r / rmin);
       disk.g[nrings] = geff (gref, r / rmin);
-      disk.nphot[nrings] = disk.nhit[nrings] = 0;
     }
+
+  /* Wrap up by zerrowing other parameters */
+  for (nrings = 0; nrings < NRINGS; nrings++)
+    {
+      disk.nphot[nrings] = 0;
+      disk.nhit[nrings] = 0;
+      disk.heat[nrings] = 0;
+      disk.ave_freq[nrings] = 0;
+      disk.w[nrings] = 0;
+      disk.t_hit[nrings] = 0;
+    }
+
+
 
   geo.lum_disk = ltot;
   return (ltot);
@@ -963,6 +971,8 @@ History:
 			not made modifications to the direction in which photons
 			are emitted though this could be done.
 	04dec   ksl     54d -- Minor mod to make more parallel to photo_gen_star,
+	080518	ksl	60a - Modified to use SPECTYPE_BB, SPECTYPE_UNIFORM, and 
+			SPECTYPE_NONE in photon gen instead of hardcoded values
 
 **************************************************************/
 
@@ -991,7 +1001,7 @@ photo_gen_disk (p, weight, f1, f2, spectype, istart, nphot)
       Error ("photo_gen_disk: Can't do anything if f2 %g < f1 %g\n", f2, f1);
       exit (0);
     }
-  Log
+  Log_silent
     ("photo_gen_disk creates nphot %5d photons from %5d to %5d \n",
      nphot, istart, iend);
   freqmin = f1;
@@ -1062,9 +1072,6 @@ photo_gen_disk (p, weight, f1, f2, spectype, istart, nphot)
 	  north[0] = (-cos (phi) * sin (theta));
 	  north[1] = (-sin (phi) * sin (theta));
 	  north[2] = cos (theta);
-//        sane_check(north[0]);
-//        sane_check(north[1]);
-//        sane_check(north[2]);
 
 	}
 
@@ -1078,12 +1085,17 @@ photo_gen_disk (p, weight, f1, f2, spectype, istart, nphot)
 	  north[2] *= -1;
 	}
       randvcos (p[i].lmn, north);
-      if (spectype == -1)
+
+      /* Note that the next bit of code is almost duplicated in photo_gen_star.  It's
+       * possilbe this should be collected into a single routine   080518 -ksl
+       */
+
+      if (spectype == SPECTYPE_BB)
 	{
 	  t = disk.t[nring];
 	  p[i].freq = planck (t, freqmin, freqmax);
 	}
-      else if (spectype == -2)
+      else if (spectype == SPECTYPE_UNIFORM)
 	{			//Produce a uniform distribution of frequencies
 
 	  p[i].freq = freqmin + rand () * dfreq;
@@ -1167,6 +1179,9 @@ Synopsis: bl_init (lum_bl, t_bl, freqmin, freqmax, ioniz_or_final, f)
 
 
 Returns:
+
+	The only thing that is actually calculated here is f, the luminosity
+	within the frequency range that is specified.
  
  
 Description:	
@@ -1178,6 +1193,10 @@ Description:
 Notes:
 	Error ?? At present bl_init assumes a BB regardless of the spectrum.
 	This is not really correct.
+
+	0703 - ksl - This is rather an odd little routine.  As noted all that is 
+	calculated is f.  ioniz_or_final is not used, and lum_bl which
+	is returned is only the luminosity that was passed.
 
 History:
 

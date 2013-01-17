@@ -244,6 +244,8 @@ spherical_wind_complete (w)
 
  History:
  	05apr	ksl	55d: Adapted from rtheta.c
+	06nov	ksl	58b: Minor modification to use W_ALL_INWIND
+			etc., instead of hardcoded values
  
 **************************************************************/
 #define RESOLUTION   100
@@ -313,14 +315,14 @@ spherical_volumes (w)
 	  }
 	if (jj == 0)
 	  {
-	    w[n].inwind = -1;	// The cell is not in the wind
+	    w[n].inwind = W_NOT_INWIND;	// The cell is not in the wind
 	    w[n].vol = 0.0;
 	  }
 	else if (jj == kk)
-	  w[n].inwind = 0;	// The cell is completely in the wind
+	  w[n].inwind = W_ALL_INWIND;	// The cell is completely in the wind
 	else
 	  {
-	    w[n].inwind = 1;	//The cell is partially in the wind
+	    w[n].inwind = W_PART_INWIND;	//The cell is partially in the wind
 	    w[n].vol *= fraction;
 	  }
 

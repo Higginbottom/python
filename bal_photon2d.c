@@ -200,41 +200,8 @@ translate_in_wind (w, p, tau_scat, tau, nres)
 
   wind_n_to_ij (n, &ix, &iz);	/*Convert the index n to two dimensions */
 
-//      smax=ds_to_wind(p);
   smax = geo.pl_vol - p->x[2];
 
-//      /* Set up the quadratic equations in the radial direction */
-
-//      a=(p->lmn[0]*p->lmn[0]+p->lmn[1]*p->lmn[1]);
-  //      b=2.*(p->lmn[0]*p->x[0]+p->lmn[1]*p->x[1]);
-  //      c=p->x[0]*p->x[0]+p->x[1]*p->x[1];
-
-//      iroot=quadratic(a,b,c-wind_x[ix]*wind_x[ix],root);  /* iroot will be the smallest positive root
-  //           if one exists or negative otherwise*/
-
-//      if(iroot>=0 && root[iroot]<smax) smax=root[iroot];
-
-//      iroot=quadratic(a,b,c-wind_x[ix+1]*wind_x[ix+1],root);
-
-//      if(iroot>=0 && root[iroot]<smax) smax=root[iroot];
-
-  /* At this point we have found how far the photon can travel in rho in its
-     current direction.  Now we must worry about motion in the z direction  */
-
-//      z1=wind_z[iz];
-  //      z2=wind_z[iz+1];
-  //      if(p->x[2]<0) {  /* We need to worry about which side of the plane the photon is on! */
-  //              z1*=(-1.);
-  //              z2*=(-1.);
-  //      }
-
-//      if(p->lmn[2]!=0.0){
-  //              q=(z1-p->x[2])/p->lmn[2];
-  //              if(q>0 && q < smax) smax=q;
-  //              q=(z2-p->x[2])/p->lmn[2];
-  //              if(q>0 && q < smax) smax=q;
-
-//      }
 
   /* At this point we now know how far the photon can travel in it's current
      grid cell */
@@ -250,11 +217,12 @@ translate_in_wind (w, p, tau_scat, tau, nres)
   stuff_phot (p, &phot);
   move_phot (&phot, smax);
 
-  ds_current = calculate_ds (w, p, &phot, tau_scat, tau, nres, smax, &istat);
+//OLD  ds_current = calculate_ds (w, p, &phot, tau_scat, tau, nres, smax, &istat);
+  ds_current = calculate_ds (w, p, tau_scat, tau, nres, smax, &istat);
 
 /* OK now we increment the radiation field in the cell, translate the photon and wrap things up */
 
-  radiation (w, p, ds_current);
+  radiation (p, ds_current);
 
   move_phot (p, ds_current);
 

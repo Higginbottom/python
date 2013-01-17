@@ -63,7 +63,7 @@ cylind_ds_in_cell (p)
 
   wind_n_to_ij (n, &ix, &iz);	/*Convert the index n to two dimensions */
 
-  smax = INFINITY;		//initialize smax to a large number
+  smax = VERY_BIG;		//initialize smax to a large number
 
   /* Set up the quadratic equations in the radial rho direction */
 
@@ -271,10 +271,17 @@ cylind_wind_complete (w)
 	05apr	ksl	55d -- Modified to include the determination of whether
 			a cell was completely in the wind or not.  This
 			functionality had been in define_wind.
+	06nov	ksl	58b: Minor modification to use W_ALL_INWIND, etc.
+			instead of hardcoded values
+	09mar	ksl	68c: Modified so that integration is only carried
+			out when the cell is partially in the wind as
+			evidenced by the fact that only some of the
+			corners of the cell are in the wind.  The intent
+			is to avoid wasting time
  
 **************************************************************/
 
-#define RESOLUTION   100
+#define RESOLUTION   1000
 
 
 int
@@ -289,6 +296,7 @@ cylind_volumes (w)
   double rmax, rmin;
   double zmin, zmax;
   double dr, dz, x[3];
+  int n_inwind;
 
 
   for (i = 0; i < NDIM; i++)
@@ -296,6 +304,12 @@ cylind_volumes (w)
       for (j = 0; j < MDIM; j++)
 	{
 	  wind_ij_to_n (i, j, &n);
+	  n_inwind = check_corners_inwind (n);
+
+	  if (n == 835)
+	    {
+	      Log ("cyl: n  %d n_inwind %d\n", n, n_inwind);
+	    }
 
 	  rmin = wind_x[i];
 	  rmax = wind_x[i + 1];
@@ -305,18 +319,31 @@ cylind_volumes (w)
 	  //leading factor of 2 added to allow for volume above and below plane (SSMay04)
 	  w[n].vol = 2 * PI * (rmax * rmax - rmin * rmin) * (zmax - zmin);
 
-	  if (i == NDIM - 1 || j == MDIM - 1)
+n_inwind=cylind_is_cell_in_wind (n);
+
+	  if (n_inwind == W_NOT_INWIND)
 	    {
 	      fraction = 0.0;	/* Force outside edge volues to zero */
 	      jj = 0;
 	      kk = RESOLUTION * RESOLUTION;
 	    }
-	  else if (i == NDIM - 2 || j == MDIM - 2)
+	  else if (n_inwind == W_ALL_INWIND)
 	    {
-	      fraction = 0.0;	/* Force outside edge volues to zero */
-	      jj = 0;
-	      kk = RESOLUTION * RESOLUTION;
+	      fraction = 1.0;	/* Force outside edge volues to zero */
+	      jj = kk = RESOLUTION * RESOLUTION;
 	    }
+//Old68c          if (i == NDIM - 1 || j == MDIM - 1)
+//Old68c            {
+//Old68c              fraction = 0.0;   /* Force outside edge volues to zero */
+//Old68c              jj = 0;
+//Old68c              kk = RESOLUTION * RESOLUTION;
+//Old68c            }
+//Old68c          else if (i == NDIM - 2 || j == MDIM - 2)
+//Old68c            {
+//Old68c              fraction = 0.0;   /* Force outside edge volues to zero */
+//Old68c              jj = 0;
+//Old68c              kk = RESOLUTION * RESOLUTION;
+//Old68c            }
 	  else
 	    {			/* Determine whether the grid cell is in the wind */
 	      num = denom = 0;
@@ -341,20 +368,21 @@ cylind_volumes (w)
 		}
 	      fraction = num / denom;
 
+
 	    }
 	  /* OK now make the final assignement of nwind and fix the volumes */
 	  if (jj == 0)
 	    {
-	      w[n].inwind = -1;	// The cell is not in the wind
+	      w[n].inwind = W_NOT_INWIND;	// The cell is not in the wind
 	      w[n].vol = 0.0;
 	    }
 	  else if (jj == kk)
 	    {
-	      w[n].inwind = 0;	// All of cell is inwind
+	      w[n].inwind = W_ALL_INWIND;	// All of cell is inwind
 	    }
-	  else			// Some of cell is inwind
+	  else
 	    {
-	      w[n].inwind = 1;
+	      w[n].inwind = W_PART_INWIND;	// Some of cell is inwind
 	      w[n].vol *= fraction;
 	    }
 	}
@@ -534,7 +562,6 @@ cylind_extend_density (w)
 {
 
   int i, j, n, m;
-//OLD int k;
 
   /* Now we need to updated the densities immediately outside the wind so that the density interpolation in resonate will work.
      In this case all we have done is to copy the densities from the cell which is just in the wind (as one goes outward) to the
@@ -550,8 +577,6 @@ cylind_extend_density (w)
      *
    */
 
-  //!! MDIM dependence remains here 
-  //
   for (i = 0; i < NDIM - 1; i++)
     {
       for (j = 0; j < MDIM - 1; j++)
@@ -565,8 +590,6 @@ cylind_extend_density (w)
 	      if (w[m].vol > 0)
 		{		//Then the windcell in the +x direction is in the wind and
 		  // we can copy the densities to the grid cell n
-//OLD             for (k = 0; k < NIONS; k++)
-//OLD               w[n].density[k] = w[m].density[k];
 		  w[n].nplasma = w[m].nplasma;
 
 		}
@@ -576,8 +599,6 @@ cylind_extend_density (w)
 		  if (w[m].vol > 0)
 		    {		//Then the grid cell in the -x direction is in the wind and
 		      // we can copy the densities to the grid cell n
-//OLD                 for (k = 0; k < NIONS; k++)
-//OLD                   w[n].density[k] = w[m].density[k];
 		      w[n].nplasma = w[m].nplasma;
 
 		    }
@@ -587,5 +608,100 @@ cylind_extend_density (w)
     }
 
   return (0);
+
+}
+
+/*
+
+cylind_is_cell_in_wind (n)
+
+This rotine performes is a robust check of whether a cell is in the wind or not.  
+It was created to speed up the evaluation of the volumes for the wind.  It
+checks each of the four boundaries of the wind to see whether any portions
+of these are in the wind
+
+
+*/
+
+int
+cylind_is_cell_in_wind (n)
+     int n;
+{
+  int i, j;
+  double r,z,dr,dz;
+  double rmin, rmax, zmin, zmax;
+  double x[3];
+    /* First check if the cell is in the boundary */
+    wind_n_to_ij (n, &i, &j);
+
+  if (i >= (NDIM - 2) && j >= (MDIM - 2))
+    {
+      return (W_NOT_INWIND);
+    }
+
+/* Assume that if all four corners are in the wind that the
+entire cell is in the wind */
+
+  if (check_corners_inwind (n) == 4)
+    {
+      return (W_ALL_INWIND);
+    }
+
+/* So at this point, we have dealt with the easy cases */
+
+
+  rmin = wind_x[i];
+  rmax = wind_x[i + 1];
+  zmin = wind_z[j];
+  zmax = wind_z[j + 1];
+
+  dr = (rmax - rmin) / RESOLUTION;
+  dz = (zmax - zmin) / RESOLUTION;
+
+// Check inner and outer boundary in the z direction
+
+  x[1] = 0;
+
+  for (z = zmin + dz / 2; z < zmax; z += dz)
+    {
+      x[2] = z;
+
+      x[0] = rmin;
+      if (where_in_wind (x) == 0)
+	{
+	  return (W_PART_INWIND);
+	}
+
+      x[0] = rmax;
+      if (where_in_wind (x) == 0)
+	{
+	  return (W_PART_INWIND);
+	}
+    }
+
+
+// Check inner and outer boundary in the z direction
+
+  for (r = rmin + dr / 2; r < rmax; r += dr)
+    {
+
+      x[0] = r;
+
+      x[2] = zmin;
+      if (where_in_wind (x) == 0)
+	{
+	  return (W_PART_INWIND);
+	}
+
+      x[2] = zmax;
+      if (where_in_wind (x) == 0)
+	{
+	  return (W_PART_INWIND);
+	}
+    }
+
+ /* If one has reached this point, then this wind cell is not in the wind */
+      return (W_NOT_INWIND);
+
 
 }

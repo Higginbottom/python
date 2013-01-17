@@ -78,7 +78,7 @@ cylvar_ds_in_cell (p)
 
   wind_n_to_ij (n, &ix, &iz);	/*Convert the index n to two dimensions */
 
-  smax = INFINITY;		//initialize smax to a large number
+  smax = VERY_BIG;		//initialize smax to a large number
 
   /* Set up the quadratic equations in the radial rho direction */
 
@@ -304,12 +304,6 @@ cylvar_wind_complete (w)
 	  dz = w[n + MDIM].x[2] - w[n].x[2];	// change in z for one step in rho
 	  drho = w[n + MDIM].x[0] - w[n].x[0];
 
-//OLD     if (dz != 0)
-//OLD       w[n].wcone.drdz = drho / dz;        //old definition
-//OLD     else
-//OLD       w[n].wcone.drdz = INFINITY;
-
-//OLD     w[n].wcone.r_zero = w[n].x[0] - w[n].x[2] / w[n].wcone.drdz;  //old definition
 
 	  if (drho > 0)
 	    w[n].wcone.dzdr = dz / drho;	//new definition
@@ -373,10 +367,12 @@ cylvar_wind_complete (w)
 	05may	ksl	56a -- began modifications starting with same 
 			routine in cylindrical
 	05jul	ksl	56d -- Made the modifications needed.
+	06nov	kls	58b: Minor modifications to use W_ALL_INWIND, etc.
+			instead of hardcoded values
  
 **************************************************************/
 
-#define RESOLUTION   100
+#define RESOLUTION   1000
 
 
 int
@@ -398,7 +394,7 @@ cylvar_volumes (w)
   for (n = 0; n < NDIM2; n++)
     {
       w[n].vol = 0;
-      w[n].inwind = -1;
+      w[n].inwind = W_NOT_INWIND;
     }
 
   for (i = 0; i < NDIM - 1; i++)
@@ -472,15 +468,15 @@ cylvar_volumes (w)
 	  /* OK now make the final assignement of nwind and fix the volumes */
 	  if (jj == 0)
 	    {
-	      w[n].inwind = -1;	// The cell is not in the wind
+	      w[n].inwind = W_NOT_INWIND;	// The cell is not in the wind
 	    }
 	  else if (jj == kk)
 	    {
-	      w[n].inwind = 0;	// All of cell is inwind
+	      w[n].inwind = W_ALL_INWIND;	// All of cell is inwind
 	    }
-	  else			// Some of cell is inwind
+	  else
 	    {
-	      w[n].inwind = 1;
+	      w[n].inwind = W_PART_INWIND;	// Some of cell is inwind
 	    }
 	}
     }

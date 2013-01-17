@@ -29,6 +29,15 @@ History:
 			to "Legacy code" Legacy1.c
 	01oct	ksl	Add calls to levels for calculation of level populations.  The
 			calls are currently hardwired.
+	08aug	ksl	60b	Evidently ksl modified the calls to ion_abundances
+				previously, but leaving w as the variable was
+				confusing.  Fixed this
+	080808	ksl	62  - Removed option 4 for a partial detailed balance
+			which seems totally obsolete at this point as
+			we have not followed this up.  This was part of
+			the cleanup of the ionizaton balance routines
+			Also removed option 5, as this was not supported
+			later in the program
 **************************************************************/
 
 #include <stdio.h>
@@ -36,15 +45,13 @@ History:
 #include <math.h>
 
 #include "atomic.h"
-
 #include "python.h"
 
 int
-ion_abundances (w, mode)
-     PlasmaPtr w;
+ion_abundances (xplasma, mode)
+     PlasmaPtr xplasma;
      int mode;
 {
-  double nh, ne;
   int ireturn;
 
 
@@ -53,52 +60,42 @@ ion_abundances (w, mode)
 /*on-the-spot approximation using existing t_e.   This routine does not attempt 
  * to match heating and cooling in the wind element! */
 
-      if ((ireturn = nebular_concentrations (w, 2)))
+      if ((ireturn = nebular_concentrations (xplasma, 2)))
 	{
 	  Error
 	    ("ionization_abundances: nebular_concentrations failed to converge\n");
 	  Error
 	    ("ionization_abundances: j %8.2e t_e %8.2e t_r %8.2e w %8.2e\n",
-	     w->j, w->t_e, w->w);
+	     xplasma->j, xplasma->t_e, xplasma->w);
 	}
     }
   else if (mode == 1)
     {
-      // LTE using t_r
+      // LTE using t_r  (ksl - checked - 080808
 
-      ireturn = nebular_concentrations (w, 1);
+      ireturn = nebular_concentrations (xplasma, 1);
     }
   else if (mode == 2)
     {				//  Hardwired concentrations
 
-//?? ERROR -- For consistence fix_concentrations calls should becomve fix_concentrations(w), not as currently
-//?? Error --  Also, when this is done, levels can be incorporated there 
-      nh = w->rho * rho2nh;
-      ireturn = fix_concentrations (nh, w->density, &ne);
-      w->ne = ne;
-      do_partitions (w, 0);
-      levels (w, 0);		// levels from reduced BB
+      ireturn = fix_concentrations (xplasma, 0);
     }
-  else if (mode == 3 || mode == 5)
+  else if (mode == 3)
     {
 /* On the spot, with one_shot at updating t_e before calculating densities
 */
 
 /* Shift values to old */
-      w->dt_e_old = w->dt_e;
-      w->dt_e = w->t_e - w->t_e_old;	//Must store this before others
-      w->t_e_old = w->t_e;
-      w->t_r_old = w->t_r;
-      w->lum_rad_old = w->lum_rad;
+      xplasma->dt_e_old = xplasma->dt_e;
+      xplasma->dt_e = xplasma->t_e - xplasma->t_e_old;	//Must store this before others
+      xplasma->t_e_old = xplasma->t_e;
+      xplasma->t_r_old = xplasma->t_r;
+      xplasma->lum_rad_old = xplasma->lum_rad;
 
-      ireturn = one_shot (w, mode);
+      ireturn = one_shot (xplasma, mode);
 
 /* Convergence check */
-      convergence (w);
-    }
-  else if (mode == 4)
-    {				// Test method with detailed balance partially included
-      ireturn = nebular_concentrations (w, 4);
+      convergence (xplasma);
     }
   else
     {
@@ -108,6 +105,17 @@ ion_abundances (w, mode)
       exit (0);
     }
 
+   /* If we want the Auger effect deal with it now. Initially, this is
+      put in here, right at the end of the ionization calculation -
+      the assumption is that the Auger effect is only for making minor
+      ions so that the ionization balance of the other ions is not
+      affected in an important way. */
+ 
+   if (geo.auger_ionization == 1)
+     {
+       auger_ionization(xplasma);
+     }
+ 
 
   return (ireturn);
 
@@ -232,77 +240,13 @@ check_convergence ()
   xconverge = ((double) nconverge) / ntot;
   xconverging = ((double) nconverging) / ntot;
   Log
-    ("!!Check_converging: %d (%.3f) converged and %d (%.3f) converging of %d cells\n",
+    ("!!Check_converging: %4d (%.3f) converged and %4d (%.3f) converging of %d cells\n",
+     nconverge, xconverge, nconverging, xconverging, ntot);
+  Log
+    ("Summary  convergence %4d %.3f  %4d  %.3f  %d  #  n_converged fraction_converged  converging fraction_converging total cells\n",
      nconverge, xconverge, nconverging, xconverging, ntot);
   return (0);
 }
-
-/***********************************************************
-                                       Space Telescope Science Institute
-
- Synopsis:
-	ionization_on_the_spot(w) calculates densities of ions in a single element of the wind
-	according to equation 11 of Lucy & Mazzali.
-	
- Arguments:		
-	WindPtr w;
-
-Returns:
- 
-Description:
-	ionization_on_the_spot uses values of t_e, t_r, etc in the windptr w to determine what
-	the ion concentrations ought to be.	
-	
-Notes:
-	This routine does not attempt to match heating and cooling in the wind element!
-
-	In Lucy and Mazzali, they suggest setting t_e to 0.9 t_r as an approximation.  This is
-	no longer enforeced.  Also, at one point CK used Cloudy in an attempt to calculate
-	a relationship between w,ne,t_r, etc. His parameterization was:
-	
-	w->t_e=3.409*pow(trad,0.9292)*pow(nh,-0.01992)*pow(w->w,0.1317);
-	but that has been removed.
-
-History:
-	97	ksl	Coded as part of python effort
-
-**************************************************************/
-// ??? ionization_on_the_spot does nothing hardly Delete ??? ksl 01dec
-//int
-//ionization_on_the_spot (w)
-//     WindPtr w;
-
-//{
-//  double nh;
-//  int nebular_concentrations ();
-
-//  nh = w->rho * rho2nh;
-
-
-//  if (w->t_r > 10.)
-//    {                         /* Then modify to an on the spot approx */
-//      if (nebular_concentrations (w, 2))
-//      {
-//        Error
-//          ("ionization_on_the_spot: nebular_concentrations failed to converge\n");
-//        Error
-//          ("ionization_on_the_spot: j %8.2e t_e %8.2e t_r %8.2e w %8.2e\n",
-//           w->j, w->t_e, w->w);
-//      }
- //     if (w->ne < 0 || INFINITY < w->ne)
-//      {
-//        Error ("ionization_on_the_spot: ne = %8.2e out of range\n", w->ne);
-//      }
-//    }
-//  else
-//    {
-//      Error ("ionization_on_the_spot: t_r exceptionally small %g\n", w->t_r);
-//      mytrap ();
-//      exit (0);
-//    }
-
-//  return (0);
-//}
 
 /***********************************************************
                                        Space Telescope Science Institute
@@ -345,7 +289,6 @@ one_shot (xplasma, mode)
   double gain;
 
 
-//OLD?  wxyz = w;   // Elimated this as it did not seem used anywhere 
 
 
   gain = xplasma->gain;
@@ -385,7 +328,7 @@ meaning in nebular concentrations.
 	    ("ionization_on_the_spot: j %8.2e t_e %8.2e t_r %8.2e w %8.2e\n",
 	     xplasma->j, xplasma->t_e, xplasma->w);
 	}
-      if (xplasma->ne < 0 || INFINITY < xplasma->ne)
+      if (xplasma->ne < 0 || VERY_BIG < xplasma->ne)
 	{
 	  Error ("ionization_on_the_spot: ne = %8.2e out of range\n",
 		 xplasma->ne);
@@ -536,10 +479,10 @@ zero_emit (t)
   xxxplasma->heat_tot += xxxplasma->heat_photo_macro;
   xxxplasma->heat_photo += xxxplasma->heat_photo_macro;
 
-  //  difference = (xxxplasma->heat_tot - total_emission (xxxplasma, 0., INFINITY));
+  //  difference = (xxxplasma->heat_tot - total_emission (xxxplasma, 0., VERY_BIG));
   difference =
     xxxplasma->heat_tot - xxxplasma->lum_adiabatic -
-    total_emission (&wmain[xxxplasma->nwind], 0., INFINITY);
+    total_emission (&wmain[xxxplasma->nwind], 0., VERY_BIG);
 
   return (difference);
 }

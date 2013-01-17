@@ -10,7 +10,7 @@
                                        Space Telescope Science Institute
 
  Synopsis:
-	define_wind  initializes the structure which characterizes the wind.  
+	define_wind  initializes the structure which characterize the wind.  
 
 Arguments:		
 	WindPtr w;			The structure which defines the wind in Python
@@ -59,6 +59,11 @@ History:
 	06may	ksl	Modified order in which items were calculated to prepare for splitting
 			of the Wind structure.  Moved the creation of thw arrays here as well
 			Allowed for wheich variables need to go into plasma
+	06nov	ksl	58b -- Modified to identify cells which have a a calculated wind volume
+			of zero, but one or more corners in the wind.  The assumption is that
+			photons were intended to simply fly through these cells.  Also modified to
+			use #define variables, such as W_ALL_INWIND, for describing the type of gridcell.
+	07jul	kls	58f -- Added code to copy volumes from wmain[].vol to plasmamain[].vol
 
 **************************************************************/
 
@@ -176,9 +181,9 @@ recreated when a windfile is read into the program
     {
       if (w[n].vol > 0.0)
 	n_vol++;
-      if (w[n].inwind == 0)
+      if (w[n].inwind == W_ALL_INWIND)
 	n_inwind++;
-      if (w[n].inwind == 1)
+      if (w[n].inwind == W_PART_INWIND)
 	n_part++;
     }
 
@@ -186,37 +191,60 @@ recreated when a windfile is read into the program
     ("wind2d: %3d cells of which %d are in inwind, %d partially in_wind, & %d with pos. vol\n",
      NDIM2, n_inwind, n_part, n_vol);
 
-/* 56d --Now check the volume calculations for 2d wind models */
+/* 56d --Now check the volume calculations for 2d wind models 
+   58b --If corners are in the wind, but there is zero_volume then ignore.
+*/
   if (geo.coord_type != SPHERICAL)
     {
       for (n = 0; n < NDIM2; n++)
 	{
-	  wind_n_to_ij (n, &i, &j);
-	  if (i < (NDIM - 1) && j < (MDIM - 1))
+	  n_inwind = check_corners_inwind (n);
+	  if (w[n].vol == 0 && n_inwind > 0)
 	    {
-	      n_inwind = 0;
-	      if (where_in_wind (w[n].x) == 0)
-		n_inwind++;
-	      if (where_in_wind (w[n + 1].x) == 0)
-		n_inwind++;
-	      if (where_in_wind (w[n + MDIM].x) == 0)
-		n_inwind++;
-	      if (where_in_wind (w[n + MDIM + 1].x) == 0)
-		n_inwind++;
-	      if (w[n].vol == 0 && n_inwind > 0)
-		{
-		  Error
-		    ("wind2d: Cell %d has %d corners in wind, but zero volume\n",
-		     n, n_inwind);
-		}
-	      if (w[n].inwind == 1 && n_inwind == 4)
-		{
-		  Error
-		    ("wind2d: Cell %d has 4 corners in wind, but is only partially in wind\n",
-		     n);
-		}
+	      wind_n_to_ij (n, &i, &j);
+	      Error
+		("wind2d: Cell %3d (%2d,%2d) has %d corners in wind, but zero volume\n",
+		 n, i, j, n_inwind);
+	      w[n].inwind = W_IGNORE;
+	    }
+	  if (w[n].inwind == W_PART_INWIND && n_inwind == 4)
+	    {
+	      wind_n_to_ij (n, &i, &j);
+	      Error
+		("wind2d: Cell %3d (%2d,%2d) has 4 corners in wind, but is only partially in wind\n",
+		 i, j, n);
 	    }
 	}
+//Old68c      for (n = 0; n < NDIM2; n++)
+//Old68c        {
+//Old68c          wind_n_to_ij (n, &i, &j);
+//Old68c          if (i < (NDIM - 2) && j < (MDIM - 2))
+//Old68c          if (i < (NDIM - 1) && j < (MDIM - 1))
+//Old68c            {
+//Old68c              n_inwind = 0;
+//Old68c              if (where_in_wind (w[n].x) == 0)
+//Old68c                n_inwind++;
+//Old68c              if (where_in_wind (w[n + 1].x) == 0)
+//Old68c                n_inwind++;
+//Old68c              if (where_in_wind (w[n + MDIM].x) == 0)
+//Old68c                n_inwind++;
+//Old68c              if (where_in_wind (w[n + MDIM + 1].x) == 0)
+//Old68c                n_inwind++;
+//Old68c              if (w[n].vol == 0 && n_inwind > 0)
+//Old68c                {
+//Old68c                  Error
+//Old68c                    ("wind2d: Old Cell %3d (%2d,%2d) has %d corners in wind, but zero volume\n",
+//Old68c                     n, i, j, n_inwind);
+//Old68c                  w[n].inwind = W_IGNORE;
+//Old68c                }
+//Old68c              if (w[n].inwind == W_PART_INWIND && n_inwind == 4)
+//Old68c                {
+//Old68c                  Error
+//Old68c                    ("wind2d: Old Cell %3d (%2d,%2d) has 4 corners in wind, but is only partially in wind\n",
+//Old68c                     i, j, n);
+//Old68c                }
+//Old68c    }
+//Old68c    }
 
     }
 
@@ -226,19 +254,19 @@ recreated when a windfile is read into the program
   if (CHOICE)
     {
       NPLASMA = n_vol;
-
-
     }
   else				/* Force NPLASMA to equal NDIM2 (for diagnostic reasons) */
     {
       NPLASMA = NDIM2;
 
     }
+
   calloc_plasma (NPLASMA);
   xplasma = plasmamain;
-  create_maps (CHOICE);
+  create_maps (CHOICE);		// Populate the maps from plasmamain & wmain
 
   calloc_macro (NPLASMA);
+  calloc_estimators (NPLASMA);
 
 /* 06may -- At this point we have calculated the volumes of all of the cells and it should
 be optional which variables beyond here are moved to structures othere than Wind */
@@ -254,6 +282,7 @@ be optional which variables beyond here are moved to structures othere than Wind
       stuff_v (w[nwind].xcen, x);
 
       plasmamain[n].rho = model_rho (x);
+      plasmamain[n].vol = w[nwind].vol;	// Copy volumes
 
 
       nh = plasmamain[n].rho * rho2nh;
@@ -272,6 +301,7 @@ be optional which variables beyond here are moved to structures othere than Wind
 	}
       else
 	plasmamain[n].w = 0.5;	//Modification to allow for possibility that grid point is inside star
+
       /* Determine the initial ionizations, either LTE or  fixed_concentrations */
       if (geo.ioniz_mode != 2)
 	{			/* Carry out an LTE determination of the ionization */
@@ -288,6 +318,15 @@ be optional which variables beyond here are moved to structures othere than Wind
 	     n, plasmamain[n].rho, plasmamain[n].t_r, plasmamain[n].t_e,
 	     plasmamain[n].w);
 	}
+
+      /* 68b - Initialize the scatters array
+       */
+
+      for (j = 0; j < NIONS; j++)
+	{
+	  plasmamain[n].scatters[j] = 0;
+	  plasmamain[n].xscatters[j] = 0;
+	}
     }
 
 
@@ -301,7 +340,7 @@ be optional which variables beyond here are moved to structures othere than Wind
  * the corresponding portion of wind_updates.  04nov -- ksl
  */
 
-/*06may -- ksl -- This is awkward because liminsotities are now part of palam structure) */
+/*06may -- ksl -- This is awkward because liminosities are now part of plasma structure */
   for (i = 0; i < NPLASMA; i++)
     {
       if (geo.adiabatic)
@@ -313,6 +352,7 @@ be optional which variables beyond here are moved to structures othere than Wind
       else
 	plasmamain[i].lum_adiabatic = 0.0;
     }
+
   /* Calculate one over dvds */
   dvds_ave ();
   wind_check (w, -1);		// Check the wind for reasonability
@@ -348,13 +388,13 @@ be optional which variables beyond here are moved to structures othere than Wind
 						    MDIM].x[1] * w[n +
 								   MDIM].
 	    x[1] - (w[n].x[0] * w[n].x[0] + w[n].x[1] * w[n].x[1]);
-	  if (w[i * MDIM].inwind == 0)
+	  if (w[i * MDIM].inwind == W_ALL_INWIND)
 	    {
 	      nplasma = w[i * MDIM].nplasma;
 	      mdotbase +=
 		plasmamain[nplasma].rho * PI * rr * w[i * MDIM].v[2];
 	    }
-	  if (w[n].inwind == 0)
+	  if (w[n].inwind == W_ALL_INWIND)
 	    {
 	      nplasma = w[n].nplasma;
 	      mdotwind += plasmamain[nplasma].rho * PI * rr * w[n].v[2];
@@ -690,7 +730,7 @@ wind_div_v (w)
       vwind_xyz (&ppp, v);
       div += xxx[2] = (v[2] - v_zero[2]) / delta;
       w[icell].div_v = div;
-      if (div < 0 && (wind_div_err < 0 || w->inwind == 0))
+      if (div < 0 && (wind_div_err < 0 || w->inwind == W_ALL_INWIND))
 	{
 	  Error
 	    ("wind_div_v: div v %e is negative in cell %d. Major problem if inwind (%d) == 0\n",
@@ -747,9 +787,13 @@ rho (w, x)
     {
 
       dd = 0;
+      //59a - ksl - 070823 - fiexed obvious error that has been there since
+      //I split the structures into w and plasmamain.
       for (nn = 0; nn < nelem; nn++)
-	nplasma = w[nnn[nn]].nplasma;
-      dd += plasmamain[nplasma].rho * frac[nn];
+	{
+	  nplasma = w[nnn[nn]].nplasma;
+	  dd += plasmamain[nplasma].rho * frac[nn];
+	}
 
     }
 
@@ -868,3 +912,77 @@ get_random_location (n, x)
 
   return (0);
 }
+
+
+int
+zero_scatters ()
+{
+  int n, j;
+
+  for (n = 0; n < NPLASMA; n++)
+    {
+      for (j = 0; j < NIONS; j++)
+	{
+	  plasmamain[n].scatters[j] = 0;
+	}
+    }
+
+  return (0);
+}
+
+
+/* The next routine checks how many corners of a wind cell
+ * are in the wind
+  
+ This routine returns the number of corners of a wind cell
+ that are in the wind.  It is intended to standardize this
+ check so that one can use such a routin in the volumes
+ calculations.  
+
+Notes:
+
+	It has not been implemented for a spherical (1d)
+	coordinate system.
+
+	The fact that none of the corners of a cell are in
+	the wind is not necessarily a guarantee that the wind
+	does not pass through the cell.  This is not only
+	a theoretical problem, because we generally use
+	a logarithmic spacing for the wind cells and thus
+	the dimensions of the cells get quite large as one
+	gets far from the center.
+	
+	The only way to verify this is to check all four 
+	surfaces of the wind.
+  
+History
+	080403	ksl	68c - Added, or more correctly simply
+			moved code into a separate routine so 
+			could be called from elsewhere
+ */
+
+int
+check_corners_inwind (n)
+     int n;
+{
+  int n_inwind;
+  int i, j;
+
+  wind_n_to_ij (n, &i, &j);
+
+  n_inwind = 0;
+  if (i < (NDIM - 2) && j < (MDIM - 2))
+    {
+      if (where_in_wind (wmain[n].x) == 0)
+	n_inwind++;
+      if (where_in_wind (wmain[n + 1].x) == 0)
+	n_inwind++;
+      if (where_in_wind (wmain[n + MDIM].x) == 0)
+	n_inwind++;
+      if (where_in_wind (wmain[n + MDIM + 1].x) == 0)
+	n_inwind++;
+    }
+
+  return (n_inwind);
+}
+

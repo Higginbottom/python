@@ -34,6 +34,14 @@
 	above, and finally interpolate between these two.  
 	The algorithm for interpolating between models 
 
+	080517 - The kslfit versiono of these routines have been updated
+	significantly, and in particular the number of variables is deduced
+	as the models are read.  That's not appropriate here though, so one needs
+	to be careful.
+
+	Note that each time a new set of models is read in, the spectype is
+	incremented.
+
 
   History:
 04jul	ksl	Adapted for use in python
@@ -47,10 +55,9 @@
 #include	<strings.h>
 #include	<string.h>
 #include 	"atomic.h"
-#include	"python.h"	//This needs to come before modles.h so that what is in models.h is used
+#include	"python.h"	//This needs to come before modlel.h so that what is in models.h is used
 #include         "models.h"
 #define    	BIG 1e32
-#define 	LINELENGTH	132
 
 
 /* Get all the models of one type and regrid them onto the wavelength grid of the data */
@@ -209,6 +216,9 @@ get_models (modellist, npars, spectype)
 /* Get a single model model 
    This routine simple reads a model file from disk and puts the result into the structure
    onemod.  This file need not have the same wavelengths as the data nor other models.
+
+080915  ksl     Added error to catch the case where the model being read in has more
+                wavelengths than allowed, ie. more than NWAVES
  */
 int
 get_one_model (filename, onemod)
@@ -238,6 +248,13 @@ get_one_model (filename, onemod)
 	}
     }
   onemod->nwaves = n;
+
+
+  if (n >= NWAVES)
+    {
+      Error ("get_one_model: model %s has more than %d wavelengths\n",
+	     filename, NWAVES);
+    }
 
 
   fclose (ptr);
@@ -293,6 +310,8 @@ get_one_model (filename, onemod)
 
  ************************************************************************/
 int nmodel_error = 0;
+int nmodel_terror = 0;
+
 
 int
 model (spectype, par)
@@ -310,6 +329,8 @@ model (spectype, par)
   double f;
   int nwaves;
   double flux[NWAVES];
+  double q1, q2, lambda, tscale, xxx;	// Used for rescaleing according to a bb
+
 
 
 /* First determine whether we already have interpolated this
@@ -464,7 +485,54 @@ excluded from furthur consideration -- 07jul ksl */
 	}
     }
 
+/* 081103 ksl -  Next section is new to deal with models with Temperatures less than in grid */
+/* Now make adjustments if we are actually out of the range of
+* the first parameter in the grid 
 
+f_out =  1/(e**hnu/kT_out -1) /  1/(e**hnu/kT_in -1) * f_in = (1/q1)/(1/q2) * f_in= q2/q1 * f_in
+Note that in the algorithm below we have to worry that the exp can become quite large, infinity
+even, and so for those cases we want to make sure to calculate the ratio of qs dirctly
+*/
+
+  if (par[0] < comp[spectype].min[0])
+    {
+      for (j = 0; j < nwaves; j++)
+	{
+	  lambda = comp[spectype].xmod.w[j] * 1.e-8;	// Convert lamda to cgs
+
+	  q1 = 1.43883 / (lambda * par[0]);	//  for model desired 
+
+	  tscale = comp[spectype].min[0];
+	  q2 = 1.43883 / (lambda * tscale);	// for model that exists
+
+
+	  /* q can be large line below is attempt to keep exponents in range in that case */
+	  if (q1 > 50. ||  q2 > 50.)
+	    {
+	      xxx = exp (q2 - q1);   // q2 - q1 should be negative since q1 is model desired
+	    }
+	  else
+	    {
+
+	      q2 = exp (q2) - 1.0;   // Model that exists has higher temperature
+	      q1 = exp (q1) - 1.0;   // Model desired has lowe T, hence q1 is larger
+	      xxx = q2 / q1;
+	    }
+
+
+	  flux[j] *= xxx;
+
+	  if (nmodel_terror < 20 || xxx > 1.0)
+	    {
+	      Error
+		("model: Taking corrective action because %f < min[0] %f -> factor %f \n",
+		 par[0], comp[spectype].min[0], xxx);
+	      nmodel_terror++;
+	    }
+	}
+    }
+
+/* End of section to reweight the spectra. */
 
   for (j = 0; j < nwaves; j++)
     {

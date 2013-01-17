@@ -111,9 +111,10 @@ WindPtr (w);
       if (geo.rt_mode == 2 && geo.macro_simple == 0)	//test for macro atoms
 	{
 	  mc_estimator_normalise (nwind);
+	  /* Store some information so one can determine how much the temps are changing */
+	  macromain[n].kpkt_rates_known = -1;
 	}
 
-      /* Store some information so one can determine how much the temps are changing */
       t_r_old = plasmamain[n].t_r;
       t_e_old = plasmamain[n].t_e;
       t_r_ave_old += plasmamain[n].t_r;
@@ -146,6 +147,12 @@ WindPtr (w);
 	    PI * plasmamain[n].j / (STEFAN_BOLTZMANN * trad * trad * trad *
 				    trad);
 
+	  if (plasmamain[n].w > 1e10)
+	    {
+	      Error
+		("wind_update: Huge w %8.2e in cell %d trad %10.2e j %8.2e\n",
+		 plasmamain[n].w, n, trad, plasmamain[n].j);
+	    }
 	  if (sane_check (trad) || sane_check (plasmamain[n].w))
 	    {
 	      Error ("wind_update: %d trad %8.2e w %8.2g\n", n, trad,
@@ -242,28 +249,38 @@ WindPtr (w);
   /* Check the balance between the absorbed and the emitted flux */
 
   xsum = psum = lsum = fsum = 0;
-  for (i = 0; i < NDIM2; i++)
-    nplasma = w[n].nplasma;
-  {
-    if (sane_check (plasmamain[nplasma].heat_tot))
-      Error ("wind_update: w\[%d}.heat_tot is %e\n", i,
-	     plasmamain[nplasma].heat_tot);
-    if (sane_check (plasmamain[nplasma].heat_photo))
-      Error ("wind_update: w\[%d}.heat_photo is %e\n", i,
-	     plasmamain[nplasma].heat_photo);
-    if (sane_check (plasmamain[nplasma].heat_ff))
-      Error ("wind_update: w\[%d}.heat_ff is %e\n", i,
-	     plasmamain[nplasma].heat_ff);
-    if (sane_check (plasmamain[nplasma].heat_lines))
-      Error ("wind_update: w\[%d}.heat_lines is %e\n", i,
-	     plasmamain[nplasma].heat_lines);
-    xsum += plasmamain[nplasma].heat_tot;
-    psum += plasmamain[nplasma].heat_photo;
-    fsum += plasmamain[nplasma].heat_ff;
-    lsum += plasmamain[nplasma].heat_lines;
-  }
 
-  asum = wind_luminosity (0.0, INFINITY);
+  // 59a - ksl - Corrected problem with calculating sums that has existed
+  // since tried to reduce the size of the structures.
+  //OLD for (i = 0; i < NDIM2; i++)
+  //OLD   nplasma = w[n].nplasma;
+  for (nplasma = 0; nplasma < NPLASMA; nplasma++)
+    {
+      if (sane_check (plasmamain[nplasma].heat_tot))
+	Error ("wind_update: w\[%d).heat_tot is %e\n", nplasma,
+	       plasmamain[nplasma].heat_tot);
+      if (sane_check (plasmamain[nplasma].heat_photo))
+	Error ("wind_update: w\[%d).heat_photo is %e\n", nplasma,
+	       plasmamain[nplasma].heat_photo);
+      if (sane_check (plasmamain[nplasma].heat_photo_macro))
+	Error ("wind_update: w\[%d).heat_photo_macro is %e\n", nplasma,
+	       plasmamain[nplasma].heat_photo_macro);
+      if (sane_check (plasmamain[nplasma].heat_ff))
+	Error ("wind_update: w\[%d).heat_ff is %e\n", nplasma,
+	       plasmamain[nplasma].heat_ff);
+      if (sane_check (plasmamain[nplasma].heat_lines))
+	Error ("wind_update: w\[%d).heat_lines is %e\n", nplasma,
+	       plasmamain[nplasma].heat_lines);
+      if (sane_check (plasmamain[nplasma].heat_lines_macro))
+	Error ("wind_update: w\[%d}).heat_lines_macro is %e\n", nplasma,
+	       plasmamain[nplasma].heat_lines_macro);
+      xsum += plasmamain[nplasma].heat_tot;
+      psum += plasmamain[nplasma].heat_photo;
+      fsum += plasmamain[nplasma].heat_ff;
+      lsum += plasmamain[nplasma].heat_lines;
+    }
+
+  asum = wind_luminosity (0.0, VERY_BIG);
   Log
     ("!!wind_update:  Absorbed flux   %8.2e  (photo %8.2e ff %8.2e lines %8.2e)\n",
      xsum, psum, fsum, lsum);
@@ -286,6 +303,11 @@ WindPtr (w);
        nmax_e, i, j);
   Log ("!!wind_update: Ave change in t_e %6.0f from %6.0f to %6.0f\n",
        (t_e_ave - t_e_ave_old), t_e_ave_old, t_e_ave);
+
+  Log ("Summary  t_e  %6.0f   %6.0f  #t_e and dt_e on this update\n", t_e_ave,
+       (t_e_ave - t_e_ave_old));
+  Log ("Summary  t_r  %6.0f   %6.0f  #t_r and dt_r on this update\n", t_r_ave,
+       (t_r_ave - t_r_ave_old));
 
   check_convergence ();
 /* Sumarize the raditive temperatures (ksl 04 mar)*/
@@ -357,11 +379,19 @@ wind_rad_init ()
 	plasmamain[n].lum_ff = 0.0;
       plasmamain[n].lum_fb = plasmamain[n].lum_z = 0.0;
       plasmamain[n].nrad = plasmamain[n].nioniz = 0;
+      if (nlevels_macro > 1)
+	macromain[n].kpkt_rates_known = -1;
 
       for (i = 0; i < nions; i++)
 	{
 	  plasmamain[n].ioniz[i] = plasmamain[n].recomb[i] =
 	    plasmamain[n].heat_ion[i] = plasmamain[n].lum_ion[i] = 0.0;
+	}
+
+      /*Block added (Dec 08) to zero the auger rate estimators */
+      for (i = 0; i < nauger; i++)
+	{
+	  plasmamain[n].gamma_inshl[i] = 0.0;
 	}
 
       /* Next blocks added by SS Mar 2004 to zero the Macro Atom estimators. */
@@ -372,60 +402,52 @@ wind_rad_init ()
          even though macromain is not used -- ksl */
 
 
-//OLD      for (i = 0; i < NLEVELS_MACRO; i++)
       for (i = 0; i < nlevels_macro; i++)	//57h
 	{
-	  for (njump = 0; njump < NBBJUMPS; njump++)
+	  for (njump = 0; njump < config[i].n_bbu_jump; njump++)
 	    {
-	      macromain[n].jbar[i][njump] = 0.0;	// mean intensity
+	      macromain[n].jbar[config[i].bbu_indx_first + njump] = 0.0;	// mean intensity
 	    }
-	  for (njump = 0; njump < NBFJUMPS; njump++)
+	  for (njump = 0; njump < config[i].n_bfu_jump; njump++)
 	    {
-	      macromain[n].gamma[i][njump] = 0.0;
-	      macromain[n].gamma_e[i][njump] = 0.0;
-	      macromain[n].alpha_st[i][njump] = 0.0;	//stimulated recombination
-	      macromain[n].alpha_st_e[i][njump] = 0.0;
+	      macromain[n].gamma[config[i].bfu_indx_first + njump] = 0.0;
+	      macromain[n].gamma_e[config[i].bfu_indx_first + njump] = 0.0;
+	      macromain[n].alpha_st[config[i].bfd_indx_first + njump] = 0.0;	//stimulated recombination
+	      macromain[n].alpha_st_e[config[i].bfd_indx_first + njump] = 0.0;
+	    }
+	  
 
 	      /* Next block to set spontaneous recombination rates for next iteration. (SS July 04) */
-
-	      if (njump < config[i].n_bfd_jump && plasmamain[n].t_e > 0.0)
+	  for (njump = 0; njump < config[i].n_bfd_jump; njump++)
+	    {
+	      if (plasmamain[n].t_e > 1.0)
 		{
-
 		  //04Jul--ksl-modified these calls to reflect changed alpha_sp
-		  macromain[n].recomb_sp[i][njump] =
+		  macromain[n].recomb_sp[config[i].bfd_indx_first + njump] =
 		    alpha_sp (&phot_top[config[i].bfd_jump[njump]],
 			      &plasmamain[n], 0);
-		  macromain[n].recomb_sp_e[i][njump] =
+		  macromain[n].recomb_sp_e[config[i].bfd_indx_first + njump] =
 		    alpha_sp (&phot_top[config[i].bfd_jump[njump]],
 			      &plasmamain[n], 2);
 		}
 	      else
 		{
-		  macromain[n].recomb_sp[i][njump] = 0.0;
-		  macromain[n].recomb_sp_e[i][njump] = 0.0;
+		  macromain[n].recomb_sp[config[i].bfd_indx_first + njump] = 0.0;
+		  macromain[n].recomb_sp_e[config[i].bfd_indx_first + njump] = 0.0;
 		}
-
+	      
 	    }
 	}
-
+      
       for (i = 0; i < ntop_phot; i++)
 	{
-/* 57h -- recomb_simple is only required for we are using a macro atom approach, and only non-zero when
-this particular phot_tob xsection is treated as a simple x-section. Stuart, is this correct?? I've added
-checks so that macro_info is only 0 (false) or true (1), and so the logic of the next section can be 
-simplified.  0608-ksl */
-//OLD57h          if ((phot_top[i].macro_info != 1) && (!geo.macro_simple)) // 57h
-//OLD57h            {
-//OLD57h              plasmamain[n].recomb_simple[i] =
-//OLD57h                alpha_sp (&phot_top[i], &plasmamain[n], 2);
-//OLD57h            }
-//OLD57h          else
-//OLD57h            {
-//OLD57h              plasmamain[n].recomb_simple[i] = 0.0;
-//OLD57h            }
+	  /* 57h -- recomb_simple is only required for we are using a macro atom approach, and only non-zero when
+	     this particular phot_tob xsection is treated as a simple x-section. Stuart, is this correct?? I've added
+	     checks so that macro_info is only 0 (false) or true (1), and so the logic of the next section can be 
+	     simplified.  0608-ksl */
 	  if (geo.macro_simple || phot_top[i].macro_info)
 	    {
-
+	      
 	      plasmamain[n].recomb_simple[i] = 0.0;
 	    }
 	  else
@@ -434,24 +456,23 @@ simplified.  0608-ksl */
 		alpha_sp (&phot_top[i], &plasmamain[n], 2);
 	    }
 	}
-
-
+      
+      
       //zero the emissivities that are needed for the spectral synthesis step.
       plasmamain[n].kpkt_emiss = 0.0;
       plasmamain[n].kpkt_abs = 0.0;
-//OLD      for (i = 0; i < NLEVELS_MACRO; i++)
       for (i = 0; i < nlevels_macro; i++)	//57h
 	{
 	  macromain[n].matom_abs[i] = 0.0;
-
+	  
 	  macromain[n].matom_emiss[i] = 0.0;
-
+	  
 	}
-
+      
       /* End of added material. */
     }
-
-
+  
+  
   return (0);
 }
 

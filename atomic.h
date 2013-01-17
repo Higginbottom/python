@@ -1,6 +1,6 @@
 
 #define MAXRAND 2147486748.
-#define INFINITY 1e50
+#define VERY_BIG 1e50     // Replaced INFINITY 58g
 #define TRUE		1
 #define FALSE		0
 
@@ -51,23 +51,28 @@
 int nelements;			/* The actual number of ions read from the data file */
 #define NIONS		500	/* Maximum number of ions to consider */
 int nions;			/*The actual number of ions read from the datafile */
-#define NLEVELS 	5000	/* Maximum number of levels for all elements and ions */
+#define NLEVELS 	12000	/* Maximum number of levels for all elements and ions */
 int nlevels;			/*These are the actual number of levels which were read in */
-#define NLTE_LEVELS	200     /* Maximum number of levels to treat explicitly */
+#define NLTE_LEVELS	270     /* Maximum number of levels to treat explicitly */
 int nlte_levels;		/* Actual number of levels to treat explicityly */
-#define NLEVELS_MACRO   50     /* Maximum number of macro atom levels. (SS, June 04) */
+#define NLEVELS_MACRO   150    /* Maximum number of macro atom levels. (SS, June 04) */
 int nlevels_macro;              /* Actual number of macro atom levels. (SS, June 04) */
-#define NLINES 10000            /* Maximum number of lines to be read */
+#define NLINES 		200000 /* Maximum number of lines to be read */
 int nlines;                     /* Actual number of lines that were read in */
 int nlines_macro;                /* Actual number of Macro Atom lines that were read in.  New version of get_atomic
 				data assumes that macro lines are read in before non-macro lines */
 
-#define NBBJUMPS         20      /* Maximum number of Macro Atom bound-bound jumps from any one configuration (SS) */
+#define NBBJUMPS         30      /* Maximum number of Macro Atom bound-bound jumps from any one configuration (SS) */
 
-#define NBFJUMPS         20      /* Maximum number of Macro Atom Bound-free jumps from any one configuration (SS) */
+#define NBFJUMPS         30      /* Maximum number of Macro Atom Bound-free jumps from any one configuration (SS) */
 
 #define MAXJUMPS          1000000      /* The maximum number of Macro Atom jumps before emission (if this is exceeded
                                      it gives up (SS) */
+#define NAUGER 2                 /*Maximum number of "auger" processes */
+int nauger;                     /*Actual number of innershell edges for which autoionization is to be computed */
+
+
+
 typedef struct elements
   {				/* Element contains physical parameters that apply to element as a whole and 
 				   provides and index to the atomic data */
@@ -96,16 +101,17 @@ typedef struct ions
     double g;			/* multiplicity of ground state, note that this is not totally consistent
 				   with energy levels and this needs to be reconciled */
     int nmax;			/* The maximum number of allowed lte configurations for this ion. 
-				Used only be get_atomic */
+				Used only by get_atomic */
     int n_lte_max;		/* The maximum number of allowed nlte configurations for this ion. 
-				Used only be get_atomic */
+				Used only by get_atomic */
     int firstlevel;		/* Index into config struc; should also refer to ground state for this ion */
     int nlevels;		/* Actual number of "lte" levels for this ion. "lte" here refers to any level 
 				in which densities are to be calculated on the fly, instead of the beginning 
 				or end of an ionization cycle */
     int first_nlte_level;       /* Index into config structure for the nlte_levels. There will be nlte 
 				levels associated with this ion*/
-    int nlte_first;             /* Index into the levden array in wind structure */
+    int first_levden;           /* Index into the levden array in wind structure, not necessairly 
+				   the same as first_nlte_level  (Name changed 080810 -- 62 */
     int nlte;                   /* Actual number of nlte levels for this ion */
     int phot_info;		/*-1 means there are no photoionization cross sections for this ion, 
 				 0  means the photoionization is given on an ion basis (e.g. for the 
@@ -123,6 +129,15 @@ typedef struct ions
     int ntop;                   /* Number of topbase photoionization cross sections for this ion */
     int nxphot;			/* Internal index into VFKY photionionization structure.  There
 				is only one of these per ion */
+    int lev_type;		/* The type of configurations used to descibe this ion 
+				   set to -1 initially (means not known)
+				   set to  0 if Kurucz (Note ultimately this may be treated similarly
+				   	to topbase.  
+				   set to  1 if configurations are described as macro atoms, even if
+				   	macro_methods are not used
+				   set to  2 if topbase inputs, even if their ar no so-called non-lte
+				   	levels, i.e. levels in the levden array
+    				*/
   }
 ion_dummy,*IonPtr;
 
@@ -132,6 +147,8 @@ IonPtr ion;
 /* And now for the arrays which describe the energy levels.  In the Topbase data, g is float (although
 I have never seen it as anything else.  I have kept g an integer here, because I am pretty sure it is
 an integer everywhere else in the code....but this is something to watch ??? */
+
+/* The number of configurations is given by nlevels */
 
 typedef struct configurations
   {
@@ -157,6 +174,10 @@ typedef struct configurations
     int bbd_jump[NBBJUMPS];         /* list of downwards bb jumps from this configuration (SS) */
     int bfu_jump[NBFJUMPS];         /* list of upwards bf jumps from this configuration (SS) */
     int bfd_jump[NBFJUMPS];         /* list of downwards bf jumps from this configuration (SS) */
+    int bbu_indx_first;         /* index to first MC estimator for bb jumps from this configuration (SS) */
+    int bfu_indx_first;         /* index to first MC estimator for bf jumps from this configuration (SS) */
+    int bfd_indx_first;         /* index to first rate for downward bf jumps from this configuration (SS) */
+
   }
 config_dummy,*ConfigPtr;
 
@@ -231,7 +252,7 @@ PhotoionizationPtr xphot_ptr[NIONS]; /* Pointers to xphot in threshold frequency
 int nxphot;			/*The actual number of ions for which there are VFKY photoionization x-sections */
 double phot_freq_min;		/*The lowest frequency for which photoionization can occur */
 
-#define NCROSS 150
+#define NCROSS 1500
 #define NTOP_PHOT 250           /* Maximum number of photoionisation processes. (SS) */
 int ntop_phot;			/* The actual number of TopBase photoionzation x-sections */
 
@@ -263,6 +284,38 @@ typedef struct topbase_phot {           /* If the old topbase treatment is to be
 
 Topbase_phot phot_top[NLEVELS];
 TopPhotPtr phot_top_ptr[NLEVELS];  /* Pointers to phot_top in threshold frequency order */
+
+/* Photoionization crossections from Verner & Yakovlev - to be used for inner shell ionization and the Auger effect*/
+typedef struct innershell
+{
+  int nion;			/* index to the appropriate ion in the structure ions, so for example, ion would
+ 				   normally be 0 for neutral H, 1 for H+, 1 for He, 2 for He+ etc */
+  int nion_target;            /*Index to the ion that is made by
+				double ionization */
+  int z, istate;
+  int n, l;                   /*Quantum numbers of shell */
+  double freq_t;              /*Threshold freq */
+  double Sigma;		/*cross section at edge */
+  double ya, P, yw, E_0;	/* Fit prarameters */
+  double yield;               /*The Auger yield associated with this edge I.e. probability that following photoionization
+				an Auger electron is ejected making a double ionization */ 
+  double arad;                /*Radiative recombination rate parameters*/
+  double etarad;		/*         following Aldrovandi & Pequignot formula*/
+  double adi, bdi, t0di, t1di; /*Dielectronic recombination
+				 parameters (A&P formula) */
+  
+} Innershell,*InnershellPtr;
+
+Innershell augerion[NAUGER];
+
+
+
+
+
+
+
+
+
 
 /* now do the table of fractions of recombinations going straight to the ground state */
 struct ground_fracs
@@ -299,4 +352,15 @@ xcol[NTRANS], *xcol_ptr[NTRANS];	/* xcol[] is the actual structure array that co
 int nxcol_min, nxcol_max, nxcol_delt;	/*For calculating a frequency range within which collisions should
 					   be included, see the routine limit_collisions */
 
-//#include "recipes.h"
+
+struct coolstruct
+{
+  double cooling_bf[NTOP_PHOT];
+  double cooling_bf_col[NTOP_PHOT];	
+  double cooling_bb[NLINES];
+  double cooling_normalisation;
+  double cooling_bbtot, cooling_bftot, cooling_bf_coltot;
+  double cooling_ff;
+};
+
+typedef struct coolstruct COOLSTR;

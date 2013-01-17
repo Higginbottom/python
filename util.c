@@ -34,7 +34,6 @@ History:
 #include "atomic.h"
 #include "python.h"
 
-#define INFINITY 1e50
 #define EPS 1.e-10
 
 

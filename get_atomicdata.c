@@ -123,6 +123,13 @@ History:
 			of the structures, is set to 0 or 1 somewhere in the process.  This simplifies
 			some of the switches in the program.  Note that I did not check for self-consitency
 			just that the value is not -1, which it was initially.
+	080810	ksl	62 -- Modified the way in which levels are read in.  Basically the routine assumes
+			and prevents one from reading in more than one level type, e.g macro_atom, top_base
+			record, kurucz record etc.  One cannot use more than one type anymore.  
+	080812	ksl	62 -- Made additional changes to make sure photoionization records were only
+			linked to levels for which the density could be calculated.  (Note, that there
+			may be a problem if we decide to use topbase data for ions with 0 nlte levels
+			allowed, i.e. zero levels in which we keep track of the density.  
 **************************************************************/
 
 
@@ -135,7 +142,7 @@ get_atomic_data (masterfile)
      char masterfile[];
 {
 
-  FILE *fopen (), *fptr, *mptr;
+  FILE *fopen (), *fptr, *mptr, *vptr;
   char *fgets (), aline[LINELENGTH];
 
   char file[LINELENGTH];
@@ -158,7 +165,8 @@ get_atomic_data (masterfile)
   double the_ground_frac[20];
   char choice;
   int lineno;			/* the line number in the file beginning with 1 */
-  int index_collisions (), index_lines (), index_phot_top ();
+  int index_collisions (), index_lines (), index_phot_top (),
+    index_phot_verner ();
   int nwords;
   int nlte, nmax;
   //  
@@ -175,6 +183,10 @@ get_atomic_data (masterfile)
   int nlevels_simple;
   int ntop_phot_simple, ntop_phot_macro;
   int bb_max, bf_max;
+  int lev_type;
+  int nn, nl, dumnn, dumnl, dumz, dumistate, n_verner, ion_index, target_index;
+  double yield, dumE_th, dumE_0, dumya, dumyw, dumSigma, dumP, arad, etarad;
+  double adi, t0di, bdi, t1di;
 
   /* define which files to read as data files */
 
@@ -255,7 +267,7 @@ get_atomic_data (masterfile)
 
 
 
-  phot_freq_min = INFINITY;
+  phot_freq_min = VERY_BIG;
   for (n = 0; n < NELEMENTS; n++)
     {
       strcpy (ele[n].name, "none");
@@ -275,24 +287,25 @@ get_atomic_data (masterfile)
       ion[n].firstlevel = (-1);
       ion[n].nlevels = (-1);
       ion[n].first_nlte_level = (-1);
-      ion[n].nlte_first = (-1);
+      ion[n].first_levden = (-1);
       ion[n].nlte = (-1);
       ion[n].phot_info = (-1);
       ion[n].macro_info = (-1);	//Initialise - don't know if using Macro Atoms or not: set to -1 (SS)
       ion[n].ntop_first = 0;	// The fact that ntop_first and ntop  are initialized to 0 and not -1 is important 
       ion[n].ntop = 0;
       ion[n].nxphot = (-1);
+      ion[n].lev_type = (-1);	// Initialise to indicate we don't know what types of configurations will be read
     }
 
-  nlevels = nxphot = ntop_phot = 0;
+  nlevels = nxphot = ntop_phot = nauger = 0;
 
   for (i = 0; i < NIONS; i++)
     {
       xphot[i].z = xphot[i].istate = -1;
       xphot[i].sigma = 0.0;
-      xphot[i].freq_t = INFINITY;
+      xphot[i].freq_t = VERY_BIG;
       xphot[i].freq_max = 0;
-      xphot[i].freq0 = INFINITY;
+      xphot[i].freq0 = VERY_BIG;
     }
 
   for (i = 0; i < NLEVELS; i++)
@@ -366,7 +379,7 @@ structure does not have this property! */
     }
   else
     {
-      Log ("get_atomicdata: Reading from masterfile %s\n", masterfile);
+      Log ("Get_atomicdata: Reading from masterfile %s\n", masterfile);
     }
 
 /* Open and read each line in the masterfile in turn */
@@ -385,7 +398,7 @@ structure does not have this property! */
 	    }
 	  else
 	    {
-	      Log ("Get_atomic_data: Now reading data from %s\n", file);
+	      Log_silent ("Get_atomic_data: Now reading data from %s\n", file);
 	      lineno = 1;
 	    }
 
@@ -426,6 +439,8 @@ structure does not have this property! */
 		choice = 'f';	/*ground state fractions */
 	      else if (strncmp (word, "Xcol", 4) == 0)
 		choice = 'x';	/*It's a collision strength line */
+ 	      else if (strncmp (word, "InPhot", 6) == 0)
+ 		choice = 'A';	/*It's an inner shell ionization for Auger effect */
 	      else if (strncmp (word, "*", 1) == 0);	/* It's a continuation so record type remains same */
 	      else
 		choice = 'z';	/* Who knows what it is */
@@ -476,7 +491,7 @@ Ion	H	1	1	2	13.598   5 3
 
 which correspond to the maximum number of LTE and nLTE configurations. 
 
-?? Stuart uses the same actual format as the new style configuration, whhic has 
+?? Stuart uses the same actual format as the new style configuration, which has 
 two additional variables for the number of LTE and nLTE configurations.  
 
 1.  Given this, why does he create input lines that begin with IonV rather
@@ -536,7 +551,7 @@ ksl 04Apr  ??
 
 		  if (nlte > 0)
 		    {		// Then we want to consider some of these levels as non-lte
-		      ion[nions].nlte_first = nlte_levels;	/* This is the index to into
+		      ion[nions].first_levden = nlte_levels;	/* This is the index to into
 								   the levdev aray */
 		      ion[nions].n_lte_max = nlte;	//Reserve this many elements of levden
 		      nlte_levels += nlte;
@@ -675,110 +690,24 @@ Col
 
 */
 
-		case 'n':	// Its an "LTE" level
-		  if (sscanf (aline, "%*s %d %d %d %le %le\n", &zz, &iistate, &qnum, &gg, &exx) == 5)	//IT's KURUCZSTYLE
-		    {
-		      istate = iistate;
-		      z = zz;
-		      exx *= EV2ERGS;
-		      qqnum = ilv = qnum;
 
-		    }
-		  else		// Read an OLDSTYLE level description
-		  if (sscanf (aline, "%*s  %d %le %le\n", &qnum, &gg, &exx)
-			== 3)
-		    {
-		      exx *= EV2ERGS;
-		      qqnum = ilv = qnum;
-		    }
-		  else
-		    {
-		      Error
-			("get_atomic_data: file %s line %d: Level line incorrectly formatted\n",
-			 file, lineno);
-		      Error ("Get_atomic_data: %s\n", aline);
-		      exit (0);
-		    }
-/* Check whether the ion for this level is known.  If not, skip the level */
-		  n = 0;
-		  while ((ion[n].z != z || ion[n].istate != istate)
-			 && n < nions)
-		    n++;
-		  if (n == nions)
-		    {
-		      if (DEBUG)
-			Error
-			  ("get_atomic_data: file %s line %d has level for unknown ion \n",
-			   file, lineno);
-		      break;
+		case 'N':
+/*  
 
-		    }
-/* Check whether this is a macro-ion.  If it is a macro-ion, but the level appears to be described as a
-simple level (i.e without a keyword LeVMacro), then skip it, since a macro-ion has to have all the levels 
-described as macro-levels. */
-		  if (ion[n].macro_info == 1)
-		    {
-		      Error
-			("get_atomic_data: file %s line %d has simple level for ion[%d], which is a macro-ion\n",
-			 file, lineno, n);
-		      break;
-		    }
+	080809 - It's a non-lte level, i.e. one for which we are going to calculate populations, at least for some number of these.
+	For these, we have to set aside space in the levden array in the plasma structure.  This is used for topbase
+	photoionization and macro atoms
+*/
 
-/*  Check whether we already have too many levels specified for this ion. If so, skip */
-		  if (ion[n].nmax == ion[n].nlevels)
-		    {
-		      if (DEBUG)
-			Error
-			  ("get_atomic_data: file %s line %d has level exceeding the number allowed for ion[%d]\n",
-			   file, lineno, n);
-
-		      break;
-		    }
-//  So now we know that this level can be associated with an ion
-
-		  config[nlevels].z = z;
-		  config[nlevels].istate = istate;
-		  config[nlevels].isp = islp;
-		  config[nlevels].ilv = ilv;
-		  config[nlevels].nion = n;	//Internal index to ion structure
-		  config[nlevels].q_num = qqnum;
-		  config[nlevels].g = gg;
-		  config[nlevels].ex = exx;
-
-		  if (ion[n].firstlevel < 0)
-		    {
-		      ion[n].firstlevel = nlevels;
-		      ion[n].nlevels = 1;
-		    }
-		  else
-		    ion[n].nlevels++;
-
-
-/* Now associate this config with the levden array where appropriate.  here -1 is appropriate because
-it is an lte level and hence there is no corresponding element in levden */
-
-		  config[nlevels].nden = -1;
-
-		  config[nlevels].rad_rate = 0.0;	// ?? Set emission oscillator strength for the level to zero
-
-		  nlevels_simple++;
-		  nlevels++;
-		  if (nlevels > NLEVELS)
-		    {
-		      Error
-			("getatomic_data: file %s line %d: More energy levels than allowed. Increase NLEVELS in atomic.h\n",
-			 file, lineno);
-		      exit (0);
-		    }
-		  break;
-
-
-
-		case 'N':	// It's a non-lte level, i.e. one for which we are going to calculate populations
-		  // and store them in the wind structure.  Needed for topbase photoionization & macro-ions
 /* ?? ksl This mix and match situation may be too much.  We are storing both macro level densities and so-called
 topbase level densities in some of the same arrays in python.  Leave for now, but it may be difficult to keep
 the program working in both cases, and certainly mixed cases  04apr ksl  */
+
+/* 080810 -- ksl -- 62 -- I have changed the way levels are created so that one can only read one type
+ * of levels for each ion.  Note also that all of the confiruations for a single ion need to be read together.  
+ * It will be possible to read other types of records but one should not mix levels of different ions (This
+ * last bit is not actually new.
+ */
 
 		  if (strncmp (word, "LevTop", 6) == 0)
 		    {		//Its a TOPBASESTYLE level
@@ -791,6 +720,7 @@ the program working in both cases, and certainly mixed cases  04apr ksl  */
 		      gg = ggg;
 		      exx *= EV2ERGS;	// Convert energy above ground to ergs
 		      mflag = -1;	//record that this is a LevTop not LevMacro read
+		      lev_type = 2;	// It's a topbase record
 		    }
 
 		  else if (strncmp (word, "LevMacro", 8) == 0)
@@ -802,6 +732,7 @@ the program working in both cases, and certainly mixed cases  04apr ksl  */
 		      islp = -1;	//these indices are not going to be used so just leave
 		      qqnum = -1;	//them at -1
 		      mflag = 1;	//record Macro read
+		      lev_type = 1;	// It's a Macro record
 		      istate = iistate;
 		      z = zz;
 		      gg = ggg;
@@ -828,19 +759,39 @@ the program working in both cases, and certainly mixed cases  04apr ksl  */
 			   file, lineno);
 		      break;
 		    }
-//  Now check to see whether we already have too many levels specified for this ion. 
-//  If so, break out
-		  if (ion[n].n_lte_max == ion[n].nlte)
-		    {
-		      if (DEBUG)
-			Error
-			  ("get_atomic_data: file %s line %d has level exceeding the number reserved for ion[%d]\n",
-			   file, lineno, n);
-
-		      break;
-		    }
 //  So now we know that this level can be associated with an ion
 //
+
+		  /* Now either set the type of level that will be used for this ion or set it if 
+		   * a level type has not been established
+		   */
+
+		  if (ion[n].lev_type == (-1))
+		    {
+		      ion[n].lev_type = lev_type;
+		    }
+		  else if (ion[n].lev_type != lev_type)
+		    {
+//OLD                 Error
+//OLD                   ("Get_atomic_data: file %s  Reading lev_type (%d) for ion %d with lev_type (%d). Not allowed\n",
+//OLD                    file, lev_type, n, ion[n].lev_type);
+		      break;
+		    }
+
+//  Now check to see whether we already have too many levels specified for this ion. 
+//  If so, break out
+
+//  We do not want to do this any more!  We want to treat the addition levels as lte levels 
+//OLD             if (ion[n].n_lte_max == ion[n].nlte)
+//OLD               {
+//OLD                 if (DEBUG)
+//OLD                   Error
+//OLD                     ("get_atomic_data: file %s line %d has level exceeding the number reserved for ion[%d]\n",
+//OLD                      file, lineno, n);
+//OLD
+//OLD                 break;
+//OLD               }
+
 /* 
  Now check 1) if it was a LevMacro that there isn't already a LevTop (if there was then 
  something has gone wrong in the input order). 
@@ -849,6 +800,7 @@ the program working in both cases, and certainly mixed cases  04apr ksl  */
 */
 
 
+// Next steps should never happen; we have added a more robust mechanism to prevent any kind of mix and match above
 		  if (ion[n].macro_info == 1 && mflag == -1)
 		    {		//it is already flagged as macro atom - current read is for LevTop - don't use it (SS)
 		      Error
@@ -904,21 +856,6 @@ the program working in both cases, and certainly mixed cases  04apr ksl  */
 		  config[nlevels].q_num = qqnum;
 		  config[nlevels].g = gg;
 		  config[nlevels].ex = exx;
-
-		  if (ion[n].first_nlte_level < 0)
-		    {
-		      ion[n].first_nlte_level = nlevels;
-		      ion[n].nlte = 1;
-		    }
-		  else
-		    ion[n].nlte++;
-
-
-/* Now associate this config with the levden array where appropriate.  The -1 is because ion[].nlte
-is already incremented */
-
-		  config[nlevels].nden = ion[n].nlte_first + ion[n].nlte - 1;
-
 		  config[nlevels].rad_rate = rl;
 		  /* SS Aug 2005
 		     Previously, the line above set the rad_rate to 0 and is was never used. 
@@ -928,6 +865,48 @@ is already incremented */
 		     collisional supported by the ground state (i.e. has the LTE excitation
 		     fraction relative to ground).
 		   */
+
+
+		  if (ion[n].n_lte_max > 0)
+		    {		// Then this ion wants nlte levels 
+		      if (ion[n].first_nlte_level < 0)
+			{	// Then this is the first one that has been found
+			  ion[n].first_nlte_level = nlevels;
+			  ion[n].nlte = 1;
+			  config[nlevels].nden = ion[n].first_levden;
+			}
+		      else if (ion[n].n_lte_max > ion[n].nlte)
+			{
+			  config[nlevels].nden =
+			    ion[n].first_levden + ion[n].nlte;
+			  ion[n].nlte++;
+			}
+		      else
+			{
+			  config[nlevels].nden = -1;
+			}
+		    }
+		  else
+		    {
+		      config[nlevels].nden = -1;
+		    }
+
+
+/* Now associate this config with the levden array where appropriate.  The -1 is because ion[].nlte
+is already incremented */
+//  I've moved the assignment up into the previous set of if statemens an now the -1 is not necessary
+//OLD             config[nlevels].nden =
+//OLD               ion[n].first_levden + ion[n].nlte - 1;
+
+// 080810 -- 62 -- Also want to treat these as simple levels in cases where we want to sum everything
+
+		  if (ion[n].firstlevel < 0)
+		    {
+		      ion[n].firstlevel = nlevels;
+		      ion[n].nlevels = 1;
+		    }
+		  else
+		    ion[n].nlevels++;
 
 
 
@@ -941,6 +920,139 @@ is already incremented */
 		      exit (0);
 		    }
 		  break;
+
+		case 'n':	// Its an "LTE" level
+		  if (sscanf (aline, "%*s %d %d %d %le %le\n", &zz, &iistate, &qnum, &gg, &exx) == 5)	//IT's KURUCZSTYLE
+		    {
+		      istate = iistate;
+		      z = zz;
+		      exx *= EV2ERGS;
+		      qqnum = ilv = qnum;
+		      lev_type = 0;	// It's a Kurucz-style record
+
+		    }
+		  else		// Read an OLDSTYLE level description
+		  if (sscanf (aline, "%*s  %d %le %le\n", &qnum, &gg, &exx)
+			== 3)
+		    {
+		      exx *= EV2ERGS;
+		      qqnum = ilv = qnum;
+		      lev_type = -2;	// It's an old stylle record, one which is only here for backward compatibility
+		    }
+		  else
+		    {
+		      Error
+			("get_atomic_data: file %s line %d: Level line incorrectly formatted\n",
+			 file, lineno);
+		      Error ("Get_atomic_data: %s\n", aline);
+		      exit (0);
+		    }
+/* Check whether the ion for this level is known.  If not, skip the level */
+
+// Next section is identical already to case N
+		  n = 0;
+		  while ((ion[n].z != z || ion[n].istate != istate)
+			 && n < nions)
+		    n++;
+		  if (n == nions)
+		    {
+		      if (DEBUG)
+			Error
+			  ("get_atomic_data: file %s line %d has level for unknown ion \n",
+			   file, lineno);
+		      break;
+
+		    }
+
+		  /* Now either set the type of level that will be used for this ion or set it if 
+		   * a level type has not been established
+		   */
+
+		  if (ion[n].lev_type == (-1))
+		    {
+		      ion[n].lev_type = lev_type;
+		    }
+		  else if (ion[n].lev_type != lev_type)
+		    {
+//OLD                 Error
+//OLD                   ("Get_atomic_data: file %s  Reading lev_type (%d) for ion %d with lev_type (%d). Not allowed\n",
+//OLD                    file, lev_type, n, ion[n].lev_type);
+		      break;
+		    }
+//  End section known to be idential to case N
+
+
+/* Check whether this is a macro-ion.  If it is a macro-ion, but the level appears to be described as a
+simple level (i.e without a keyword LeVMacro), then skip it, since a macro-ion has to have all the levels 
+described as macro-levels. */
+		  if (ion[n].macro_info == 1)
+		    {
+		      Error
+			("get_atomic_data: file %s line %d has simple level for ion[%d], which is a macro-ion\n",
+			 file, lineno, n);
+		      break;
+		    }
+/* Check to prevent one from adding simple levels to an ionized that already has some nlte levels.  Note that
+   an ion may have simple levels, i.e. levels with no entries in the plasma structure levden array, but this 
+   will only be the case if there are too many of this type of level.
+*/
+		  if (ion[n].nlte > 0)
+		    {
+		      Error
+			("get_atomic_data:  file %s line %d has simple level for ion[%d], which has non_lte_levels\n",
+			 file, lineno, n);
+		      break;
+		    }
+
+/*  Check whether we already have too many levels specified for this ion. If so, skip */
+		  if (ion[n].nmax == ion[n].nlevels)
+		    {
+		      if (DEBUG)
+			Error
+			  ("get_atomic_data: file %s line %d has level exceeding the number allowed for ion[%d]\n",
+			   file, lineno, n);
+
+		      break;
+		    }
+//  So now we know that this level can be associated with an ion
+
+		  config[nlevels].z = z;
+		  config[nlevels].istate = istate;
+		  config[nlevels].isp = islp;
+		  config[nlevels].ilv = ilv;
+		  config[nlevels].nion = n;	//Internal index to ion structure
+		  config[nlevels].q_num = qqnum;
+		  config[nlevels].g = gg;
+		  config[nlevels].ex = exx;
+
+		  if (ion[n].firstlevel < 0)
+		    {
+		      ion[n].firstlevel = nlevels;
+		      ion[n].nlevels = 1;
+		    }
+		  else
+		    ion[n].nlevels++;
+
+
+/* 080808 - ksl - Now declare that this level has no corresponding element in the levden array which is part 
+   of the plasma stucture.  To do this set config[].ndent to -1
+*/
+
+		  config[nlevels].nden = -1;
+
+		  config[nlevels].rad_rate = 0.0;	// ?? Set emission oscillator strength for the level to zero
+
+		  nlevels_simple++;
+		  nlevels++;
+		  if (nlevels > NLEVELS)
+		    {
+		      Error
+			("getatomic_data: file %s line %d: More energy levels than allowed. Increase NLEVELS in atomic.h\n",
+			 file, lineno);
+		      exit (0);
+		    }
+		  break;
+
 
 
 // Photoionization
@@ -1045,7 +1157,7 @@ for the ionstate.
 			n++;
 		      if (n == nlevels)
 			{
-			  Error
+			  Error_silent
 			    ("get_atomic_data: No configuration found to match upper state for phot. line %d\n",
 			     lineno);
 			  break;	//Need to match the configuration for macro atoms - break if not found.
@@ -1059,7 +1171,7 @@ for the ionstate.
 			m++;
 		      if (m == nlevels)
 			{
-			  Error
+			  Error_silent
 			    ("get_atomic_data: No configuration found to match lower state for phot. line %d\n",
 			     lineno);
 			  break;	//Need to match the configuration for macro atoms - break if not found.
@@ -1120,6 +1232,15 @@ for the ionstate.
 
 		      ntop_phot_macro++;
 		      ntop_phot++;
+
+		      /* 080812 - Added check to assure we did not exceed the allowed number of photoionization records */
+		      if (ntop_phot > NTOP_PHOT)
+			{
+			  Error
+			    ("get_atomicdata: More macro photoionization cross sections that NTOP_PHOT (%d).  Increase in atomic.h\n",
+			     NTOP_PHOT);
+			  exit (0);
+			}
 		      break;
 		    }
 		  else
@@ -1143,7 +1264,16 @@ for the ionstate.
 			    }
 
 			  n = 0;
-			  while ((config[n].z != z
+
+
+			  /* 080812 - 63 - ksl - added additional check to assure that records were
+			   * only matched with levels whose density was being tracked in levden.  This
+			   * is now necesary since a change was made to use topbase levels for calculating
+			   * partition functions 
+			   */
+
+			  while ((config[n].nden == -1
+				  || config[n].z != z
 				  || config[n].istate != istate
 				  || config[n].isp != islp
 				  || config[n].ilv != ilv) && n < nlevels)
@@ -1181,7 +1311,7 @@ for the ionstate.
 				  exit (0);
 				}
 			      ion[config[n].nion].ntop++;
-
+			      //printf("Accepted Z %d NI %d %d %d (%d %d)\n", z,istate,islp,ilv,n,config[n].nden);
 			      for (n = 0; n < np; n++)
 				{
 				  phot_top[ntop_phot].freq[n] = xe[n] * EV2ERGS / H;	// convert from eV to freqency
@@ -1193,6 +1323,15 @@ for the ionstate.
 
 			      ntop_phot_simple++;
 			      ntop_phot++;
+
+			      /* 080812 - Added check to assure we did not exceed the allowed number of photoionization records */
+			      if (ntop_phot > NTOP_PHOT)
+				{
+				  Error
+				    ("get_atomicdata: More TopBase photoionization cross sections that NTOP_PHOT (%d).  Increase in atomic.h\n",
+				     NTOP_PHOT);
+				  exit (0);
+				}
 			    }
 			  else
 			    {
@@ -1266,6 +1405,101 @@ for the ionstate.
 			  exit (0);
 			}
 		    }
+
+		  /*Input data for innershell ionization followed by
+		    Auger effect */
+
+ 		case 'A':
+ 		  if (sscanf (aline,
+ 			  "%*s %d %d %d %d %le %le %le %le %le %le %le", &z,
+ 			      &istate, &nn, &nl, &yield, &arad, &etarad, &adi, &t0di, &bdi, &t1di) != 11)
+ 		    {
+ 		      Error("Auger input incorrectly formatted\n");
+ 		      Error("Get_atomic_data: %s\n", aline);
+ 		      exit(0);
+ 		    }
+ 		  //		  printf("%d %d %d %d %le %le %le\n",z,istate,nn,nl,yield, arad, etarad);
+ 		  if (nauger < NAUGER)
+ 		    {
+ 		      if ((vptr = fopen ("atomic/photo_verner.data", "r")) == NULL)
+ 			{
+ 			  Error ("get_atomic data:  Could not open photo_verner.data\n");
+ 			  exit (0);
+ 			} 
+ 		      ion_index = -2;
+ 		      target_index = -1;
+ 		      for (n_verner=0; n_verner<1696; n_verner++)
+ 			{
+ 			  fscanf (vptr, "%d %d %d %d %le %le %le %le %le %le\n", &dumz, &dumistate, &dumnn, &dumnl,
+ 				  &dumE_th, &dumE_0, &dumSigma, &dumya, &dumP, &dumyw);
+ 			  if ((dumz == z) && (dumistate == (dumz - istate + 1)) && (dumnn == nn) && (dumnl == nl))
+ 			    {
+ 			      /* Now need to check that this ion is really in the data set and find which it is */
+ 			      ion_index = -1;
+ 			      for (n = 0; n < nions; n++)
+ 				{
+ 				  if (ion[n].z == z && ion[n].istate == istate)
+ 				    {
+ 				      ion_index = n; 
+ 				      augerion[nauger].nion = n;
+ 				      augerion[nauger].yield = yield;
+ 				      augerion[nauger].arad = arad;
+ 				      augerion[nauger].etarad = etarad;
+ 				      augerion[nauger].adi = adi;
+ 				      augerion[nauger].t0di = t0di;
+ 				      augerion[nauger].bdi = bdi;
+ 				      augerion[nauger].t1di = t1di;
+ 				      
+ 				      augerion[nauger].z = z;
+ 				      augerion[nauger].istate = istate;
+ 				      augerion[nauger].n = nn;
+ 				      augerion[nauger].l = nl;
+ 				      augerion[nauger].freq_t = dumE_th/HEV;
+ 				      augerion[nauger].E_0 = dumE_0;
+ 				      augerion[nauger].Sigma = dumSigma * 1.e-18; //input
+										  //in megabarns
+ 				      augerion[nauger].ya = dumya;
+ 				      augerion[nauger].yw = dumyw;
+ 				      augerion[nauger].P = dumP;
+ 				      nauger++;
+ 				    }
+ 
+ 				  /*We also want the index for the
+ 				    targe ion (i.e. the one that is
+ 				    two ionization stages up from the
+ 				    one found above */
+ 				  if (ion[n].z == z && ion[n].istate == istate + 2)
+ 				    {
+ 				      target_index = n;
+ 				    }
+ 				  
+ 				}
+ 			      if (ion_index == -1)
+ 				{
+ 				  Error("Get_atomic_data: Failed to find ion to match Auger input data. Ignoring.  %d %d %d %d\n", dumz, dumistate, dumnn, dumnl);
+ 				}
+ 			      else
+ 				{
+ 				  augerion[nauger-1].nion_target = target_index;
+ 				}
+ 			    }
+ 			}
+ 		      fclose(vptr);
+ 		      if (ion_index == -2)
+ 			{
+ 			  Error("Get_atomic_data: Failed to find source data to match Auger input data. Ignoring. %d %d %d %d\n", z, istate, nn, nl);
+ 			}
+		      else
+			{
+			  Log("Matched Auger ionization input to Z %d istate %d going to Z %d istate %d.\n", ion[augerion[nauger-1].nion].z,ion[augerion[nauger-1].nion].istate,ion[augerion[nauger-1].nion_target].z,ion[augerion[nauger-1].nion_target].istate);
+			}
+ 		    }
+ 		  else
+ 		    {
+ 		      Error("Get_atomic_data: NAUGER is filled up! Ignoring input data %d.\n", nauger);
+ 		    }
+ 		  break;
+ 		  
 
 
 // Lines
@@ -1362,7 +1596,7 @@ Col
 			n++;
 		      if (n == nlevels)
 			{
-			  Error
+			  Error_silent
 			    ("Get_atomic_data: No configuration found to match lower level of line %d\n",
 			     lineno);
 			  break;
@@ -1375,7 +1609,7 @@ Col
 			m++;
 		      if (m == nlevels)
 			{
-			  Error
+			  Error_silent
 			    ("Get_atomic_data: No configuration found to match upper level of line %d\n",
 			     lineno);
 			  break;
@@ -1463,7 +1697,7 @@ Col
 			{	/* Then there is a match */
 			  if (freq == 0 || f <= 0 || gl == 0 || gu == 0)
 			    {
-			      Error
+			      Error_silent
 				("getatomic_data: line input incomplete: %s\n",
 				 aline);
 			      break;
@@ -1900,7 +2134,7 @@ or zero so that simple checks of true and false can be used for them */
   if (ntop_phot > 0)
     index_phot_top ();
 
-  return (0);
+ return (0);
 
 }
 

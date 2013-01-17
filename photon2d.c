@@ -12,6 +12,7 @@
                                        Space Telescope Science Institute
 
  Synopsis:   
+
 	translate either calls translate_in_space or translate_in_wind  depending upon the
 	current location of the photon.  
   
@@ -126,13 +127,15 @@ photon hit the star in its passage from pold to the current position */
 /***********************************************************
                                        Space Telescope Science Institute
 
- Synopsis:   
+Synopsis:   
+
 	double ds_to_wind(pp)  calculates the photon pathlength to the edge of the wind.  
    
- Arguments:		
+Arguments:		
 	PhotPtr pp;.
 	
- Returns:
+Returns:
+
  	The distance to the nearest boundary of the wind.  
   
 Description:
@@ -159,7 +162,7 @@ Description:
 	The routine distinguishes between  two basic cases.  Either the photon is already in the wind
 	in which case one looks for the nearest boundary, or the photon is not currently
 	in the wind and you have to translate it until it reaches the the boundary (or
-	INFINITY) 
+	VERY_BIG) 
 Notes:
 	There is no guarantee that you will still be in the region defined by the grid.
 
@@ -169,7 +172,7 @@ History:
 	99oct	ksl	The existing version of this code appears to contain
 			an attempt to deal with what looks to be a roundoff
 			problem when the intersection point is at large radii
-			but at a radii less than INFINITY.  I have made the 
+			but at a radii less than VERY_BIG.  I have made the 
 			fudge bigger in an attempt to push through the boundary
 			and logged the error.  There ought to be a better fix
 			involving not letting the photon get too far from
@@ -260,10 +263,25 @@ History:
 			that are not picked up by the calculation of volumes.  Basically
 			there was an option to kill these photons off entirely or
 			to allow than to proceed to the next cell.  
+	06nov	ksl	58b -- Modified to recognize case in which
+			we want to ignore a cell because the portion
+			of the volume of that cell is negligibly
+			small
+	09mar	ksl	Provided a capability to count reduce
+			the numbers of errors for a photon
+			going through a region with negligibe
+			volume.  
  
 **************************************************************/
 
+/* 68c - The variable below was added because there were cases where the number
+ * of photons passing through a cell with a neglible volume was becoming
+ * too large and stopping the program.  This is a bandaide since if this
+ * is occurring a lot we should be doing a better job at calculating the
+ * volume
+ */
 
+int neglible_vol_count=0;
 
 int
 translate_in_wind (w, p, tau_scat, tau, nres)
@@ -278,7 +296,6 @@ translate_in_wind (w, p, tau_scat, tau, nres)
   int n;
   double smax, s, ds_current;
   int istat;
-  double calculate_ds (), ds_to_wind (), ds_to_disk ();
   int stuff_phot ();
   int where_in_grid (), wind_n_to_ij ();
   int quadratic (), move_phot ();
@@ -291,7 +308,7 @@ translate_in_wind (w, p, tau_scat, tau, nres)
 
 
 /* First verify that the photon is in the grid, and if not
-return and error */
+return and record an error */
 
   if ((p->grid = n = where_in_grid (p->x)) < 0)
     {
@@ -301,12 +318,14 @@ return and error */
 
 
 /* Assign the pointers for the cell containing the photon */
+
   one = &wmain[n];		/* one is the grid cell where the poton is */
   nplasma = one->nplasma;
   xplasma = &plasmamain[nplasma];
 
 
 /* Calculate the maximum distance the photon can travel in the cell */
+
   if (geo.coord_type == CYLIND)
     {
       smax = cylind_ds_in_cell (p);	// maximum distance the photon can travel in a cell
@@ -331,7 +350,7 @@ return and error */
       exit (0);
     }
 
-  if (one->inwind == 1)
+  if (one->inwind == W_PART_INWIND)
     {				// The cell is partially in the wind
       s = ds_to_wind (p);	//smax is set to be the distance to edge of the wind
       if (s < smax)
@@ -340,18 +359,25 @@ return and error */
       if (s > 0 && s < smax)
 	smax = s;
     }
-  else if (one->inwind == -1)
+  else if (one->inwind == W_IGNORE)
+    {
+      if ((neglible_vol_count % 100)==0) Error
+	("translate_in_wind: Photon is in cell %d with negligible volume, moving photon %.2e  Occurrences %d\n",
+	 n, smax,neglible_vol_count+1);
+      
+      neglible_vol_count++;
+      move_phot (p, smax);
+      return (p->istat);
+
+    }
+  else if (one->inwind == W_NOT_INWIND)
     {				//The cell is not in the wind at all
 
 /* 
-	05apr -- ksl -- 55d -- In older versions of the Python, we established
-	whether something was inwind on the basis of the positios of the vertices.
-	At present, we are using a volume integration.  So there is a possiblilty
-	that the wind will just skim a cell.  Here we just assure that in this
-	case the photon passes unimpeded through the cell.
-
-	06sep -- ksl -- 57h -- Occasionally photons appera to get stuck here.  Changing
-	diagnostics first to determine why this is happening
+061104--58b--ksl -- In previous versions of the program, this error could be ignored
+because of the fact that we used a volume integration to determine whether the cell
+was in the wind, but now we are explicitly handling this case, see above.  So if this
+error continues to appear, new investigations are required.
 */
 
 
@@ -366,8 +392,7 @@ return and error */
     }
 
 
-  /* At this point we now know how far the photon can travel in it's current
-     grid cell */
+/* At this point we now know how far the photon can travel in it's current grid cell */
 
 
 
@@ -393,6 +418,7 @@ radiation, which is the single largest contributer to execution time.*/
 
 
 /* Note that ds_current does not alter p in any way at present 02jan ksl */
+
   ds_current = calculate_ds (w, p, tau_scat, tau, nres, smax, &istat);
 
 /* OK now we increment the radiation field in the cell, translate the photon and wrap 
@@ -416,6 +442,7 @@ subroutine radiation can be avoided.
 
 /*57h -- ksl -- 071506 moved steps not needed in calculation of detailed spectrum inside if statement
 for consistency.  Delete comment when satisfied OK */
+
       if (geo.ioniz_or_extract == 1)	//don't need to record estimators if this is set to 0 (spectrum cycle)
 	{
 	  bf_estimators_increment (one, p, ds_current);
@@ -428,34 +455,14 @@ for consistency.  Delete comment when satisfied OK */
 
 	}
 
-
     }
   else
     {
       radiation (p, ds_current);
     }
 
-//DIAG n=where_in_grid(p->x);
-
-//DIAG if(wmain[n].nplasma==NPLASMA){
-
-//DIAG                   Error
-//DIAG                     ("translate_in_wind: photon is not in a cell in the plasma structure before transport\n");
-//DIAG                   Error ("translate_in_wind: grid %3d x %8.2e %8.2e %8.2e\n",
-//DIAG                          p->grid, p->x[0], p->x[1], p->x[2]);
-//DIAG }
 
   move_phot (p, ds_current);
-
-
-//DIAG n=where_in_grid(p->x);
-//DIAG if(wmain[n].nplasma==NPLASMA){
-
-//DIAG                   Error
-//DIAG                     ("translate_in_wind: photon is not in a cell in the plasma structure after transport\n");
-//DIAG                   Error ("translate_in_wind: grid %3d x %8.2e %8.2e %8.2e\n",
-//DIAG                          p->grid, p->x[0], p->x[1], p->x[2]);
-//DIAG }
 
   p->nres = (*nres);
 

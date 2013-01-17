@@ -19,7 +19,7 @@
 
    ds_to_roche2   calculates the distance a photon defined by p_roche has to travel 
    before it will encounter the secondary.  If it misses, ds_to_roche2
-   returns INFINITY.
+   returns VERY_BIG.
 
    hit_secondary   determines whether a photon defined by p_roche will hit the secondary
    or not.  If it misses, hit_secondary returns 0, if it hits, the return is
@@ -167,7 +167,7 @@ binary_basics ()
 
 
 /* Calculate the distance to the roche surface of the secondary for photon p.  
-   Return -INFINITY if the photon does not intercept the surface.  
+   Return -VERY_BIG if the photon does not intercept the surface.  
 
  */
 
@@ -189,7 +189,7 @@ ds_to_roche_2 (p)
 
   double pillbox ();
 
-  if ((s = pillbox (p, &smin, &smax)) == INFINITY)
+  if ((s = pillbox (p, &smin, &smax)) == VERY_BIG)
     return (0);			/* Missed secondary */
   stuff_phot (p, &p_roche);
 
@@ -199,7 +199,7 @@ ds_to_roche_2 (p)
   potential = golden (smin, 0.5 * (smin + smax), smax, phi, 0.0001, &s);
 
   if (potential > 0.0)
-    return (INFINITY);		/*Missed secondary) */
+    return (VERY_BIG);		/*Missed secondary) */
 
 
   if (smin > s)
@@ -241,7 +241,7 @@ hit_secondary (p)
 
   double pillbox ();
 
-  if (pillbox (p, &smin, &smax) == INFINITY)
+  if (pillbox (p, &smin, &smax) == VERY_BIG)
     return (0);			/* Missed secondary */
   stuff_phot (p, &p_roche);
   potential = golden (smin, 0.5 * (smin + smax), smax, phi, 0.0001, &s);
@@ -262,7 +262,7 @@ hit_secondary (p)
    is on the WD side of L1 plane; an abnormal one is on the side of the L1 plane with the secondary.
  
 
-   pillbox returns INFINITY if the photon p has not intersected the pillbox.  It appears to return the distance
+   pillbox returns VERY_BIG if the photon p has not intersected the pillbox.  It appears to return the distance
    to the pillbox if the photon p hits the pillbox.  smin and smax contain the entrance and exit distances.  It
    is not obvious that smin < smax.
 
@@ -310,14 +310,14 @@ and determine where they are.  This calculation is carried out in the if section
 hit the edges of the cylinder. i is an index to the smallest positive root, if one exists.  
 If both of the roots are negative or imaginary then i will be negative, and we know
 that the ray did not hit the cylinder while travelling in the positive direction.  In
-that case return  INFINITY
+that case return  VERY_BIG
 
 Note that the fact that the ray does hit the cylinder going in the positive direction 
 does not necessarily mean that it hits the pillbox.  
 */
 
       if ((i = quadratic (a, b, c, root)) < 0)
-	return (INFINITY);
+	return (VERY_BIG);
 
 /* If the intersection is in the part of the cylinder between the caps it is probably legitimate.
 So tranport pp to the intersection of the first root and check where that lies. And then
@@ -370,7 +370,7 @@ distances are valid only if the photon is in the pillbox already */
 then the photon did not hit the pillbox ksl 02jan */
 
   if ((n == 0) || (ss[0] < 0 && ss[1] < 0))
-    return (INFINITY);		// The photon did not hit the pillbox
+    return (VERY_BIG);		// The photon did not hit the pillbox
 
   if (n == 2)
     {
@@ -389,7 +389,7 @@ then the photon did not hit the pillbox ksl 02jan */
     }
 
   Error ("pillbox %d interfaces to pillbox is impossible\n", n);
-  return (INFINITY);
+  return (VERY_BIG);
 
 }
 
@@ -423,7 +423,7 @@ phi (s)
   move_phot (&pp, s);		/* So now we have the actuaal position of the photon relative to the WD */
 
   if ((x1 = length (&pp.x[0])) == 0)
-    return (-INFINITY);
+    return (-VERY_BIG);
   z1 = -phi_gm1 / x1;
   z3 =
     -phi_3 * ((pp.x[0] - phi_4) * (pp.x[0] - phi_4) + pp.x[1] * pp.x[1]) -
@@ -431,7 +431,7 @@ phi (s)
 
   pp.x[0] -= geo.a;		/* Here we make pp refer to the positions w.r.t. the secondary */
   if ((x2 = length (&pp.x[0])) == 0)
-    return (-INFINITY);
+    return (-VERY_BIG);
 
   z2 = -phi_gm2 / x2;
 

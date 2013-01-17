@@ -337,7 +337,7 @@ pdf_gen_from_func (pdf, func, xmin, xmax, njumps, jump)
     }
 
 
-/* So at this point pdf_arry contains an unnormalized version of the CDF for the function */
+/* So at this point pdf_array contains an unnormalized version of the CDF for the function */
 
   pdf->x[0] = xmin;
   pdf->y[0] = 0;
@@ -397,7 +397,7 @@ one can linearly interpolate between points
 Notes:
 
 
-	06sep -- There are differenceds between this and pdf_gen_from_func
+	06sep -- There are differences between this and pdf_gen_from_func
 	that look historical -- ksl
 
 
@@ -419,9 +419,15 @@ History:
 			elements in the pdf array.  I found an error in the way q 
 			for jumps was calculated and added checks (and a shuffle)
 			for situations where the cdf was out of order.
+	090122	ksl	Increase size of PDF_ARRAY to reflect the fact that we are
+			tending towards models with more points in them and updated 
+			the error message associated with allowing too few points
+			so that problems with this would be easier to update in
+			future.
 */
 
-#define PDF_ARRAY  4000
+#define PDF_ARRAY  11000
+
 double pdf_x[PDF_ARRAY], pdf_y[PDF_ARRAY], pdf_z[PDF_ARRAY];
 int pdf_n;
 
@@ -538,7 +544,9 @@ pdf_gen_from_array (pdf, x, y, n_xy, xmin, xmax, njumps, jump)
 	  pdf_n++;
 	  if (pdf_n > PDF_ARRAY)
 	    {
-	      Error ("pdf_gen_from_array: pdf_n exceeded maximum array size");
+	      Error ("pdf_gen_from_array: pdf_n (%d) exceeded maximum array size PDF_ARRAY (%d) \n",pdf_n,PDF_ARRAY);
+	      Error ("pdf_gen_from_array: n_xy %d xmin %f xmax %f njumps %d\n",n_xy,xmin,xmax,njumps);
+	      Error ("pdf_gen_from_array: Consider increasing PDF_ARRAY to a value > n_xy + njumps, and recompiling\n");  
 	      exit (0);
 	    }
 	}
@@ -1014,6 +1022,8 @@ History:
 	06sep	ksl	57i -- Initiated to try an improve
 			the calculation of the distribuion
 			within a pdf interval.
+	06nov	ksl	58b: Fixed problem occuring when there
+			were two points in cdf with same x
                                                                                              
 **************************************************************/
 
@@ -1022,13 +1032,35 @@ recalc_pdf_from_cdf (pdf)
      PdfPtr pdf;
 {
   int n;
+  double dx1, dx2, dy1, dy2;
 
   for (n = 1; n < NPDF; n++)
     {
+      dy1 = pdf->y[n] - pdf->y[n - 1];
+      dx1 = pdf->x[n] - pdf->x[n - 1];
 
-      pdf->d[n] = 0.5 *
-	((pdf->y[n + 1] - pdf->y[n]) / (pdf->x[n + 1] - pdf->x[n])) +
-	((pdf->y[n] - pdf->y[n - 1]) / (pdf->x[n] - pdf->x[n - 1]));
+      dy2 = pdf->y[n + 1] - pdf->y[n];
+      dx2 = pdf->x[n + 1] - pdf->x[n];
+
+      if (dx1 != 0.0 && dx2 != 0.0)
+	{
+	  pdf->d[n] = 0.5 * (dy1 / dx1 + dy2 / dx2);
+	}
+      else if (dx1 != 0.0)
+	{
+	  pdf->d[n] = dy1 / dx1;
+	}
+      else if (dx2 != 0.0)
+	{
+	  pdf->d[n] = dy2 / dx2;
+	}
+      else
+	{
+	  pdf->d[n] = 0.0;
+	  Error ("recalc_pdf_from_cdf: dx1 and dx2 both 0 at  %d %f\n", n,
+		 pdf->x[n]);
+	}
+
     }
   /* Fill in the ends */
   pdf->d[0] = pdf->d[1];

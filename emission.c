@@ -32,7 +32,6 @@ History:
 #include "python.h"
 //#include "recipes.h"
 
-#define LINELENGTH 132
 
 
 
@@ -499,7 +498,7 @@ space because the line luminosities contained in the line ptr arrays are not cur
 /***********************************************************
                                        Space Telescope Science Institute
 
-Synopsis: 
+Synopsis:  total_free calculates the ff luminosity of a cell.
 
 Arguments:		
 
@@ -518,10 +517,12 @@ History:
 Note: program uses an integral formula rather than integrating on
    the fly which is not ideal but saves time 
 
- Apr 04, SS: added if statement for case when running hydrogen only. 
+ 	04Apr	SS 	added if statement for case when running hydrogen only. 
 	06may	ksl	57+ -- Modified to partially account for plasma structue
 			but a further change will be needed when move volume to
 			plasma
+	07jul	ksl	58f - This routine requires a WindPtr because we still need the
+			volume and that is still part of WindPtr
 */
 
 double

@@ -597,6 +597,7 @@ emittance_bb (freqmin, freqmax, t)
 	       BOLTZMANN * BOLTZMANN * BOLTZMANN) / (H * H * H * C * C);
   alphamin = H * freqmin / (BOLTZMANN * t);
   alphamax = H * freqmax / (BOLTZMANN * t);
+
   return (q1 * t * t * t * t * integ_planck_d (alphamin, alphamax));
 }
 

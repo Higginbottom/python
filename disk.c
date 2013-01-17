@@ -21,8 +21,6 @@ tdisk (m, mdot, r)
 }
 
 
-double
-teff (t, x)
 /* effective temperature of accretion disk as a function of r
    inputs:      
    	t    reference temperature of the disk in degrees.
@@ -41,12 +39,16 @@ teff (t, x)
 			for a variety of disk illumination possibilities
    06Jan	ksl	Fixed problem with absorbing disk
 */
+
+double
+teff (t, x)
      double t, x;
 {
   double q, theat, r;
   double pow ();
   double disk_heating_factor;
   int kkk;
+  int n;
 
   if (x < 1)
     {
@@ -55,46 +57,63 @@ teff (t, x)
     }
 
 
-
-
-  q = (1.e0 - pow (x, -0.5e0)) / (x * x * x);
-  q = t * pow (q, 0.25e0);
-
-  if (geo.disk_illum == 2)
+  if ((geo.disk_tprofile != 0)
+      && ((x * geo.rstar) < blmod.r[blmod.n_blpts - 1]))
     {
-      r = x * geo.rstar;	// 04aug -- Requires fix if disk does not extend to rstar
-      kkk = 1;			// photon cannot hit the disk at r<qdisk.r[0]
-      while (r > qdisk.r[kkk] && kkk < NRINGS - 1)
-	kkk++;
-      /* Note that disk has 2 sides */
-      theat =
-	qdisk.heat[kkk -
-		   1] / (2. * PI * (qdisk.r[kkk] * qdisk.r[kkk] -
-				    qdisk.r[kkk - 1] * qdisk.r[kkk - 1]));
-//OLD  Next lines are not correct  ksl 060102
-//OLD      theat = pow (theat / STEFAN_BOLTZMANN, 0.25);
-//OLD     q += theat;
-
-/* T_eff is given by T_eff**4= T_disk**4+Heating/area/STEFAN_BOLTZMANN */
-      q = pow (q * q * q * q + (theat / STEFAN_BOLTZMANN), 0.25);
+      if ((r = (x * geo.rstar)) < blmod.r[0])
+	{
+	  return (blmod.t[0]);
+	}
+      else
+	{
+	  for (n = 1; n < blmod.n_blpts; n++)
+	    {
+	      if ((r < blmod.r[n]) && (r > blmod.r[n - 1]))
+		{
+		  return (blmod.t[n]);
+		}
+	    }
+	  Error
+	    ("tdisk: inside BL profile region but failed to identify temp.\n");
+	}
     }
-  else if (geo.disk_illum == 3)
+  else
     {
-      disk_heating_factor = pow (geo.tstar / t, 4.0);
-      disk_heating_factor *=
-	(asin (1. / x) - (pow ((1. - (1. / (x * x))), 0.5) / x));
-      disk_heating_factor /= PI;
 
-      disk_heating_factor *= x * x * x;
-      disk_heating_factor /= (1 - sqrt (1. / x));
+      q = (1.e0 - pow (x, -0.5e0)) / (x * x * x);
+      q = t * pow (q, 0.25e0);
 
-      disk_heating_factor += 1;
-      q *= pow (disk_heating_factor, (1. / 4.));
+      if (geo.disk_illum == 2)	// Absorb photons and increase t so that heat is radiated
+	{
+	  r = x * geo.rstar;	// 04aug -- Requires fix if disk does not extend to rstar
+	  kkk = 1;		// photon cannot hit the disk at r<qdisk.r[0]
+	  while (r > qdisk.r[kkk] && kkk < NRINGS - 1)
+	    kkk++;
+	  /* Note that disk has 2 sides */
+	  theat =
+	    qdisk.heat[kkk -
+		       1] / (2. * PI * (qdisk.r[kkk] * qdisk.r[kkk] -
+					qdisk.r[kkk - 1] * qdisk.r[kkk - 1]));
 
-      //    Log("teff: heating by the star increased the luminosty at %g by factor %g.\n", x, disk_heating_factor);
+	  /* T_eff is given by T_eff**4= T_disk**4+Heating/area/STEFAN_BOLTZMANN */
+	  q = pow (q * q * q * q + (theat / STEFAN_BOLTZMANN), 0.25);
 
+	}
+      else if (geo.disk_illum == 3)	// Analytic approximation for disk heating by star; implemented for YSOs
+	{
+	  disk_heating_factor = pow (geo.tstar / t, 4.0);
+	  disk_heating_factor *=
+	    (asin (1. / x) - (pow ((1. - (1. / (x * x))), 0.5) / x));
+	  disk_heating_factor /= PI;
+
+	  disk_heating_factor *= x * x * x;
+	  disk_heating_factor /= (1 - sqrt (1. / x));
+	  disk_heating_factor += 1;
+
+	  q *= pow (disk_heating_factor, (1. / 4.));
+
+	}
     }
-
   return (q);
 }
 
@@ -127,6 +146,33 @@ geff (g0, x)
 }
 
 
+/* vdisk calculate the speed and velocity v at which material given
+   specific position in the disk.
+  
+Description:
+
+   The routine determines the speed by interpolating on stored
+   values in the structure disk
+  
+   It then takes the xproduct of a unit vector pointing north and
+   the position, to determine the direction of motion at this point
+   in the disk
+  
+   Finally it rescales this to get the actual velocity.
+  
+   is travelling in the
+   disk by interpolating on the velocities that are contained 
+
+Notes"
+
+	The routine projects the input variable x on to the xy plane
+	before it calculates velocities.  
+
+History:
+
+	08mar	ksl	Added explanation of what the routine does. The
+			routine was not changed.
+ */
 double north[] = { 0.0, 0.0, 1.0 };
 
 double
@@ -195,7 +241,7 @@ zdisk (r)
  Returns:
         The distance to the disk.  The photon is not going to
 	hit the disk travelling in either direction
-	returns INFINITY.
+	returns VERY_BIG.
 
    
 Description:
@@ -240,7 +286,7 @@ ds_to_disk (p, miss_return)
 
 
   if (geo.disk_type == 0)
-    return (INFINITY);		/* There is no disk! */
+    return (VERY_BIG);		/* There is no disk! */
 
   if (ds_to_disk_init == 0)
     {				/* Initialize 3 structures that define
@@ -277,7 +323,7 @@ ds_to_disk (p, miss_return)
   if (geo.disk_type == 1)
     {
       if (r_plane > geo.diskrad)
-	return (INFINITY);
+	return (VERY_BIG);
       return (s_plane);
     }
 
@@ -304,7 +350,7 @@ ds_to_disk (p, miss_return)
     {
       if (miss_return == 0)
 	{
-	  return (INFINITY);
+	  return (VERY_BIG);
 	}
       else
 	{

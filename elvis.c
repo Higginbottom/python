@@ -1,14 +1,4 @@
 
-
-/* The routines in this file define and summarize the properties of the wind.  The routines here are
-   specific to the SV description of a wind. It is only useful in the 2-d version of the code.
-
-   This file was created in 98apr in order to being to isolate the SV description from the more
-   generic parts of the wind.  Major modifications, mostly moving new code here and
-   creating the remaining subroutines to completely concentrate the sv dependent routines
-   here were made in 98dec.
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -20,8 +10,9 @@
                                        Space Telescope Science Institute
 
  Synopsis:
-	get_sv_wind_params gets input data which is necessary for a Shlossman & Vitello 
-	description of the wind
+	get_elvis_wind_params gets input data which is necessary for a Shlossman & Vitello 
+	description of the wind with a vertical offset as requested for the Elvis AGN model
+	This is all copied almost directly from the equivalent SV routines.
 Arguments:		
 
 Returns:
@@ -34,20 +25,17 @@ Notes:
 
 
 History:
- 	98dec	ksl	Coded and debugged as part of major change in IO structure required when
- 				adding a spherical wind
-        080518  ksl     60a - geo should contain only cgs units
+         Oct06 SS
 **************************************************************/
 
 int
-get_sv_wind_params ()
+get_elvis_wind_params ()
 {
   double windmin, windmax, theta_min, theta_max;
-  double qromb (), sv_wind_mdot_integral ();
+  double qromb (), elvis_wind_mdot_integral ();
 
-  Log ("Creating an SV wind model for a Cataclysmic Variable\n");
+  Log ("Creating an SV/Elvis wind model for an AGN\n");
 
-  geo.wind_mdot /= (MSOL / YR);	// Convert to MSOL/YR for easy of data entry
   rddoub ("wind.mdot(msol/yr)", &geo.wind_mdot);
   geo.wind_mdot *= MSOL / YR;
 
@@ -62,6 +50,7 @@ get_sv_wind_params ()
   geo.sv_alpha = 1.5;		/* Accleration scale exponent */
   geo.sv_v_infinity = 3;	/* Final speed of wind in units of escape velocity */
   geo.sv_lambda = 0.0;		/* Mass loss rate exponent */
+  geo.elvis_offset = 1.e14;
 
   windmin = geo.sv_rmin / geo.rstar;
   windmax = geo.sv_rmax / geo.rstar;
@@ -84,7 +73,11 @@ get_sv_wind_params ()
 
   rddoub ("sv.acceleration_length(cm)", &geo.sv_r_scale);	/*Accleration length scale for wind */
   rddoub ("sv.acceleration_exponent", &geo.sv_alpha);	/* Accleration scale exponent */
+
+  rddoub ("elvis_offset(cm)", &geo.elvis_offset);	/* This is the vertical offset - the length over which the wind rises vertically */
+
 /* Assign the generic parameters for the wind the generic parameters of the wind */
+
 
   geo.wind_rmin = geo.rstar;
   geo.wind_rmax = geo.rmax;
@@ -92,13 +85,13 @@ get_sv_wind_params ()
   geo.wind_rho_max = geo.sv_rmax;
   geo.wind_thetamin = geo.sv_thetamin;
   geo.wind_thetamax = geo.sv_thetamax;
-  geo.xlog_scale = geo.sv_rmin;
-  geo.zlog_scale = 1e7;
+  geo.xlog_scale = geo.sv_rmin + (geo.elvis_offset * tan (geo.sv_thetamin));
+  geo.zlog_scale = 1e15;	/* Big number - for AGN */
 
 /*Now calculate the normalization factor for the wind*/
 
   geo.mdot_norm =
-    qromb (sv_wind_mdot_integral, geo.sv_rmin, geo.sv_rmax, 1e-6);
+    qromb (elvis_wind_mdot_integral, geo.sv_rmin, geo.sv_rmax, 1e-6);
   return (0);
 }
 
@@ -106,7 +99,7 @@ get_sv_wind_params ()
                                        Space Telescope Science Institute
 
  Synopsis:
-	double sv_velocity(x,v) calulates the v of a Schlossman Vitello wind from a position
+	double elvis_velocity(x,v) calulates the v of an offset Schlossman Vitello wind from a position
 	x
 Arguments:		
 	double x[]		the postion where for the which one desires the velocity
@@ -120,26 +113,17 @@ Description:
 Notes:
 
 History:
- 	98dec	ksl	Coded as part of effort to isolate SV portions of the code.
-	01mar	ksl	Moved mdot_norm calculation from sv_rho to get_sv_params() 
-			since it doesn't need to be recalulated every time
-	04aug	ksl	52 -- Modified to allow for s thick disk, and to return
-			the velocity in cartesian rather than cylindrical coords.
-			These are the same if x is in xz plane.
-	04dec	ksl	54a  -- Minor mod to avoid -O3 warning
-	05jul	ksl	56d  -- Corrected error in the direction calculated for
-			ptest
  
 **************************************************************/
 
 double
-sv_velocity (x, v)
+elvis_velocity (x, v)
      double x[], v[];
 {
   double r, rzero, theta, speed;
   double ldist, zzz, v_escape, vl;
-  double sv_find_wind_rzero ();
-  double sv_theta_wind ();
+  double elvis_find_wind_rzero ();
+  double elvis_theta_wind ();
   struct photon ptest;
   double xtest[3];
   double s;
@@ -147,11 +131,22 @@ sv_velocity (x, v)
 
   zzz = v_escape = -99.;
 
-  rzero = sv_find_wind_rzero (x);
-  theta = sv_theta_wind (rzero);
+  rzero = elvis_find_wind_rzero (x);
+  theta = elvis_theta_wind (rzero);
 
   r = sqrt (x[0] * x[0] + x[1] * x[1]);
-  ldist = sqrt ((r - rzero) * (r - rzero) + x[2] * x[2]);
+  if (fabs (x[2]) > geo.elvis_offset)
+    {
+      ldist =
+	geo.elvis_offset + sqrt ((r - rzero) * (r - rzero) +
+				 (x[2] - geo.elvis_offset) * (x[2] -
+							      geo.
+							      elvis_offset));
+    }
+  else
+    {
+      ldist = fabs (x[2]);
+    }
 
   if (geo.disk_type == 2)
     {
@@ -186,16 +181,24 @@ sv_velocity (x, v)
 			 geo.sv_v_zero) * zzz / (1. + zzz);
     }
 
-  v[0] = vl * sin (theta);
+  if (fabs (x[2]) > geo.elvis_offset)
+    {
+      v[0] = vl * sin (theta);
+      v[2] = vl * cos (theta);
+    }
+  else
+    {
+      v[0] = 0;
+      v[2] = vl;
+    }
+
 
   if (r > 0)
     v[1] = sqrt (G * geo.mstar * rzero) / r;
   else
     v[1] = 0;
 
-  v[2] = vl * cos (theta);
-
-  if (x[2] < 0)			//line added SS Nov 04 - is this correct?
+  if (x[2] < 0)
     v[2] *= (-1);
   /* 04aug -- ksl --52 At this point we have calculated the velocity in the xz plane, which
    * is identical to the statement that we have calculated it in
@@ -212,10 +215,10 @@ sv_velocity (x, v)
   speed = (sqrt (v[0] * v[0] + v[1] * v[1] + v[2] * v[2]));
   if (sane_check (speed))
     {
-      Error ("sv_velocity: x %f %f %f v %f %f %f\n", x[0], x[1], x[2], v[0],
-	     v[1], v[2]);
+      Error ("elvis_velocity: x %f %f %f v %f %f %f\n", x[0], x[1], x[2],
+	     v[0], v[1], v[2]);
       Error
-	("sv_velocity: rzero %f theta %f ldist %f zzz %f v_escape %f vl %f\n",
+	("elvis_velocity: rzero %f theta %f ldist %f zzz %f v_escape %f vl %f\n",
 	 rzero, theta, ldist, zzz, v_escape, vl);
     }
 
@@ -228,7 +231,7 @@ sv_velocity (x, v)
                                        Space Telescope Science Institute
 
  Synopsis:
-	double sv_rho(x) calculates the density of an sv_wind at a position x
+	double elvis_rho(x) calculates the density of an offset sv_wind at a position x
 Arguments:		
 	double x[]	the position where for the which one desires the denisty
 Returns:
@@ -237,42 +240,65 @@ Returns:
 Description:	
 		
 Notes:
-	52 -- If the disk is thick, our intention is that the stream lines
-	trace back to the disk, and have the same properties at that radius
-	as they would have had except for a vertical offset.
 
 History:
- 	98dec	ksl	Coded as part of effort to isolate SV portions of the code.
  
 **************************************************************/
 
 double
-sv_rho (x)
+elvis_rho (x)
      double x[];
 {
   double r, rzero, theta;
   double ldist;
-  double sv_find_wind_rzero ();
-  double sv_theta_wind ();
+  double elvis_find_wind_rzero ();
+  double elvis_theta_wind ();
   double dmdot_da;
   double dtheta_drzero, dr_drzero;
 
   double v[3], rho;
-  double sv_velocity ();
-  double sv_find_wind_rzero (), sv_theta_wind ();
+  double elvis_velocity ();
+  double elvis_find_wind_rzero (), elvis_theta_wind ();
   struct photon ptest;
   double xtest[3];
   double s;
   double ds_to_disk ();
 
 
-  sv_velocity (x, v);
+  elvis_velocity (x, v);
 
-  rzero = sv_find_wind_rzero (x);
-  theta = sv_theta_wind (rzero);
+  rzero = elvis_find_wind_rzero (x);
+  if (rzero > geo.sv_rmax)
+    {
+      rho = 1.e-20;		//This is a fudge which keeps the wind boundries conical by filling in excess space with
+      // "empty" space - a waste of memory and time but to do otherwise would require a 
+      // more substantial change to the way wind boundaries are defined SSOct06
+      return (rho);
+    }
+  if (rzero < (geo.sv_rmin + (geo.elvis_offset * tan (geo.sv_thetamin))))
+    {
+      rho = 1.e-20;		//fudge, as above
+      return (rho);
+    }
+
+
+
+
+  theta = elvis_theta_wind (rzero);
 
   r = sqrt (x[0] * x[0] + x[1] * x[1]);
-  ldist = sqrt ((r - rzero) * (r - rzero) + x[2] * x[2]);
+  if (fabs (x[2]) > geo.elvis_offset)
+    {
+      ldist =
+	geo.elvis_offset + sqrt ((r - rzero) * (r - rzero) +
+				 (x[2] - geo.elvis_offset) * (x[2] -
+							      geo.
+							      elvis_offset));
+    }
+  else
+    {
+      ldist = fabs (x[2]);
+    }
 
   if (geo.disk_type == 2)
     {
@@ -292,25 +318,33 @@ sv_rho (x)
       rzero = length (ptest.x);
     }
 
+  if (fabs (x[2]) < geo.elvis_offset)
+    {
+      dmdot_da =
+	geo.wind_mdot * pow (rzero, geo.sv_lambda) / geo.mdot_norm / 2.;
+      rho = dmdot_da / v[2];
 
-/* Reduced by a factor of 2 to account for radiation on both sides of the disk */
+      return (rho);
+    }
+
+  /* Reduced by a factor of 2 to account for radiation on both sides of the disk */
   dmdot_da =
     geo.wind_mdot * pow (rzero,
 			 geo.sv_lambda) * cos (theta) / geo.mdot_norm / 2.;
 
-/* Although the current definition of sv_theta_wind is continuous, the derivative is not continuous accross the
-   outer boundary of the wind and thus dtheta_drzero would appear to change discontinuously.   This created
-   large apparent density jumps at the outside edge of the wind. We can't allow that and so we force the derivative to equal
-   that at the edge of the wind if you try to calculate the density rho.  ksl 97apr23 */
+  /* Although the current definition of sv_theta_wind is continuous, the derivative is not continuous accross the
+     outer boundary of the wind and thus dtheta_drzero would appear to change discontinuously.   This created
+     large apparent density jumps at the outside edge of the wind. We can't allow that and so we force the derivative to equal
+     that at the edge of the wind if you try to calculate the density rho.  ksl 97apr23 */
 
   if (rzero > geo.sv_rmax)
     rzero = geo.sv_rmax;
   dtheta_drzero =
-    (sv_theta_wind (rzero) -
-     sv_theta_wind ((1. - EPSILON) * rzero)) / (EPSILON * rzero);
+    (elvis_theta_wind (rzero) -
+     elvis_theta_wind ((1. - EPSILON) * rzero)) / (EPSILON * rzero);
 
   dr_drzero = 1. + ldist * dtheta_drzero / cos (theta);
-/* Note VS93 eqn 8 is dr/drzero but equation  7 is drzero/dr   ksl 97 apr 19 */
+  /* Note VS93 eqn 8 is dr/drzero but equation  7 is drzero/dr   ksl 97 apr 19 */
   rho = rzero * dmdot_da / (dr_drzero * r * v[2]);
 
   return (rho);
@@ -321,55 +355,47 @@ sv_rho (x)
                                        Space Telescope Science Institute
 
  Synopsis:
-	sv_find_wind_rzero(p) locates the radial position in the disk from which the 
-	stream line arises.  
+	elvis_find_wind_rzero(p) locates the radial position in the disk from which the 
+	stream line arises for an offset SV wind (the "elvis" model).  
  
 Arguments:		
 	double p[]	    A 3 vector position, and not a photon structure
 Returns:
-	sv_find_wind_rzero returns the radius of the footpoint of the stream line
+	elvis_find_wind_rzero returns the radius of the footpoint of the stream line
  
 Description:	
-	In our models, which follows Shlossman and Vitello the wind is expected to arise in a cone.  
-	However, we have also defined r_o in a sensible way for any position regardless of whether it
-	is in the cone or not.   The routine should be accurate even if p[2] is negative, i.e if we
-	are trying to calculate r in the -z hemisphere.	
-
-	More specifically, if the point is a distance drho outside of the windcone then rzero
-	will be rmax+drho. Alternatively if the point is inside the wind cone then, rzero
-	will rmin*rho/rho_min where rho_min is the minimum value of rho to be in the windcone
-	at that height.
 		
 Notes:
 
 History:
- 	97jan      ksl	Coding on python began.
  
 **************************************************************/
 
 
 double
-sv_find_wind_rzero (p)
+elvis_find_wind_rzero (p)
      double p[];		/* Note that p is a 3 vector and not a photon structure */
 {
   double x, z;
-  double sv_zero_r ();
+  double elvis_zero_r ();
   double zbrent ();
   double rho_min, rho_max, rho;
-  int sv_zero_init ();
+  int elvis_zero_init ();
 
   /* thetamin and theta max are defined w.r.t  z axis */
+
 
   z = fabs (p[2]);		/* This is necessary to get correct answer above
 				   and below plane */
 
-  if (z == 0)
+  if (z <= geo.elvis_offset)
     {
       x = (sqrt (p[0] * p[0] + p[1] * p[1]));	// If p is in the xy plane, there is no need to think further
       return (x);
     }
 
-  sv_zero_init (p);		/* This initializes the routine sv_zero_r.  It is not
+
+  elvis_zero_init (p);		/* This initializes the routine sv_zero_r.  It is not
 				   actually needed unless zbrent is called, but it
 				   does allow you to check your answer otherwize
 				 */
@@ -381,18 +407,21 @@ sv_find_wind_rzero (p)
   if (rho <= rho_min)
     {
       x = geo.sv_rmin * rho / rho_min;
-      return (x);
+      return (x + (geo.elvis_offset * tan (geo.sv_thetamin)));
     }
   if (rho >= rho_max)
     {
       x = geo.sv_rmax + rho - rho_max;
-      return (x);
+      return (x + (geo.elvis_offset * tan (geo.sv_thetamax)));
     }
 
   /* 100 here means that zbrent will end if one has a guess of rzero which is
      correct ot 100 cm */
 
-  x = zbrent (sv_zero_r, geo.sv_rmin, geo.sv_rmax, 100.);
+  x =
+    zbrent (elvis_zero_r,
+	    geo.sv_rmin + (geo.elvis_offset * tan (geo.sv_thetamin)),
+	    geo.sv_rmax + (geo.elvis_offset * tan (geo.sv_thetamax)), 100.);
   return (x);
 
 }
@@ -402,11 +431,8 @@ sv_find_wind_rzero (p)
 
  Synopsis:
 	The next two subroutines are used to guess the position in the disk
-	from which a streamline arises.  sv_zero_r is the routine called by
-	the numerical recipes routine zbrent to walk down on the actual value
-	of r in the disk.  sv_zero_init is required to set the portions of the routine
-	which do not change in calls from zbrent.  sv_zero_r returns the difference
-	between rho actual (sqrt x*x + y *y ) and rho_guessed
+	from which a streamline arises.  They work in the same manner as sv_zero_r 
+	and sv_zero_init.
  
 Arguments:		
 
@@ -418,14 +444,13 @@ Description:
 Notes:
 
 History:
- 	97jan      ksl	Coding on python began.
  
 **************************************************************/
 
 double zero_p[3];
 
 int
-sv_zero_init (p)
+elvis_zero_init (p)
      double p[];
 {
   stuff_v (p, zero_p);
@@ -435,20 +460,27 @@ sv_zero_init (p)
 }
 
 /* This routine is used to test whether a guess of r_zero is correct.  If
-   you have the answer exactly then sv_zero_r will return 0 */
+   you have the answer exactly then elvis_zero_r will return 0 */
 
 double
-sv_zero_r (r)
+elvis_zero_r (r)
      double r;
 {
   double theta;
   double rho, rho_guess;
-  double sv_theta_wind ();
+  double elvis_theta_wind ();
 
-  theta = sv_theta_wind (r);
+  theta = elvis_theta_wind (r);
 
   rho = sqrt (zero_p[0] * zero_p[0] + zero_p[1] * zero_p[1]);
-  rho_guess = r + tan (theta) * zero_p[2];
+  if (zero_p[2] < geo.elvis_offset)
+    {
+      rho_guess = r;
+    }
+  else
+    {
+      rho_guess = r + tan (theta) * (zero_p[2] - geo.elvis_offset);
+    }
   return (rho_guess - rho);
 
 
@@ -458,42 +490,38 @@ sv_zero_r (r)
                                        Space Telescope Science Institute
 
  Synopsis:
-	double sv_theta_wind(r) finds the angle at which the wind emerges from at a specific
-	radius r on surface of the disk
+	double elvis_theta_wind(r) finds the angle at which the wind that rises from a specific point on the disk bend to
  
 Arguments:
 	double r	a radial distance on the surface of the disk		
 
 Returns:
-	As long as r is between geo.sv_rmin and geo.sv_rmax, sv_theta_wind returns the
-	angle given by the SV prescription.
-	
-	Inside geo.sv_rmin, it returns a value which smoothly goes from thetamin to 0
-	as the radius goes to 0
-	
-	Outside geo.sv_rmax, it returns geo.sv_thetamax
  
 Description:	
 		
 Notes:
 
 History:
- 	97jan      ksl	Coding on python began.
  
 **************************************************************/
 
 double
-sv_theta_wind (r)
+elvis_theta_wind (r)
      double r;
 {
   double theta;
-  if (r <= geo.sv_rmin)
+  if (r <= (geo.sv_rmin + geo.elvis_offset * tan (geo.sv_thetamin)))
     return (atan (tan (geo.sv_thetamin * r / geo.sv_rmin)));
-  if (r >= geo.sv_rmax)
+  if (r >= (geo.sv_rmax + geo.elvis_offset * tan (geo.sv_thetamax)))
     return (geo.sv_thetamax);
   theta = geo.sv_thetamin +
     (geo.sv_thetamax -
-     geo.sv_thetamin) * pow ((r - geo.sv_rmin) / (geo.sv_rmax - geo.sv_rmin),
+     geo.sv_thetamin) * pow ((r - geo.sv_rmin -
+			      geo.elvis_offset * tan (geo.sv_thetamin)) /
+			     (geo.sv_rmax +
+			      geo.elvis_offset * tan (geo.sv_thetamax) -
+			      geo.sv_rmin -
+			      geo.elvis_offset * tan (geo.sv_thetamin)),
 			     geo.sv_gamma);
   return (theta);
 
@@ -503,8 +531,8 @@ sv_theta_wind (r)
                                        Space Telescope Science Institute
 
  Synopsis:
-	double sv_wind_mdot_integral(r) is the integrand of SV model for mdot as a function
-	of radius
+	double elvis_wind_mdot_integral(r) is the integrand of SV model for mdot as a function
+	of radius - works in the same way as the SV routine but calls the elvis version of the theta routines. 
 Arguments:		
 	double r;
  
@@ -514,22 +542,32 @@ Description:
 	
 		
 Notes:
-	This routine should be further down in the file but at one point this created
-	an error for reasons I do not understand (97sept13).  I moved it to the bottom
-	of the file on 12/14/97.
 
 History:
- 	97jan      ksl	Coding on python began.
+
  
 **************************************************************/
 
 double
-sv_wind_mdot_integral (r)
+elvis_wind_mdot_integral (r)
      double r;
 {
   double x;
-  double sv_theta_wind ();
-  x = 2 * PI * pow (r, geo.sv_lambda + 1.) * cos (sv_theta_wind (r));
+  double elvis_theta_wind ();
+
+  if (r < (geo.sv_rmin + geo.elvis_offset * tan (geo.sv_thetamin)))
+    {
+      x = 0.0;
+      return (x);
+    }
+  if (r > geo.sv_rmax)
+    {
+      x = 0.0;
+      return (x);
+    }
+
+
+  x = 2 * PI * pow (r, geo.sv_lambda + 1.) * cos (elvis_theta_wind (r));
   return (x);
 
 }
