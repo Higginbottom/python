@@ -105,6 +105,11 @@ nebular_concentrations (xplasama, mode)  modifies the densities of ions, levels,
 	080808	ksl	60b -- Removed mode 4 which attempted to carry out detailed balance
 			for H and He and ussd LM for other elements.  (This was carried out
 			in the routine dlucy) This is wholly replaced by the macro atom approach.  
+	11	ksl	Main changes here made by Nick to incorporate the power law approximation
+			to ionization for AGN
+        12Feb   nsh	More changes made to allow for two new modes - for multiple saha equaions.
+			mode 6 corrects using a dilute blackbody and should be almost the same as the 				LM method
+			mode 7 corrects using a power law spectrum, and show end up supplanting mode 5.
 
 
 **************************************************************/
@@ -117,7 +122,6 @@ nebular_concentrations (xplasma, mode)
   double get_ne ();
   int lucy_mazzali1 ();
   int m;
-  int concentrations (), lucy (), dlucy ();
 
   if (mode == 0)
     {				// LTE all the way -- uses tr
@@ -146,6 +150,32 @@ nebular_concentrations (xplasma, mode)
 
 
     }
+  else if (mode == 5)           /* This replicates Sim's (2008) power
+				   law method for ionization in a non-BB radiation
+				   field.  */
+    {
+
+      partition_functions (xplasma, 1);   //lte partition function using t_e and no weights
+
+      m = concentrations (xplasma, 1);	// Saha equation using t_e 
+
+      m = sim_driver (xplasma);
+   }
+/* Two new modes, they could proably be combined into one if statement, but having two adds little complexity and allows for other modifications if required. No call to partition functions is required, since this is done on a pairwise basis in the routine. Similarly there is no call to concentrations, since this is also done pairwise inside the routine. */
+  else if (mode == 6)         /* Pairwise calculation of abundances, using a 
+				temperature computed to ensure a reasonable
+				ratio between the two, and then corrected for
+				a dilute blackbody radiation field. */
+    {
+      m = variable_temperature (xplasma, mode);
+    }
+  else if (mode == 7)         /* Pairwise calculation of abundances, using a 
+				temperature computed to ensure a reasonable
+				ratio between the two, and then corrected for
+				a radiation field modelled by a power law*/
+    {
+      m = variable_temperature (xplasma, mode);
+    }
 
   else
     {
@@ -154,7 +184,6 @@ nebular_concentrations (xplasma, mode)
       exit (0);
 
     }
-
 
 
   return (m);
@@ -236,11 +265,11 @@ concentrations (xplasma, mode)
 
 
 
-#define SAHA 4.82907e15		/* 2* (2.*PI*MELEC*k)**1.5 / h**3  (Calculated in constants) */
-#define MAXITERATIONS	200
-#define FRACTIONAL_ERROR 0.03
-#define THETAMAX	 1e4
-#define MIN_TEMP         100.
+//#define SAHA 4.82907e15		/* 2* (2.*PI*MELEC*k)**1.5 / h**3  (Calculated in constants) */
+//#define MAXITERATIONS	200
+//#define FRACTIONAL_ERROR 0.03
+//#define THETAMAX	 1e4
+//#define MIN_TEMP         100. NSH 0712 - moved into python.h because this is used in severalpaces
 
 
 int
@@ -271,6 +300,11 @@ concentrations (xplasma, mode)
     {
       t = sqrt (xplasma->t_e * xplasma->t_r);
     }
+//ksl I removed the next lines.  It is bad practice to needlessly complicate something unless you know one needs to do so
+//OLD ksl  else if (mode == 3)   //same as mode 1, put in to allow identical control when using Sim modifications to concentrations
+//OLD ksl    {
+//OLD ksl      t = xplasma->t_e;
+//OLD ksl    }
   else
     {
       Error ("Concentrations: Unknown mode %d\n", mode);
@@ -283,6 +317,14 @@ concentrations (xplasma, mode)
   /* make an initial estimate of ne based on H alone,  Our guess
      assumes ion[0] is H1.  Note that x below is the fractional
      ionization of H and should vary from 0 to 1
+
+     Note that in a pure H plasma, the left hand side of the Saha 
+     equation can be written as (x*x*nh*nh)/((1-x)*nh)  and can
+     then be converted into a quadratic.  That is what is done
+     below.  
+
+     Since this is an initial estimate g factors have been ignored
+     in what follows.
    */
 
   if (t < MIN_TEMP)
@@ -304,18 +346,14 @@ concentrations (xplasma, mode)
     xne = 1.e-6;		/* fudge to assure we can actually calculate
 				   xne the first time through the loop */
 
-  /* At this point we have an intial estimate of ne. */
+  /* At this point we have an initial estimate of ne. */
 
 
   niterate = 0;
   while (niterate < MAXITERATIONS)
     {
-
+//	Log("Saha Iteration %i, with ne=%e and t=%e\n",niterate,xne,t);
       /* Assuming a value of ne calculate the relative densities of each ion for each element */
-//OLD      for (nelem = 0; nelem < nelements; nelem++)
-//OLD   {
-//OLD     saha (xne, nh, t, nelem, xplasma->density);
-//OLD   }
 
       saha (xplasma, xne, t);
 
@@ -429,30 +467,38 @@ saha (xplasma, ne, t)
 	  exit (0);
 	}
 
-      sum = density[first] = 1.;
+/*    These lines were put in to make sim work properly, ideally there should be a switch so if we are doing things the old way, we keep the old numbers. But, saha doesnt know the mode....
+      sum = density[first] = 1e-250;
+      big = pow (10., 250. / (last - first));
+      big=big*1e6;   */
+
+      sum = density[first] = 1.0;
       big = pow (10., 250. / (last - first));
 
       for (nion = first + 1; nion < last; nion++)
 	{
 	  b = xsaha * partition[nion]
 	    * exp (-ion[nion - 1].ip / (BOLTZMANN * t)) / (ne *
-							   partition[nion]);
-	  if (b > big)
-	    b = big;		//limit step so there is no chance of overflow
-
+							   partition[nion-1]);
+//	  if (b > big && nh < 1e5) this is a line to only modify things if the density is high enough to matter
+          if (b > big)	 
+	   b = big;		//limit step so there is no chance of overflow
 	  a = density[nion - 1] * b;
-
 	  sum += density[nion] = a;
 	  if (density[nion] < 0.0)
 	    mytrap ();
-	  sane_check (sum);
+	  if (sane_check (sum))
+	    Error("saha:sane_check failed for density summation\n");
+
+
 	}
 
       a = nh * ele[nelem].abun / sum;
       for (nion = first; nion < last; nion++)
 	{
 	  density[nion] *= a;
-	  sane_check (density[nion]);
+	  if (sane_check (density[nion]))
+		Error("saha:sane_check failed for density of ion %i\n",nion);
 	}
     }
 
@@ -632,6 +678,7 @@ lucy (xplasma)
  
 	98may	ksl	Coded as a a separate routine for each element
 	07mar	ksl	Convert warnings to errors to stop many repeads
+	12july 	nsh	Modified to use external code to compute zeta.
 
 **************************************************************/
 
@@ -642,34 +689,34 @@ lucy_mazzali1 (nh, t_r, t_e, www, nelem, ne, density, xne, newden)
      int nelem;
      double ne, density[], xne, newden[];
 {
-  double fudge, dummy, interpfrac;
+  double fudge;  // dummy, interpfrac; 0712 zeta calculation moved into zeta.c
   double fudge2, q;
   double sum, a;
-  int ilow, ihi;
+//  int ilow, ihi; 0712 nsh zeta moved into subroutine
   int first, last, nion;
   double numerator, denominator;
-
   if (t_r > MIN_TEMP)
     {
       fudge = www * sqrt (t_e / t_r);
 
+//NSH 0712These lines now moved into zeta.c we retain the caculation of sqrt t_e/t_r
       /* now get the right place in the ground_frac tables  CK */
-      dummy = t_e / TMIN - 1.;
-      ilow = dummy;		/* have now truncated to integer below */
-      ihi = ilow + 1;		/*these are the indeces bracketing the true value */
-      interpfrac = (dummy - ilow);	/*this is the interpolation fraction */
-      if (ilow < 0)
-	{
-	  ilow = 0;
-	  ihi = 0;
-	  interpfrac = 1.;
-	}
-      if (ihi > 19)
-	{
-	  ilow = 19;
-	  ihi = 19;
-	  interpfrac = 1.;
-	}
+//      dummy = t_e / TMIN - 1.;
+//      ilow = dummy;		/* have now truncated to integer below */
+//      ihi = ilow + 1;		/*these are the indeces bracketing the true value */
+//      interpfrac = (dummy - ilow);	/*this is the interpolation fraction */
+//      if (ilow < 0)
+//	{
+//	  ilow = 0;
+//	  ihi = 0;
+//	  interpfrac = 1.;
+//	}
+//    if (ihi > 19)
+//	{
+//	  ilow = 19;
+//	  ihi = 19;
+//	  interpfrac = 1.;
+//	}
 
     }
   else
@@ -677,8 +724,8 @@ lucy_mazzali1 (nh, t_r, t_e, www, nelem, ne, density, xne, newden)
       Error_silent ("lucy_mazzali1: t_r too low www %8.2e t_e %8.2e  t_r %8.2e \n",
 	     www, t_e, t_r);
       fudge = 0.0;
-      interpfrac = 0.0;
-      ihi = ilow = 0;
+//      interpfrac = 0.0;
+//      ihi = ilow = 0;
     }
 
   if (fudge < MIN_FUDGE || MAX_FUDGE < fudge)
@@ -690,7 +737,7 @@ lucy_mazzali1 (nh, t_r, t_e, www, nelem, ne, density, xne, newden)
 
   /* Initialization of fudges complete */
 
-  first = ele[nelem].firstion;	/*first and last identify the postion in the array */
+  first = ele[nelem].firstion;	/*identify the position of the first and last ion in the array */
   last = first + ele[nelem].nions;	/*  So for H which has 2 ions, H1 and H2, first will generally
 					   be 0 and last will be 2 so the for loop below will just be done once for nion = 1 */
 
@@ -716,10 +763,14 @@ lucy_mazzali1 (nh, t_r, t_e, www, nelem, ne, density, xne, newden)
       /* now apply the Mazzali and  Lucy fudge, i.e. zeta + w (1-zeta)
          first find fraction of recombinations going directly to
          the ground state for this temperature and ion */
-      fudge2 =
+
+      fudge2 = compute_zeta (t_e, nion-1, 2); /* NSH 1207 - call external function, mode 2 uses chianti and badnell data to try to take account of DR in zeta - if atomic data is not read in, then the old interpolated zeta will be returned */
+    
+
+/* NSH 0712 - Old way of doing it, not moved into routines in zeta.c 
 	ground_frac[nion - 1].frac[ilow] +
 	interpfrac * (ground_frac[nion - 1].frac[ihi] -
-		      ground_frac[nion - 1].frac[ilow]);
+		      ground_frac[nion - 1].frac[ilow]); */
       /*Since nion-1 points at state i-1 (saha: n_i/n_i-1) we want ground_frac[nion-1].
          Note that we NEVER access the last ion for any element in that way
          which is just as well since you can't have recombinations INTO
@@ -874,7 +925,6 @@ fix_concentrations (xplasma, mode)
 
   xplasma->ne = get_ne (xplasma->density);
 
-  //OLD do_partitions (xplasma, 0);
   partition_functions (xplasma, 0);
 
   return (0);

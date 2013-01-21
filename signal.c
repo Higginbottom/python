@@ -7,6 +7,11 @@
 
   Synopsis:  
 
+  These are routines which provide a very brief summary of 
+  how the program is proceeding, mainly information about
+  how many cycles have completed.  They are used for restarting
+  python, primarily.
+
   Description:	
 
   Arguments:  
@@ -60,7 +65,7 @@ int
 xsignal (char *root, char *format, ...)
 {
 
-  va_list ap;
+  va_list ap, ap2;
   int result;
 
   char curtime[LINELENGTH];
@@ -98,11 +103,12 @@ xsignal (char *root, char *format, ...)
 
 
   va_start (ap, format);
+  va_copy(ap2,ap);  /* Added because vfprintf can change ap */
   result = vfprintf (sptr, format, ap);
   va_end (ap);
 
 
-  vsprintf (message, format, ap);
+  vsprintf (message, format, ap2);
   Log ("xxx %s %8.1f %s", curtime, elapsed_time, message);
 
 

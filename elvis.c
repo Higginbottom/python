@@ -7,6 +7,34 @@
 #include "python.h"
 
 /***********************************************************
+                     Space Telescope Science Institute
+
+ Synopsis:
+	These are the routines that are specific to an offiset wind model 
+	intended to mimic a proposed model for AGN winds.  It is very similar
+	to an SV wind except for an offset
+Arguments:		
+
+Returns:
+ 
+Description:	
+
+Notes:
+
+	These routines were all developed from the original sv routines by SS and so 
+	changes in one may well effect the other.  The velocity flow assumes that one
+	calculates a "poloidal distance" starting with a vertical flow until you get
+	to the offset height at which point the remaining distance is calculated according
+	to that prescribed by the SV model 
+
+History:
+         Oct06 SS
+	 1111	ksl	Began to try to understand in detail what Stuart intended prior to any
+	 		real code modifications.  
+**************************************************************/
+
+
+/***********************************************************
                                        Space Telescope Science Institute
 
  Synopsis:
@@ -18,14 +46,15 @@ Arguments:
 Returns:
  
 Description:	
-	The parameters, geo.sv...,  obtained here are only used in the routines in stellar_winds.c
-	which calculate the velocity and density of the wind during the initialization process.
-	Other portions of the structure, geo defined here are more general purpose.		
+	The parameters, geo.sv...,  needed to define the wind.
+	The parameters are identical to that nneed for a SV wind with an additional offset.
 Notes:
 
 
 History:
          Oct06 SS
+	 1111	ksl	Began to try to understand in detail what Stuart intended prior to any
+	 		real code modifications
 **************************************************************/
 
 int
@@ -81,11 +110,14 @@ get_elvis_wind_params ()
 
   geo.wind_rmin = geo.rstar;
   geo.wind_rmax = geo.rmax;
-  geo.wind_rho_min = geo.sv_rmin;
-  geo.wind_rho_max = geo.sv_rmax;
+//Old  geo.wind_rho_min = geo.sv_rmin;
+//Old  geo.wind_rho_max = geo.sv_rmax;
+  geo.wind_rho_min = geo.sv_rmin - (geo.elvis_offset * tan (geo.sv_thetamin));
+  geo.wind_rho_max = geo.sv_rmax - (geo.elvis_offset * tan (geo.sv_thetamin));
   geo.wind_thetamin = geo.sv_thetamin;
   geo.wind_thetamax = geo.sv_thetamax;
-  geo.xlog_scale = geo.sv_rmin + (geo.elvis_offset * tan (geo.sv_thetamin));
+//OLD  geo.xlog_scale = geo.sv_rmin + (geo.elvis_offset * tan (geo.sv_thetamin));
+  geo.xlog_scale = geo.sv_rmin;
   geo.zlog_scale = 1e15;	/* Big number - for AGN */
 
 /*Now calculate the normalization factor for the wind*/
@@ -102,7 +134,7 @@ get_elvis_wind_params ()
 	double elvis_velocity(x,v) calulates the v of an offset Schlossman Vitello wind from a position
 	x
 Arguments:		
-	double x[]		the postion where for the which one desires the velocity
+	double x[]		the position where for the which one desires the velocity
 Returns:
 	double v[]		the calculated velocity
 	
@@ -134,6 +166,10 @@ elvis_velocity (x, v)
   rzero = elvis_find_wind_rzero (x);
   theta = elvis_theta_wind (rzero);
 
+  /* Calculate the poloidal distance, assuming a stream line that is vertical 
+   * up to the elvis offset and then along an SV stream line after that.  ksl 111123 
+   */
+
   r = sqrt (x[0] * x[0] + x[1] * x[1]);
   if (fabs (x[2]) > geo.elvis_offset)
     {
@@ -148,6 +184,8 @@ elvis_velocity (x, v)
       ldist = fabs (x[2]);
     }
 
+  /* If the disk is vertically extended ksl 111124 
+   * ERROR? - This calculation of the poloical distance replaces the one above.  It does not take the offset into account*/
   if (geo.disk_type == 2)
     {
       xtest[0] = r;		// Define xtest in the +z plane
@@ -166,6 +204,7 @@ elvis_velocity (x, v)
     }
 
 
+  /* Having calculated the "poloidal distance" calculate the velocity ksl 111124 */
   vl = geo.sv_v_zero;
   if (ldist > 0)
     {
@@ -181,6 +220,7 @@ elvis_velocity (x, v)
 			 geo.sv_v_zero) * zzz / (1. + zzz);
     }
 
+  /* Now calculate the direction of the velocity */
   if (fabs (x[2]) > geo.elvis_offset)
     {
       v[0] = vl * sin (theta);
@@ -215,7 +255,7 @@ elvis_velocity (x, v)
   speed = (sqrt (v[0] * v[0] + v[1] * v[1] + v[2] * v[2]));
   if (sane_check (speed))
     {
-      Error ("elvis_velocity: x %f %f %f v %f %f %f\n", x[0], x[1], x[2],
+      Error ("elvis_velocity:sane_check x %f %f %f v %f %f %f\n", x[0], x[1], x[2],
 	     v[0], v[1], v[2]);
       Error
 	("elvis_velocity: rzero %f theta %f ldist %f zzz %f v_escape %f vl %f\n",
@@ -258,7 +298,7 @@ elvis_rho (x)
 
   double v[3], rho;
   double elvis_velocity ();
-  double elvis_find_wind_rzero (), elvis_theta_wind ();
+//  double elvis_find_wind_rzero (), elvis_theta_wind ();
   struct photon ptest;
   double xtest[3];
   double s;
@@ -268,9 +308,11 @@ elvis_rho (x)
   elvis_velocity (x, v);
 
   rzero = elvis_find_wind_rzero (x);
+
+  /* ERROR - This is a mistake, and is a root cause of some of the problems we are seeing in the Elvis wind 111124 */
   if (rzero > geo.sv_rmax)
     {
-      rho = 1.e-20;		//This is a fudge which keeps the wind boundries conical by filling in excess space with
+      rho = 1.e-20;		//This is a fudge which keeps the wind boundaries conical by filling in excess space with
       // "empty" space - a waste of memory and time but to do otherwise would require a 
       // more substantial change to the way wind boundaries are defined SSOct06
       return (rho);
@@ -388,6 +430,8 @@ elvis_find_wind_rzero (p)
   z = fabs (p[2]);		/* This is necessary to get correct answer above
 				   and below plane */
 
+  /* If the position is underneath the elvis_offset, the stream line is assumed
+   * to be vertical and so you just return rho 111124 ksl */
   if (z <= geo.elvis_offset)
     {
       x = (sqrt (p[0] * p[0] + p[1] * p[1]));	// If p is in the xy plane, there is no need to think further
@@ -400,9 +444,13 @@ elvis_find_wind_rzero (p)
 				   does allow you to check your answer otherwize
 				 */
 
+  /* The next lines provide a value for the footpoint position when the positions
+   * we want the footpoint for is outside of the wind 111124 ksl */
   rho_min = geo.sv_rmin + z * tan (geo.sv_thetamin);
   rho_max = geo.sv_rmax + z * tan (geo.sv_thetamax);
   rho = sqrt (p[0] * p[0] + p[1] * p[1]);
+
+  /* Note that theta_min and theta_max are measured from the z axis */
 
   if (rho <= rho_min)
     {
@@ -571,3 +619,142 @@ elvis_wind_mdot_integral (r)
   return (x);
 
 }
+
+
+
+/***********************************************************
+	Space Telescope Science Institute
+
+ Synopsis:
+ 	ds_to_pillbox calculates the distance to a pillbox, really
+	an annular region with an inner radius and outer radius
+	and a height.  The pillbox is symmetric with respect to the xy
+Arguments:		
+	pp	photon ptr containing a position and direction
+	rmin	The minimum rho for the pillbox
+	rmax	The maximum rho for the pillbox
+	height 	Height of the pillbox
+ 
+Returns:
+ 
+Description:	
+	
+		
+Notes:
+	No allowance is made for a geometrically thick disk.  This is
+	a purely geometrical construction.
+
+	This is modeled on ds_to_torus, but here all the parameters
+	are passed.  It's likely that this routine should replace
+	that one
+
+	This should almost surely be moved to phot_util
+
+History:
+	11nov	ksl	Began coding to deal with issues that
+			currently exist with the elvis model
+
+ 
+**************************************************************/
+
+double ds_to_pillbox(pp,rmin,rmax,height)
+	PhotPtr pp;
+	double rmin,rmax,height;
+{
+
+	struct photon ptest;
+	double ds, ds_best, x;
+	struct plane xplane;
+
+
+	ds_best=VERY_BIG;
+
+	/* Make sure we don't mess with pp */
+	stuff_phot(pp,&ptest);
+	ds=ds_to_cylinder(rmin,&ptest);
+
+	/* Calculate the distance to the innner cylinder */
+	if (ds < VERY_BIG)
+	{
+		/* Check whether we encounted the
+		 * part of the cylinder we are interested in
+		 */
+		move_phot(&ptest,ds);
+		if (fabs(ptest.x[2])<height)
+		{
+			ds_best=ds;
+		}
+		/* Now reinitialize ptest */
+		stuff_phot(pp,&ptest);
+	}
+	
+	/* Similarly calculate the distance to the outer
+	 * cylinder
+	 */
+	ds=ds_to_cylinder(rmax,&ptest);
+	if (ds < ds_best)
+	{
+		move_phot(&ptest,ds);
+		if (fabs(ptest.x[2])<height)
+		{
+			ds_best=ds;
+		}
+		stuff_phot(pp,&ptest);
+	}
+	
+	/* At this point we know whether the photon has interecepted
+	 * the wall of the cylinder, but we do not know if it intercepted
+	 * the top or bottom of the cylinder earlier
+	 */
+
+	xplane.x[0]=0;
+	xplane.x[1]=0;
+	xplane.x[2]=height;
+	xplane.lmn[0]=0.0;
+	xplane.lmn[1]=0.0;
+	xplane.lmn[2]=1.0;
+
+	ds=ds_to_plane(&xplane,&ptest);
+	// Note that ds to plane can return a negative number
+	if (ds>0 && ds < ds_best)
+	{
+		move_phot(&ptest,ds);
+		x=fabs(ptest.x[0]);
+		if (rmin<x  && x< rmax)
+		{
+			ds_best=ds;
+		}
+		stuff_phot(pp,&ptest);
+	}
+
+	xplane.x[2]=(-height);
+
+	ds=ds_to_plane(&xplane,&ptest);
+	if (ds>0 && ds < ds_best)
+	{
+		move_phot(&ptest,ds);
+		x=fabs(ptest.x[0]);
+		if (rmin<x  && x< rmax)
+		{
+			ds_best=ds;
+		}
+		stuff_phot(pp,&ptest);
+	}
+
+	return(ds_best);
+}	
+
+
+
+
+
+
+	
+	
+
+
+
+
+
+
+

@@ -3,9 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-
 #include "atomic.h"
-
 #include "python.h"
 
 /* Notes on spherical coordinates
@@ -47,8 +45,6 @@ History:
  
 **************************************************************/
 
-
-
 double
 spherical_ds_in_cell (p)
      PhotPtr p;
@@ -60,7 +56,6 @@ spherical_ds_in_cell (p)
   int where_in_grid ();
   int quadratic ();
   int radiation ();
-
 
   if ((p->grid = n = where_in_grid (p->x)) < 0)
     {
@@ -76,7 +71,6 @@ spherical_ds_in_cell (p)
   s = ds_to_sphere (wind_x[ix + 1], p);
   if (s < smax)
     smax = s;
-
 
   if (smax <= 0)
     {
@@ -135,20 +129,26 @@ spherical_make_grid (w)
 	  }
 	else
 	  {			//logarithmic intervals
-
 	    dlogr = (log10 (geo.rmax / geo.rstar)) / (NDIM - 3);
 	    w[n].r = geo.rstar * pow (10., dlogr * (n - 1));
 	    w[n].rcen = 0.5 * geo.rstar * (pow (10., dlogr * (n)) +
 					   pow (10., dlogr * (n - 1)));
+	printf("OLD W.r = %e, w.rcen = %e\n",w[n].r,w[n].rcen);
+	    dlogr = (log10 (geo.rmax / geo.wind_rmin)) / (NDIM - 3);
+	    w[n].r = geo.wind_rmin * pow (10., dlogr * (n - 1));
+	    w[n].rcen = 0.5 * geo.wind_rmin * (pow (10., dlogr * (n)) +
+					   pow (10., dlogr * (n - 1)));
+	printf("New W.r = %e, w.rcen = %e\n",w[n].r,w[n].rcen);
 	  }
+
 	/* Now calculate the positions of these points in the xz plane.
 	   There is a choice about how one does this.   I have elected
 	   to assume that we want to calculate this at a 45 degree angle.
 	   in the hopes this will be a reasonable portion of the wind in
 	   a biconical flow.
 	 */
-	w[n].x[1] = w[n].xcen[1] = 0.0;
 
+	w[n].x[1] = w[n].xcen[1] = 0.0;
 	w[n].x[0] = w[n].x[2] = w[n].r * sin (PI / 4.);
 	w[n].xcen[0] = w[n].xcen[2] = w[n].rcen * sin (PI / 4.);
 
@@ -158,8 +158,6 @@ spherical_make_grid (w)
   return (0);
 
 }
-
-
 
 
 
@@ -246,14 +244,19 @@ spherical_wind_complete (w)
  	05apr	ksl	55d: Adapted from rtheta.c
 	06nov	ksl	58b: Minor modification to use W_ALL_INWIND
 			etc., instead of hardcoded values
+	11aug	ksl	70b Add the ability to find a different 
+			component.  Note that this makes explicit
+			use of the way components are defined,
+			See python.h
  
 **************************************************************/
 #define RESOLUTION   100
 
 
 int
-spherical_volumes (w)
+spherical_volumes (w,icomp)
      WindPtr w;
+     int icomp;
 {
   int i, n;
   double fraction;
@@ -289,7 +292,7 @@ spherical_volumes (w)
 	    kk = RESOLUTION;
 	  }
 	else
-	  {			/* Determine whetehr the cell is in the wind */
+	  {			/* Determine whether the cell is in the wind */
 	    num = denom = 0;
 	    jj = kk = 0;
 	    dr = (rmax - rmin) / RESOLUTION;
@@ -304,7 +307,7 @@ spherical_volumes (w)
 		    x[0] = r * sin (theta);
 		    x[1] = 0;
 		    x[2] = r * cos (theta);;
-		    if (where_in_wind (x) == 0)
+		    if (where_in_wind (x) == icomp)
 		      {
 			num += r * r * sin (theta);	/* 0 implies in wind */
 			jj++;
@@ -319,10 +322,12 @@ spherical_volumes (w)
 	    w[n].vol = 0.0;
 	  }
 	else if (jj == kk)
-	  w[n].inwind = W_ALL_INWIND;	// The cell is completely in the wind
+	  //OLD 70b w[n].inwind = W_ALL_INWIND;	// The cell is completely in the wind
+	  w[n].inwind = icomp;	// The cell is completely in the wind
 	else
 	  {
-	    w[n].inwind = W_PART_INWIND;	//The cell is partially in the wind
+	    //OLD 70b w[n].inwind = W_PART_INWIND;	//The cell is partially in the wind
+	    w[n].inwind = icomp+1;	//The cell is partially in the wind
 	    w[n].vol *= fraction;
 	  }
 
@@ -400,7 +405,8 @@ spherical_where_in_grid (x)
  	spherical_get_random_location
 
  Arguments:		
- 	int n -- Cell in which random poition is to be generated
+ 	int n -- Cell in which random position is to be generated
+	int icomp -- The component we want the postion to be generated in
  Returns:
  	double x -- the position
  Description:	
@@ -412,12 +418,14 @@ spherical_where_in_grid (x)
 
  History:
  	05apr	ksl	55d: Adapted from rtheta.c
+	11aug	ksl	70b - Modified to account for torus
  
 **************************************************************/
 
 int
-spherical_get_random_location (n, x)
-     int n;			// Cell in which to create postion
+spherical_get_random_location (n, icomp,x)
+     int n;			// Cell in which to create position
+     int icomp;			// Component in which to create position
      double x[];		// Returned position
 {
   int i, j;
@@ -431,7 +439,7 @@ spherical_get_random_location (n, x)
 
   /* Generate a position which is both in the cell and in the wind */
   inwind = -1;
-  while (inwind)
+  while (inwind!=icomp)
     {
       r = (rmin * rmin * rmin) +
 	(rmax * rmax * rmax -
@@ -498,12 +506,10 @@ spherical_extend_density (w)
 {
 
   int j, n, m;
-//OLD  int  k;
-  /* Now we need to updated the densities immediately outside the wind so that the density interpolation in resonate will work.
-     In this case all we have done is to copy the densities from the cell which is just in the wind (as one goes outward) to the
-     cell that is just inside (or outside) the wind. 
-
-     *
+  /* 
+  Now we need to updated the densities immediately outside the wind so that the density interpolation in resonate will work.
+  In this case all we have done is to copy the densities from the cell which is just in the wind (as one goes outward) to the
+  cell that is just inside (or outside) the wind. 
    */
 
   for (j = 0; j < NDIM2 - 1; j++)
@@ -515,8 +521,6 @@ spherical_extend_density (w)
 	  m = n + 1;
 	  if (w[m].vol > 0)	// Then grid point n is just inside the wind
 	    {			// To extend we copy  copy the densities to the grid cell n
-//OLD         for (k = 0; k < NIONS; k++)
-//OLD           w[n].density[k] = w[m].density[k];
 	      w[n].nplasma = w[m].nplasma;
 
 	    }
@@ -525,9 +529,6 @@ spherical_extend_density (w)
 	      m = n - 1;
 	      if (w[m].vol > 0)	// The grid point is just outside the wind
 		{
-		  // we can copy the densities to the grid cell n
-//OLD             for (k = 0; k < NIONS; k++)
-//OLD               w[n].density[k] = w[m].density[k];
 		  w[n].nplasma = w[m].nplasma;
 
 		}
@@ -538,3 +539,77 @@ spherical_extend_density (w)
   return (0);
 
 }
+
+
+/***********************************************************
+               Space Telescope Science Institute
+
+ Synopsis:
+	shell_make_grid defines the cells in a thin shell. One shell inside the shell, one outside and one shell exactly fitting the shell.            
+
+Arguments:		
+	WindPtr w;	The structure which defines the wind in Python
+ 
+Returns:
+ 
+Description:
+
+	In spherical coordinates w runs from 0 to NDIM.  Note that the 
+	centers of the grid cells are defined in the xz plane at a 45 
+	degree angle.  This was done so that one would be in a plausible
+	region of a biconical wind.
+        NSH - Ive changed it to use 1/root2 rather than sin 45. More accurate.
+
+
+History:
+ 	11feb	nsh	Adapted from spherical_make_grid.c
+
+
+**************************************************************/
+
+
+int
+shell_make_grid (w)
+     WindPtr w;
+{
+int n;
+
+
+        w[0].r=geo.wind_rmin-(geo.wind_rmax-geo.wind_rmin);
+        w[1].r=geo.wind_rmin;
+	w[2].r=geo.wind_rmax;
+	w[3].r=geo.wind_rmax+(geo.wind_rmax-geo.wind_rmin);
+
+
+
+	w[0].rcen=(w[0].r+w[1].r)/2;
+	w[1].rcen=(w[1].r+w[2].r)/2;
+	w[2].rcen=(w[2].r+w[3].r)/2;
+	w[3].rcen=w[2].rcen+(geo.wind_rmax-geo.wind_rmin);
+
+
+
+
+	/* Now calculate the positions of these points in the xz plane.
+	   There is a choice about how one does this.   I have elected
+	   to assume that we want to calculate this at a 45 degree angle.
+	   in the hopes this will be a reasonable portion of the wind in
+	   a biconical flow.
+	 */
+  for (n = 0; n < NDIM; n++)
+	{
+	Log("Cell %i:  inner edge = %2.20e, centre = %2.20e\n",n,w[n].r,w[n].rcen);
+	w[n].x[1] = w[n].xcen[1] = 0.0;
+
+ //NSH Slight change here, using 1/root2 give more accurate results than sin45.
+
+
+	w[n].x[0] = w[n].x[2] = w[n].r / pow(2.0,0.5);
+	w[n].xcen[0] = w[n].xcen[2] = w[n].rcen /pow(2.0,0.5);
+	}
+    
+
+  return (0);
+
+}
+

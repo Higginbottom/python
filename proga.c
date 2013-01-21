@@ -390,7 +390,7 @@ proga_velocity (x, v)
 
   if (sane_check (speed))
     {
-      Error ("proga_velocity: v %e %e %e\n", v[0], v[1], v[2]);
+      Error ("proga_velocity:sane_check v %e %e %e\n", v[0], v[1], v[2]);
     }
   return (speed);
 

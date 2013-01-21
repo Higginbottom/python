@@ -14,7 +14,8 @@ double t,freqmin,freqmax;		temperature of BB, and frequency limits
 
 double
 emittance_bb (freqmin, freqmax, t)
-     double freqmin, freqmax, t;
+
+double freqmin, freqmax, t;
 					Calculate the emittance of a bb between freqmin and freqmax
 
 double integ_planck_d(alphamin,alphamax)
@@ -36,6 +37,13 @@ init_integ_planck_d() 			performs the integration of the dimensionless bb functi
 					 called onetime. The actuall integration is done with the numerical 
 					 recipes routine "qromb" .
 
+check_fmax(fmin,fmax,temp)		This is a little helper routine written by NSH in August 2012. We
+					were having lots of problems with trying to integrate cross sections
+					x a plack function at temperatures where there is no flux at fmax. This
+					little routine just checks if fmax is going to be more than 100xt/(h/k)
+					which will return tiny numbers for planck, and make qromb return
+					nonsense.
+
 Arguments:		
 
 Returns:
@@ -45,8 +53,8 @@ Description:
 		They call the other routines
 
 		The first call to either of these routines (surely emittance_bb) results in a call to integ_planck_d, 
-		which in turn calls integ_planck_init.  This initialization routine turn populates the array integ_planck
-		, which contains the integral of the bb function in an array.
+		which in turn calls integ_planck_init.  This initialization routine in turn populates the 
+		array integ_planck , which contains the integral of the bb function in an array.
 
 		bb_emittance continues to access the array integ_plank through integ_planck_d every 
 		future time is is called.
@@ -59,67 +67,6 @@ Description:
 Notes:
 		It seems possible that some of these routines could be combined in a clever way
 		
-		Bug/Problem:  04mar  ksl
-			The program saves time by only integrating dimensionless bb function one 
-			time.  Then you use pdf_limit to handle frequency limiting.  But we have introduced
-			photon banding to force the program to generate photons in certain portions of the
-			spectrum, where they are not expected on average.  This is a problem, because the program is
-			written so that all pdfs have the same dimension.  Expanding this number without modifying
-			the pdf routines will cause the entire program to slow down.  On the other hand, increasing
-			the number of fixed points in the pdf, with bb_set, will limit the quality of the BB spectra
-			produced in the region where most of the energy flux is.  An additional problem, is that
-			no matter what one does, when you limit the range to the very ends of the pdf, then one
-			gets a very poor represntation of the cdf.  This problem appeared in some of the disks models
-			that I tried, when I was producing IR spectra.
-
-			Redesigning all of the pdf generating software is undesirable, since it would require 
-			changes of many routines.   
-
-			One possibility that might work would be to create multiple dimensionless pdfs, one for
-			the nominal case 0-30, one for the high end, say 20-100, and one for the low end, say
-			0-1.  The problem really is that on the high end particularly the probablilty distribution
-			is hugely changing over the wavelength band.  
-
-			Another possibility would be to use pdf_gen_from_array, since this can grab an array
-			of any reasonable size (currently 4000).  There is a good bit of work to be done, and
-			so ideally one would still not generate a new pdf every time.    
-
-			The problem that we are finding with planck_d also must existe in integ_planck_d at some 
-			level, since this is also called exteranally, and uses ALPHAMAX to limit the integration.
-			
-			At present, when we get the error I was trying to solve one simply returns the minimum
-			frequency, on the assertion that the probablility density is dropping preciptiouls with
-			frequency.  Maybe the correct thing to do with that particular problem is simply to
-			make an approximation of the frequency width and use that.  Something similar might
-			be a better approch for the low frequency limit as well.
-
-			It turns out that in the restricted case where slpha=nu/kT is constrained to be large, then
-			then the randomly selected photon frequency is given by
-				alpha = alpha_min + ln (1-rand) === alpha_min + ln (rand)
-			where rand is a uniforly generated random number.
-
-			Similarly in the low frequency limit 
-			        alpha= alphamax * (1-rand)**1/3 ==== alpha_max * rand**1/3
-
-			This is what is now implemented.
-
-			0608--57h -- There was a bug in the routine that Stuart had implemented 
-			pdf_get_rand_limit_bbir (&pdf_bb); to handle the
-			case where things were in the low temperature limit, which caused the routine to give
-			photons outside the allowed frequency range. He was trying to correct the way
-			the program handles low enery photons, but the problem also occurs at high enegies.
-			The answer to the problem really is to break the geneation into three regions, 
-			a low, a reasonble and a high frequency regime. 
-
-			I think the right way to do this is as follows.  Decide where the boundaries between
-			the three rebimes are.  Create a pdf which the first inteval encompasses the
-			entire low energy regime, and the last interval the entire high energy regime.
-			Generate a random number.  If this does not end up in either of the edge
-			bins then take a standard linear interpolation.  If it does however, do a second
-			calculation for the edge.
-
-			06aug -- At least a partial fix to this problem is now implemented in the routines
-			below.  There is additional work to be done for the high frequency limit.  
 
 History:
  	97	ksl	The various portions of this file were written in 1997 as part of the python effort
@@ -139,6 +86,10 @@ History:
 	06aug	kls	57h -- Recommented and reorganized the file, so that could complete a partial
 			fix to a problem Sturat had identified.  The partial fix was generating 
 			photons outsde the min and maximum frequency
+	12aug	nsh	73e -- check_fmax written to check qromb calls will work properly.
+	12nov	ksl	74a_ksl -- Revised  rand_exp, which is used to allow us to reasonalbly 
+			approximate photons in the high alpha limit.  Eliminated some old notes about
+			this routine that seemed no longer very relevant.
 
 **************************************************************/
 
@@ -159,34 +110,36 @@ History:
 
 Arguments:		
 
+     temperature, 
+     freqmin, freqmax  - frequency interval 
+
 Returns:
+
+     The frequency of a photon  drawn randomly from a BB function with 
+     temperature T
  
 Description:	
 
+	The first time one enters the program, a cdf for a diminensionaless
+	BB function is created.  On subseqent entries, when the temperature
+	or frequency limits are changed, we use standard routines to limit
+	what portion of the dimensionless cdf to use.
+
+	Because of of the rapid fall off of the proabability density function
+	at very low and high frequency, special routines exist to deal with
+	photons in these regions of the spectrum.
+
 Notes:
 
-`	06aug - ksl -- I am fairly sure that one can eliminate the sections
-	in this routine that have to do with high and low temperuature limits
-	in favor of makeing a few additional modifications to the new routine
-	bb_pdf_get_rand_limit below.  
+	12nov - ksl - I have deleted some of the old notes associated with
+	this routine.  When this routine was written, computers are a lot
+	slower than they are today, and I was quite concerned about the
+	possibility that this routine would take a lot of computer time.
+	Computers are much faster today, and this routine does not 
+	consitute a significant fraction of the time of the entire 
+	program.  It is possible, that a more accurate routine could
+	be created more simply today.
 
-	06sep - ksl -- I really think what should be done in this program is to
-	rewrite so that one generates a random number at the start.  If this 
-	random numbers leave you in a portion of the range that is the very high 
-	or low frequency limit, you shoud use it to generate a frequency from
-	that interval with one of the approsimations that we have.  If it leaves
-	you in the main part of the interval you should use the pdf that was 
-	initailly generated. This is not what is currently implemented.
-
-	This would require determining where to set the high and low frequency limits.
-	Preusmably what one owould do is find alphamin and alphamax where the low and
-	high grequence limits occcured, e.g where the probability was less than say a 0.1
-        or greater than 0.9.  One would consider these the boundaries.  Anytime the random
-	number came up in these limtis one would use the low or the high fequeny nunbers.
-
-	Note that alpha small is the low freqency limit, alpha large corresponds o
-	high freqencies relative to the T.
-		
 History:
 	06aug	ksl	57h --Recommented, as moved to fix a problem
 			that was returning photons that were occassionally outside
@@ -203,7 +156,9 @@ History:
 			we have created pdf arrays, we simply create a uniform 
 			distribution within an interval.
 	06sep	ksl	57i -- Have simplfied this to elimiante for now any lo or hi
-			freque4ncy special cases
+			frequency special cases
+	12nov	ksl	Removed some of the old Notes assocaited with this routine.
+			See version earlier than 74 for these old notes.
 **************************************************************/
 
 #define ALPHAMIN 0.4		// Region below which we will use a low frequency approximation
@@ -228,7 +183,7 @@ double bb_set[] = {
   0.05, 0.1, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45,
   10.3, 11.3, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0,
   19., 20., 21., 22., 23., 24., 25., 26., 27., 28., 29.
-};
+}; 
 
 
 int error_bb_hi = 0;
@@ -247,7 +202,8 @@ planck (t, freqmin, freqmax)
 
 
   /*First time through create the array containing the proper boundaries for the integral of the BB function,
-     Note calling pdf_gen_from func also difines ylo and yhi */
+     Note calling pdf_gen_from func also defines ylo and yhi */
+
   if (ninit_planck == 0)
     {				/* First time through p_alpha must be initialized */
       if ((echeck =
@@ -269,7 +225,12 @@ planck (t, freqmin, freqmax)
     }
 
 
-/* If temperatures or frequencies have changed limit the region of the pdf in which we are interested */
+/* If temperatures or frequencies have changed since the last call to planck
+redefine various limitsi, including the region of the pdf  to be used
+
+Note - ksl - 1211 - It is not obvious why all of these parameters need to be
+reset.  A careful review of them is warranted.
+*/
 
   if (t != old_t || freqmin != old_freqmin || freqmax != old_freqmax)
     {
@@ -280,9 +241,6 @@ planck (t, freqmin, freqmax)
       old_t = t;
       old_freqmin = freqmin;
       old_freqmax = freqmax;
-
-//      freq = BOLTZMANN * t / H * ALPHAMIN;
-//      Log ("Boundary %f\n", C * 1e8 / freq);
 
       cdf_bb_ylo = cdf_bb_yhi = 1.0;
       if (alphamin < ALPHABIG)
@@ -298,7 +256,6 @@ planck (t, freqmin, freqmax)
 	    cdf_bb_yhi = 1.0;
 	}
 
-/* I still need to determine what all of the limits are set */
 
 /* These variables are not always used */
       lo_freq_alphamin = alphamin;	// Never used if 
@@ -317,10 +274,8 @@ planck (t, freqmin, freqmax)
 	  pdf_limit (&pdf_bb, alphamin, alphamax);
 	}
 
-
-
-
     }
+ /* End of section redefining limits */
 
 
   y = rand () / (MAXRAND);
@@ -328,7 +283,7 @@ planck (t, freqmin, freqmax)
   y = cdf_bb_ylo * (1. - y) + cdf_bb_yhi * y;	// y is now in an allowd place in the cdf
 
 /* There are 3 cases to worry about
-	The case were everything is in the low frequency limit
+	The case where everything is in the low frequency limit
 	The case where everything is in the normal limit
 	The case where some photons are in the low regime and some are
 	in the normal regime
@@ -360,8 +315,8 @@ planck (t, freqmin, freqmax)
 /***********************************************************
 	Space Telescope Science Institute
 
- Synopsis: get_rand_pow obtains a random number between x1 and x2 for a power law densitity distribution with
-	index alpha
+ Synopsis: get_rand_pow obtains a random number between x1 and x2 
+ 	for a power law densiity distribution with index alpha
 	
 
 Arguments:		
@@ -369,7 +324,7 @@ Arguments:
 Returns:
  
 Description:	
-	this array. 
+
 Notes:
 		
 History:
@@ -397,38 +352,84 @@ get_rand_pow (x1, x2, alpha)
 /***********************************************************
 	Space Telescope Science Institute
 
- Synopsis: get_rand_exp wobtains a random number between x1 and x2 for a exp law densitity distribution with
-	index alpha. 
+ Synopsis: get_rand_exp obtains a random number between x1 and x2 
+ 	for an exp law density distribution with index alpha. 
 	
 
 Arguments:		
 
+	alpha_min and alpha_max, the range of the exponential
+	function over which one wants the random number 
+	to be returned
+
 Returns:
+
+	A double precision random number
  
 Description:	
-	this array. 
+
+	
 Notes:
+
+	The cdf for an exponential distribution can be easily
+	shown to be given by solving this equation for alpha
+
+	r*(exp(-alpha_min)-exp(-alpha_max))=(exp(-alpha_min)-exp(alpha))
+
+	but you can recast this and solve for delta_alpha
+
+	exp(-delta_alpha)=(1-R)+R*exp(-(alpha_max-alpha_min))
+
+	This has the advantage that it depends only on the 
+	difference of alpha_max and alpha_min and not their
+	actual values, and as long as the exp of a very 
+	large number turns out to be zero and not 
+	not a number, it shuld not generate sane checks
 		
 History:
-	06ocd	ksl	Coded       
+	06oct	ksl	Coded       
+	12nov	ksl	Added sane check to find a problem with
+			returning NaN.  The problem was due to
+			the fact that alpha_min and almax was so
+			large that x1 and x2 were both identically
+			zero and as a result the logarithm was
+			negative.  
+	12nov	ksl	Changed algorithm to minimimize the effects
+			of very large values of alpha_min and 
+			alpha_max.  Instead of calculating 
+			alpha directly, we calculate delta_alpha
+			the difference between alpha_min and the
+			value we want
 **************************************************************/
 double
 get_rand_exp (alpha_min, alpha_max)
      double alpha_min, alpha_max;
 {
   double r;
-  double x1, x2;
-  double a;
+  //Old ksl 12nov double x1, x2;
+  double x;
+  double a,aa;
+  double delta_alpha;
 
   r = rand () / MAXRAND;
 
-  x1 = exp (-alpha_min);
-  x2 = exp (-alpha_max);
+  x= exp (alpha_min-alpha_max);
 
-  a = (1. - r) * x1 + r * x2;
+  //OLD 12nov ksl x1 = exp (-alpha_min);
+  //OLD 12nov ksl x2 = exp (-alpha_max);
 
-  a = log (a);
-  return (-a);
+  //OLD 12nov ksl aa = (1. - r) * x1 + r * x2;
+
+  aa=(1.-r)+r*x;
+  delta_alpha= -(log (aa));
+
+  a=alpha_min+delta_alpha;
+
+  if (sane_check(a)){
+	  Error("get_rand_exp:sane_check %e %e %e %e %e\n",a,aa,delta_alpha,x,r);
+  }
+  //OLD 12 nov ksl return (-a);
+  return (a);
 }
 
 /***********************************************************
@@ -590,16 +591,82 @@ double
 emittance_bb (freqmin, freqmax, t)
      double freqmin, freqmax, t;
 {
-  double alphamin, alphamax, q1;
+  double alphamin, alphamax, q1,x;
   double integ_planck_d ();
   q1 =
     2. * PI * (BOLTZMANN *
 	       BOLTZMANN * BOLTZMANN * BOLTZMANN) / (H * H * H * C * C);
+
+
   alphamin = H * freqmin / (BOLTZMANN * t);
   alphamax = H * freqmax / (BOLTZMANN * t);
-
+	if (alphamin > ALPHAMIN && alphamax < ALPHAMAX)
+	{
   return (q1 * t * t * t * t * integ_planck_d (alphamin, alphamax));
+	}
+	else if (alphamax < ALPHAMIN)
+	{
+  return (q1 * t * t * t * t * qromb(planck_d,alphamin,alphamax,1e-7));
+	}
+	else
+	{
+//	printf ("BB_emit is requesting a value outside tabulated results\n");
+  return (q1 * t * t * t * t * integ_planck_d (alphamin, alphamax));
+	}
+; /*NSH 120813 73e - changed so we simply integrate the dimensionless blackbody function here */
+ // if (alphamax > ALPHAMAX) alphamax=ALPHAMAX;
+ // if (alphamin > ALPHAMAX) return(0.0);
+//x=q1 * t * t * t * t * qromb(planck_d,alphamin,alphamax,1e-7);
+//printf ("We are in emittance_bb going from %e to %e at temp %e ans=%e\n",freqmin,freqmax,t,x);
+ // return (x);
+
 }
+
+
+/***********************************************************
+	Southampton University
+
+ Synopsis:
+check_fmax decides wether a maximum frequency requested for an integral is sensible.
+If it is too far off the end of the planck function, qromb will malfunction. We
+just have to set it to a frequency where the BB function is tiny, say where hnu/kT =100.
+At this point the bb function is
+
+
+	
+
+Arguments:		
+
+Returns:
+ 
+Description:	
+We use alphabig to define the place in the BB spectrum where we want to give up
+Notes:
+		
+History:
+	12aug	nsh	written
+**************************************************************/
+
+
+double
+check_fmax (fmin,fmax,temp)
+     double fmin,fmax,temp;
+{     
+     double bblim;
+
+     bblim=ALPHABIG*(temp/H_OVER_K); /*This is the frequency at which the exponent in the 
+				       planck law will be -100. This will give a *very* small b(nu). */
+      if (bblim < fmax)
+	{
+	fmax=bblim;
+	}
+ 
+  return (fmax);
+
+}
+
+
+
 
 #undef NMAX
 #undef ALPHAMIN

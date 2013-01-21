@@ -1,3 +1,4 @@
+
 /*
 
                                        Space Telescope Science Institute
@@ -16,6 +17,7 @@ History:
  	01mar	ksl	Added this possibility
 	02jan	ksl	Rechecked all of the routines in an atttempt to
 			determine why I do not produce KWD figure 7 well.
+        11may   nsh     Added the option to have a multiple of sound speed as initial velocity
 
  */
 
@@ -75,6 +77,7 @@ get_knigge_wind_params ()
   geo.kn_dratio = dmin = 0.5 * sqrt (geo.diskrad / geo.rstar);	/* Center of collimation in units of the WD 
 								   radius. The value set here is for the minimum collimation, see KWD95.  The coefficient 0.5 is 
 								   approximate */
+  geo.kn_v_zero = 1.0;          /* NSH 19/04/11 New parameter - multiple of sound speed to be used as initial velocity of wind */
 
 /* There is confusion in various papers concerning whether to use d or d/dmin.  In KWD95, d/dmin was
 used but in later papers, e.g KD97 d in WD radii was used.  I believe d is more natural and so will use it, 
@@ -99,6 +102,7 @@ As now represented geo.kn_dratio is the distance to the focus point in stellar r
 
   rddoub ("kn.acceleration_length(cm)", &geo.kn_r_scale);	/*Accleration length scale for wind */
   rddoub ("kn.acceleration_exponent", &geo.kn_alpha);	/* Accleration scale exponent */
+  rddoub ("kn.v_zero(multiple_of_sound_speed_at_base)", &geo.kn_v_zero);
 
 /* Assign the generic parameters for the wind the generic parameters of the wind. Note that one should not really
 use these generic parameters in the rest of the routines here, as especially for the yso model they may have
@@ -133,8 +137,18 @@ in units of WD radii */
 	geo.diskrad - (zdisk (geo.diskrad) * tan (geo.wind_thetamax));
     }
 
+  /* Some changes were made here to make this more general by Nick */
+//OLD70d  geo.xlog_scale = geo.rstar/10.0;
+//geo.zlog_scale = 1e8;
+//OLD70d  geo.zlog_scale = geo.rstar/10.0;
+/* 70d - ksl - I changed the scaling to something that produced more cells
+ * in the wind, at the cost of slightly less spatial resolution at the inner
+ * edge of the wind
+ */
+
   geo.xlog_scale = geo.rstar;
-  geo.zlog_scale = 1e8;
+  geo.zlog_scale = geo.rstar;
+
 
 
 /*Now calculate the normalization factor for the wind*/
@@ -278,6 +292,7 @@ the poloidal velocity at the inner edge of the wind. It is there for continuity 
     v_escape = sqrt (2. * G * geo.mstar / rzero);
 
   vzero = kn_vzero (rzero);
+  vzero *= geo.kn_v_zero;     /*NSH 19/4/11 Multiply sound speed by new multiplyer to allow faster velocity at base of wind */
 
 /* 578 -- 06oct -- ksl -- The next lines are modified to allow one to create a SV style
 velocity law if kn_v_infinity is less than 0 */

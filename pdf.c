@@ -34,6 +34,12 @@
 			the return to lie between xmin and xmax from pdf_limit.
 
 	
+	There are some internal routines
+
+		gen_array_from_func (func, xmin, xmax, pdfsteps) generates a cdf from a function
+			on values linearly spaced between xmin and xmax.  pdfsteps gies the
+			number of points.
+
  	There is also a simple diagnostic routine
 		pdf_check(&pdf)
 
@@ -43,10 +49,6 @@
 		pdf_to_file(&pdf,filename)				
  		  	to write a pdf structure to a file
 
-	and a totally internal routine 
-		pdf_init()	
-			Simply allocates a working array the first time pdf_gen_func is
-			called
 
 								
 Arguments for pdf_gen_from_func
@@ -122,7 +124,7 @@ Description:
 	will linearly interpolate between two points on the opposite sides of the edge).
 
 Notes:
-	Must be compiles with log.c since it makes use of the "python" logging routines for
+	Must be compiled with log.c since it makes use of the "python" logging routines for
 	errors.
 
 	The fact that these routines start with pdf... is historical and represents a poor
@@ -174,6 +176,10 @@ History:
 			where this more excact calculation seems to take less time to exeucute
 			in python than the old version.  The old version should still be in the
 			directory (and is called pdf_uniform.c)
+	10oct	ksl	Changed the way in wich pdf_gen_from function works so it will change the
+			the number of points that are used in the array pdf_array in situations
+			where the binning is too course.  In the process, eliminated pdf_init.  
+			It was only called by one routine.  
  
 **************************************************************/
 
@@ -195,24 +201,10 @@ History:
 //} *PdfPtr,pdf_dummy;
 
 
-#define PDFSTEPS 10000
+#define PDFSTEPS 10000		// This is the initial value of PDFSTEPS
+int pdf_steps_current;		// This is the value of pdfsteps at this point in time
 int init_pdf = 0;
 double *pdf_array;
-
-/* This routine simply allocates a working array that is used inside of these 
-routines*/
-int
-pdf_init ()
-{
-  double d;
-  if ((pdf_array = calloc (sizeof (d), PDFSTEPS)) == NULL)
-    {
-      Error ("pdf: Could not allocate space for pdf_array\n");
-      exit (0);
-    }
-  init_pdf = 1;
-  return (0);
-}
 
 /* Generate a pdf structure from a function.  
 
@@ -229,6 +221,10 @@ This routine stores values of the function in  pdf_array
 			pdf_gen_from function should not simple
 			call pdf_gen_from array...but that is
 			not currently the case 
+	10oct	ksl	Modified (and reorganized) in an attempt to calculate a 
+			finer grid of points in pdf_array, in situations
+			where array was so course that we did not
+			adequately sample the CDF.
 
 */
 int
@@ -239,26 +235,18 @@ pdf_gen_from_func (pdf, func, xmin, xmax, njumps, jump)
      double jump[];
      int njumps;
 {
-  double x, xstep;
+  double xstep;
   double y;
-  double sum, z;
   int j, m, mm, n;
   int njump_min, njump_max;
-  int idiag, icheck;
+  int idiag, icheck, pdfsteps;
   int pdf_check (), recalc_pdf_from_cdf ();
+  double gen_array_from_func (), delta;
 
   idiag = 0;
   njump_min = njump_max = 0;
-
-  /* Allocate an array for internal use, if that
-     has not already been done */
-  if (init_pdf == 0)
-    pdf_init ();
-
   /* Check the input data before proceeding */
-  if (xmax > xmin)
-    xstep = (xmax - xmin) / PDFSTEPS;
-  else
+  if (xmax <= xmin)
     {
       Error ("pdf_gen_from_func: xmin %g <= xmax %g\n", xmin, xmax);
       exit (0);
@@ -297,10 +285,151 @@ pdf_gen_from_func (pdf, func, xmin, xmax, njumps, jump)
 
   /* Construct what is effectively is the definite integral from xmin to x. Note
      however that currently pdf_array[0] corresponds awkwardly to the integral
-     from xmin to xstep 
+     from xmin to xstep.  
+
+     There code increases the size of the array if the steps appear so large that they
+     will affect the digitization.  
+
+     Problems might occur if there are very large jumps in the function. 
+
+     10oct - ksl - Incorprated into the code in attempting to create a power law.
    */
 
-  for (n = 0; n < PDFSTEPS; n++)
+  delta = 1.;
+  n = 0;
+  pdfsteps = PDFSTEPS;
+
+  while (n < 3)
+    {
+      delta = gen_array_from_func (func, xmin, xmax, pdfsteps);
+      if (delta < 0.1 / NPDF)
+	break;
+      pdfsteps *= 10;
+      n = n + 1;
+    }
+
+  xstep = (xmax - xmin) / pdfsteps;
+
+/* So at this point pdf_array contains an unnormalized version of the CDF for the function */
+  pdf->x[0] = xmin;
+  pdf->y[0] = 0;
+
+  n = 0;			//This is the position in pdf_array
+  mm = 1;			//This is the index to a desired value of y, with no jumps
+  j = njump_min;		//This refers to the jumps
+  for (m = 1; m < NPDF; m++)
+    {
+      y = (float) mm / (NPDF - njumps);	// Desired value of y ignoring jumps
+
+      while (pdf_array[n] < y && n < pdfsteps)	// Work one's way through pdf_array
+	{
+	  if (j < njump_max && jump[j] <= xmin + (n + 1) * xstep)
+	    {
+	      pdf->x[m] = xmin + (n + 1) * xstep;	//Not exactly jump but close
+	      pdf->y[m] = pdf_array[n];
+	      j++;		//increment the jump number
+	      m++;		//increment the pdf structure number
+	    }
+	  n++;
+	}
+
+      /* So at this point pdf_array[n-1] < x and pdf_array[n]>x */
+      pdf->x[m] = xmin + (n + 1) * xstep;
+      pdf->y[m] = pdf_array[n];
+      mm++;			// increment the number associated with the desired y ignoring jumps
+      /* So pdf->y will contain numbers from 0 to 1 */
+    }
+
+  pdf->x[NPDF] = xmax;
+  pdf->y[NPDF] = 1.0;
+  pdf->norm=1.;                 /* pdf_gen_from array produces a properly nomalized cdf and so the
+				   normalization is 1.  110629 ksl
+				*/
+//OLD  pdf->norm = xstep;		/* The normalizing factor that would convert the function we
+//OLD				   have been given into a proper probability density function */
+
+/* Calculate the gradients */
+  recalc_pdf_from_cdf (pdf);	// 57ib 
+  /* Check the pdf */
+  if ((icheck = pdf_check (pdf)) != 0)
+    {
+      Error ("pdf_gen_from_function: error %d on pdf_check\n", icheck);
+    }
+  return (icheck);
+
+}
+
+
+/* 
+
+gen_array_from_func
+
+
+This is a routine which is called by pdf_gen_from_func which simply calculates the cumulative
+distribution of the function in equally spaced steps between xmin and xmax.  The CDF is properly
+normalized.
+
+
+pdfsteps is the number of steps that are calculated.  The routine returns the largest change
+in the cdf between any two points in the grid.
+
+Notes:
+
+10oct - ksl -This is rather brute force.  An alternative would have been to have increased the density of points
+only in the region where it was needed.  This could be done by looking at the regions where the
+sampling was poor in the initial calculation and addeding new points in in a new calculations.  But
+this would require one to pass both the values of the CDF and the positions where the values were
+taken.  This would be  not be hard but would require more extensive modifications to pdf_gen_from func than 
+currently.  
+
+11jun	ksl	The name of this function is rather misleading reflecting its history.  At one point
+		it simple generated the value of the function at the various points in the grid.  That
+		is no longer the case, and has led to confusion.  
+
+History
+
+10oct	ksl(python_69)	Coded to enable one to adaptively increase the density of points
+11jun	ksl(69d)	This routine creates a properly normalized CDF.
+
+*/
+
+double
+gen_array_from_func (func, xmin, xmax, pdfsteps)
+     double (*func) (double);
+     double xmin, xmax;
+     int pdfsteps;
+{
+
+  double x, z, xstep;
+  double sum;
+  int m, n;
+  int idiag;
+  double delta;
+
+  xstep = (xmax - xmin) / pdfsteps;
+  idiag = 0;
+
+  /* First, allocate an array for internal use, if that
+     has not already been done */
+
+
+  if (init_pdf == 0 || pdf_steps_current < pdfsteps)
+    {
+
+      if (pdf_array != NULL)
+	free (pdf_array);
+
+      if ((pdf_array = calloc (sizeof (x), pdfsteps)) == NULL)
+	{
+	  Error ("pdf: Could not allocate space for pdf_array\n");
+	  exit (0);
+	}
+      init_pdf = 1;
+      pdf_steps_current = pdfsteps;
+    }
+
+
+  for (n = 0; n < pdfsteps; n++)
     {
       x = xmin + (n + 0.5) * xstep;
       if ((z = (*func) (x)) < 0 || z > 1.e50 || sane_check (z))
@@ -329,61 +458,34 @@ pdf_gen_from_func (pdf, func, xmin, xmax, njumps, jump)
   /* Thus, pdf_array is proportional to  the definite integral from xmin to x 
      (where x=xmin+(n+1)*xstep) */
 
-  sum = pdf_array[PDFSTEPS - 1];
+  sum = pdf_array[pdfsteps - 1];
 
   if (sane_check (sum))
     {
-      Error ("pdf_gen_from_func: Sum %f is NaN\n", sum);
+      Error ("pdf_gen_from_func:sane_check Sum %f is NaN\n", sum);
     }
 
-
-/* So at this point pdf_array contains an unnormalized version of the CDF for the function */
-
-  pdf->x[0] = xmin;
-  pdf->y[0] = 0;
-
-  n = 0;			//This is the position in pdf_array
-  mm = 1;			//This is the index to a desired value of y, with no jumps
-  j = njump_min;		//This refers to the jumps
-  for (m = 1; m < NPDF; m++)
+  /* Renormalize the array so that this really is a cumulative distribution function */
+  delta = 0;
+  for (n = 0; n < pdfsteps; n++)
     {
-      y = mm * sum / (NPDF - njumps);	// Desired value of y ignoring jumps
-
-      while (pdf_array[n] < y && n < PDFSTEPS)	// Work one's way through pdf_array
+      pdf_array[n] /= sum;
+      if (n > 0)
 	{
-	  if (j < njump_max && jump[j] <= xmin + (n + 1) * xstep)
+	  x = pdf_array[n] - pdf_array[n - 1];
+	  if (x > delta)
 	    {
-	      pdf->x[m] = xmin + (n + 1) * xstep;	//Not exactly jump but close
-	      pdf->y[m] = pdf_array[n] / sum;
-	      j++;		//increment the jump number
-	      m++;		//increment the pdf structure number
+	      delta = x;
 	    }
-	  n++;
 	}
 
-      /* So at this point pdf_array[n-1] < x and pdf_array[n]>x */
-      pdf->x[m] = xmin + (n + 1) * xstep;
-      pdf->y[m] = pdf_array[n] / sum;
-      mm++;			// increment the number associated with the desired y ignoring jumps
-      /* So pdf->y will contain numbers from 0 to 1 */
     }
 
-  pdf->x[NPDF] = xmax;
-  pdf->y[NPDF] = 1.0;
-  pdf->norm = sum * xstep;	/* The normalizing factor that would convert the function we
-				   have been given into a proper probability density function */
 
-/* Calculate the gradients */
-  recalc_pdf_from_cdf (pdf);	// 57ib 
-  /* Check the pdf */
-  if ((icheck = pdf_check (pdf)) != 0)
-    {
-      Error ("pdf_gen_from_function: error %d on pdf_check\n", icheck);
-    }
-  return (icheck);
-
+  return (delta);
 }
 
+// End of function
 
 
 /*  
@@ -544,9 +646,14 @@ pdf_gen_from_array (pdf, x, y, n_xy, xmin, xmax, njumps, jump)
 	  pdf_n++;
 	  if (pdf_n > PDF_ARRAY)
 	    {
-	      Error ("pdf_gen_from_array: pdf_n (%d) exceeded maximum array size PDF_ARRAY (%d) \n",pdf_n,PDF_ARRAY);
-	      Error ("pdf_gen_from_array: n_xy %d xmin %f xmax %f njumps %d\n",n_xy,xmin,xmax,njumps);
-	      Error ("pdf_gen_from_array: Consider increasing PDF_ARRAY to a value > n_xy + njumps, and recompiling\n");  
+	      Error
+		("pdf_gen_from_array: pdf_n (%d) exceeded maximum array size PDF_ARRAY (%d) \n",
+		 pdf_n, PDF_ARRAY);
+	      Error
+		("pdf_gen_from_array: n_xy %d xmin %f xmax %f njumps %d\n",
+		 n_xy, xmin, xmax, njumps);
+	      Error
+		("pdf_gen_from_array: Consider increasing PDF_ARRAY to a value > n_xy + njumps, and recompiling\n");
 	      exit (0);
 	    }
 	}
@@ -866,6 +973,16 @@ pdf_get_rand_limit (pdf)
 
 }
 
+/* 
+
+Write the full structure of the cumulattive distribution function to
+a file
+
+110628	ksl	Added lines to write out all of the information contained
+		in the pdf structure in an attempt to debug an error in
+		anisowind
+*/
+
 int
 pdf_to_file (pdf, filename)
      PdfPtr pdf;
@@ -876,9 +993,13 @@ pdf_to_file (pdf, filename)
 
   fptr = fopen (filename, "w");
 
-  fprintf (fptr, "#x y\n");
+  fprintf(fptr,"# limits (portion.to.sample)   %10.4g %10.4g\n",pdf->limit1,pdf->limit2);
+  fprintf(fptr,"# x1 x2  Range(to.be.returned) %10.4g %10.4g\n",pdf->x1,pdf->x2);
+  fprintf(fptr,"# norm   Scale.factor          %10.4g \n",pdf->norm);
+
+  fprintf (fptr, "#x y  1-y d\n");
   for (n = 0; n <= NPDF; n++)
-    fprintf (fptr, "%10.4g	%14.8g (%14.8e)  %10.4g\n", pdf->x[n],
+    fprintf (fptr, "%10.4g	%14.8g %14.8e  %10.4g\n", pdf->x[n],
 	     pdf->y[n], 1. - pdf->y[n], pdf->d[n]);
 
   fclose (fptr);

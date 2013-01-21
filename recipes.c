@@ -123,6 +123,7 @@ polint (xa, ya, n, x, y, dy)
   double *c, *d, *vector ();
   void free_vector ();
 
+
   dif = fabs (x - xa[1]);
   c = vector (1, n);
   d = vector (1, n);
@@ -145,7 +146,7 @@ polint (xa, ya, n, x, y, dy)
 	  hp = xa[i + m] - x;
 	  w = c[i + 1] - d[i];
 	  if ((den = ho - hp) == 0.0)
-	    printf ("Error in routine POLINT");
+	    printf ("Error in routine POLINT\n");
 	  den = w / den;
 	  d[i] = hp * den;
 	  c[i] = ho * den;

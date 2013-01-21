@@ -144,7 +144,7 @@ spectrum_init (f1, f2, nangle, angle, phase, scat_select, top_bot_select,
     }
 
   strcpy (s[0].name, "Emitted");
-  strcpy (s[1].name, "Star+BL");
+  strcpy (s[1].name, "CenSrc");
   strcpy (s[2].name, "Disk   ");
   strcpy (s[3].name, "Wind   ");
   strcpy (s[4].name, "HitSurf");
@@ -168,7 +168,7 @@ disk. The minus sign in the terms associated with phase are to make this happen.
 02feb ksl
 */
 
-      sprintf (s[n].name, "Ang:%.1f", angle[n - MSPEC]);
+      sprintf (s[n].name, "A%02.0f", angle[n - MSPEC]);
       s[n].lmn[0] =
 	sin (angle[n - MSPEC] / RADIAN) * cos (-phase[n - MSPEC] * 360. /
 					       RADIAN);
@@ -206,13 +206,17 @@ disk. The minus sign in the terms associated with phase are to make this happen.
 	s[n].renorm = 1.;
       /* Completed initialization of variables for live or die */
 
-      if (phase[n - MSPEC] > 0.75 || phase[n - MSPEC] < 0.25)
-	{			/*Then conditions
-				   have been place on the phases so update the names */
+/* 68g - Changed the format of the string describing the spectrum so that it was shorted
+ * and so that the phase was always given.  ksl 091125
+ */
+      //
+//OLD091125      if (phase[n - MSPEC] > 0.75 || phase[n - MSPEC] < 0.25)
+//OLD091125	{			/*Then conditions
+//OLD091125			   have been place on the phases so update the names */
 	  strcpy (dummy, "");
-	  sprintf (dummy, "_ph%.2f", angle[n - MSPEC]);
+	  sprintf (dummy, "P%04.2f", phase[n - MSPEC]);
 	  strcat (s[n].name, dummy);
-	}
+//OLD091125	}
       s[n].nscat = scat_select[n - MSPEC];
       if (s[n].nscat < MAXSCAT)
 	{			/* Then conditions have been place on the
@@ -308,6 +312,10 @@ History:
 			both 1-d and 2-d grids simulataneouly.  
 	08mar	ksl	Fixed up spectrum types to account for tracking
 			of photons which had been scattered by the wind
+	1212	ksl	Changed the way dealt with photons which had
+			frequencies which were too low or too high
+			to record the numbers and to give an error
+			only if the numbers seemed large
 **************************************************************/
 
 int
@@ -318,21 +326,33 @@ spectrum_create (p, f1, f2, nangle, select_extract)
      int select_extract;
 
 {
-  int nphot, i, j, k, n;
+  int nphot, i, j, k, k1, n;
   int nspec, spectype;
   double freqmin, freqmax, dfreq;
+  double lfreqmin, lfreqmax, ldfreq;
   double x1;
   int wind_n_to_ij ();
   int mscat, mtopbot;
+  double delta;
+  double nlow,nhigh;
 
   freqmin = f1;
   freqmax = f2;
   dfreq = (freqmax - freqmin) / NWAVE;
   nspec = nangle + MSPEC;
+  nlow=0.0;   // variable to storte the number of photons that have frequencies which are too low
+  nhigh=0.0;  // variable to storte the number of photons that have frequencies which are too high
+  delta=0.0;  // fractional frequency error allowod
+
+/* Lines to set up a logarithmic spectrum */
+
+	lfreqmin=log10(freqmin);
+	lfreqmax=log10(freqmax);
+	ldfreq=(lfreqmax-lfreqmin) / NWAVE;	
+
 
   for (nphot = 0; nphot < NPHOT; nphot++)
     {
-
       if ((j = p[nphot].nscat) < 0 || j > MAXSCAT)
 	nscat[MAXSCAT]++;
       else
@@ -343,53 +363,76 @@ spectrum_create (p, f1, f2, nangle, select_extract)
       else
 	nres[j]++;
 
+/* At some undocumented point, logarithmic frequency intervals were added */
+/* lines to work out where we are in a logarithmic spectrum */
+	k1 = (log10(p[nphot].freq) -log10(freqmin)) / ldfreq;
+	if (k1<0) 
+		{
+		k1=0; 
+		}
+	if (k1>NWAVE) 
+		{
+		k1=NWAVE; 
+		}
+
+/* lines to work out where we are in a normal spectrum */
       k = (p[nphot].freq - freqmin) / dfreq;
       if (k < 0)
 	{
-/*Because of Doppler shifts the frequency of a photon can be slightly out
- * of the desired range.  Print an error message only if the frequency is
- * so far out of bounds (>3000 km/s) that it suggests a real error.
-*/
+//OLD 74a_ksl /*Because of Doppler shifts the frequency of a photon can be slightly out
+//OLD 74a_ksl  * of the desired range.  Print an error message only if the frequency is
+//OLD 74a_ksl  * so far out of bounds (>3000 km/s) that it suggests a real error.
+//OLD 74a_ksl */
+//OLD 74a_ksl 
+//OLD 74a_ksl   	  delta=0.02;  /* 111211 ksl -  Added a variable so that we could control how tightly to limit the photon boundaries 
+//OLD 74a_ksl 			 It would be possible to calculate what delta should be from the maximum velocity in the disk or wind
+//OLD 74a_ksl 		 */
 
-	  if (((1. - p[nphot].freq / freqmin) > 0.01) && (geo.rt_mode != 2))
-	    Error_silent
-	      ("spectrum_create: photon %6d freq low  %g < %g v %.2e scat %d n res scat %d origin %d\n",
-	       nphot, p[nphot].freq, freqmin,
-	       (1. - p[nphot].freq / freqmin) * 2.99795e5, p[nphot].nscat,
-	       p[nphot].nrscat, p[nphot].origin);
+	  if (((1. - p[nphot].freq / freqmin) > delta) && (geo.rt_mode != 2))
+//OLD 74a_ksl	    Error_silent
+//OLD 74a_ksl	      ("spectrum_create: photon %6d freq low  %g < %g v %.2e scat %d n res scat %d origin %d\n",
+//OLD 74a_ksl	       nphot, p[nphot].freq, freqmin,
+//OLD 74a_ksl	       (1. - p[nphot].freq / freqmin) * 2.99795e5, p[nphot].nscat,
+//OLD 74a_ksl	       p[nphot].nrscat, p[nphot].origin);
+	  nlow=nlow+1;
 	  k = 0;
 	}
       else if (k > NWAVE - 1)
 	{
-	  if (((1. - freqmax / p[nphot].freq) > 0.01) && (geo.rt_mode != 2))
-	    Error_silent
-	      ("spectrum_create: photon %6d freq high %g > %g v %.2e scat %d  res scat %d origin %d\n",
-	       nphot, p[nphot].freq, freqmax,
-	       (1. - freqmax / p[nphot].freq) * 2.99795e5, p[nphot].nscat,
-	       p[nphot].nrscat, p[nphot].origin);
+	  if (((1. - freqmax / p[nphot].freq) > delta) && (geo.rt_mode != 2))
+//OLD 74a_ksl	    Error_silent
+//OLD 74a_ksl	      ("spectrum_create: photon %6d freq high %g > %g v %.2e scat %d  res scat %d origin %d\n",
+//OLD 74a_ksl	       nphot, p[nphot].freq, freqmax,
+//OLD 74a_ksl	       (1. - freqmax / p[nphot].freq) * 2.99795e5, p[nphot].nscat,
+//OLD 74a_ksl	       p[nphot].nrscat, p[nphot].origin);
+		  nhigh=nhigh+1;
 	  k = NWAVE - 1;
 	}
 
       if ((i = p[nphot].istat) == P_ESCAPE)
 	{
 	  s[0].f[k] += p[nphot].w;	/* emitted spectrum */
+	  s[0].lf[k1] += p[nphot].w;	/* logarithmic emitted spectrum */
 	  s[0].nphot[i]++;
 	  spectype = p[nphot].origin;
 	  if (spectype >= 10)
 	    spectype -= 10;
-	  if (spectype == PTYPE_STAR || spectype == PTYPE_BL)	// Then it came from the bl or the star
+	  if (spectype == PTYPE_STAR || spectype == PTYPE_BL || spectype == PTYPE_AGN)	// Then it came from the bl or the star
 	    {
 	      s[1].f[k] += p[nphot].w;	/* emitted star (+bl) spectrum */
+	      s[1].lf[k1] += p[nphot].w;	/* logarithmic emitted star (+bl) spectrum */
 	      s[1].nphot[i]++;
 	    }
 	  else if (spectype == PTYPE_DISK)	// Then it was a disk photon 
 	    {
 	      s[2].f[k] += p[nphot].w;	/* transmitted disk spectrum */
+	      s[2].lf[k1] += p[nphot].w;	/* logarithmic transmitted disk spectrum */
 	      s[2].nphot[i]++;
 	    }
 	  else if (spectype == PTYPE_WIND)
 	    {
 	      s[3].f[k] += p[nphot].w;	/* wind spectrum */
+	      s[3].lf[k1] += p[nphot].w;	/* logarithmic wind spectrum */
 	      s[3].nphot[i]++;
 	    }
 	  else
@@ -417,6 +460,7 @@ spectrum_create (p, f1, f2, nangle, select_extract)
 		    {
 		      if (s[n].mmin < x1 && x1 < s[n].mmax)
 			s[n].f[k] += p[nphot].w;
+			s[n].lf[k1] += p[nphot].w;   /* logarithmic spectrum */
 		    }
 
 		}
@@ -425,12 +469,14 @@ spectrum_create (p, f1, f2, nangle, select_extract)
       else if (i == P_HIT_STAR || i == P_HIT_DISK)
 	{
 	  s[4].f[k] += p[nphot].w;	/*absorbed spectrum */
+	  s[4].lf[k1] += p[nphot].w;	/*logarithmic absorbed spectrum */
 	  s[4].nphot[i]++;
 	}
 
       if (j > 0)
 	{
 	  s[5].f[k] += p[nphot].w;	/* j is the number of scatters so this constructs */
+	  s[5].lf[k1] += p[nphot].w;	/* logarithmic j is the number of scatters so this constructs */
 	  if (i < 0 || i > NSTAT - 1)
 	    s[5].nphot[NSTAT - 1]++;
 	  else
@@ -446,6 +492,12 @@ spectrum_create (p, f1, f2, nangle, select_extract)
     }
 
 
+  if ((nlow/nphot>0.05) || (nhigh/nphot>0.05)) {
+  	Error("spectrum_create: Fraction of photons lost: %4.2f wi/ freq. low, %4.2f w/freq hi\n",nlow/nphot,nhigh/nphot);
+  }
+  else {
+	 Log("spectrum_create: Fraction of photons lost:  %4.2f wi/ freq. low, %4.2f w/freq hi\n",nlow/nphot,nhigh/nphot);
+  }
 
 
   Log ("\nNo. of photons which have scattered n times\n");
@@ -504,8 +556,8 @@ spectrum_create (p, f1, f2, nangle, select_extract)
 
  Synopsis:
    
-	spectrum_summary(filename,mode,nspecmin,nspecmax,select_spectype,renorm)  
-		writes out the spectrum to a file "spectrum.out"
+	spectrum_summary(filename,mode,nspecmin,nspecmax,select_spectype,renorm,loglin)  
+		writes out the spectrum to a file 
 
 Arguments:		
 
@@ -520,6 +572,7 @@ Arguments:
 				was added to allow one to print out the spectrum at the
 				end of each cycle, rather than the end of the entire
 				calculation.
+	char loglin[]		Are we outputting a log or a linear spectrum
 				
 
 Returns:
@@ -547,14 +600,16 @@ History:
 	02apr	ksl	Added renorm option so that the spectrum will have the
 			same overall "flux" when each incremental spectrum is printed
 			out.
+	10nov   nsh	Added another switch if we are outputting a log or a lin spectrum
 
 **************************************************************/
 
 
 
 int
-spectrum_summary (filename, mode, nspecmin, nspecmax, select_spectype, renorm)
+spectrum_summary (filename, mode, nspecmin, nspecmax, select_spectype, renorm, loglin)
      char filename[], mode[];
+     int loglin;          // switch to tell the code if we are outputting a log or a lin
      int nspecmin, nspecmax;
      int select_spectype;
      double renorm;		// parameter used to rescale spectrum as it is building up 
@@ -563,7 +618,8 @@ spectrum_summary (filename, mode, nspecmin, nspecmax, select_spectype, renorm)
   FILE *fopen (), *fptr;
   int i, n;
   char string[LINELENGTH];
-  double freq, freqmin, dfreq;
+  double freq, freqmin, dfreq, freq1;
+  double lfreqmin,lfreqmax,ldfreq;
   double x, dd;
 
 
@@ -612,32 +668,67 @@ spectrum_summary (filename, mode, nspecmin, nspecmax, select_spectype, renorm)
      as a result of the fact that the bb function generate some IR photons */
   dd = 4. * PI * (100. * PC) * (100. * PC);
 
-  freqmin = s[nspecmin].freqmin;
-  dfreq = (s[nspecmin].freqmax - freqmin) / NWAVE;
-  for (i = 1; i < NWAVE - 1; i++)
-    {
-      freq = freqmin + i * dfreq;
-      fprintf (fptr, "%-8e %.3f ", freq, C * 1e8 / freq);
-      for (n = nspecmin; n <= nspecmax; n++)
+  if (loglin==0)
 	{
-	  x = s[n].f[i] * s[n].renorm;
-	  if (select_spectype == 1)
-	    {			/* flambda */
-	      x *= (freq * freq * 1e-8) / (dfreq * dd * C);
-	    }
-	  else if (select_spectype == 2)
-	    {			/*fnu */
-	      x /= (dfreq * dd);
-	    }
-	  fprintf (fptr, " %8.3g", x * renorm);
+  	freqmin = s[nspecmin].freqmin;
+  	dfreq = (s[nspecmin].freqmax - freqmin) / NWAVE;
+  	for (i = 1; i < NWAVE - 1; i++)
+    		{
+      		freq = freqmin + i * dfreq;
+      		fprintf (fptr, "%-8e %.3f ", freq, C * 1e8 / freq);
+      		for (n = nspecmin; n <= nspecmax; n++)
+			{
+	  		x = s[n].f[i] * s[n].renorm;
+	  		if (select_spectype == 1)
+	    			{			/* flambda */
+	      			x *= (freq * freq * 1e-8) / (dfreq * dd * C);
+	    			}
+	  		else if (select_spectype == 2)
+	    			{			/*fnu */
+	      			x /= (dfreq * dd);
+	    			}
+	  		fprintf (fptr, " %8.3g", x * renorm);
+			}
+
+
+      		fprintf (fptr, "\n");
+    		}
 	}
+   else if (loglin==1)
+	{
+	lfreqmin=log10(s[nspecmin].freqmin);
+	freq1=lfreqmin;
+	lfreqmax=log10(s[nspecmin].freqmax);
+	ldfreq=(lfreqmax-lfreqmin)/NWAVE;
+		
+	printf("lfreqmin=%e lfreqmax=%e ldfreq=%e\n",lfreqmin,lfreqmax,ldfreq);
+	for (i = 1; i < NWAVE - 1; i++)
+    		{
+      		freq = pow(10.,(lfreqmin + i * ldfreq));
+		dfreq=freq-freq1;
+      		fprintf (fptr, "%-8e %.3f ", freq, C * 1e8 / freq);
+      		for (n = nspecmin; n <= nspecmax; n++)
+			{
+	  		x = s[n].lf[i] * s[n].renorm;
+	  		if (select_spectype == 1)
+	    			{			/* flambda */
+	      			x *= (freq * freq * 1e-8) / (dfreq * dd * C);
+	    			}
+	  		else if (select_spectype == 2)
+	    			{			/*fnu */
+	      			x /= (dfreq * dd);
+	    			}
+	  		fprintf (fptr, " %8.3g", x * renorm);   /* this really shouldn't get called if we are outputting log data */
+			}
 
 
-      fprintf (fptr, "\n");
-    }
-
+      		fprintf (fptr, "\n");
+		freq1=freq;
+    		}
+	}
   fclose (fptr);
 
   return (0);
 
 }
+

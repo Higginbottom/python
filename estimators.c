@@ -75,17 +75,11 @@ bf_estimators_increment (one, p, ds)
   mplasma = &macromain[xplasma->nplasma];
 
 
-  freq_av = p->freq;		// I'm doing this is the simplest way for now: for purposes of 
+  freq_av = p->freq;
   // the continuum neglect variation of frequency along path and
   // take as a single "average" value.  
 
 
-  /* SS Jul07 - replacing next block to use kap_bf for consistency. */
-  // SS July07 - problems when a packet drifts across a strong continuum edge (e.g. Lyman)
-  // The exponential can blow up (which it shouldn't). Setting it to 1.0 (i.e. behaviour for
-  // exactly on the edge - not clear that this is ideal, but it's better than letting it get
-  // bigger than 1.0. Perhaps need to address more fully by putting a limit to 
-  // propagation distances that will prevent this.
   for (nn = 0; nn < xplasma->kbf_nuse; nn++)
     {
       n = xplasma->kbf_use[nn];
@@ -129,7 +123,7 @@ bf_estimators_increment (one, p, ds)
 	  mplasma->matom_abs[phot_top[n].uplev] += abs_cont =
 	    yy * ft / freq_av;
 	  xplasma->kpkt_abs += yy - abs_cont;
-	  /* the following is just a check that flags packets that appear to traveled a 
+	  /* the following is just a check that flags packets that appear to travel a 
 	     suspiciously large optical depth in the continuum */
 	  if ((yy / weight_of_packet) > 50)
 	    {
@@ -149,8 +143,8 @@ bf_estimators_increment (one, p, ds)
 	      x = sigma_phot_topbase (&phot_top[n], freq_av);	//this is the cross section
 	      weight_of_packet = p->w;
 	      y = weight_of_packet * x * ds;
-	      /* Is a factor of two needed here to account for volume above and below the plane?? (SS May04) */
-	      xplasma->heat_photo += heat_contribution = y * density * (1.0 - (ft / freq_av));	///2;// * one->vol ? 
+	     
+	      xplasma->heat_photo += heat_contribution = y * density * (1.0 - (ft / freq_av));	
 	      xplasma->heat_tot += heat_contribution;
 	      /* This heat contribution is also the contibution to making k-packets in this volume. So we record it. */
 
@@ -165,9 +159,7 @@ bf_estimators_increment (one, p, ds)
   weight_of_packet = p->w;
   y = weight_of_packet * kappa_ff (xplasma, freq_av) * ds;
 
-  /* Is a factor of two needed here to account for volume above and below the plane ?? (SS May04) */
-
-  xplasma->heat_ff += heat_contribution = y;	///2;// * one->vol ?
+  xplasma->heat_ff += heat_contribution = y;	
   xplasma->heat_tot += heat_contribution;
 
   /* This heat contribution is also the contibution to making k-packets in this volume. So we record it. */
@@ -370,7 +362,7 @@ Notes: This routine normalises the bb and bf mc estimators needed
        is for now.
 
        ksl -- This routine loops over nlte_levels, which in principle
-       could include non-macro ions, but that should not matter since
+       could include non-macro ions, but that should not matter 
        since nbfu_jumps will be zero for these.
 
 History:
@@ -408,13 +400,8 @@ mc_estimator_normalise (n)
      1 / h  (Planck constant)
      1 / Volume
      1 / Time 
-     I think that the weights are chosen such that Time = 1. (Knox - can 
-     you confirm that this is true?)
+     I think that the weights are chosen such that Time = 1. 
      So the normalisation of gamma and gamma_e is easy. 
-
-     Stuart, everything should be normalized so that time = 1.  Photon
-     bundles are created so that total energy carried by all photon
-     bundles is the same as the luminosity -- 04 Apr ksl
    */
 
 
@@ -430,19 +417,6 @@ mc_estimator_normalise (n)
     {
       for (j = 0; j < config[i].n_bfu_jump; j++)
 	{
-	  /*
-	     if (i == 1 && j == 0)
-	     {
-	     if (mplasma->gamma[i][j] == 0)
-	     {
-	     printf("Ba continuum has zero estimator for cell %d\n", one->nplasma);
-	     }
-	     else
-	     {
-	     printf("Ba continuum has %g estimaros for cell %d Previously it was %g.\n",mplasma->gamma[i][j] / H / volume, one->nplasma, mplasma->gamma_old[i][j]);
-	     }
-	     }
-	   */
 
 	  mplasma->gamma_old[config[i].bfu_indx_first+j] = mplasma->gamma[config[i].bfu_indx_first+j] / H / volume;	//normalise
 	  mplasma->gamma[config[i].bfu_indx_first+j] = 0.0;	//re-initialise for next iteration
@@ -456,7 +430,6 @@ mc_estimator_normalise (n)
 
 	  stat_weight_ratio =
 	    config[phot_top[config[i].bfu_jump[j]].uplev].g / config[i].g;
-	  //        config[phot_top[config[i].bfu_jump[j]].nlev].g
 
 	  mplasma->alpha_st_old[config[i].bfu_indx_first+j] =
 	    mplasma->alpha_st[config[i].bfu_indx_first+j] * stimfac * stat_weight_ratio / H /
@@ -487,52 +460,7 @@ mc_estimator_normalise (n)
 		get_alpha_st (&phot_top[config[i].bfu_jump[j]], xplasma);
 	    }
 
-
-	  /* Now that the estimators are known they can be used to compute the bf heating rate. Note
-	     that the alpha_st should be included as a cooling process somewhere - worry about this later (SS) */
-
-	  /* Adding in the heating contribution of three body collisional recombination. SS June 04. */
-
-	  /* SS June 04: The heating contribution is now computed in a different routine. Next block of
-	     code commented out for now - can be deleted once sure that everythin works okay. */
-
-	  /*************************
-	  density = den_config (one, i);
-	  
-	  heat_contribution =
-	    (one->gamma_e_old[i][j] -
-	     one->gamma_old[i][j]) * H *
-	    phot_top[config[i].bfu_jump[j]].freq[0] * density * one->vol;
-
-	  density = den_config (one, phot_top[config[i].bfu_jump[j]].uplev);
-
-	  heat_contribution += q_recomb (&phot_top[config[i].bfu_jump[j]], one->t_e)
-	    * one->ne * one->ne * H * density * one->vol * 
-	    phot_top[config[i].bfu_jump[j]].freq[0];
-	  
-	  one->heat_photo += heat_contribution;
-	  one->heat_tot += heat_contribution;
-	  *************************************/
-
 	}
-
-
-
-
-
-      /* I've not put in anything for heat_z or nioniz or ioniz or heat_ion because I'm not sure if they're
-         needed. (SS) Any thoughts about this would be appreciated. 
-         04apr -- ksl -- I don't think we can tell yet what we want to do about these.  It will be more obvious
-         once we understand how we are going to handle ionization equilibrium for macro-atoms and non-macro atoms.
-         The original reason for recording the ionization numbers was in order to check that ionizations and 
-         recombinations were in equilibrum.  Also, I kept track of H and He and metals separately because I
-         assumed that one might adopt a more detailed approach to H and He than metals.  I had similar thoughts
-         concerning the various heating contributions, plus I had found for diagnostic purposes it was useful to
-         separate H and He from metals.  
-
-       */
-
-
 
       /* That deals with the bf jumps. Now need to sort out the bb jumps. */
 
@@ -588,16 +516,15 @@ mc_estimator_normalise (n)
     }
 
   /* bb and bf now normalised. Done. */
-  /* At some point it is necessary to get the heating contribution from macro atom bb transitions (the
-     line heating). This doesn't really seem like the natural place to do it but for now I'm going to
-     put it here just so that it remains close to where the bf heating is computed. */
+  /* Get the heating contribution from macro atom bb transitions (the
+     line heating). */
 
   xplasma->heat_lines += heat_contribution =
     macro_bb_heating (xplasma, xplasma->t_e);
   xplasma->heat_lines_macro = heat_contribution;
   xplasma->heat_tot += heat_contribution;
 
-  /* Get the bf heating contributions here too now. (SS June 04) */
+  /* Get the bf heating contributions here too. (SS June 04) */
 
   xplasma->heat_photo += heat_contribution =
     macro_bf_heating (xplasma, xplasma->t_e);
@@ -605,7 +532,7 @@ mc_estimator_normalise (n)
   xplasma->heat_tot += heat_contribution;
 
 
-  /* Now that we have estimators use for the level populations */
+  /* Now that we have estimators, set the plag to use them for the level populations */
 
 
   geo.macro_ioniz_mode = 1;
@@ -762,7 +689,6 @@ total_bb_cooling (xplasma, t_e)
   double coll_rate, rad_rate;
 
   total = 0;			// initialise
-
   for (i = 0; i < nlines; i++)
     {
       line_ptr = &line[i];
@@ -781,7 +707,6 @@ total_bb_cooling (xplasma, t_e)
 	  //The cooling rate is computed using the scattering probability formalism in KSL's notes on Python.
 
 	  two_level_atom (line_ptr, xplasma, &lower_density, &upper_density);
-
 	  coll_rate = q21 (line_ptr, t_e) * xplasma->ne
 	    * (1. - exp (-H_OVER_K * line_ptr->freq / t_e));
 

@@ -62,8 +62,8 @@
 #include "python.h"
 
 
-//OLD #define LINELENGTH 132
 #define NW		10000
+#define NSPEC           20
 
 
 typedef struct sss
@@ -272,14 +272,18 @@ main (argc, argv)
 	  if (line[0] != '#')
 	    {
 	      if ((nwords =
-		   sscanf (line, "%e %e %e %e %e %e %e %e %e %e %e %e %e %e",
+		   sscanf (line, "%e %e %e %e %e %e %e %e %e %e %e %e %e %e %e %e %e %e %e %e %e %e",
 			   &spec_in[imax].freq, &spec_in[imax].wav,
 			   &spec_in[imax].x[0], &spec_in[imax].x[1],
 			   &spec_in[imax].x[2], &spec_in[imax].x[3],
 			   &spec_in[imax].x[4], &spec_in[imax].x[5],
 			   &spec_in[imax].x[6], &spec_in[imax].x[7],
 			   &spec_in[imax].x[8], &spec_in[imax].x[9],
-			   &spec_in[imax].x[10], &spec_in[imax].x[11])) != 14)
+			   &spec_in[imax].x[10], &spec_in[imax].x[11],
+			   &spec_in[imax].x[12], &spec_in[imax].x[13],
+			   &spec_in[imax].x[14], &spec_in[imax].x[15],
+			   &spec_in[imax].x[16], &spec_in[imax].x[17],
+			   &spec_in[imax].x[18], &spec_in[imax].x[19])) != 22)
 		{
 //                                              printf("Error: Incorrect number of spectra in input spectrum %d\n",nwords);
 		  //                                              exit(0);

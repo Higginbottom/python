@@ -26,10 +26,12 @@
 Arguments:		
 	double x[3]	a position
 Returns:
- 	where_in_wind returns 0 if the photon is in the wind, 
+ 	where_in_wind returns 
+	 W_ALL_INTORUS if the photon is in the torus
+	 W_ALL_INWIND if the photon is in the wind, 
  	-1 if it is inside the inner wind cone, and 
  	-2 if it is outside the outer wind cone.
- 	-3 if it is inside the minimmum radius for the wind
+ 	-3 if it is inside the minimum radius for the wind
 	-4 if it is outside the maximum radius for the wind
 	-5 if it is inside the disk
 Description:	
@@ -39,6 +41,10 @@ Notes:
 	It does not tell you whether it is in the grid or not, just whether the photon is
 	between the two wind cones and/or inside minimum or maximum radius of the wind.     
 	It does not update pp->grid
+
+	11Aug. - ksl - it does not look like any of the negative return values are actually utilized
+	anywhere.  It could be that one should return W_NOT_INWIND in all
+	of these cases
 History:
  	97jan   ksl	Coding on python began.
  	98dec	ksl	Modified so the call to where_in_wind involves only
@@ -50,6 +56,11 @@ History:
 			is in the disk, which is now possible
 			if the disk has vertical extent
         04Aug   SS      Minor modification - "else" removed.
+	11Aug	ksl	Allowed for torus, and adapted so that it uses
+			some of the same defined variables as w->inwind
+	11Nov	ksl	Made changes to attempt to fix errors in the
+			implementation of the Elvis model
+			
 **************************************************************/
 
 int
@@ -57,10 +68,13 @@ where_in_wind (x)
      double x[];
 {
   double rho, rho_min, rho_max, z;
-//  double length (), zdisk ();
   int ireturn;
 
-  ireturn = 0;
+  ireturn = W_ALL_INWIND;
+
+  //110814 - Currently geo.wind_rmin is always set to geo.rstar except for models that are 
+  //calculated by others.  Thus we would all the grids to start at rmin.
+
 
   /* First check to see if photon is inside star or outside wind */
   if ((z = length (x)) < geo.wind_rmin)
@@ -84,10 +98,37 @@ where_in_wind (x)
 	return (-5);
     }
 
-  /* Removed "else" from following line (SS August 04) - above check
-     does not exclude the next two possibilities. */
+  /* 70b -ksl - Now check if the position is in the torus.  This check
+    precedes the check to see if the position is in the wind
+  */ 
+
+  if (geo.compton_torus){
+	  if (geo.compton_torus_rmin < rho && rho <geo.compton_torus_rmax && z< geo.compton_torus_zheight) {
+		  return (W_ALL_INTORUS);
+	  }
+  }
+
+  /* Now for the elvis wind model, check to see if the position is
+   * inside all of the wind or if it is in the vertical section of the wind
+   *
+   * Note the use of sv_rmax and sv_rmin here, because thise are not the
+   * same as for the windcones gescribed by geo.wind_rmin and geo.wind_rmax
+   * 111124 ksl
+   */
+
+  if (geo.wind_type== 8)
+  {
+	  if (rho < geo.sv_rmin){
+		  return (-1);
+	  }
+	  if (rho < geo.sv_rmax && z < geo.elvis_offset) {
+		  return (W_ALL_INWIND);
+	  }
+  }
+ 
 
 
+  /* Check if one is inside the inner windcone */
   if (rho < (rho_min = geo.wind_rho_min + z * tan (geo.wind_thetamin)))
     {
       ireturn = (-1);
@@ -140,6 +181,7 @@ wind_check (www, n)
      WindPtr www;
      int n;
 {
+	printf("Got to wind_check\n");
   int i, j, k, istart, istop;
   if (n < 0)
     {
@@ -158,16 +200,16 @@ wind_check (www, n)
 	{
 	  if (sane_check (www[i].x[j]))
 	    {
-	      Error ("wind_check: www[%d].x[%d] %e\n", i, j, www[i].x[j]);
+	      Error ("wind_check:sane_check www[%d].x[%d] %e\n", i, j, www[i].x[j]);
 	    }
 	  if (sane_check (www[i].xcen[j]))
 	    {
-	      Error ("wind_check: www[%d].xcen[%d] %e\n", i, j,
+	      Error ("wind_check:sane_check www[%d].xcen[%d] %e\n", i, j,
 		     www[i].xcen[j]);
 	    }
 	  if (sane_check (www[i].v[j]))
 	    {
-	      Error ("wind_check: www[%d].v[%d] %e\n", i, j, www[i].v[j]);
+	      Error ("wind_check:sane_check www[%d].v[%d] %e\n", i, j, www[i].v[j]);
 	    }
 	}
       for (j = 0; j < 3; j++)
@@ -176,7 +218,7 @@ wind_check (www, n)
 	    {
 	      if (sane_check (www[i].v_grad[j][k]))
 		{
-		  Error ("wind_check: www[%d].v_grad[%d][%d] %e\n", i, j, k,
+		  Error ("wind_check:sane_check www[%d].v_grad[%d][%d] %e\n", i, j, k,
 			 www[i].v_grad[j][k]);
 		}
 	    }
@@ -187,6 +229,7 @@ wind_check (www, n)
   Log
     ("Wind_check: Punchthrough distance DFUDGE %e www[1].x[2] %e\n",
      DFUDGE, www[1].x[2]);
+	printf ("Finished wind checl\n");
   return (0);
 }
 
@@ -234,7 +277,7 @@ model_velocity (x, v)
       if (sane_check (v[0]) || sane_check (v[1]) || sane_check (v[2]))
 	{
 	  Error
-	    ("wind2d: On return from thierry_velocity: x %f %f %f v %f %f %f\n",
+	    ("wind2d:sane_check On return from thierry_velocity: x %f %f %f v %f %f %f\n",
 	     x[0], x[1], x[2], v[0], v[1], v[2]);
 	}
 
@@ -246,6 +289,10 @@ model_velocity (x, v)
   else if (geo.wind_type == 8)
     {
       speed = elvis_velocity (x, v);
+    }
+  else if (geo.wind_type == 9)
+    {
+      speed = stellar_velocity (x,v);
     }
   else
     {
@@ -296,7 +343,7 @@ model_vgrad (x, v_grad)
 
       if (sane_check (v1[0]) || sane_check (v1[1]) || sane_check (v1[2]))
 	{
-	  Error ("model_vgrad: dx %f %f %f v0 %f %f %f\n", dx[0], dx[1],
+	  Error ("model_vgrad:sane_check dx %f %f %f v0 %f %f %f\n", dx[0], dx[1],
 		 dx[2], v1[0], v1[1], v1[2]);
 	}
 
@@ -313,10 +360,11 @@ model_vgrad (x, v_grad)
 }
 
 /* model_rho calculates the density of the wind in from the flow based on the
- * analytic wind models.  This routine is normally only used during the initialization
- * of the wind
- * History
- * 04aug	ksl	52--adapted from define_wind in wind2d.c
+analytic wind models.  This routine is normally only used during the initialization
+of the wind
+History
+04aug	ksl	52--adapted from define_wind in wind2d.c
+11aug	ksl	70b- added call to calculate density in the torus
  */
 
 double
@@ -356,11 +404,22 @@ model_rho (x)
     {
       rho = elvis_rho (x);
     }
+  else if (geo.wind_type == 9)
+   {
+     rho = stellar_rho (x);
+   }
   else
     {
       Error ("wind2d: Unknown windtype %d\n", geo.wind_type);
       exit (0);
     }
+
+  /* 70b - as this is written the torus simply overlays the wind */
+
+  if ((where_in_wind(x)==W_ALL_INTORUS) || (where_in_wind(x)==W_PART_INTORUS)){
+	  rho=torus_rho(x);
+  }
+
   return (rho);
 
 }

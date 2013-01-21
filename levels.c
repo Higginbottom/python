@@ -70,7 +70,6 @@ levels (xplasma, mode)
   double kt;
   double z;
 
-
   if (mode == 0)		// LTE with t_r
     {
       t = xplasma->t_r;
@@ -85,6 +84,16 @@ levels (xplasma, mode)
     {
       t = xplasma->t_r;
       weight = xplasma->w;
+    }
+  else if (mode == 3)           /* non_LTE with SS modification NSH 120912 - This mode is more or less defunct. It can be romoved once all the viestiges of the original PL ioinzation scheme are removed */
+    {
+      t = xplasma->t_e;
+      weight = 1;
+    }
+  else if (mode == 4)           /* A test mode - this is to allow all levels to be set to GS, in the event we dont have a good idea of what the radiation field shoulb be. */
+    {
+      t = xplasma->t_e;
+      weight = 0;
     }
   else
     {
@@ -116,7 +125,6 @@ levels (xplasma, mode)
 	      m_ground = m;	//store the ground state index - allow for gs energy neq 0 (SS) 
 	      nlevden = ion[nion].first_levden;
 	      xplasma->levden[nlevden] = config[m].g / z;	//Assumes first level is ground state
-
 	      for (n = 1; n < ion[nion].nlte; n++)
 		{
 		  m++;

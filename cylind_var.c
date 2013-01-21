@@ -3,7 +3,7 @@ The overall idea for a vertically extended disk is as follows:
 
 We will create a cylindicral coordinate system in which the rho coordinates
 are established just as for a cylindrical system.  Howver, the boundaries of
-the cell in the z directioin will vary with radius from the star.  The 
+the cell in the z direction will vary with radius from the star.  The 
 vertices of the cells will be defined so that they have fixed offsets from
 the disk surface.  The "top" and "bottom" edges are not parallel to the xy
 plane, but mimic the disk surface.  
@@ -355,12 +355,11 @@ cylvar_wind_complete (w)
  Returns:
 
  Description:
+
  	This is a brute_force integration of the volume.  The technique
 	is completely general.  It does not depend on the shape of the
 	cell, and could be used for most of the coodinate systems.
 	       
-
-		
  Notes:
 	Where_in grid does not tell you whether the photon is in the wind or not. 
  History:
@@ -369,6 +368,8 @@ cylvar_wind_complete (w)
 	05jul	ksl	56d -- Made the modifications needed.
 	06nov	kls	58b: Minor modifications to use W_ALL_INWIND, etc.
 			instead of hardcoded values
+	11aug	ksl	70b - Added ability to get volumes for multiple
+			components
  
 **************************************************************/
 
@@ -376,8 +377,9 @@ cylvar_wind_complete (w)
 
 
 int
-cylvar_volumes (w)
+cylvar_volumes (w,icomp)
      WindPtr w;
+     int icomp; // The component for which we want the volume
 {
   int i, j, n;
   int jj, kk;
@@ -454,7 +456,7 @@ cylvar_volumes (w)
 		       &f, &g) == 0)
 		    {
 		      kk++;
-		      if (where_in_wind (x) == 0)
+		      if (where_in_wind (x) == W_ALL_INWIND)
 			{
 			  volume += r;
 			  jj++;
@@ -472,11 +474,13 @@ cylvar_volumes (w)
 	    }
 	  else if (jj == kk)
 	    {
-	      w[n].inwind = W_ALL_INWIND;	// All of cell is inwind
+	      //OLD 70b w[n].inwind = W_ALL_INWIND;	// All of cell is inwind
+	      w[n].inwind = icomp;	// All of cell is inwind
 	    }
 	  else
 	    {
-	      w[n].inwind = W_PART_INWIND;	// Some of cell is inwind
+	      //OLD 70b w[n].inwind = W_PART_INWIND;	// Some of cell is inwind
+	      w[n].inwind = icomp+1;	// Some of cell is inwind
 	    }
 	}
     }
@@ -630,6 +634,7 @@ cylvar_where_in_grid (x, ichoice, fx, fz)
 	}
 
       /* OK we are still in the grid so we can increment or decrement j */
+
       if (*fz >= 1.0)
 	{
 	  j++;
@@ -651,6 +656,7 @@ cylvar_where_in_grid (x, ichoice, fx, fz)
     }
 
   // Next error checks should not be needed
+
   if (j < 0 || n < 0)
     {
       if (ierr_cylvar_where_in_grid < 100)
@@ -674,10 +680,13 @@ cylvar_where_in_grid (x, ichoice, fx, fz)
                      Space Telescope Science Institute
 
  Synopsis:
+
  	cylvar_get_random_location
 
  Arguments:		
- 	int n -- Cell in which random poition is to be generated
+ 	int n -- Cell in which random position is to be generated
+	int icomp - Component in which the random position is to
+		be generated
  Returns:
  	double x -- the position
  Description:	
@@ -687,18 +696,19 @@ cylvar_where_in_grid (x, ichoice, fx, fz)
  	The encapsulation steps should probably put into a separate
 	routine since this is used several times
 
-
-
  History:
 	05may	ksl	56a -- began modifications starting with same 
 			routine in cylindrical
 	05jul	ksl	56d -- Updated to work for cylvar coords
+	11aug	ksl	70b - Updated to include more than one
+			component
  
 **************************************************************/
 
 int
-cylvar_get_random_location (n, x)
-     int n;			// Cell in which to create postion
+cylvar_get_random_location (n, icomp,x)
+     int n;			// Cell in which to create position
+     int icomp;			// Component in which to create position
      double x[];		// Returned position
 {
   int i, j;
@@ -712,6 +722,7 @@ cylvar_get_random_location (n, x)
   wind_n_to_ij (n, &i, &j);
 
   /* Encapsulate the grid cell with a rectangle for integrating */
+
   rmin = wmain[n].x[0];
   if (rmin > wmain[n + 1].x[0])
     rmin = wmain[n + 1].x[0];
@@ -747,7 +758,7 @@ cylvar_get_random_location (n, x)
 
   /* Generate a position which is both in the cell and in the wind */
   inwind = incell = -1;
-  while (inwind || incell != 0)
+  while (inwind != icomp || incell != 0)
     {
       r =
 	sqrt (rmin * rmin +
@@ -786,11 +797,19 @@ cylvar_get_random_location (n, x)
  Arguments:		
  Returns:
  Description:	
-	
+
+     We need to updated the densities immediately outside the wind so that the density interpolation in resonate will work.
+     In this case all we have done is to copy the densities from the cell which is just in the wind (as one goes outward) to the
+     cell that is just inside (or outside) the wind. 
+
+     In cylindrical coordinates, the fast dimension is z; grid positions increase up in z, and then out in r.
+     In spperical polar coordinates, the fast dimension is theta; the grid increases in theta (measured)
+     from the z axis), and then in r.
+
 		
  Notes:
 
-
+	Instead of copying every thing is accomplished using pointers.	
 
  History:
 	05may	ksl	56a -- began modifications starting with same 
@@ -798,7 +817,6 @@ cylvar_get_random_location (n, x)
 	05jul	ksl	56d -- Actually nothing was done to this
 			routine. It should be OK as is.
 	06may	ksl	57+ -- Updated to extend by changing the mapping into the plasma structure.
-			This is dangerous and really needs to be checked.
  
 **************************************************************/
 
@@ -809,23 +827,7 @@ cylvar_extend_density (w)
 {
 
   int i, j, n, m;
-//OLD int k;
-  /* Now we need to updated the densities immediately outside the wind so that the density interpolation in resonate will work.
-     In this case all we have done is to copy the densities from the cell which is just in the wind (as one goes outward) to the
-     cell that is just inside (or outside) the wind. 
 
-     SS asked whether we should also be extending the wind for other parameters, especially ne.  At present we do not interpolate
-     on ne so this is not necessary.  If we did do that it would be required.
-
-     In cylindrical coordinates, the fast dimension is z; grid positions increase up in z, and then out in r.
-     In spperical polar coordinates, the fast dimension is theta; the grid increases in theta (measured)
-     from the z axis), and then in r.
-     In spherical coordinates, the grid increases as one might expect in r..
-     *
-   */
-
-  //!! MDIM dependence remains here 
-  //
   for (i = 0; i < NDIM - 1; i++)
     {
       for (j = 0; j < MDIM - 1; j++)
@@ -836,12 +838,9 @@ cylvar_extend_density (w)
 	    {			//Then this grid point is not in the wind 
 
 	      wind_ij_to_n (i + 1, j, &m);
-	      //if (w[m].inwind == 0)//SS May04- is this volume based test now correct?
+
 	      if (w[m].vol > 0)
-		{		//Then the windcell in the +x direction is in the wind and
-		  // we can copy the densities to the grid cell n
-//OLD             for (k = 0; k < NIONS; k++)
-//OLD               w[n].density[k] = w[m].density[k];
+		{		
 		  w[n].nplasma = w[m].nplasma;
 
 		}
@@ -849,10 +848,7 @@ cylvar_extend_density (w)
 		{
 		  wind_ij_to_n (i - 1, j, &m);
 		  if (w[m].vol > 0)
-		    {		//Then the grid cell in the -x direction is in the wind and
-		      // we can copy the densities to the grid cell n
-//OLD                 for (k = 0; k < NIONS; k++)
-//OLD                   w[n].density[k] = w[m].density[k];
+		    {		
 		      w[n].nplasma = w[m].nplasma;
 
 		    }
@@ -974,7 +970,7 @@ cylvar_coord_fraction (ichoice, x, ii, frac, nelem)
 
   if (sane_check (dr) || sane_check (dz))
     {
-      Error ("coord_frac: dr=%f dz=%f for 2d coords\n", dr, dz);
+      Error ("coord_frac:sane_check dr=%f dz=%f for 2d coords\n", dr, dz);
     }
 
   return (1);

@@ -148,7 +148,9 @@ the choices actually matched what was said.  I fixed this.  01sept ksl
  * frequency limites depned on t_r 
  */
 
-  init_bands (t_r, 0.0, 1e50, 0, &xband);
+  //0LD init_bands (t_r, 0.0, 1e50, 0, &xband);
+  //OLD 120626 bands_init (t_r, 0.0, 1e50, 0, &xband);
+  bands_init (t_r, &xband);
 
 //???? New  make_bb (p, t_r, weight);
   xbb (p, t_r, weight, xband.f1[0], xband.f2[0], 1);
@@ -223,7 +225,7 @@ double cy_tr = 0.0;
 double cy_nh = 0.0;
 
 int
-cycle (xplasma, p, nh, t_r, t_e, weight, mode, freq_sampling)
+cycle (xplasma, p, nh, t_r, t_e, weight, mode, freq_sampling,radmode)
      PlasmaPtr xplasma;
      PhotPtr p;
      double nh;
@@ -232,6 +234,7 @@ cycle (xplasma, p, nh, t_r, t_e, weight, mode, freq_sampling)
      double weight;
      int mode;
      int freq_sampling;
+     int radmode;
 {
   double total_fb ();
   double total_free ();
@@ -241,22 +244,34 @@ cycle (xplasma, p, nh, t_r, t_e, weight, mode, freq_sampling)
   double alpha_recomb ();
   double planck (), kappa_ff ();
   double luminosity;
+  double agn_weight; /*The weight of an agn photon */
   double vol;
+  double agn_ip;    /* the ionization parameter */
+  int i;
+//  double spec[1000],fmin,fmax,dfreq;
+//  int ipoint;
+  double en1,en2,mean_freq,energy_density,sim_w_new; /*Sim estimators */
   int n;
+//  FILE *fopen(), *fptr;
   WindPtr one;
 
   one = &wmain[xplasma->nwind];
-
+		printf ("Arriving in cycle, nh=%e, t_r =%e cy_tr=%e \n",nh, t_r, cy_tr);
 /* initialize some parts of the wind ptr (see wind_rad_init) */
 
+
+
   xplasma->j = xplasma->ave_freq = xplasma->lum = xplasma->heat_tot =
-    xplasma->ntot = 0;
+    xplasma->ntot = xplasma->max_freq = 0;
   xplasma->heat_ff = xplasma->heat_photo = xplasma->heat_lines = 0.0;
+  xplasma->heat_comp = xplasma->heat_ind_comp = 0.0; //NSH 1208 73 added to zero compton heating
   xplasma->heat_z = 0;
   xplasma->lum_z = 0.0;
   xplasma->ntot = xplasma->nioniz = 0;
   for (n = 0; n < nions; n++)
     {
+      xplasma->PWdenom[n] = 0.0; //NSH 1208 73 added to zero pairwise denominator store
+      xplasma->PWdtemp[n] = 0.0; //NSH 1208 73 added to zero pariwise denom temp store
       xplasma->ioniz[n] = 0;
       xplasma->recomb[n] = 0;
       xplasma->heat_ion[n] = 0;
@@ -274,8 +289,8 @@ cycle (xplasma, p, nh, t_r, t_e, weight, mode, freq_sampling)
 	   weight);
 
   vol = wmain[xplasma->nwind].vol;
-  s = vol;
-
+//  s = pow(vol,1./3.); //NSH 21/1/11 - changed from s=vol to s=pow(vol,1/3) - assumes plane illuminated cube
+s=vol; // NSH 120802 Changed back, note, this means that the cell is 1cm2 area, with depth equal to volume/area = numerically equal to volume.
 
 /* 
 Now set up the initial concentrations.  This is to parallel what is
@@ -289,8 +304,18 @@ of the if statement
       Log
 	("Cycle: Fixing abundances to Saha values since new t_r %g or nh %g\n",
 	 t_r, nh);
-      xplasma->t_e = 0.9 * t_e;	// Lucy guess
-      nebular_concentrations (xplasma, 2);
+ 
+      if (mode != 5)    /*try to maintain original behiaviour */
+	  {
+     	  xplasma->t_e = 0.9 * t_e;	// Lucy guess
+    	  nebular_concentrations (xplasma, 2);
+      	  }
+      else 
+	  {
+	  printf ("Were are going to try to use ioniz_mode 5 - going to NC\n");
+          nebular_concentrations (xplasma, 5);
+          }
+      ne=xplasma->ne;   //NSH 14/1/2011 - seemed necessary in order for the following line to produce a result.
       Log ("Cycle: On the spot estimate  t_r of %g gives ne %g\n", t_r, ne);
       cy_tr = t_r;
       cy_nh = nh;
@@ -304,26 +329,158 @@ of the if statement
 
 /* Set the frequency limits and then generate the photons */
 
-  init_bands (t_r, 0.0, 1e50, 0, &xband);
-  xbb (p, t_r, weight, xband.f1[0], xband.f2[0], freq_sampling);
+  //OLD init_bands (t_r, 0.0, 1e50, 0, &xband);
+ 
 
+  Error("Cycle: Routines have been fixed to compile, but band_init is not properly sorted out\n");
+if (radmode == 1)
+    {
+//old1206  bands_init (t_r, &xband);
+geo.tstar=t_r; //nsh 1208 put in to ensure we get a reasonable band even if we have a very high t_r.
+bands_init (7, &xband);
+  xbb (p, t_r, weight, xband.f1[0], xband.f2[0], freq_sampling);   
+}
+
+
+
+else if (radmode == 2)
+    {
+    agn_ip=emittance_pow (100/HEV, 50000/HEV,geo.lum_agn,geo.alpha_agn);
+	printf("Calculating heating and cooling - I think the luminosity from 2-10 keV is %e Giving an ionisation parameter of %e\n",geo.lum_agn,agn_ip/(geo.d_agn*geo.d_agn*nh));
+//old1206  bands_init (t_r, 1.23e15,1.21e19,1,&xband);     /* at the moment we will have one big band */
+  bands_init (1,&xband);     /* at the moment we will have one big band */
+    agn_weight=emittance_pow (xband.f1[0], xband.f2[0],geo.lum_agn,geo.alpha_agn);
+
+    agn_weight=(agn_weight)/(NPHOT*(4.0*PI*geo.d_agn*geo.d_agn));
+	
+	/* This next line will generate the photons */
+  photo_gen_agn (p, geo.r_agn, geo.alpha_agn, agn_weight, xband.f1[0], xband.f2[0], -4, 0, NPHOT);
+    printf("Each pl photon has a weight equal to %e\n",agn_weight);
+    }
+
+
+if (mode==7)
+{
+freqs_init (xband.f1[0], xband.f2[xband.nbands-1]); //Set up estimators in case we want to do power law things.
+for (i=0;i<geo.nxfreq;i++)
+	{
+	xplasma->xj[i]= xplasma->xave_freq[i]= xplasma->xsd_freq[i] = xplasma->nxtot[i]=0.0; //zero estimators
+ //       xplasma->spec_mod_type[i]=-1; //Tell the code we dont have a model at the moment
+	}
+}
+
+
+  /* The lines below are used to generate an output file to show what photons are produced currently commented out because they cause a segmentaion fault very occasionally on my mac. The problem is caused by very high frequency photons generating an ipoint of 1000, quick fix would be to increase size of array, but it probably needs a more clever fix */
+  /*
+  fmin=xband.f1[0];
+  fmax=xband.f2[0];
+  dfreq=(fmax-fmin)/1001;
+ 
+  printf("fmin=%e,fmax=%e,dfreq=%e\n",fmin,fmax,dfreq);
+
+  for (n=0; n<999; n++)
+	{
+ 	spec[n]=0.0; 
+	}
+ for (n = 0; n < NPHOT; n++)
+       {
+	ipoint=(p[n].freq-fmin)/dfreq;
+	spec[ipoint]=spec[ipoint]+p[n].w; 	
+        }
+
+  
+
+	fptr=fopen("bal.spec","w");
+  for (n = 0; n < 998; n++)  
+	{    
+	fprintf(fptr,"freq= %e nphot= %e\n",(fmin+(n+1)*dfreq),spec[n]);  
+	}	
+	fclose(fptr);
+*/
+/*for (n=0; n<NPHOT; n++)
+	{
+	printf ("PHOT_DAT %e %e \n",p[n].freq,p[n].w);
+	}*/
 
 /* Shift values to old */
   xplasma->heat_tot_old = xplasma->heat_tot;
   xplasma->dt_e_old = xplasma->dt_e;
 
+/* Set up sim estimators */
+ 	en1=0.0;
+	en2=0.0;
 /* Next calculate the heating for this distribution */
   for (n = 0; n < NPHOT; n++)
     {
+//	printf ("FLYING PHOTONS0 f=%e w=%e\n",p[n].freq,p[n].w);
+/* sum sim estimators */
+      en1=en1+p[n].w*s;
+      en2=en2+p[n].w*s*p[n].freq;
       line_heating (xplasma, &p[n], s);
+//	printf ("FLYING PHOTONS1 w=%e\n",p[n].w);
       radiation (&p[n], s);
+//	printf ("FLYING PHOTONS2 w=%e\n",p[n].w);
+
+    }
+      xplasma->j /= (4. * PI * vol);	//Factor of 2 has been removed
+if (mode==7) //Generate PL estimators
+    {
+    for (i=0 ; i<geo.nxfreq ; i++) /*loop over number of bands */
+	{
+	if (xplasma->nxtot[i] > 0)   /*Check we actually have some photons in the cell in this band */
+		{
+		xplasma->xave_freq[i] /= xplasma->xj[i];   /*Normalise the average frequency */
+		xplasma->xsd_freq[i] /= xplasma->xj[i];  /*Normalise the mean square frequency */
+		xplasma->xsd_freq[i] = sqrt(xplasma->xsd_freq[i] - (xplasma->xave_freq[i] * xplasma->xave_freq[i])); /*Compute standard deviation */
+		xplasma->xj[i] /= (4 * PI * vol);     /*Convert to radiation density */	
+		printf ("NSH Band %i - We have calculated xave_freq[i]=%e, xj[i]=%e xsd[i]=%e \n",i,xplasma->xave_freq[i],xplasma->xj[i],xplasma->xsd_freq[i]);
+		}
+	else
+		{
+		xplasma->xj[i]=0;   /*If no photons, set both radiation estimators to zero */
+		xplasma->xave_freq[i]=0;
+		xplasma->xsd_freq[i]=0;
+		}
+	}
     }
 
+
+
+
+
+/*	if (radmode==2)
+	{
+
+	printf ("E1=%e,E2=%e",en1,en2);
+	mean_freq=en2/en1;
+	energy_density=en1/(4*PI*vol);
+	printf ("Mean freq=%e\n",mean_freq);
+	Error("Cycle: This may be an error\n");
+	for (i=0;i<NXBANDS;i++){
+		xplasma->pl_alpha[i]=sim_alphasolve(en2/en1,1.23e15,1.21e19);
+		printf("I think alpha=%f\n",xplasma->pl_alpha[i]);
+
+
+
+	sim_w_new=pl_w(en1,wmain[xplasma->nwind].vol,1,xplasma->pl_alpha[i],1.23e15,1.21e19);
+	printf("sim W computed as %e compared to current weight used %e \n",sim_w_new,xplasma->pl_w[i]);
+
+        xplasma->pl_w[i]=sim_w_new;
+	}
+
+	mean_freq=en2/en1;   
+
+//	  trad = xplasma->t_r =
+//	    H * mean_freq / (BOLTZMANN * 3.832);
+//	  xplasma->w =
+//	    PI * energy_density / (STEFAN_BOLTZMANN * trad * trad * trad *
+//				    trad);	
+	} NSH 120817 Commented all this PL stuff out - needs recoding and is just confusing things at the moment */
+
+
 /* Now calculate the luminosity for these conditions */
-
-  luminosity = total_emission (one, xband.f1[0], xband.f2[0]);
+  luminosity = total_emission (one, xband.f1[0], xband.f2[xband.nbands-1]);
   num_recomb (&xplasma[0], xplasma->t_e);
-
   summary (xplasma);
 
 /* Shift values to old */
@@ -331,8 +488,14 @@ of the if statement
   xplasma->t_e_old = xplasma->t_e;
   xplasma->t_r_old = xplasma->t_r;
   xplasma->lum_rad_old = xplasma->lum_rad;
-
+if (mode==7)
+	{
+ spectral_estimators(xplasma); 
+	}
+printf ("About to go off to oneshot - mode = %i\n",mode);
   one_shot (xplasma, mode);
+
+
 
 
   Log ("Cycle: one_shot old t_r t_e %8.2g %8.2g, new t_r t_e %8.2g %8.2g\n",
@@ -340,7 +503,7 @@ of the if statement
 
 //  Error ?? -- Next statement is probably superfluous, since calc_te, called by oneshot calculated total emission
 //  luminosity = total_emission (xplasma, freqmin, freqmax);
-  luminosity = total_emission (one, xband.f1[0], xband.f2[0]);
+  luminosity = total_emission (one, xband.f1[0], xband.f2[xband.nbands-1]);
   num_recomb (&xplasma[0], xplasma->t_e);
 
   summary (xplasma);

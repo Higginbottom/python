@@ -13,6 +13,10 @@ Description:
 
 Notes:
 
+	Comment: Some but not all of the calls to routines were changed here
+	when the Plasma structure was introduced.  A general cleanup would
+	make this consistent.  ksl 110805
+
 History:
  	97jun	ksl	Coding on py_wind began.
  	98feb	ksl	Coding of these subroutines began.
@@ -21,6 +25,8 @@ History:
 	01oct	ksl	Recombination related routines removed to recomb.c while
 			topbase modifications made.
 	01nov	ksl	Implement pdf functionality for line luminosity spped up
+        11Aug   nsh     Changes to total_emission and wind_luminosity to allow compton heating to be computed
+	11Oct	nsh	Compton heating removed from total_emission, DR cooling added to wind_luminosity
  
 **************************************************************/
 
@@ -56,6 +62,9 @@ History:
 			Note that the call for wind_luminostiy has changed
 			to remove the pointer call.  Ultimately rewrite
 			using plasma structure alone.
+	11aug	nsh	70 Modifications made to incorporate compton cooling
+        11sep   nsh     70 Modifications in incorporate DR cooling (very approximate at the moment)
+	12sep	nsh	73 Added a counter for adiabatic luminosity (!)
  
 **************************************************************/
 
@@ -63,13 +72,14 @@ double
 wind_luminosity (f1, f2)
      double f1, f2;		/* freqmin and freqmax */
 {
-  double lum, lum_lines, lum_fb, lum_ff;
+  double lum, lum_lines, lum_fb, lum_ff, lum_comp, lum_dr, lum_adiab; //1108 NSH Added a new variable for compton cooling
+//1109 NSH Added a new variable for dielectronic cooling
   int n;
   double x;
   int nplasma;
 
 
-  lum = lum_lines = lum_fb = lum_ff = 0;
+  lum = lum_lines = lum_fb = lum_ff = lum_comp = lum_dr = lum_adiab = 0; //1108 NSH Zero the new counter 1109 including DR counter
   for (n = 0; n < NDIM2; n++)
     {
       if (wmain[n].vol > 0.0)
@@ -79,6 +89,9 @@ wind_luminosity (f1, f2)
 	  lum_lines += plasmamain[nplasma].lum_lines;
 	  lum_fb += plasmamain[nplasma].lum_fb;
 	  lum_ff += plasmamain[nplasma].lum_ff;
+	  lum_comp += plasmamain[nplasma].lum_comp;  //1108 NSH Increment the new counter by the compton luminosity for that cell.
+          lum_dr += plasmamain[nplasma].lum_dr; //1109 NSH Increment the new counter by the DR luminosity for the cell.
+  	  lum_adiab += plasmamain[nplasma].lum_adiabatic;
 	  if (x < 0)
 	    mytrap ();
 	  if (recipes_error != 0)
@@ -94,6 +107,9 @@ wind_luminosity (f1, f2)
   geo.lum_lines = lum_lines;
   geo.lum_fb = lum_fb;
   geo.lum_ff = lum_ff;
+  geo.lum_comp = lum_comp; //1108 NSH The total compton luminosity of the wind is stored in the geo structure
+  geo.lum_dr = lum_dr; //1109 NSH the total DR luminosity of the wind is stored in the geo structure
+  geo.lum_adiabatic = lum_adiab;
   return (lum);
 }
 
@@ -103,8 +119,6 @@ wind_luminosity (f1, f2)
              Space Telescope Science Institute
 
 Synopsis:  total_emission (one, f1, f2) Calculate the total emission of a single cell 
-	in the wind given t_e.  The reason t_e is a variable is so that one can solve 
-	for t_e so that the total_emission will match the total heating
 
 Arguments:		
 
@@ -115,6 +129,16 @@ Description:
 	
 
 Notes:
+	Total emission gives the total enery loss due to photons.  It does
+	not include other coooling sources, e. g. adiabatic expansion.
+
+	It returns the total luminosity, but also stores the luminosity due
+	to various types of emssion, e.g ff, fb, lines, compton into the
+	Plasms cells
+
+	Comment: The call to this routine was changed when PlasmaPtrs
+	were introduced, but it appears that the various routines 
+	that were called were not changed.
 
 History:
 	97	ksl	Coded
@@ -132,6 +156,7 @@ History:
 			total emission but total cooling.
 	05may	ksl	57+ -- To use plasma structure for most things.  If vol
 			is added to plasma then one can change the call
+	11aug	nsh	70 changes made to allow compton heating to be calculated.
  
  
 **************************************************************/
@@ -157,7 +182,7 @@ total_emission (one, f1, f2)
   if (f2 < f1)
     {
       xplasma->lum_rad = xplasma->lum_lines = xplasma->lum_ff =
-	xplasma->lum_fb = 0;
+	xplasma->lum_fb = 0;    //NSH 1108 Zero the new lum_comp variable NSH 1101 - removed
     }
   else
     {
@@ -191,7 +216,13 @@ total_emission (one, f1, f2)
 
 
 	}
-
+      /* NSH 1108 - This line calls the function total_comp which returns the compton luminosity for the cell
+	this is then added to lum_rad, the total luminosity of the cell */  
+      /* NSH 1110 - Ths line has now been commented out. It was adding the compton luminosity to the lum_rad 
+       variable. This was then generating line photons to fill the compton luminosity. We need to do something
+        better, but at the moment, simply removing this line, and putting the calculation of compton luminosity 
+       into calc_te with the adiabatic cooling and the new DR cooling is the way to make things a little more stable */
+ //OLD     xplasma->lum_rad += xplasma->lum_comp = total_comp (one, t_e); 
     }
 
   return (xplasma->lum_rad);
@@ -229,7 +260,9 @@ History:
   			if the routine is called it has no effect.  The
   			or more properly, one issue is how to meld adiabatic 
   			cooling with the macro atom approach.
-	06may	ksl	57+ -- Adapted to include plsma structure
+	06may	ksl	57+ -- Adapted to include plasma structure
+	11aug	ksl	70 - Adiabatic cooling returns the cooling but
+			does not store it.
  
  
 **************************************************************/
@@ -324,32 +357,32 @@ photo_gen_wind (p, weight, freqmin, freqmax, photstart, nphot)
       while (xlumsum < xlum)
 	{
 //?? 57+ This is not the best way to do this.  We should be able to sum over the plasma structure
-	  if (wmain[icell].vol > 0.0)
+	  if (wmain[icell].vol > 0.0)  //only consider cells with volume greater than zero
 	    {
-	      nplasma = wmain[icell].nplasma;
-	      xlumsum += plasmamain[nplasma].lum_rad;
+	      nplasma = wmain[icell].nplasma; //get the plasma cell in this wind cell
+	      xlumsum += plasmamain[nplasma].lum_rad; /*increment the xlumsum by the lum_rad in this plasma cell - note that due to the way wind_luminosity gets called, this is actually the band limited flux not the luminosity. */
 	    }
-	  icell++;
+	  icell++; /*If we are not yet up to xlum, go to the next cell */
 	}
-      icell--;			/* This is the cell in which the photon must be generated */
+      icell--;			/* We have got up to xlum, so this is the cell in which the photon must be generated */
 
-      nplasma = wmain[icell].nplasma;
+      nplasma = wmain[icell].nplasma; 
 
 
       /* Now generate a single photon in this cell */
 
       /*Get the total luminosity and MORE IMPORTANT populate xcol.pow and other parameters */
-      lum = plasmamain[nplasma].lum_rad;
+      lum = plasmamain[nplasma].lum_rad; /* Whilst this says lum - I'm (nsh) pretty sure this is actually a flux between two frequency limits) */
 
-      xlum = lum * (rand () + 0.5) / (MAXRAND);
+      xlum = lum * (rand () + 0.5) / (MAXRAND);  /*this makes a small test luminosity*/
 
       xlumsum = 0;
 
       p[n].nres = -1;
       p[n].nnscat = 1;
-      if ((xlumsum += plasmamain[nplasma].lum_ff) > xlum)
+      if ((xlumsum += plasmamain[nplasma].lum_ff) > xlum) /*Add the free free luminosity of the cell to the running total. If it is more than our small test luminosity, then we need to make some ff photons */
 	{
-	  p[n].freq = one_ff (&wmain[icell], freqmin, freqmax);
+	  p[n].freq = one_ff (&wmain[icell], freqmin, freqmax);  /*Get the frequency of one ff photon */
 	  if (p[n].freq <= 0.0)
 	    {
 	      Error_silent
@@ -358,19 +391,27 @@ photo_gen_wind (p, weight, freqmin, freqmax, photstart, nphot)
 	      p[n].freq = 0.0;
 	    }
 	}
-      else if ((xlumsum += plasmamain[nplasma].lum_fb) > xlum)
+      else if ((xlumsum += plasmamain[nplasma].lum_fb) > xlum) /*Do the same for fb */
 	{
 	  p[n].freq = one_fb (&wmain[icell], freqmin, freqmax);
 	}
       else
 	{
-	  p[n].freq = one_line (&wmain[icell], freqmin, freqmax, &p[n].nres);
+	  p[n].freq = one_line (&wmain[icell], freqmin, freqmax, &p[n].nres); /*And fill all the rest of the luminosity up with line photons */
 	}
       p[n].w = weight;
       /* Determine the position of the photon in the moving frame */
 
-      get_random_location (icell, p[n].x);
+      /* !! ERROR - Need to account for emission from torus if it exists */
 
+      if (wmain[icell].inwind>1) 
+	{
+	get_random_location (icell, 2, p[n].x);  /* NSH 1110 Added this if statement to take account of photons being generated from the torus. Hope I've done it correctly!! */
+	}
+      else
+	{
+	get_random_location (icell, 0, p[n].x);
+	}
 
       p[n].grid = icell;
 
@@ -523,6 +564,9 @@ Note: program uses an integral formula rather than integrating on
 			plasma
 	07jul	ksl	58f - This routine requires a WindPtr because we still need the
 			volume and that is still part of WindPtr
+        12sep	nsh	73g - increased the number of ions we will use to all of them!!
+	12sep	nsh	73g - incorporated sutherlands data for gaunt factor
+	12dec	nsh	74b - put in code to cope with the case where gaunt factor data is not read in
 */
 
 double
@@ -532,34 +576,56 @@ total_free (one, t_e, f1, f2)
      double f1, f2;
 {
   double g_ff_h, g_ff_he;
-  double x;
-  int nplasma;
+  double gaunt;
+  double x,sum;
+  double gsqrd; /*The scaled inverse temperature experienced by an ion - used to compute the gaunt factor */
+  int nplasma,nion;
   PlasmaPtr xplasma;
 
   nplasma = one->nplasma;
   xplasma = &plasmamain[nplasma];
-
   if (t_e < 100.)
     return (0.0);
   if (f2 < f1)
     {
       return (0.0);
     }
-  g_ff_h = g_ff_he = 1.0;
 
-  if (nelements > 1)
-    {
-      x =
-	BREMS_CONSTANT * xplasma->ne * (xplasma->density[1] * g_ff_h +
+//  gaunt=1.0; /*NSH 120920 - this is a placeholder, we need to calculate the gaunt factor at some point */
+
+//  if (nelements > 1)
+//    {
+/*NSH 120924 - this summation works out the z^2 times number density term for all ions the gaunt factor is calculated for each ion */
+       
+
+    if (gaunt_n_gsqrd==0) //Maintain old behaviour
+	{
+  	g_ff_h = g_ff_he = 1.0;
+	if (nelements > 1)
+    		{
+      		x =
+		BREMS_CONSTANT * xplasma->ne * (xplasma->density[1] * g_ff_h +
 					4. * xplasma->density[4] * g_ff_he) /
-	H_OVER_K;
-    }
-  else
-    {
-      x =
-	BREMS_CONSTANT * xplasma->ne * (xplasma->density[1] * g_ff_h) /
-	H_OVER_K;
-    }
+		H_OVER_K;
+    		}
+  	else
+    		{
+      		x =
+		BREMS_CONSTANT * xplasma->ne * (xplasma->density[1] * g_ff_h) /
+		H_OVER_K;
+    		}
+	}
+    else
+	{
+  	sum=0.0; /*NSH 120920 - zero the summation over all ions */
+	for (nion = 0; nion < nions; nion++)
+		{
+		gsqrd=(ion[nion].z*ion[nion].z*RYD2ERGS)/(BOLTZMANN*t_e);//
+		gaunt=gaunt_ff(gsqrd);
+		sum += xplasma->density[nion] * ion[nion].z * ion[nion].z * gaunt;
+		}
+      	x = BREMS_CONSTANT * xplasma->ne * (sum) /  H_OVER_K;
+	}
 
   x *= sqrt (t_e) * one->vol;
   x *= (exp (-H_OVER_K * f1 / t_e) - exp (-H_OVER_K * f2 / t_e));
@@ -586,12 +652,16 @@ Notes:
 History:
  
 **************************************************************/
-/* Calculate the free-free emissivity in a cell.  Just consider H2+He3 
+/* Calculate the free-free emissivity in a cell.  Just consider H2+He3 EDIT NSH - now do all ions - its fast so why not?
 
 SS Apr 04: added an "if" statement to deal with case where there's only H. 
 	06may	ksl	57+ -- Modified to partially account for plasma structue
 			but a further change will be needed when move volume to
 			plasma
+        12sep	nsh	73g - increased the number of ions we will use to all of them!!
+	12sep	nsh	73g - incorporated sutherlands data for gaunt factor
+	12dec	nsh	74b - put code in to allow for the case where gaunt data is not available.
+	
 */
 
 double
@@ -599,9 +669,11 @@ ff (one, t_e, freq)
      WindPtr one;
      double t_e, freq;
 {
-  double g_ff_h, g_ff_he;
+  double g_ff_h, g_ff_he; 
   double fnu;
+  double gsqrd, gaunt, sum;
   int nplasma;
+  int nion;
   PlasmaPtr xplasma;
 
   nplasma = one->nplasma;
@@ -611,20 +683,33 @@ ff (one, t_e, freq)
   if (t_e < 100.)
     return (0.0);
 
-  /* Use gaunt factor of 1 for now */
 
-  g_ff_h = g_ff_he = 1.0;
-
-  if (nelements > 1)
-    {
-      fnu =
+  
+    if (gaunt_n_gsqrd==0) //Maintain old behaviour
+	{
+  	g_ff_h = g_ff_he = 1.0;
+	if (nelements > 1)
+		{
+ 		fnu =
 	BREMS_CONSTANT * xplasma->ne * (xplasma->density[1] * g_ff_h +
 					4. * xplasma->density[4] * g_ff_he);
-    }
-  else
-    {
-      fnu = BREMS_CONSTANT * xplasma->ne * (xplasma->density[1] * g_ff_h);
-    }
+    		}
+  	else
+    		{
+      		fnu = BREMS_CONSTANT * xplasma->ne * (xplasma->density[1] * g_ff_h);
+    		}
+	}
+    else
+	{
+	sum=0.0;
+      	for (nion = 0; nion < nions; nion++)
+		{
+		gsqrd=(ion[nion].z*ion[nion].z*RYD2ERGS)/(BOLTZMANN*t_e);
+		gaunt=gaunt_ff(gsqrd);
+		sum += xplasma->density[nion] * ion[nion].z * ion[nion].z * gaunt;
+		}
+        fnu = BREMS_CONSTANT * xplasma->ne * (sum) /  H_OVER_K;
+	}
 
 
   fnu *= exp (-H_OVER_K * freq / t_e) / sqrt (t_e) * one->vol;
@@ -715,3 +800,64 @@ one_ff (one, f1, f2)
   freq = pdf_get_rand (&pdf_ff);
   return (freq);
 }
+
+
+
+
+/***********************************************************
+                Southampton university
+
+Synopsis: gaunt_ff computes the frequency averaged gaunt factor at
+		scaled temperature. It interpolates between the tabulated
+		factors
+
+Arguments:		
+
+Returns:
+ 
+Description:	
+
+Notes:
+
+
+History:
+   12           nsh     coded 
+ 
+**************************************************************/
+
+
+double
+gaunt_ff (gsquared)
+     double gsquared;		/* the gamma squared varaiable */
+{
+  int i,index;
+  double gaunt;
+  double log_g2;
+  double delta; //The log difference between our G2 and the one in the table
+
+log_g2=log10(gsquared); //The data is in log format
+
+	if (log_g2<gaunt_total[0].log_gsqrd || log_g2>gaunt_total[gaunt_n_gsqrd-1].log_gsqrd)
+		{
+//		Error ("gaunt ff - request gsqrd outside range - returning gaunt factor =1\n"); /*Removed this as an error - it happens a lot, and is probably not important! */
+		return (1.0);
+		}
+	for (i=0;i<gaunt_n_gsqrd;i++) /*first find the pair of parameter arrays that bracket our temperature */
+		{
+		if (gaunt_total[i].log_gsqrd <= log_g2 && gaunt_total[i+1].log_gsqrd > log_g2)
+			{
+			index=i; /* the array to use */
+			delta=log_g2-gaunt_total[index].log_gsqrd;
+			}
+		}
+
+	gaunt=gaunt_total[index].gff+delta*(gaunt_total[index].s1+delta*(gaunt_total[index].s2+gaunt_total[index].s3));
+
+
+
+
+
+  return (gaunt);
+}
+
+

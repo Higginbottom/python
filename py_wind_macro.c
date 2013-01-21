@@ -291,8 +291,6 @@ depcoef_overview (icell)
 {
   ConfigPtr p;
   PlasmaPtr x, xdummy;
-//OLD  double xden, lteden, nh;
-//OLD  int n, nelem;
   double xden, lteden;
   int n;
 
@@ -312,13 +310,6 @@ depcoef_overview (icell)
 
       partition_functions (xdummy, 1);
       saha (xdummy, xdummy->ne, xdummy->t_e);
-//OLD      do_partitions(xdummy, 1);
-//OLD      levels(xdummy, 1);
-//OLD      nh = x->rho * rho2nh;   
-//OLD      for (nelem = 0; nelem < nelements; nelem++)
-//OLD   {
-//OLD     saha(xdummy->ne, nh, xdummy->t_e, nelem,  xdummy->density);
-//OLD   }
       geo.macro_ioniz_mode = 1;
     }
 
@@ -390,10 +381,8 @@ depcoef_overview_specific (version, nconfig, w, rootname, ochoice)
 {
   int n;
   char filename[LINELENGTH];
-//OLD  int nelem;
   ConfigPtr p;
   PlasmaPtr x, xdummy;
-//OLD  double xden, lteden, nh;
   double xden, lteden;
   int copy_plasma ();
   plasma_dummy pdum;
@@ -415,17 +404,7 @@ depcoef_overview_specific (version, nconfig, w, rootname, ochoice)
 	  partition_functions (xdummy, 1);
 	  saha (xdummy, xdummy->ne, xdummy->t_e);
 
-//OLD     do_partitions(xdummy, 1);
-//OLD     levels(xdummy, 1);
-//OLD     nh = x->rho * rho2nh;   
-//OLD     for (nelem = 0; nelem < nelements; nelem++)
-//OLD       {
-//OLD         saha(xdummy->ne, nh, xdummy->t_e, nelem,  xdummy->density);
-//OLD       }
-
 	  geo.macro_ioniz_mode = 1;
-
-
 
 	  p = &config[nconfig];
 	  xden = den_config (x, nconfig);

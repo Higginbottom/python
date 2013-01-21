@@ -74,6 +74,8 @@ in python.h
 	06jul	ksl	57h-Standardized the headers and notes.  I have not
 			really checked that everything is up to date, just
 			put it into a more readable format.
+	12jul	nsh	73-Subroutine bad_t_rr coded to generate a total
+			recombination rate from badnell type parameters
                                                                                                    
  ************************************************************************/
 
@@ -162,7 +164,6 @@ fb_verner_partial (freq)
 //?? Seems like gn should actually be the multiplicity of the excited and not the ground state ???
   gn = ion[nion].g;		// This is g factor of the ion to which you are recombining
   gion = ion[nion + 1].g;	// Want the g factor of the next ion up
-
   x = sigma_phot (fb_xver, freq);
 // Next expression from Ferland
   partial =
@@ -227,16 +228,17 @@ fb_topbase_partial (freq)
   nion = fb_xtop->nion;
   gn = config[fb_xtop->nlev].g;
   gion = ion[nion + 1].g;	// Want the g factor of the next ion up
-
   x = sigma_phot_topbase (fb_xtop, freq);
 // Now calculate emission using Ferland's expression
+
+
   partial =
     FBEMISS * gn / (2. * gion) * pow (freq * freq / fbt,
 				      1.5) * exp (H_OVER_K *
 						  (fthresh - freq) / fbt) * x;
 // 0=emissivity, 1=heat loss from electrons, 2=photons emissivity
   if (fbfr == 1)
-    partial *= (freq - fthresh) / freq;
+   partial *= (freq - fthresh) / freq;
   else if (fbfr == 2)
     partial /= (H * freq);
 
@@ -266,7 +268,7 @@ recombinations per second of a particular ion.
 			threshold
 			1- the (reduced) emissivity, e.g. excluding
 			the threshold energy.  This is the energy
-			associated with kinetic energy los
+			associated with kinetic energy loss
 			2- the specific recombination rate.
                                                                                                    
                                                                                                    
@@ -313,22 +315,26 @@ integ_fb (t, f1, f2, nion, fb_choice)
     {
       for (n = 0; n < nfb; n++)
 	{
+		/* See if the frequencies correspond to one previously calculated */
 	  if (f1 == freebound[n].f1 && f2 == freebound[n].f2)
 	    {
 	      fnu = get_fb (t, nion, n);
 	      return (fnu);
 	    }
 	}
+      /* If not calculate it here */
       fnu = xinteg_fb (t, f1, f2, nion, fb_choice);
       return (fnu);
     }
   else if (fb_choice == 2)
     {
+		/* See if the frequencies correspond to one previously calculated */
       if (nfb > 0)
 	{
 	  fnu = get_nrecomb (t, nion);
 	  return (fnu);
 	}
+      /* If not calculate it here */
       fnu = xinteg_fb (t, f1, f2, nion, fb_choice);
       return (fnu);
     }
@@ -391,7 +397,6 @@ total_fb (one, t, f1, f2)
   if (t < 1000. || f2 < f1)
     return (0);			/* It's too cold to emit */
 
-
 // Initialize the free_bound structures if that is necessary
   init_freebound (1.e3, 1.e6, f1, f2);
 
@@ -404,6 +409,7 @@ total_fb (one, t, f1, f2)
     {
       if (xplasma->density[nion] > DENSITY_PHOT_MIN)
 	{
+
 	  total += xplasma->lum_ion[nion] =
 	    one->vol * xplasma->ne * xplasma->density[nion + 1] * integ_fb (t,
 									    f1,
@@ -415,7 +421,6 @@ total_fb (one, t, f1, f2)
 	}
 
     }
-
   return (total);
 }
 
@@ -1050,7 +1055,6 @@ xinteg_fb (t, f1, f2, nion, fb_choice)
     {
       Error ("integ_fb: %d is unacceptable value of nion\n", nion);
       mytrap ();
-//      exit (0);
       return (0);
     }
 
@@ -1058,16 +1062,14 @@ xinteg_fb (t, f1, f2, nion, fb_choice)
   fbt = t;
   fbfr = fb_choice;
 
-// Place over all limits on the integration interval if they are very large
-/* We need to limit the frequency range to one that is reasonable
-if we are going to integrate */
-  if (f1 < 3e14)
-    f1 = 3e14;			// 10000 Angstroms
-  if (f2 > 3e17)
-    f2 = 3e17;			// 10 Angstroms
+/* Limit the frequency range to one that is reasonable before integrating */
+
+  if (f1 < 3e12)
+    f1 = 3e12;			// 10000 Angstroms
+  if (f2 > 3e18)                // 110819 nsh increase upper limits to include  highly ionised ions that we are now seeing in x-ray illuminated nebulas.
+    f2 = 3e18;			// This is 1 Angstroms  - ksl
   if (f2 < f1)
-    return (0);			// Because either f2 corresponded to something redward of 1000 A or f1 
-  // was blueward of 10 Angstroms
+    return (0);			/* Because there is nothing to integrate */ 
 
   fnu = 0.0;
 
@@ -1088,9 +1090,11 @@ if we are going to integrate */
 	  // Now calculate the emissivity as long as fmax exceeds xthreshold and there are ions to recombine
 	  if (fmax > fthresh)
 	    fnu += qromb (fb_topbase_partial, fthresh, fmax, 1.e-4);
+
 	}
     }
-// This completes the calculation of those levels for which we have Topbase x-sections, now do Verner
+
+/* This completes the calculation of those levels for which we have Topbase x-sections, now do Verner */
 
   for (n = nvmin; n < nvmax; n++)
     {
@@ -1287,3 +1291,279 @@ string that constitutes VERSION*/
 
 
 }
+
+
+/***********************************************************
+                                       Southampton University
+                                                                                                                                      
+ Synopsis:
+        bad_t_rr(nion, T)
+                                                                                                                                      
+Arguments:
+        ion - ion for which we want a recombination rate - 
+		this is the upper state, so the ion which is 
+		doing the recombining, there is no rate for
+		H1(ion0) but there is one for H(ion1)
+	temperature - the temperature we want a rate for
+Returns:
+	rate - the total recombination rate for this ion 
+		for this temperature
+                                                                                                                                      
+Description:
+                                                                                                                                      
+        This routine generates a total recombination rate for 
+		a given ion at a given temperature using 
+		badnell type parameters.
+                                                                                                                                      
+Notes:
+	
+                                                                                                                                      
+History:
+        12jul   nsh     73 -- Began coding
+	24jul	nsh	73 -- Included the shull coefficients in the chianti database
+	
+                                                                                                                                      
+**************************************************************/
+
+double
+total_rrate (nion,T)
+     int nion;
+     double T;
+{
+
+
+  double rate;  //The returned rate
+  double  rrA, rrB, rrT0, rrT1, rrC, rrT2;  //The parameters
+  double term1, term2, term3; //Some temporary parameters to make calculation simpler
+
+
+  if (ion[nion].total_rrflag != 1)
+	{
+	Error ("total_rrate: No T_RR parameters for ion %i\n", nion);
+	return (0);
+	}
+  if (total_rr[ion[nion].nxtotalrr].type==RRTYPE_BADNELL)
+	{
+	rrA=total_rr[ion[nion].nxtotalrr].params[0];
+  	rrB=total_rr[ion[nion].nxtotalrr].params[1];
+  	rrT0=total_rr[ion[nion].nxtotalrr].params[2];
+  	rrT1=total_rr[ion[nion].nxtotalrr].params[3];
+  	rrC=total_rr[ion[nion].nxtotalrr].params[4];
+  	rrT2=total_rr[ion[nion].nxtotalrr].params[5];
+
+
+  	rrB=rrB+rrC*exp((-1.0*rrT2)/T); //If C=0, this does nothing
+
+
+  	term1=sqrt(T/rrT0);
+  	term2=1.0+sqrt(T/rrT0);
+  	term2=pow(term2,(1-rrB));
+  	term3=1.0+sqrt(T/rrT1);
+  	term3=pow(term3,(1+rrB));
+  
+
+  	rate=pow((term1*term2*term3),-1.0);
+  	rate*=rrA;
+  	}
+  else if (total_rr[ion[nion].nxtotalrr].type==RRTYPE_SHULL)
+	{
+	rate=total_rr[ion[nion].nxtotalrr].params[0]*pow((T/1.0e4),total_rr[ion[nion].nxtotalrr].params[1]);
+	}
+  else
+	{
+	Error ("total_rrate: unknown parameter type for ion %i\n", nion);
+	}
+ 
+
+  return (rate);
+
+
+}
+
+
+/***********************************************************
+                                       Southampton University
+                                                                                                                                      
+ Synopsis:
+        bad_gs_rr(nion,T)
+                                                                                                                                      
+Arguments:
+        ion - ion for which we want a recombination rate - 
+		this is the upper state, so the ion which is 
+		doing the recombining, there is no rate for
+		H1(ion0) but there is one for H(ion1)
+	temperature - the temperature we want a rate for
+Returns:
+	rate - the resolved recombination rate for the ground
+		state of this ion recombining into the GS of
+		the lower ion.
+		for this temperature
+                                                                                                                                      
+Description:
+                                                                                                                                      
+        This routine generates a total recombination rate for 
+		a given ion at a given temperature using 
+		badnell type parameters. We simply perform an
+		interpolation 
+                                                                                                                                      
+Notes:
+	
+                                                                                                                                      
+History:
+        12jul   nsh     73 -- Began coding
+
+	
+                                                                                                                                      
+**************************************************************/
+
+double
+badnell_gs_rr (nion,T)
+     int nion;
+     double T;
+{
+	double rate,drdt,dt;
+	int i,imin,imax;
+	double rates[BAD_GS_RR_PARAMS],temps[BAD_GS_RR_PARAMS];
+
+
+  if (ion[nion].bad_gs_rr_t_flag != 1 && ion[nion].bad_gs_rr_r_flag != 1 )
+	{
+	Error ("bad_gs_rr: Insufficient GS_RR parameters for ion %i\n", nion);
+	return (0);
+	}
+
+
+for (i=0;i<BAD_GS_RR_PARAMS;i++)
+	{
+	rates[i]=bad_gs_rr[ion[nion].nxbadgsrr].rates[i];
+	temps[i]=bad_gs_rr[ion[nion].nxbadgsrr].temps[i];
+//	printf ("%i, %e, %e\n",i,bad_gs_rr[ion[nion].nxbadgsrr].temps[i],bad_gs_rr[ion[nion].nxbadgsrr].rates[i]);
+	}
+
+
+
+//	printf ("We are getting gs for T=%e, tmin=%e, tmax=%e\n",T,temps[0],temps[BAD_GS_RR_PARAMS-1]);
+
+
+	if (T<temps[0])   //we are below the range of GS data
+		{
+		Log_silent("bad_gs_rr: Requested temp %e is below limit of data for ion %i(Tmin= %e)\n",T,nion,temps[0]);
+		rate=rates[0];
+		}
+	else if  (T>=temps[BAD_GS_RR_PARAMS-1] )  //we are above the range of GS data
+		{
+		Log_silent("bad_gs_rr: Requested temp %e is above limit (%e) of data for ion %i\n",T,nion,bad_gs_rr[ion[nion].nxbadgsrr].temps[BAD_GS_RR_PARAMS-1]);
+		rate=rates[BAD_GS_RR_PARAMS-1];
+		}
+	else    //We must be within the range of tabulated data
+		{
+		for (i=0;i<BAD_GS_RR_PARAMS-1;i++)
+			{	
+//		printf ("We are searching for %e between %e (%i) and %e (%i)\n",T,temps[i],i,temps[i+1],i+1);
+			if (temps[i] <= T && T < temps[i+1]) //We have bracketed the correct temperature
+				{
+				imin=i;
+				imax=i+1;			
+				}
+			}
+//		printf ("We have found that %e is bracketed by %e (%i) and %e (%i)\n",T,temps[imin],imin,temps[imax],imax);
+		drdt=(rates[imax]-rates[imin])/(temps[imax]-temps[imin]);
+		dt=(T-temps[imin]);
+		rate=rates[imin]+ drdt*dt;
+
+
+
+		}
+ //	printf ("Rate=%e\n",rate);
+ 
+
+  return (rate);
+
+
+}
+
+
+/***********************************************************
+                                       Southampton University
+                                                                                                                                      
+ Synopsis:
+        milne_gs_rr(nion,T)
+                                                                                                                                      
+Arguments:
+        ion - ion for which we want a recombination rate - 
+		this is the upper state, so the ion which is 
+		doing the recombining, there is no rate for
+		H1(ion0) but there is one for H(ion1)
+	temperature - the temperature we want a rate for
+Returns:
+	rate - the resolved recombination rate for the ground
+		state of this ion recombining into the GS of
+		the lower ion.
+		for this temperature
+                                                                                                                                      
+Description:
+                                                                                                                                      
+        This routine generates a GS to GS recombination rate 
+		for those ions we do not have badnell data for - it
+		computed the rate using the milne relation.
+                                                                                                                                      
+Notes:
+	
+                                                                                                                                      
+History:
+        12jul   nsh     73 -- Began coding
+	
+                                                                                                                                      
+**************************************************************/
+
+double
+milne_gs_rr (nion,T)
+     int nion;
+     double T;
+{
+	double rate;
+	int ntmin,nvmin,n;
+	double fthresh,fmax,dnu;
+
+			fbt=T;
+			fbfr = 2;
+
+			if (ion[nion].phot_info == 1)  //topbase
+      				{
+				ntmin = ion[nion].ntop_ground;
+//				printf ("We are looking at topbase data for ion %i \n",j-1);
+      				fb_xtop = &phot_top[ntmin];
+				fthresh = fb_xtop->freq[0];
+	  			fmax = fb_xtop->freq[fb_xtop->np - 1];
+				dnu=100.0*(fbt/H_OVER_K);
+				if (fthresh+dnu < fmax)
+					{
+					fmax=fthresh+dnu;
+					}		
+				rate = qromb (fb_topbase_partial, fthresh,fmax, 1e-5);
+				}
+			 else if (ion[nion].phot_info == 0)  // verner
+    				{
+      				nvmin = nion;
+      				n = nvmin;		
+      				fb_xver = &xphot[ion[n].nxphot];
+//				printf ("We are looking at verner data for ion %i \n",j);
+      				fthresh = fb_xver->freq_t;
+      				fmax=fb_xver->freq_max;	
+				dnu=100.0*(fbt/H_OVER_K);
+				if (fthresh+dnu < fmax)
+					{
+					fmax=fthresh+dnu;
+					}		
+				rate = qromb (fb_verner_partial, fthresh,fmax, 1e-5);
+				}
+
+
+ 
+
+  return (rate);
+
+
+}
+
+

@@ -1,25 +1,58 @@
 README 
+***
 =========
 
-#Python 58
+#Python 74b4
 
-This is the README file for Python 58, an old but stable version.
+This is the README file for Python74b4. 
 
+* Precursor is python_74b1 
+* this papers over the bug NSH121214_2 by increasing DFUDGE to a larger value for large models.
+changes this version
+* python.c - dfudge now set to 1e5cm or rmax/1e10, whichever is larger.
+
+Note that the proper GitHub site will contain versions 68-74b1 of python as well- but this is just a test version for the moment.
+
+***
 ==========
 
 # Getting the radiative transfer code 'Python'
 
-You can download the required structure under the structure branch.
+You can download the required structure under the structure branch. e.g.
+git clone https://github.com/agnwinds/python.git -b structure
+or simply click on the 'zip' button!
 
-Releases can be found under 'tags'.
 
-Consult the wiki for how to install Python.
 
+Releases of progs can be found under [tags](https://github.com/agnwinds/python/tags "Wiki").
+
+Consult the [wiki](https://github.com/agnwinds/python/wiki/_pages "Wiki") for how to install Python.
+
+
+***
 ===========
 
 # Basic Git Instructions
 
+clone this repository:
+$ git clone https://github.com/agnwinds/python.git
 
+add files to be tracked:
+$ git add filename
+
+pull changes from github site:
+$ git pull origin branchname
+
+push changes to github site:
+$ git push origin branchname
+
+check git status:
+$ git status
+
+commit all changes to local repo with commit message:
+$ git commit -am 'Changed something in file.c'
+
+***
 ===========
 
 # Original README file from KSL
@@ -94,8 +127,9 @@ something, one uses the MakePyEnvrion to create a standalone environment
 for running python.  This routine copies the binaries and the base_environment
 to a directory that you designate.  (The one thing to remember is that to
 use the environment the commands are bin/py rather py.  The former uses
-the binary that you have trasnfered, whereas the former uses py in this
+the binary that you have transferred, whereas the former uses py in this
 master directory.
 
 
 Please send comments on this file to long@stsci.edu
+This readme is in markdown format.

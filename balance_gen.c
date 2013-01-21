@@ -23,7 +23,10 @@ summary (one)
 {
   int n, first, last, nn, m;
   int nmax, n_tenth, n_hundredth;
-  double pmax;
+  double pmax,cool_tot;
+  FILE *fopen(),*heatcoolfile;
+
+   heatcoolfile  = fopen ("heat_cool.out", "a");
 
   /* Write out the element densities */
   for (nn = 0; nn < 5; nn++)
@@ -35,17 +38,30 @@ summary (one)
 	Log (" %8.2e", one->density[m]);
       Log ("\n");
     }
+	cool_tot=one->lum_rad+one->lum_comp+one->lum_dr; //dr and compton cooling do not generate photons
+  Log
+    ("t_e %8.2e cool_tot %8.2e lum_lines  %8.2e lum_ff  %8.2e lum_comp  %8.2e lum_dr %8.2e        lum_fb     %8.2e %8.2e %8.2e %8.2e %8.2e\n",
+     one->t_e, cool_tot, one->lum_lines, one->lum_ff, one->lum_comp, one->lum_dr, one->lum_fb,
+     one->lum_ion[0], one->lum_ion[2], one->lum_ion[3], one->lum_z);
+
+    fprintf (heatcoolfile,"t_e %8.2e cool_tot %8.2e lum_lines  %8.2e lum_ff  %8.2e lum_comp  %8.2e lum_dr %8.2e        lum_fb     %8.2e %8.2e %8.2e %8.2e %8.2e\n",
+     one->t_e, cool_tot, one->lum_lines, one->lum_ff, one->lum_comp, one->lum_dr, one->lum_fb,
+     one->lum_ion[0], one->lum_ion[2], one->lum_ion[3], one->lum_z);
 
   Log
-    ("t_e %8.2e lum_tot  %8.2e lum_lines  %8.2e lum_ff  %8.2e lum_fb     %8.2e %8.2e %8.2e %8.2e %8.2e\n",
-     one->t_e, one->lum_rad, one->lum_lines, one->lum_ff, one->lum_fb,
-     one->lum_ion[0], one->lum_ion[2], one->lum_ion[3], one->lum_z);
-  Log
-    ("t_r %8.2e heat_tot %8.2e heat_lines %8.2e heat_ff %8.2e heat_photo %8.2e %8.2e %8.2e %8.2e %8.2e\n",
-     one->t_r, one->heat_tot, one->heat_lines, one->heat_ff, one->heat_photo,
+    ("t_r %8.2e heat_tot %8.2e heat_lines %8.2e heat_ff %8.2e heat_comp %8.2e heat_ind_comp %8.2e heat_photo %8.2e %8.2e %8.2e %8.2e %8.2e\n",
+     one->t_r, one->heat_tot, one->heat_lines, one->heat_ff, one->heat_comp, one->heat_ind_comp, one->heat_photo,
      one->heat_ion[0], one->heat_ion[2], one->heat_ion[3], one->heat_z);
+
+   fprintf (heatcoolfile,"t_r %8.2e heat_tot %8.2e heat_lines %8.2e heat_ff %8.2e heat_comp %8.2e heat_ind_comp %8.2e heat_photo %8.2e %8.2e %8.2e %8.2e %8.2e\n",
+     one->t_r, one->heat_tot, one->heat_lines, one->heat_ff, one->heat_comp, one->heat_ind_comp, one->heat_photo,
+     one->heat_ion[0], one->heat_ion[2], one->heat_ion[3], one->heat_z);
+   fprintf (heatcoolfile,"\n");
+   fclose (heatcoolfile);
+
+
   Log ("Heating/cooling: Tot %8.2g lines %8.2g \n",
-       one->heat_tot / one->lum_rad, one->heat_lines / one->lum_lines);
+       one->heat_tot / cool_tot, one->heat_lines / one->lum_lines);
   Log ("Number of ionizing photons in cell nioniz %d\n", one->nioniz);
 
   /* Write out the number of ionizations and recombinations */

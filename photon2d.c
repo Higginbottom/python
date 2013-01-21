@@ -35,6 +35,7 @@ History:
  	98nov	ksl	Modified call to where_in_wind 
 	05apr	ksl	55d -- Minor mod to get more info on problem case
 			of a photon not in wind or grid
+	11aug	ksl	70b - Incorporate mulitple components
 
  
 **************************************************************/
@@ -48,11 +49,10 @@ translate (w, pp, tau_scat, tau, nres)
      int *nres;
 {
   int istat;
-  int where_in_wind (), where_in_grid ();
-  int translate_in_space (), translate_in_wind ();
 
 
-  if (where_in_wind (pp->x) != 0)
+//Old 70b  if (where_in_wind (pp->x) != 0)
+  if (where_in_wind (pp->x) < 0)
     {
       istat = translate_in_space (pp);
     }
@@ -94,6 +94,7 @@ Notes:
 
 History:
  	1997	ksl	Coded and debugged as part of Python effort. 
+	110930	ksl	Added check for torus
  
 **************************************************************/
 
@@ -108,6 +109,11 @@ translate_in_space (pp)
 
   ds = ds_to_wind (pp);
 
+  /* Check whether the photon hit the torus first */
+  if (geo.compton_torus && (x=ds_to_torus(pp))<ds) {
+	  ds=x;
+  }
+
 /* ?? The way in which a photon is identified as hitting the star seems
 a bit convoluted.  Despite the fact that it is already identified here
 as being a photon that hits the star, another determination of this 
@@ -121,6 +127,8 @@ photon hit the star in its passage from pold to the current position */
       pp->istat = P_HIT_STAR;	/* Signifying that photon is hitting star */
     }
   move_phot (pp, ds + DFUDGE);
+
+
   return (pp->istat);
 }
 
@@ -198,7 +206,9 @@ History:
 
 	05jul	ksl	Changed call from ds_to_cone to ds_to_cone as
 			added cylvar coord system.  Otherwise routine is
-			currently uncanged.  
+			currently unchanged.  
+	11nov	ksl	Modified to account for elvis wind model with
+			its pillbox at the bottom
  
 **************************************************************/
 
@@ -209,10 +219,7 @@ ds_to_wind (pp)
      PhotPtr pp;
 {
   struct photon ptest;
-  double ds, ds_to_cone (), x;
-  double ds_to_sphere ();
-  int where_in_wind ();
-  int move_phot (), stuff_phot ();
+  double ds, x;
 
   stuff_phot (pp, &ptest);
   ds = ds_to_sphere (geo.wind_rmax, &ptest);
@@ -222,6 +229,8 @@ ds_to_wind (pp)
     ds = x;
   if ((x = ds_to_cone (&windcone[1], &ptest)) < ds)
     ds = x;
+  if (geo.wind_type== 8)
+	  x=ds_to_pillbox(&ptest,geo.sv_rmin,geo.sv_rmax,geo.elvis_offset);
 
   return (ds);
 }
@@ -296,11 +305,6 @@ translate_in_wind (w, p, tau_scat, tau, nres)
   int n;
   double smax, s, ds_current;
   int istat;
-  int stuff_phot ();
-  int where_in_grid (), wind_n_to_ij ();
-  int quadratic (), move_phot ();
-  int radiation ();
-  double length ();
   int nplasma;
 
   WindPtr one;
@@ -316,12 +320,13 @@ return and record an error */
       return (n);		/* Photon was not in grid */
     }
 
-
 /* Assign the pointers for the cell containing the photon */
 
-  one = &wmain[n];		/* one is the grid cell where the poton is */
+  one = &wmain[n];		/* one is the grid cell where the photon is */
   nplasma = one->nplasma;
   xplasma = &plasmamain[nplasma];
+  
+
 
 
 /* Calculate the maximum distance the photon can travel in the cell */
@@ -359,6 +364,16 @@ return and record an error */
       if (s > 0 && s < smax)
 	smax = s;
     }
+  // 110930 - ksl - Next section added to accommodate the torus 
+  if (geo.compton_torus && one->inwind == W_PART_INTORUS)
+  {
+      s = ds_to_torus (p);	//smax is set to be the distance to edge of the wind
+      if (s < smax)
+	smax = s;
+      s = ds_to_disk (p, 0);	// ds_to_disk can return a negative distance
+      if (s > 0 && s < smax)
+	smax = s;
+  }
   else if (one->inwind == W_IGNORE)
     {
       if ((neglible_vol_count % 100)==0) Error
@@ -399,6 +414,9 @@ error continues to appear, new investigations are required.
   smax += DFUDGE;		/* DFUDGE is to force the photon through the cell boundaries.
 				   Implies that phot is in another cell often.  */
 
+
+
+
 /* The next set of limits the distance a photon can travel.  There are 
 a good many photons which travel more than this distance without this 
 limitation, at least in the standard 30 x 30 instantiation.  It does
@@ -420,6 +438,10 @@ radiation, which is the single largest contributer to execution time.*/
 /* Note that ds_current does not alter p in any way at present 02jan ksl */
 
   ds_current = calculate_ds (w, p, tau_scat, tau, nres, smax, &istat);
+
+  if (p->nres < 0)  xplasma->nscat_es++;
+  if (p->nres > 0)  xplasma->nscat_res++;
+
 
 /* OK now we increment the radiation field in the cell, translate the photon and wrap 
    things up If the photon is going to scatter in this cell, radiation also reduces 

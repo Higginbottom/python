@@ -109,7 +109,7 @@ calculate_ds (w, p, tau_scat, tau, nres, smax, istat)
   double v_inner[3], v_outer[3], v1, v2, dvds, dd;
   double v_check[3], vch, vc;
   double dvds1, dvds2;
-  struct photon phot, p_now; 
+  struct photon phot, p_now;
   int init_dvds;
   double kap_bf_tot, kap_ff, kap_cont;
   double tau_sobolev;
@@ -144,7 +144,9 @@ calculate_ds (w, p, tau_scat, tau, nres, smax, istat)
 
 
 /* So "phot"  is a photon vector at the far edge of the cell, while p remains the photon 
-   vector at the near edge of the cell, and p_now is the midpoint. */
+   vector at the near edge of the cell, and p_now is the midpoint.  Note that comp_phot
+   compares the position and direction of two photons.  If they are the same, then 
+   it just takes v1 from the old value.  */
 
   if (comp_phot (&cds_phot_old, p))
     {
@@ -154,7 +156,6 @@ calculate_ds (w, p, tau_scat, tau, nres, smax, istat)
   else
     {
       v1 = cds_v2_old;
-
     }
 
   /* Create phot, a photon at the far side of the cell */
@@ -206,8 +207,9 @@ then the photon frequency will be less. */
 
   if (fabs (dfreq) < EPSILON)
     {
+      vwind_xyz (p, v_inner);
       Error
-	("translate: v same at both sides of cell %d %2g,\n %.2g %.2g %.2g %.2g %.2g %.2g \n",
+	("translate: v same at both sides of cell %d so dfreq is %2g,\n v_inner %.2g %.2g %.2g v_outer %.2g %.2g %.2g \n",
 	 one->nwind, dfreq, v_inner[0], v_inner[1], v_inner[2], v_outer[0],
 	 v_outer[1], v_outer[2]);
       x = -1;
@@ -266,6 +268,8 @@ method). If the macro atom method is not used just get kap_bf to 0 and move on).
 
   kap_cont = kap_es + kap_bf_tot + kap_ff;	//total continuum opacity 
 
+
+
 /* Finally begin the loop over the resonances that can interact with the
      photon in the cell */
 
@@ -278,6 +282,7 @@ method). If the macro atom method is not used just get kap_bf to 0 and move on).
       if (0. < x && x < 1.)
 	{			/* this particular line is in resonance */
 	  ds = x * smax;
+
 
 /* Before checking for a resonant scatter, need to check for scattering due to a continuum
 process. */
@@ -294,10 +299,12 @@ process. */
 	      ds_current += (tau_scat - ttau) / (kap_cont);	//distance travelled
 	      ttau = tau_scat;
 	      *tau = ttau;
+//     printf ("NSH Photon %i has scattered by continuum process %i in cell %i after %e cm and now has weight %e and frequency %e\n",p->np,*nres,nplasma,ds_current,p->w,p->freq);
 	      return (ds_current);
 	    }
 	  else
 	    {
+
 	      /* increment tau by the continuum optical depth to this point */
 	      ttau += kap_cont * (ds - ds_current);	/*kap_cont used here rather than kap_es */
 
@@ -338,9 +345,9 @@ process. */
 		  /* Add the line optical depth  Note that one really should translate the photon to this point 
 		     before doing this (?? What is "this"??)as p-> x is being used to calculate direction of the wind */
 
-		  ttau+=tau_sobolev =
+		  ttau += tau_sobolev =
 		    sobolev (one, p, dd, lin_ptr[nn], dvds);
-
+		  //    printf ("NSH Photon %i has enocuntered a resonant line in cell %i after %e cm with tau=%e. Total opacity now %e vs required %e\n",p->np,nplasma,ds_current,tau_sobolev,ttau,tau_scat);
 		  /* tau_sobolev now stores the optical depth. This is fed into the next statement for the bb estimator
 		     calculation. SS March 2004 */
 
@@ -387,7 +394,7 @@ process. */
 			    }
 			}
 		    }
-		  /* Completed special calculateions for the Macro Atom case */
+		  /* Completed special calculations for the Macro Atom case */
 
 		  /* 68b - 0902 - The next section is to track where absorption is taking place along the line of sight
 		   * to the observer.  It is probably possibly to simplify some of what is happening here, as we
@@ -396,11 +403,12 @@ process. */
 		   * of these could be used to store information needed in phot_hist.
 		   */
 
-		  if (phot_hist_on){
-			  p_now.tau=ttau;
-			  p_now.nres=nn;
-			  phot_hist(&p_now,1);
-		  }
+		  if (phot_hist_on)
+		    {
+		      p_now.tau = ttau;
+		      p_now.nres = nn;
+		      phot_hist (&p_now, 1);
+		    }
 
 
 		}
@@ -413,11 +421,14 @@ process. */
 		  *istat = P_SCAT;
 		  *nres = nn;
 		  *tau = ttau;
+//              printf ("Photon scatters after %e cm\n",ds_current);
 
-		  return (ds_current);	
+
+
+		  return (ds_current);
 		}
 
-		 /* End of loop to process an individual resonance */
+	      /* End of loop to process an individual resonance */
 	    }
 	  *tau = ttau;
 	}
@@ -453,6 +464,7 @@ event occurred.  04 apr
       *istat = P_INWIND;
       ttau += kap_cont * (smax - ds_current);	/* kap_es replaced with kap_cont (SS) */
       ds_current = smax;
+//      printf ("Photon has hit a wall\n");
 
     }
 
@@ -959,6 +971,8 @@ doppler (pin, pout, v, nres)
 
 {
   double dot ();
+//  double ftemp;
+// double beta;
 //  double q[3];
 
   if (nres == -1)		//Electron scattering (SS)
@@ -966,6 +980,12 @@ doppler (pin, pout, v, nres)
       pout->freq =
 	pin->freq * (1 - dot (v, pin->lmn) / C) / (1 -
 						   dot (v, pout->lmn) / C);
+//    beta=(dot (v, pin->lmn) / C);
+      //   ftemp=pin->freq*sqrt((1-beta)/(1+beta));
+      //  beta=(dot (v, pout->lmn) / C);
+      // pout->freq=ftemp/sqrt((1-beta)/(1+beta));
+
+
     }
   else if (nres > -1 && nres < nlines)
     {				/* It was a resonant scatter. */
@@ -1055,7 +1075,6 @@ History:
                         not required)
                         Also ff is now included: nres = -2 flags ff which leads
                         to creating a k-packet always.
-                        Also cleaned up some "OLD" comments.
         04May   SS      Modifications to allow the macro_simple option (i.e. all
                         ions treated as "simple").
         04Jun   SS      Modifications so simplify the interation of macro atoms and
@@ -1099,9 +1118,17 @@ scatter (p, nres, nnscat)
   stuff_phot (p, &pold);
   n = where_in_grid (pold.x);	// Find out where we are
 
+  //71 - 1112 Check added to test out spherical wind models 
+  if (n<0) {
+	  Error("scatter: Trying to scatter a photon in grid cell %d\n",n);
+	  return(-1);
+  }
+
   one = &wmain[p->grid];
   xplasma = &plasmamain[one->nplasma];
-  mplasma = &macromain[xplasma->nplasma];
+  //OLD - did not trap a problem if (xplasma==NULL){
+  //OLD - did not trap a problem 	  Error("Houston, we have a null pointer at %d %d",p->grid,one->nplasma);
+  //OLD - did not trap a problem }
 
   /* On entering this subroutine we know that a photon packet has been 
      absorbed. nres tells us which process absorbed it. There are currently
@@ -1116,6 +1143,24 @@ scatter (p, nres, nnscat)
 
   if (geo.rt_mode == 2)		//check if macro atom method in use
     {
+
+  /* 1112 - 71 - ksl - Moved to avoid trying to reference mplasma if there are no 
+     macro atoms.  This was to fix a segmentation fault that appeared
+     when compiling with a new version of gcc.   It's possible that the error below
+     could occur if we were in a macro atom approach but had no macro atoms.  Need
+     to fix all this up with a thorough review of macro atoms. !!!
+   */
+
+  if (geo.nmacro > 0)
+    {
+      mplasma = &macromain[xplasma->nplasma];
+    }
+  else
+    {
+      mplasma = NULL;
+      Error("Resonate: In macro atom section, but no macro atoms.  Seems very odd\n");
+    }
+
       /* Electron scattering is the simplest to deal with. The co-moving 
          frequency is unchanged so it's just a randomisation of the direction.
          For b-b and b-f processes it is first necessary to determine the
@@ -1189,10 +1234,12 @@ scatter (p, nres, nnscat)
 
 	      gamma_twiddle =
 		mplasma->gamma_old[config[llvl].bfu_indx_first + m] -
-		(mplasma->alpha_st_old[config[llvl].bfu_indx_first+m] * stim_fact);
+		(mplasma->alpha_st_old[config[llvl].bfu_indx_first + m] *
+		 stim_fact);
 	      gamma_twiddle_e =
 		mplasma->gamma_e_old[config[llvl].bfu_indx_first + m] -
-		(mplasma->alpha_st_e_old[config[llvl].bfu_indx_first+m] * stim_fact);
+		(mplasma->alpha_st_e_old[config[llvl].bfu_indx_first + m] *
+		 stim_fact);
 
 	      // Both gamma_twiddles must be greater that zero if this is going to work. If they 
 	      // are zero then it's probably because this is the first iteration and so the've not
@@ -1336,7 +1383,7 @@ scatter (p, nres, nnscat)
   //stuff_v (z_prime, p->lmn);
 
   vwind_xyz (p, v);		/* Get the velocity vector for the wind */
-  doppler (&pold, p, v, *nres);	/* Get the final frequency of the photon */
+
 
 /* We estimate velocities by interpolating between the velocities at the edges of the cell based
 on the photon direction.  We have now changed the direction of the photon, and so we may not

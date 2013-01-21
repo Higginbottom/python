@@ -34,7 +34,7 @@ CFLAGS = -g -pg -Wall -I$(INCLUDE) -I$(INCLUDE2)
 LDFLAGS= -L$(LIB) -L$(LIB2)  -lm -lkpar -lcfitsio -lgsl -lgslcblas 
 
 #Note that version should be a single string without spaces. 
-VERSION = 68d
+VERSION = 74b4
 CHOICE=1             // Compress plasma as much as possible
 # CHOICE=0           //  Keep relation between plasma and wind identical
 
@@ -46,7 +46,7 @@ startup:
 foo: foo.o signal.o time.o
 	gcc ${cfllags} foo.o signal.o time.o ${LDFLAGS}  -o foo
 
-python_objects = bb.o get_atomicdata.o python.o photon2d.o photon_gen.o \
+python_objects = bb.o get_atomicdata.o photon2d.o photon_gen.o \
 		saha.o spectra.o wind2d.o wind.o  vector.o debug.o recipes.o \
 		trans_phot.o phot_util.o resonate.o radiation.o \
 		wind_updates2d.o windsave.o extract.o pdf.o roche.o random.o \
@@ -55,7 +55,9 @@ python_objects = bb.o get_atomicdata.o python.o photon2d.o photon_gen.o \
 		sv.o ionization.o  ispy.o   levels.o gradv.o reposition.o \
 		anisowind.o util.o density.o  detail.o bands.o time.o \
 		matom.o estimators.o wind_sum.o yso.o elvis.o cylindrical.o rtheta.o spherical.o  \
-		cylind_var.o bilinear.o gridwind.o partition.o signal.o auger_ionization.o
+		cylind_var.o bilinear.o gridwind.o partition.o signal.o auger_ionization.o \
+		agn.o shell_wind.o compton.o torus.o zeta.o dielectronic.o \
+		spectral_estimators.o power_sub.o variable_temperature.o
 
 
 python_source= bb.c get_atomicdata.c python.c photon2d.c photon_gen.c \
@@ -67,17 +69,19 @@ python_source= bb.c get_atomicdata.c python.c photon2d.c photon_gen.c \
 		sv.c ionization.c  ispy.c  levels.c gradv.c reposition.c \
 		anisowind.c util.c density.c  detail.c bands.c time.c \
 		matom.c estimators.c wind_sum.c yso.c elvis.c cylindrical.c rtheta.c spherical.c  \
-		cylind_var.c bilinear.c gridwind.c partition.c signal.c auger_ionization.c
+		cylind_var.c bilinear.c gridwind.c partition.c signal.c auger_ionization.c \
+		agn.c shell_wind.c compton.c torus.c zeta.c dielectronic.c \
+		spectral_estimators.c power_sub.c variable_temperature.c
 
-additional_py_wind_source = py_wind_sub.c py_wind_ion.c py_wind_write.c py_wind_macro.c
+additional_py_wind_source = py_wind_sub.c py_wind_ion.c py_wind_write.c py_wind_macro.c py_wind.c 
 
 prototypes: 
 	cp templates.h templates.h.old
-	cproto -I$(INCLUDE)  -I$(INCLUDE2) $(python_source) ${additional_py_wind_source} > foo.h      
+	cproto -I$(INCLUDE)  -I$(INCLUDE2) $(python_source) ${additional_py_wind_source} test_saha.c test_dielectronic.c > foo.h      
 	cp foo.h templates.h
 
-python: startup  $(python_objects)
-	gcc  ${CFLAGS} $(python_objects) $(LDFLAGS) -o python
+python: startup  python.o $(python_objects)
+	gcc  ${CFLAGS} python.o $(python_objects) $(LDFLAGS) -o python
 		cp $@ $(BIN)/py
 		mv $@ $(BIN)/py$(VERSION)
 
@@ -89,7 +93,9 @@ py_wind_objects = py_wind.o get_atomicdata.o py_wind_sub.o windsave.o py_wind_io
 		lines.o vector.o wind2d.o wind.o  ionization.o  py_wind_write.o levels.o \
 		radiation.o gradv.o phot_util.o anisowind.o resonate.o density.o \
 		matom.o estimators.o yso.o elvis.o photon2d.o cylindrical.o rtheta.o spherical.o  \
-		cylind_var.o bilinear.o gridwind.o py_wind_macro.o partition.o auger_ionization.o
+		cylind_var.o bilinear.o gridwind.o py_wind_macro.o partition.o auger_ionization.o\
+		spectral_estimators.o power_sub.o shell_wind.o compton.o torus.o zeta.o dielectronic.o \
+                variable_temperature.o bb.o
 
 
 
@@ -105,7 +111,17 @@ py_smooth: py_smooth.o
 test_bb: bb.o test_bb.o pdf.o recipes.o bilinear.o time.o 
 	gcc  ${CFLAGS} bb.o pdf.o test_bb.o  recipes.o bilinear.o time.o $(LDFLAGS) -o test_bb
 	
+test_pow: test_pow.o pdf.o recipes.o bilinear.o time.o 
+	gcc  ${CFLAGS} pdf.o test_pow.o  recipes.o bilinear.o time.o $(LDFLAGS) -o test_pow
 
+
+test_saha: test_saha.o $(python_objects)
+	gcc ${CFLAGS} test_saha.o $(python_objects) $(LDFLAGS) -o test_saha
+		mv $@ $(BIN)
+
+test_dielectronic: test_dielectronic.o $(python_objects)
+	gcc ${CFLAGS} test_dielectronic.o $(python_objects) $(LDFLAGS) -o test_dielectronic
+		mv $@ $(BIN)
 
 t_bilinear:  t_bilinear.o bilinear.o  
 	$(CC) $(CFLAGS) t_bilinear.o  bilinear.o  $(LDFLAGS)  -o t_bilinear
@@ -172,9 +188,8 @@ py_grid: bb.o get_atomicdata.o py_grid.o photon2d.o photon_gen.o \
 		cp $@ $(BIN)/py_grid
 		mv $@ $(BIN)/py_grid$(VERSION)
 
-# Balance does compile but has not been used much if at all in the recent past.  
 balance_sources = balance_abso.c balance_bb.c balance.c balance_gen.c balance_sub.c bal_photon2d.c bal_trans_phot.c plane.c \
-		  partition.c
+		  partition.c agn.c power_sub.c compton.c torus.c spectral_estimators.c dielectronic.c variable_temperature.c  zeta.c
 
 startup_balance: startup $(balance_sources)
 	cproto -I$(INCLUDE)  -I$(INCLUDE2) $(balance_sources) > balance_templates.h
@@ -188,7 +203,8 @@ balance: balance.o balance_sub.o balance_gen.o balance_abso.o \
 		lines.o get_atomicdata.o random.o wind2d.o wind.o   bal_photon2d.o  levels.o  \
 		util.o anisowind.o reposition.o density.o  detail.o bands.o matom.o estimators.o  bilinear.o   \
 		spherical.o cylindrical.o cylind_var.o rtheta.o yso.o elvis.o gridwind.o wind_sum.o \
-		partition.o 
+		partition.o auger_ionization.o agn.o power_sub.o shell_wind.o compton.o torus.o spectral_estimators.o \
+		dielectronic.o variable_temperature.o zeta.o
 	gcc   ${CFLAGS} balance.o balance_sub.o balance_gen.o   balance_abso.o \
 		emission.o recomb.o balance_bb.o gradv.o  detail.o \
 		get_atomicdata.o random.c wind2d.o wind.o  bal_trans_phot.o \
@@ -198,7 +214,8 @@ balance: balance.o balance_sub.o balance_gen.o balance_abso.o \
 		extract.o ispy.o roche.o stellar_wind.o proga.o corona.o disk.o  knigge.o  \
 		util.o anisowind.o reposition.o density.o bands.o matom.o estimators.o bilinear.o \
 		spherical.o cylindrical.o cylind_var.o rtheta.o  yso.o elvis.o   gridwind.o wind_sum.o\
-		partition.o \
+		partition.o  auger_ionization.o agn.o power_sub.o shell_wind.o torus.o compton.o spectral_estimators.o\
+		dielectronic.o  variable_temperature.o zeta.o \
 		$(LDFLAGS) -o balance
 	cp $@ $(BIN)/balance
 	mv $@ $(BIN)/balance$(VERSION)
@@ -211,6 +228,19 @@ libatomic.a:  get_atomicdata.o atomic.o
 	ranlib libatomic.a
 	mv libatomic.a $(LIB)
 	cp atomic.h  $(INCLUDE)
+
+
+saha_sources = saha_inv.c get_atomicdata.c
+
+startup_saha: startup $(saha_sources)
+	cproto -I$(INCLUDE)  -I$(INCLUDE2) $(saha_sources) > saha_templates.h
+
+saha_inv: saha_inv.o get_atomicdata.c
+	gcc ${CFLAGS} saha_inv.o get_atomicdata.o
+	cp $@ $(BIN)/saha_inv
+	mv $@ $(BIN)/saha_inv$(VERSION)
+
+
 
 
 clean :

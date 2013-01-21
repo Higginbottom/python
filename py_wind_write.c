@@ -66,6 +66,9 @@
 	05apr	ksl	56 -- Completely rewritten to enable a variety of 
 			coordinate systems and to produce tecplot type 
 			output files.
+	1111	ksl	71 -- Modified format of files to ease ability
+			to plot the data in a variety of formats
+	1111	ksl	71 - Tecplot dependencies removed
 
 	
 
@@ -79,7 +82,7 @@ write_array (filename, choice)
      char filename[];
      int choice;
 {
-  //Dynamical allocatioin is allowed, although I generally avoid it -- 05apr ksl
+  //Dynamical allocation is allowed, although I generally avoid it -- 05apr ksl
   float rin[NDIM], zin[MDIM];
   float r, z;
   float rmin, rmax, zmin, zmax;
@@ -105,7 +108,26 @@ write_array (filename, choice)
 
 
   /* Write out the header information for the file */
-  fprintf (fptr, "TITLE= \"%s\"\n", outfile);
+  fprintf (fptr, "# TITLE= \"%s\"\n", outfile);
+      if (geo.coord_type == SPHERICAL){
+	  fprintf (fptr, "# Coord_Sys SPHERICAL\n");
+      }
+      else if (geo.coord_type == CYLIND)
+	    {
+	      fprintf (fptr, "# Coord_Sys CYLIND\n");
+	    }
+	  else if (geo.coord_type == RTHETA)
+	    {
+	      fprintf (fptr, "# Coord_Sys RTHETA\n");
+	    }
+	  else if (geo.coord_type == CYLVAR)
+	    {
+	      fprintf (fptr, "# Coord_Sys CYLVAR\n");
+	    }
+      else {
+	      Error("write_array: Unknown coordinaate system type: %d\n",geo.coord_type);
+      }
+
 
 // Put the r and z coord. grid  into easier to understand arrays
   for (i = 0; i < NDIM; i++)
@@ -123,35 +145,30 @@ are linear, and x otherwise.  This is not particularly transparent ?? ksl */
 
       if (geo.coord_type == SPHERICAL)
 	{
-	  fprintf (fptr, "VARIABLES= \"R\"  \"Var1\" \n");
-	  fprintf (fptr, "ZONE I=%d DATAPACKING=POINT\n", NDIM);
 	  for (i = 0; i < NDIM; i++)
 	    {
-	      fprintf (fptr, "%8.2e %8.2e\n", wmain[i].r, aaa[i]);
+	      fprintf (fptr, "%8.2e %8.2e %3d %3d \n", wmain[i].r, aaa[i],wmain[i].inwind,i);
 	    }
 	}
       else
 	{
-	  fprintf (fptr, "VARIABLES= \"X\" \"Z\" \"Var1\" \n");
-	  fprintf (fptr, "ZONE I=%d J=%d DATAPACKING=POINT\n", NDIM, MDIM);
-
 	  for (i = 0; i < NDIM2; i++)
 	    {
-	      fprintf (fptr, "%8.2e %8.2e %8.2e\n", wmain[i].x[0],
-		       wmain[i].x[2], aaa[i]);
+	      wind_n_to_ij (i, &ii, &jj);
+		fprintf (fptr, "%8.2e %8.2e %8.2e %3d %3d %3d\n",
+			 wmain[i].x[0], wmain[i].x[2], aaa[i],
+			 wmain[i].inwind, ii, jj);
 	    }
 	}
 
     }
   else if (choice == 2)
     {				// Then regrid to a linear grid
-      /* Wind array is organized so that it increments up along z and then over */
+/* Wind array is organized so that it increments up along z and then over */
 
 /* Want linearly spaced output array */
       rmin = zmin = 0;
       rmax = zmax = geo.rmax;
-
-//      rmax = zmax = 50. * geo.rstar;
 
       xx[1] = 0.0;
       for (ii = 0; ii < ODIM; ii++)
@@ -160,7 +177,8 @@ are linear, and x otherwise.  This is not particularly transparent ?? ksl */
 	  for (jj = 0; jj < ODIM; jj++)
 	    {
 	      xx[2] = z = zmin + jj * (zmax - zmin) / (ODIM - 1);
-	      if (where_in_wind (xx) == 0)
+	      //OLD 70B if (where_in_wind (xx) == 0)
+	      if (where_in_wind (xx) >= 0)
 		{		// Then the position is in the wind region
 		  coord_fraction (0, xx, nnn, frac, &nelem);
 		  for (nn = 0; nn < nelem; nn++)
@@ -173,8 +191,9 @@ are linear, and x otherwise.  This is not particularly transparent ?? ksl */
 	}
 
       /* Now print out the array */
-      fprintf (fptr, "VARIABLES= \"X\" \"Z\" \"Var1\" \n");
-      fprintf (fptr, "ZONE I=%d J=%d DATAPACKING=POINT\n", ODIM, ODIM);
+      // fprintf (fptr, "VARIABLES= \"X\" \"Z\" \"Var1\" \n");
+      // fprintf (fptr, "ZONE I=%d J=%d DATAPACKING=POINT\n", ODIM, ODIM);
+      fprintf(fptr,"# Resampled outputs\n");
       for (jj = 0; jj < ODIM; jj++)
 	{
 	  z = zmin + (zmax - zmin) * jj / (ODIM - 1);
@@ -195,34 +214,54 @@ are linear, and x otherwise.  This is not particularly transparent ?? ksl */
   return (0);
 }
 
-/*  This is a generalized display routine, intended to allow various
-    simplifications of py_wind
 
-Note:       For cylindrical coordinates, one goes up in z, and over in x. To cylindrical coordinates
-we want to display so that each colum represents a constant line on the axis
-              w[mdim][ndim].  So for a system with mdim=20 and ndim=25.  There are 25 elements
-              in the z axis and 20 elements in the xaxis
+/**************************************************************************
+                    Space Telescope Science Institute
 
-              Therefore a row, constant z, is displayed by by incrementing by 20 or mdim
 
-              For rtheta coordinates, one goes around in theta, up in r.  The fasted moving
-              coordinate is r (when thinking of 1-d versions of the array.  Unless we
-              are going to write a separate routine, the simplest thing to do
-              is to make each column represent a constant r
+  Synopsis:
 
-              w[mdim][ndim]  So, in spherical polar coorcinates, a system with mdim 20 has
-              20 angles, and 25 radii.  
+  Description:
+	This is a generalized display routine, intended to allow various
+ 	simplifications of py_wind
 
-              So for spherical polar, constant r is displayed by incrementing by 1.  As a result
-              it is unclear that one can easily use the same routine for the two situations
-              since you seem to be incrementing the opposite axes, since in the one case one 
-              wants MDIM rows and other case one wants NDIM rows.  
+  Arguments:		
 
-              It would be possible if you plot theta lines in each row, but what this means
-              is that the first row is closest to the z axis
+  Returns:
 
-      
-*/
+  Notes:
+
+	For cylindrical coordinates, one goes up in z, and over in x. To cylindrical coordinates
+	we want to display so that each colum represents a constant line on the axis
+	w[mdim][ndim].  So for a system with mdim=20 and ndim=25.  There are 25 elements
+	in the z axis and 20 elements in the xaxis
+
+	Therefore a row, constant z, is displayed by by incrementing by 20 or mdim
+
+	For rtheta coordinates, one goes around in theta, up in r.  The fasted moving
+	coordinate is r (when thinking of 1-d versions of the array.  Unless we
+	are going to write a separate routine, the simplest thing to do
+	is to make each column represent a constant r
+
+	w[mdim][ndim]  So, in spherical polar coorcinates, a system with mdim 20 has
+	20 angles, and 25 radii.  
+
+	So for spherical polar, constant r is displayed by incrementing by 1.  As a result
+	it is unclear that one can easily use the same routine for the two situations
+	since you seem to be incrementing the opposite axes, since in the one case one 
+	wants MDIM rows and other case one wants NDIM rows.  
+
+	It would be possible if you plot theta lines in each row, but what this means
+	is that the first row is closest to the z axis
+
+
+  History:
+  	111125	ksl	Put standard headers before routine prior to updating slightly
+	
+
+ ************************************************************************/
+
+
 
 int
 display (name)

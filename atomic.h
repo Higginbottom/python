@@ -7,9 +7,11 @@
 #define H   				6.6262e-27
 #define HC  				1.98587e-16
 #define HEV				4.13620e-15	/* Planck's constant in eV */
+#define HRYD				3.04005e-16     /* NSH 1204 Planck's constant in Rydberg */
 #define C   				2.997925e10
 #define G				6.670e-8
 #define BOLTZMANN 			1.38062e-16
+#define WIEN				5.879e10       /* NSH 1208 Wien Disp Const in frequency units */
 #define H_OVER_K			4.799437e-11
 #define STEFAN_BOLTZMANN 		5.6696e-5
 #define THOMPSON			0.66524e-24
@@ -126,6 +128,7 @@ typedef struct ions
 				Note: program will exit if -1 before leaving get_atomicdata
 				 */
     int ntop_first;             /* Internal index into topbase photionization structure */
+    int ntop_ground;		/* NSH 03/12 Index to the ground state topbase photoionization state */
     int ntop;                   /* Number of topbase photoionization cross sections for this ion */
     int nxphot;			/* Internal index into VFKY photionionization structure.  There
 				is only one of these per ion */
@@ -137,7 +140,29 @@ typedef struct ions
 				   	macro_methods are not used
 				   set to  2 if topbase inputs, even if their ar no so-called non-lte
 				   	levels, i.e. levels in the levden array
-    				*/
+    				*/ 
+    int drflag;	        /* The number of dielectronic recombination parameter types read in. 0
+				probably means it has no data. 2 is good, 3 or 1 means an error has taken
+				place - this is trapped in get_atomicdata.c */
+    int nxdrecomb;              /* link into the drecomb structure to give the location of the dielectronic
+                               recombination coefficients for this ion */
+    int cpartflag;	       /* Flag to say wether partition function data from the cardona2010
+ 				paper exists for this ion*/
+    int nxcpart;	      /* index into the cpart structure to give the location of the cardona2010
+				data for this ion, if it exists */
+    int total_rrflag;	       /* Flag to say wether we have badnell style total radiative rate 
+				coefficients for this ion */
+    int nxtotalrr;		/* index into the bad_t_rr structure to give the location of the
+				Badnell fit coefficient for the total radiative recombination rate for 
+				this ion if it exists */
+    int bad_gs_rr_t_flag;	/* Flag to say wether we have badnell style resolved ground state radiative temperature
+				data for this ion */
+    int bad_gs_rr_r_flag;	 /* Flag to say wether we have badnell style resolved ground state radiative rate 
+				coefficients for this ion*/
+    int nxbadgsrr;		/* index into the bad_gs_rr structure to give the location of the
+				Badnell fit coefficient for the resolved ground state recombination rate for 
+				this ion if it exists */
+  
   }
 ion_dummy,*IonPtr;
 
@@ -248,6 +273,7 @@ typedef struct photoionization
 
 Photoionization xphot[NIONS];
 PhotoionizationPtr xphot_ptr[NIONS]; /* Pointers to xphot in threshold frequency order --57h -- ksl*/
+PhotoionizationPtr xphot_ptr1[NIONS]; /* Pointers to xphot in ion order --57h -- ksl*/
 
 int nxphot;			/*The actual number of ions for which there are VFKY photoionization x-sections */
 double phot_freq_min;		/*The lowest frequency for which photoionization can occur */
@@ -353,14 +379,92 @@ int nxcol_min, nxcol_max, nxcol_delt;	/*For calculating a frequency range within
 					   be included, see the routine limit_collisions */
 
 
-struct coolstruct
-{
-  double cooling_bf[NTOP_PHOT];
-  double cooling_bf_col[NTOP_PHOT];	
-  double cooling_bb[NLINES];
-  double cooling_normalisation;
-  double cooling_bbtot, cooling_bftot, cooling_bf_coltot;
-  double cooling_ff;
-};
+//091103 ksl deleted coolstruct as not really necessary and in order to reduce the overall size of the MacroPtr array
+// This structure has been put in the overall MacroPtr as individual elements so that icould get it there
+//OLD 091103 struct coolstruct
+//OLD 091103 {
+//OLD 091103   double cooling_bf[NTOP_PHOT];
+//OLD 091103   double cooling_bf_col[NTOP_PHOT];	
+//OLD 091103   double cooling_bb[NLINES];
+//OLD 091103   double cooling_normalisation;
+//OLD 091103   double cooling_bbtot, cooling_bftot, cooling_bf_coltot;
+//OLD 091103   double cooling_ff;
+//OLD 091103 };
 
 typedef struct coolstruct COOLSTR;
+
+
+//081115 nsh New structure and variables to hold the dielectronic recombination rate data
+//set up to accept the korista data from the university of strahclyde website.
+
+#define MAX_DR_PARAMS 9  //This is the maximum number of c or e parameters. 
+#define DRTYPE_BADNELL	    0
+#define DRTYPE_SHULL	    1
+int ndrecomb;                //This is the actual number of DR parameters
+
+typedef struct dielectronic_recombination
+{
+	int nion;        //Internal cross reference to the ion in the ion structure thsat it refers to
+	int nparam;	  //the number of parameters - it varies from ion to ion
+	double c[MAX_DR_PARAMS];   //c parameters
+	double e[MAX_DR_PARAMS];   //e parameters
+	double shull[4];  //schull DR parameters
+	int type;	//defines wether we have a schull type or a badnell type
+} Drecomb, *Drecombptr;
+
+
+Drecomb drecomb[NIONS];  //set up the actual structure
+
+double dr_coeffs[NIONS];    //this will be an array to temprarily store the volumetric dielectronic recombination rate coefficients for the current cell under interest. We may want to make this 2D and store the coefficients for a range of temperatures to interpolate.
+
+int ncpart;
+
+typedef struct cardona_partition
+{
+	int nion;       //Internal cross refernce to the ion in the ion strcutrure that this refers to
+	double part_eps;	//Mean energy term
+	int part_G;		//Mean multiplicity term
+	int part_m; 	//Structure factor
+}  Cpart, *Cpartptr;
+
+Cpart cpart[NIONS]; 
+
+#define T_RR_PARAMS 6  //This is the number of parameters. 
+#define RRTYPE_BADNELL	    0
+#define RRTYPE_SHULL	    1
+int n_total_rr;
+typedef struct total_rr
+ {
+	int nion; 	//Internal cross reference to the ion that this refers to
+	double params[T_RR_PARAMS];   /*There are up to six parameters. If the last two are zero, we stillthe 					data in the same way, but they have no effect - NB - 
+				important to zero these!*/
+				/* NSH 23/7/2012 - This array will double up for Shull parameters */
+	int type;	/* NSH 23/7/2012 - What type of parampeters we have for this ion */
+}   Total_rr, *total_rrptr;
+
+Total_rr total_rr[NIONS]; //Set up the structure
+
+#define BAD_GS_RR_PARAMS 19  //This is the number of points in the fit. 
+int n_bad_gs_rr;
+typedef struct badnell_gs_rr
+ {
+	int nion; 	//Internal cross reference to the ion that this refers to
+	double temps[BAD_GS_RR_PARAMS];   //temperatures at which the rate is tabulated
+	double rates[BAD_GS_RR_PARAMS];   //rates corresponding to those temperatures
+}   Bad_gs_rr, *Bad_gs_rrptr;
+
+Bad_gs_rr bad_gs_rr[NIONS]; //Set up the structure
+	
+#define MAX_GAUNT_N_GSQRD 100 //Space set aside for the number of parameters for scaled inverse temperature
+
+int gaunt_n_gsqrd;  //The actual number of scaled temperatures
+
+typedef struct gaunt_total
+  {
+	float log_gsqrd; //The scaled electron temperature squared for this array
+	float gff;	
+	float s1,s2,s3;
+  }     Gaunt_total, *Gaunt_totalptr;
+
+Gaunt_total gaunt_total[MAX_GAUNT_N_GSQRD]; //Set up the structure
+

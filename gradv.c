@@ -116,7 +116,7 @@ the routine is used I believe . ksl
 
   if (sane_check (dvds))
     {
-      Error ("vgrad: %f\n", dvds);
+      Error ("vgrad:sane_check %f\n", dvds);
     }
   return (dvds);
 
@@ -205,7 +205,6 @@ dvds_ave ()
       for (n = 0; n < N_DVDS_AVE; n++)
 	{
 	  randvec (delta, ds);
-//OLD68c	  if (pp.x[2] + delta[2] < 0)
 	  if (p.x[2] + delta[2] < 0)
 	    {			// Then the new position would punch through the disk
 	      delta[0] = (-delta[0]);	// So we reverse the direction of the vector

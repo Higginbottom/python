@@ -252,15 +252,18 @@ xthierry_velocity (x, v)
     {
 //spline(&xstar.depth,&xstar.v_offset,xstar.nd,1.e30,1.e30,&xstar.v_spline2);
 
-      sane_check (speed);
+      if (sane_check (speed))
+	Error ("xthierry_velocity:sane_check failure for speed(1)=%f\n",speed);
 //splint(&xstar.depth,&xstar.v_offset,&xstar.v_spline2,xstar.nd,xstar.r[0]-r,&speed);
       splint (&xstar.depth[0], &xstar.v_offset[0], &xstar.v_spline2[0],
 	      xstar.nd, xstar.r[0] - r, &speed);
-      sane_check (speed);
+      if (sane_check (speed))
+	Error ("xthierry_velocity:sane_check failure for speed(2)=%f\n",speed);
     }
 
 
-  sane_check (r);
+  if (sane_check (r))
+	Error ("xthierry_velocity:sane_check failure for r=%e\n",r);
 
   v[0] = speed * x[0] / r;
   v[1] = speed * x[1] / r;
@@ -270,7 +273,7 @@ xthierry_velocity (x, v)
   if (sane_check (speed) || sane_check (v[0]) || sane_check (v[1])
       || sane_check (v[2]))
     {
-      Error ("thierry_velocity: x %f %f %f speed %f r %f\n", x[0], x[1],
+      Error ("xthierry_velocity:sane_check x %f %f %f speed %f r %f\n", x[0], x[1],
 	     x[2], speed, r);
     }
   return (speed);
@@ -291,6 +294,7 @@ thierry_velocity (x, v)
   z = x[0] * x[0] + x[1] * x[1] + x[2] * x[2];
   if (sane_check (z))
     {
+     Error ("thierry_velocity:sane_check failed for z=%f\n",z);
       printf ("%f\n", z);
       z = x[0] * x[0] + x[1] * x[1] + x[2] * x[2];
       printf ("%f\n", z);
@@ -299,6 +303,7 @@ thierry_velocity (x, v)
 
   if (sane_check (r))
     {
+     Error ("thierry_velocity:sane_check failed for r(1)=%f\n",r);
       printf ("%f\n", r);
       r = length (x);
       printf ("%f\n", r);
@@ -334,12 +339,14 @@ or n=xstar.nd); */
 	      frac = (r - xstar.r[n]) / (xstar.r[n - 1] - xstar.r[n]);
 	      speed = (1. - frac) * xstar.v[n] + (frac) * xstar.v[n - 1];
 
-	      sane_check (r);
+	      if (sane_check (r))
+     Error ("thierry_velocity:sane_check failed for r(2)=%f\n",r);
 	    }
 	}
 
 
-      sane_check (r);
+	      if (sane_check (r))
+     Error ("thierry_velocity:sane_check failed for r(3)=%f\n",r);
 
       v[0] = speed * x[0] / r;
       v[1] = speed * x[1] / r;
@@ -350,7 +357,7 @@ or n=xstar.nd); */
   if (sane_check (speed) || sane_check (v[0]) || sane_check (v[1])
       || sane_check (v[2]))
     {
-      Error ("thierry_velocity: x %f %f %f speed %f n %d r %f\n", x[0], x[1],
+      Error ("thierry_velocity:sane_check x %f %f %f speed %f n %d r %f\n", x[0], x[1],
 	     x[2], speed, n, r);
     }
   return (speed);
@@ -386,7 +393,7 @@ thierry_vel_grad (x, velgrad)
 
   if (sane_check (v0[0]) || sane_check (v0[1]) || sane_check (v0[2]))
     {
-      Error ("thiery_vel_grad: x %f %f %f v0 %f %f %f\n", x[0], x[1], x[2],
+      Error ("thiery_vel_grad:sane_check x %f %f %f v0 %f %f %f\n", x[0], x[1], x[2],
 	     v0[0], v0[1], v0[2]);
     }
 
@@ -398,7 +405,7 @@ thierry_vel_grad (x, velgrad)
       thierry_velocity (dx, v1);
       if (sane_check (v1[0]) || sane_check (v1[1]) || sane_check (v1[2]))
 	{
-	  Error ("sv_vel: dx %f %f %f v0 %f %f %f\n", dx[0], dx[1], dx[2],
+	  Error ("sv_vel:sane_check dx %f %f %f v0 %f %f %f\n", dx[0], dx[1], dx[2],
 		 v1[0], v1[1], v1[2]);
 	}
 

@@ -132,9 +132,13 @@ extract (w, p, itype)
 	  stuff_phot (p, &pp);
 	  stuff_v (s[n].lmn, pp.lmn);	/* Stuff new photon direction into pp */
 
-/* Python 41 -- modified to frequency shift the disk photons as well as the wind 
-photons.    Note also that splitting the modifications of pp between this and extract 
-one is odd. We do frequency here but weighting in extract!! */
+/* 
+
+Need to frequency shift the disk photons as well as the wind 
+photons.    
+
+Note that split of functionality between this and extract 
+one is odd. We do frequency here but weighting is carried out in  extract */
 
 	  if (itype == PTYPE_DISK)
 	    {
@@ -147,9 +151,8 @@ one is odd. We do frequency here but weighting in extract!! */
 				   the frequency also must be shifted */
 	      vwind_xyz (&pp, v);	/*  Get the velocity at the position of pp */
 	      doppler (p, &pp, v, pp.nres);	/*  Doppler shift the photon -- test! */
-/*  Doppler shift the photon 
-					   (as nonresonant scatter) 
-					   to new direction */
+
+/*  Doppler shift the photon (as nonresonant scatter) to new direction */
 
 	    }
 
@@ -322,12 +325,12 @@ the same resonance again */
 
   if (tau > TAU_MAX)
     istat = P_ABSORB;		/* Check to see if tau already too large */
-  else if (geo.binary_system)
+  else if (geo.system_type==1)  /* Changed 69 to allow for additional system types */
     istat = hit_secondary (pp);	/* Check to see if it hit secondary */
 
  
 /* 68b - 0902 - ksl If we are trying to track the history of this photon, we need to initialize the
- * phot_hist.  We had to do this here, because we have just rewighed the photon
+ * phot_hist.  We had to do this here, because we have just reweighted the photon
  */
 
 	  if (phot_hist_on){
@@ -406,17 +409,6 @@ the same resonance again */
 		  phot_hist_on=0;
 	  }
 
-	  //68c  Commented out these steps as no longer likely to ever be used again
-//OLD68c	  if (diag_on_off && 1530.0 < 2.997925e18 / pp->freq
-//OLD68c	      && 2.997925e18 / pp->freq < 1570.0)
-//OLD68c	    {
-//OLD68c	      fprintf (epltptr,
-//OLD68c		       "f%2d %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %6.3f %6.3f %6.3f %7.2f %7.2f %10.3e\n",
-//OLD68c		       nspec, pstart.x[0], pstart.x[1], pstart.x[2],
-//OLD68c		       pp->x[0], pp->x[1], pp->x[2], pp->lmn[0],
-//OLD68c		       pp->lmn[1], pp->lmn[2], 2.997925e18 / pp->freq,
-//OLD68c		       tau, pp->w);
-//OLD68c	    }
 
 	}
 

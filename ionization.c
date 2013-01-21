@@ -38,6 +38,13 @@ History:
 			the cleanup of the ionizaton balance routines
 			Also removed option 5, as this was not supported
 			later in the program
+	11nov	ksl	71 - Moved the so-called Sim power law approximation
+			to its own routine to restore this routine to its intent 
+			to be a steering routine and not something with a lot
+			of code particular to one calculation
+        12feb   nsh	71c - added options for mode 6 and 7, the two new ioinzation
+			codes that compute saha abundances for pairs of ions, based on a
+			good temperature for that pair, then corrects. 
 **************************************************************/
 
 #include <stdio.h>
@@ -47,6 +54,9 @@ History:
 #include "atomic.h"
 #include "python.h"
 
+
+
+
 int
 ion_abundances (xplasma, mode)
      PlasmaPtr xplasma;
@@ -54,11 +64,12 @@ ion_abundances (xplasma, mode)
 {
   int ireturn;
 
+//      printf("NSH here we are in ion_abundances, I think we are running at mode %i\n",mode);
 
   if (mode == 0)
     {
-/*on-the-spot approximation using existing t_e.   This routine does not attempt 
- * to match heating and cooling in the wind element! */
+/* on-the-spot approximation using existing t_e.   This routine does not attempt 
+to match heating and cooling in the wind element! */
 
       if ((ireturn = nebular_concentrations (xplasma, 2)))
 	{
@@ -71,7 +82,7 @@ ion_abundances (xplasma, mode)
     }
   else if (mode == 1)
     {
-      // LTE using t_r  (ksl - checked - 080808
+/* LTE using t_r  (ksl - checked - 080808 */
 
       ireturn = nebular_concentrations (xplasma, 1);
     }
@@ -82,8 +93,7 @@ ion_abundances (xplasma, mode)
     }
   else if (mode == 3)
     {
-/* On the spot, with one_shot at updating t_e before calculating densities
-*/
+/* On the spot, with one_shot at updating t_e before calculating densities */
 
 /* Shift values to old */
       xplasma->dt_e_old = xplasma->dt_e;
@@ -97,6 +107,71 @@ ion_abundances (xplasma, mode)
 /* Convergence check */
       convergence (xplasma);
     }
+  else if (mode == 4)
+    {				//LTE with SIM correction this is called from define_wind, sim_alpha and sim_w are set to geo values in define_wind. Not sure this is ever called now, we thought it best to set the values to LTE when in define_wind.
+      ireturn = nebular_concentrations (xplasma, 5);
+    }
+  else if (mode == 5)
+    {				// One shot at updating t_e before calculating densities using Stuart's power law correction
+  ireturn=spectral_estimators(xplasma); //Slight recoding - now this just computes the estimators - this was the code clogging up this mode. Now it looks like the others.
+
+  xplasma->dt_e_old = xplasma->dt_e;
+  xplasma->dt_e = xplasma->t_e - xplasma->t_e_old;	//Must store this before others
+  xplasma->t_e_old = xplasma->t_e;
+  xplasma->t_r_old = xplasma->t_r;
+  xplasma->lum_rad_old = xplasma->lum_rad;
+
+
+ /* Log ("NSH in this cell, we have %e AGN photons and %e disk photons\n",
+       xplasma->ntot_agn, xplasma->ntot_disk); Removed, no longer gives reasonable answers due to banding */
+
+  ireturn = one_shot (xplasma, mode);
+
+
+/* Convergence check */
+  convergence (xplasma);
+
+
+
+    }
+  else if (mode == 6)
+   {
+      /* Feb 2012 new for mode 6. New abundances have been computed using pairwise Saha equation
+	approach. We can now attempt to balance heating and cooling with the new abundance in the
+	same way as mode 3. */
+
+/* Shift values to old */
+      xplasma->dt_e_old = xplasma->dt_e;
+      xplasma->dt_e = xplasma->t_e - xplasma->t_e_old;	//Must store this before others
+      xplasma->t_e_old = xplasma->t_e;
+      xplasma->t_r_old = xplasma->t_r;
+      xplasma->lum_rad_old = xplasma->lum_rad;
+
+      ireturn = one_shot (xplasma, mode);
+
+/* Convergence check */
+      convergence (xplasma);
+   }
+  else if (mode == 7)
+   {
+/* Feb 2012 NSH - new for mode 7. KSL has moved a lot of the mechanics that used to be here into
+ power_abundances. This, once called, calculates the weight and alpha for each band in this cell. There is a lot of code that was clogging up this routine. Once this is done, one_shot gets called from within that routine. */
+      ireturn = spectral_estimators(xplasma);  /*Aug 2012 NSH - slight change to help integrate this into balance, power_estimators does the work of getting banded W and alpha. Then oneshot gets called. */
+	  xplasma->dt_e_old = xplasma->dt_e;
+  xplasma->dt_e = xplasma->t_e - xplasma->t_e_old;	//Must store this before others
+  xplasma->t_e_old = xplasma->t_e;
+  xplasma->t_r_old = xplasma->t_r;
+  xplasma->lum_rad_old = xplasma->lum_rad;
+
+
+  ireturn = one_shot (xplasma, mode);
+
+
+/* Convergence check */
+  convergence (xplasma);
+   }
+
+
   else
     {
       Error
@@ -105,17 +180,17 @@ ion_abundances (xplasma, mode)
       exit (0);
     }
 
-   /* If we want the Auger effect deal with it now. Initially, this is
-      put in here, right at the end of the ionization calculation -
-      the assumption is that the Auger effect is only for making minor
-      ions so that the ionization balance of the other ions is not
-      affected in an important way. */
- 
-   if (geo.auger_ionization == 1)
-     {
-       auger_ionization(xplasma);
-     }
- 
+  /* If we want the Auger effect deal with it now. Initially, this is
+     put in here, right at the end of the ionization calculation -
+     the assumption is that the Auger effect is only for making minor
+     ions so that the ionization balance of the other ions is not
+     affected in an important way. */
+
+  if (geo.auger_ionization == 1)
+    {
+      auger_ionization (xplasma);
+    }
+
 
   return (ireturn);
 
@@ -125,7 +200,7 @@ ion_abundances (xplasma, mode)
 /***********************************************************
               Space Telescope Science Institute
 
- Synopsis: convergence checks to see whehter a single cell
+ Synopsis: convergence checks to see whether a single cell
 	is or is not converging
 	
  Arguments:		
@@ -134,6 +209,21 @@ ion_abundances (xplasma, mode)
 Returns:
  
 Description:	
+
+	The routine attempts to determine whether a cell is
+	on the track to a final solution by checking whether 
+	the electron and radiation temperatures are getting 
+	smaller with cycle and whetehr the difference between
+	heating and cooling is drroping.
+
+	The routine returns a number between 0 and 3, 
+	depending on the number of convergence checks that
+	are passed.  If all convergence tests are pssed
+	then the number returned will be 0
+
+	The routine also adjust the gain which controls how
+	far the electron temperture can change in a cycle.
+
 	
 Notes:
 
@@ -143,6 +233,8 @@ History:
 			is likelely that this entire routine
 			will ultimatetely be replaced because
 			everything here should only be in the wind
+        11sep  nsh     70f: Added lines to track which of the convergence criteria
+			in each cell was being met
 **************************************************************/
 int
 convergence (xplasma)
@@ -152,23 +244,44 @@ convergence (xplasma)
   double epsilon;
 
   trcheck = techeck = hccheck = converging = 0;
+  xplasma->trcheck = xplasma->techeck = xplasma->hccheck = 0;	//NSH 70g - zero the global variables
   epsilon = 0.05;
+
+  /* Check the fractional change in tempperatature and if is less than 
+   * epsiolong increment trcheck and techeck 
+   */
 
   if ((xplasma->converge_t_r =
        fabs (xplasma->t_r_old - xplasma->t_r) / (xplasma->t_r_old +
 						 xplasma->t_r)) > epsilon)
-    trcheck = 1;
+    xplasma->trcheck = trcheck = 1;
   if ((xplasma->converge_t_e =
        fabs (xplasma->t_e_old - xplasma->t_e) / (xplasma->t_e_old +
 						 xplasma->t_e)) > epsilon)
-    techeck = 1;
+    xplasma->techeck = techeck = 1;
+
+//110919 nsh modified line below to include the adiabatic cooling in the check that heating equals cooling
+//111004 nsh further modification to include DR and compton cooling, now moved out of lum_rad
+
+  /* Check whether the heating and colling balance to within epsilon and if so set hccheck to 1 */
+
   if ((xplasma->converge_hc =
-       fabs (xplasma->heat_tot - xplasma->lum_rad) / (xplasma->heat_tot +
-						      xplasma->lum_rad)) >
-      epsilon)
-    hccheck = 1;
+       fabs (xplasma->heat_tot -
+	     (xplasma->lum_rad + xplasma->lum_adiabatic + xplasma->lum_dr +
+	      xplasma->lum_comp)) / (xplasma->heat_tot + xplasma->lum_comp +
+				     xplasma->lum_dr + xplasma->lum_rad +
+				     xplasma->lum_adiabatic)) > epsilon)
+    xplasma->hccheck = hccheck = 1;
+
+  /* whole_check is the sum of the temperature checks and the heating check */
 
   xplasma->converge_whole = whole_check = trcheck + techeck + hccheck;
+
+  /* Converging is a situation where the change in electron
+   * temperature is dropping with time and the cell is oscillating
+   * around a temperature.  If that is the case, we drop the 
+   * amount by which the temperature can change in this cycle
+   */
 
   if (xplasma->dt_e_old * xplasma->dt_e < 0
       && fabs (xplasma->dt_e) > fabs (xplasma->dt_e_old))
@@ -217,21 +330,30 @@ History:
 			Whether something is in the wind or not is
 			now totally determeined by the volume.
         06may	ksl	57+ -- Now using plasma structure
+        11sep   nsh     70e added in lines to write out the split of temperature and luminosity convergence
 **************************************************************/
 int
 check_convergence ()
 {
   int n;
   int nconverge, nconverging, ntot;
+  int nte, ntr, nhc;		//NSH 70g - three new counters for the different convergence criteria
   double xconverge, xconverging;
 
   nconverge = nconverging = ntot = 0;
+  ntr = nte = nhc = 0;		//NSH 70i zero the counters
 
   for (n = 0; n < NPLASMA; n++)
     {
       ntot++;
       if (plasmamain[n].converge_whole == 0)
 	nconverge++;
+      if (plasmamain[n].trcheck == 0)	//NSH 70g - count up the three individual convergence criteria
+	ntr++;
+      if (plasmamain[n].techeck == 0)
+	nte++;
+      if (plasmamain[n].hccheck == 0)
+	nhc++;
       if (plasmamain[n].converging == 0)
 	nconverging++;
 
@@ -242,6 +364,7 @@ check_convergence ()
   Log
     ("!!Check_converging: %4d (%.3f) converged and %4d (%.3f) converging of %d cells\n",
      nconverge, xconverge, nconverging, xconverging, ntot);
+  Log ("!!Check_convergence_breakdown: t_r %4d t_e %4d hc %4d\n", ntr, nte, nhc);	//NSH 70g split of what is converging
   Log
     ("Summary  convergence %4d %.3f  %4d  %.3f  %d  #  n_converged fraction_converged  converging fraction_converging total cells\n",
      nconverge, xconverge, nconverging, xconverging, ntot);
@@ -289,13 +412,16 @@ one_shot (xplasma, mode)
   double gain;
 
 
-
+printf ("NSH here we are in oneshot - running at mode %i\n",mode);
 
   gain = xplasma->gain;
 
+
   te_old = xplasma->t_e;
   te_new = calc_te (xplasma, 0.7 * te_old, 1.3 * te_old);
+
   xplasma->t_e = (1 - gain) * te_old + gain * te_new;
+
 
   dte = xplasma->dt_e;
 
@@ -310,7 +436,7 @@ meaning in nebular concentrations.
 
   if (mode == 3)
     mode = 2;
-  else if (mode != 4)
+  else if (mode <= 1 || mode >= 8)	/* modification to cope with mode 5 - SIM + two new modes in Feb 2012*/
     {
 
       Error ("one_shot: Sorry, Charlie, don't know how to process mode %d\n",
@@ -389,13 +515,38 @@ calc_te (xplasma, tmin, tmax)
   double heat_tot;
   double z1, z2;
   int macro_pops ();
+  int n;
+  double temptmin,temptmax,temp,dt,zemtemp;
+  /* 110916 - ksl - Note that we assign a plasma pointer here to a fixed structure because
+   * we need to call zbrent and we cannot pass the xplasma ptr directly
+   */
+
   xxxplasma = xplasma;
+
+   temptmin=1e4;
+   temptmax=1e6;
+   dt=1e3;
+   for (n=0;n<190;n++)
+	{
+	temp=temptmin+(n*dt);
+	zemtemp=zero_emit(temp);
+	}
+
+
+
+
+
   heat_tot = xplasma->heat_tot;
 
   xplasma->t_e = tmin;
   z1 = zero_emit (tmin);
   xplasma->t_e = tmax;
   z2 = zero_emit (tmax);
+
+  /* The way this works is that if we have a situation where the cooling
+   * at tmax and tmin brackets the heating, then we use zbrent to improve
+   * the estimated temperature, but if not we chose the best direction
+   */
 
   if ((z1 * z2 < 0.0))
     {				// Then the interval is bracketed 
@@ -406,10 +557,15 @@ calc_te (xplasma, tmin, tmax)
       xplasma->t_e = tmin;
     }
   else
+   {
     xplasma->t_e = tmax;
-
+}
   /* With the new temperature in place for the cell, get the correct value of heat_tot.
      SS June  04 */
+
+  /* ksl - I basically don't undestand what is going on here.  If we start using
+   * macro atoms a lot we need to understand them better ??? - 
+   * Look at zero emit as well 091611 */
 
   xplasma->heat_tot -= xplasma->heat_lines_macro;
   xplasma->heat_lines -= xplasma->heat_lines_macro;
@@ -424,10 +580,10 @@ calc_te (xplasma, tmin, tmax)
   xplasma->heat_photo += xplasma->heat_photo_macro;
 
 
-
   return (xplasma->t_e);
 
 }
+
 
 
 /* This is just a function which has a zero when total energy loss is equal to total energy gain */
@@ -480,9 +636,30 @@ zero_emit (t)
   xxxplasma->heat_photo += xxxplasma->heat_photo_macro;
 
   //  difference = (xxxplasma->heat_tot - total_emission (xxxplasma, 0., VERY_BIG));
-  difference =
-    xxxplasma->heat_tot - xxxplasma->lum_adiabatic -
-    total_emission (&wmain[xxxplasma->nwind], 0., VERY_BIG);
+
+
+  /* 70d - ksl - Added next line so that adiabatic cooling reflects the temperature we
+   * are testing.  Adiabatic cooling is proportional to temperature
+   */
+
+
+  xxxplasma->lum_adiabatic = adiabatic_cooling (&wmain[xxxplasma->nwind], t);
+
+
+  /* difference =
+     xxxplasma->heat_tot - xxxplasma->lum_adiabatic -
+     total_emission (&wmain[xxxplasma->nwind], 0., VERY_BIG); */
+
+
+  /* 70g - nsh adding this line in next to calculate dielectronic recombination cooling without generating photons */
+  compute_dr_coeffs (t);
+  xxxplasma->lum_dr = total_dr (&wmain[xxxplasma->nwind], t);
+
+/* 70g compton cooling calculated here to avoid generating photons */
+  xxxplasma->lum_comp = total_comp (&wmain[xxxplasma->nwind], t);
+
+  difference = xxxplasma->heat_tot - xxxplasma->lum_adiabatic - xxxplasma->lum_dr - xxxplasma->lum_comp - total_emission (&wmain[xxxplasma->nwind], 0., VERY_BIG);	//NSH 1110 - total emission no longer computes compton.
+
 
   return (difference);
 }

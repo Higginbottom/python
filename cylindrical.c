@@ -278,6 +278,9 @@ cylind_wind_complete (w)
 			evidenced by the fact that only some of the
 			corners of the cell are in the wind.  The intent
 			is to avoid wasting time
+	11aug	ksl	Add ability to determine the volume for different
+			components.  See python.h for explanation of
+			relatinship between PART and ALL
  
 **************************************************************/
 
@@ -285,8 +288,9 @@ cylind_wind_complete (w)
 
 
 int
-cylind_volumes (w)
+cylind_volumes (w, icomp)
      WindPtr w;
+     int icomp;			// component number
 {
   int i, j, n;
   int jj, kk;
@@ -304,86 +308,78 @@ cylind_volumes (w)
       for (j = 0; j < MDIM; j++)
 	{
 	  wind_ij_to_n (i, j, &n);
-	  n_inwind = check_corners_inwind (n);
 
-	  if (n == 835)
+	  /* 70b - only try to assign the cell if it has not already been assigned */
+	  if (w[n].inwind == W_NOT_INWIND)
 	    {
-	      Log ("cyl: n  %d n_inwind %d\n", n, n_inwind);
-	    }
+	      n_inwind = check_corners_inwind (n, icomp);
 
-	  rmin = wind_x[i];
-	  rmax = wind_x[i + 1];
-	  zmin = wind_z[j];
-	  zmax = wind_z[j + 1];
 
-	  //leading factor of 2 added to allow for volume above and below plane (SSMay04)
-	  w[n].vol = 2 * PI * (rmax * rmax - rmin * rmin) * (zmax - zmin);
+	      rmin = wind_x[i];
+	      rmax = wind_x[i + 1];
+	      zmin = wind_z[j];
+	      zmax = wind_z[j + 1];
 
-n_inwind=cylind_is_cell_in_wind (n);
+	      //leading factor of 2 added to allow for volume above and below plane (SSMay04)
+	      w[n].vol = 2 * PI * (rmax * rmax - rmin * rmin) * (zmax - zmin);
 
-	  if (n_inwind == W_NOT_INWIND)
-	    {
-	      fraction = 0.0;	/* Force outside edge volues to zero */
-	      jj = 0;
-	      kk = RESOLUTION * RESOLUTION;
-	    }
-	  else if (n_inwind == W_ALL_INWIND)
-	    {
-	      fraction = 1.0;	/* Force outside edge volues to zero */
-	      jj = kk = RESOLUTION * RESOLUTION;
-	    }
-//Old68c          if (i == NDIM - 1 || j == MDIM - 1)
-//Old68c            {
-//Old68c              fraction = 0.0;   /* Force outside edge volues to zero */
-//Old68c              jj = 0;
-//Old68c              kk = RESOLUTION * RESOLUTION;
-//Old68c            }
-//Old68c          else if (i == NDIM - 2 || j == MDIM - 2)
-//Old68c            {
-//Old68c              fraction = 0.0;   /* Force outside edge volues to zero */
-//Old68c              jj = 0;
-//Old68c              kk = RESOLUTION * RESOLUTION;
-//Old68c            }
-	  else
-	    {			/* Determine whether the grid cell is in the wind */
-	      num = denom = 0;
-	      jj = kk = 0;
-	      dr = (rmax - rmin) / RESOLUTION;
-	      dz = (zmax - zmin) / RESOLUTION;
-	      for (r = rmin + dr / 2; r < rmax; r += dr)
+	      n_inwind = cylind_is_cell_in_wind (n, icomp);
+
+	      if (n_inwind == W_NOT_INWIND)
 		{
-		  for (z = zmin + dz / 2; z < zmax; z += dz)
+		  fraction = 0.0;	/* Force outside edge volues to zero */
+		  jj = 0;
+		  kk = RESOLUTION * RESOLUTION;
+		}
+	      else if (n_inwind == W_ALL_INWIND)
+		{
+		  fraction = 1.0;	/* Force outside edge volues to zero */
+		  jj = kk = RESOLUTION * RESOLUTION;
+		}
+	      else
+		{		/* Determine whether the grid cell is in the wind */
+		  num = denom = 0;
+		  jj = kk = 0;
+		  dr = (rmax - rmin) / RESOLUTION;
+		  dz = (zmax - zmin) / RESOLUTION;
+		  for (r = rmin + dr / 2; r < rmax; r += dr)
 		    {
-		      denom += r * r;
-		      kk++;
-		      x[0] = r;
-		      x[1] = 0;
-		      x[2] = z;
-		      if (where_in_wind (x) == 0)
+		      for (z = zmin + dz / 2; z < zmax; z += dz)
 			{
-			  num += r * r;	/* 0 implies in wind */
-			  jj++;
+			  denom += r * r;
+			  kk++;
+			  x[0] = r;
+			  x[1] = 0;
+			  x[2] = z;
+			  if (where_in_wind (x) == icomp)
+			    {
+			      num += r * r;	/* 0 implies in wind */
+			      jj++;
+			    }
 			}
 		    }
+		  fraction = num / denom;
+
+
 		}
-	      fraction = num / denom;
 
-
-	    }
-	  /* OK now make the final assignement of nwind and fix the volumes */
-	  if (jj == 0)
-	    {
-	      w[n].inwind = W_NOT_INWIND;	// The cell is not in the wind
-	      w[n].vol = 0.0;
-	    }
-	  else if (jj == kk)
-	    {
-	      w[n].inwind = W_ALL_INWIND;	// All of cell is inwind
-	    }
-	  else
-	    {
-	      w[n].inwind = W_PART_INWIND;	// Some of cell is inwind
-	      w[n].vol *= fraction;
+	      /* OK now make the final assignement of nwind and fix the volumes */
+	      if (jj == 0)
+		{
+		  w[n].inwind = W_NOT_INWIND;	// The cell is not in the wind
+		  w[n].vol = 0.0;
+		}
+	      else if (jj == kk)
+		{
+		  //OLD 70b w[n].inwind = W_ALL_INWIND;     // All of cell is inwind
+		  w[n].inwind = icomp;	// All of cell is inwind
+		}
+	      else
+		{
+		  //OLD 70b w[n].inwind = W_PART_INWIND;    // Some of cell is inwind
+		  w[n].inwind = icomp + 1;	// Some of cell is inwind
+		  w[n].vol *= fraction;
+		}
 	    }
 	}
     }
@@ -469,6 +465,8 @@ cylind_where_in_grid (x)
 
  Arguments:		
  	int n -- Cell in which random poition is to be generated
+	int icomp - The component, e. g. the wind in which the
+		location is to be generated.
  Returns:
  	double x -- the position
  Description:	
@@ -485,9 +483,10 @@ cylind_where_in_grid (x)
 **************************************************************/
 
 int
-cylind_get_random_location (n, x)
+cylind_get_random_location (n, icomp, x)
      int n;			// Cell in which to create postion
      double x[];		// Returned position
+     int icomp;
 {
   int i, j;
   int inwind;
@@ -502,7 +501,7 @@ cylind_get_random_location (n, x)
 
   /* Generate a position which is both in the cell and in the wind */
   inwind = -1;
-  while (inwind)
+  while (inwind != icomp)
     {
       r =
 	sqrt (rmin * rmin +
@@ -615,24 +614,31 @@ cylind_extend_density (w)
 
 cylind_is_cell_in_wind (n)
 
-This rotine performes is a robust check of whether a cell is in the wind or not.  
+This routine performs is a robust check of whether a cell is in the wind or not.  
 It was created to speed up the evaluation of the volumes for the wind.  It
 checks each of the four boundaries of the wind to see whether any portions
 of these are in the wind
 
+Note that it simply calls where_in_wind multiple times.
+
+History:
+  11Aug	ksl	70b - Modified to incoporate torus
+  		See python.h for more complete explanation
+		of how PART and ALL are related
 
 */
 
 int
-cylind_is_cell_in_wind (n)
-     int n;
+cylind_is_cell_in_wind (n, icomp)
+     int n;			// cell number
+     int icomp;			// component number
 {
   int i, j;
-  double r,z,dr,dz;
+  double r, z, dr, dz;
   double rmin, rmax, zmin, zmax;
   double x[3];
-    /* First check if the cell is in the boundary */
-    wind_n_to_ij (n, &i, &j);
+  /* First check if the cell is in the boundary */
+  wind_n_to_ij (n, &i, &j);
 
   if (i >= (NDIM - 2) && j >= (MDIM - 2))
     {
@@ -642,9 +648,10 @@ cylind_is_cell_in_wind (n)
 /* Assume that if all four corners are in the wind that the
 entire cell is in the wind */
 
-  if (check_corners_inwind (n) == 4)
+  if (check_corners_inwind (n, icomp) == 4)
     {
-      return (W_ALL_INWIND);
+      //OLD 70b return (W_ALL_INWIND);
+      return (icomp);
     }
 
 /* So at this point, we have dealt with the easy cases */
@@ -667,15 +674,17 @@ entire cell is in the wind */
       x[2] = z;
 
       x[0] = rmin;
-      if (where_in_wind (x) == 0)
+      if (where_in_wind (x) == icomp)
 	{
-	  return (W_PART_INWIND);
+	  //OLD 70b return (W_PART_INWIND);
+	  return (icomp + 1);
 	}
 
       x[0] = rmax;
-      if (where_in_wind (x) == 0)
+      if (where_in_wind (x) == icomp)
 	{
-	  return (W_PART_INWIND);
+	  //OLD 70b return (W_PART_INWIND);
+	  return (icomp + 1);
 	}
     }
 
@@ -688,20 +697,22 @@ entire cell is in the wind */
       x[0] = r;
 
       x[2] = zmin;
-      if (where_in_wind (x) == 0)
+      if (where_in_wind (x) == icomp)
 	{
-	  return (W_PART_INWIND);
+	  //OLD 70b return (W_PART_INWIND);
+	  return (icomp + 1);
 	}
 
       x[2] = zmax;
-      if (where_in_wind (x) == 0)
+      if (where_in_wind (x) == icomp)
 	{
-	  return (W_PART_INWIND);
+	  //OLD 70b return (W_PART_INWIND);
+	  return (icomp + 1);
 	}
     }
 
- /* If one has reached this point, then this wind cell is not in the wind */
-      return (W_NOT_INWIND);
+  /* If one has reached this point, then this wind cell is not in the wind */
+  return (W_NOT_INWIND);
 
 
 }

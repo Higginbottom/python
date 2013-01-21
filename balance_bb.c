@@ -59,7 +59,6 @@ xbb (p, t, weight, f1, f2, freq_sampling)
   int iphot_start;
   int nphottot;
   int xmake_bb ();
-
   if (freq_sampling == 0)	// Old uniform approach
     {
       /* The weights are normalized to the energy density of a BB spectrum * the speed
@@ -105,6 +104,7 @@ xbb (p, t, weight, f1, f2, freq_sampling)
 //02jul         emittance_bb (band[n].freq, band[n + 1].freq, t);
 	      ftot += xband.flux[n] =
 		emittance_bb (xband.f1[n], xband.f2[n], t);
+		printf ("BAND %i from %e to %e at temp %f has flux %e\n",n,xband.f1[n], xband.f2[n], t,xband.flux[n]);
 	    }
 	  else
 //02jul     uband[n].f = 0.0;
@@ -132,6 +132,7 @@ xbb (p, t, weight, f1, f2, freq_sampling)
 //02jul   nphottot += uband[n].nphot = NPHOT * uband[n].used_fraction;
 	  xband.used_fraction[n] =
 	    xband.min_fraction[n] + (1 - frac_used) * xband.nat_fraction[n];
+	
 	  nphottot += xband.nphot[n] = NPHOT * xband.used_fraction[n];
 
 //02jul   if (uband[n].used_fraction > z)
@@ -154,6 +155,8 @@ one photon for each band.*/
 
 //Calculate the weight for each photon assuming no banding 
       weight = 4. * STEFAN_BOLTZMANN * t * t * t * t * weight / NPHOT;
+
+
 
 
 // Now generate the photons
@@ -198,9 +201,9 @@ xmake_bb (p, t_r, freqmin, freqmax, weight, iphot_start, nphot)
   iphot_stop = iphot_start + nphot;
   for (n = iphot_start; n < iphot_stop; n++)
     {
+
       p[n].freq = planck (t_r, freqmin, freqmax);
       p[n].w = weight;
-
       p[n].x[0] = wind_midx[0];
       p[n].x[1] = wind_midx[0];
       p[n].x[2] = EPSILON;

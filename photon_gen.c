@@ -88,7 +88,7 @@ define_phot (p, f1, f2, nphot_tot, ioniz_or_final, iwind, freq_sampling)
   int iphot_start;
 
   if (freq_sampling == 0)
-    {				/* Original approach, uniform sampling of entire wavelenght interval, 
+    {				/* Original approach, uniform sampling of entire wavelength interval, 
 				   used for detailed spectrum calculaation */
       if (f1 != f1_old || f2 != f2_old || iwind != iwind_old)
 	{			// The reinitialization is required
@@ -105,11 +105,8 @@ define_phot (p, f1, f2, nphot_tot, ioniz_or_final, iwind, freq_sampling)
     {				/* Use banding, create photons with different weithst in different wavelength
 				   bands.  this is used for the for ionization calculation where one wants to assure
 				   that you have "enough" photons at high energy */
-//OLD      if (xband.nbands == 0)
-//OLD	{
-//OLD	  init_bands (0.0, f1, f2, 2, &xband);
-//OLD	}
-      ftot = populate_bands (f1, f2, ioniz_or_final, iwind, &xband);
+	printf ("Going to popultate_bands\n");     
+	 ftot = populate_bands (f1, f2, ioniz_or_final, iwind, &xband);
 
 // Now generate the photons
       iphot_start = 0;
@@ -118,21 +115,23 @@ define_phot (p, f1, f2, nphot_tot, ioniz_or_final, iwind, freq_sampling)
 
 	  if (xband.nphot[n] > 0)
 	    {
-
+		printf ("About to go to xdefine_phot for band %i\n",n);
 /*Reinitialization is required here always because we are changing the frequencies around all the time */
 	      xdefine_phot (xband.f1[n], xband.f2[n], ioniz_or_final,
 			    iwind);
-
+		printf ("Back from xdefine_phot \n");
 	      /* The weight of each photon is designed so that all of the photons add up to the
 	         luminosity of the photosphere.  This implies that photons must be generated in such
 	         a way that it mimics the energy distribution of the star. */
 
 	      geo.weight = (natural_weight) = (ftot) / (nphot_tot);
-
+		printf ("Back from xdefine_phot, weight=%e\n",geo.weight);
+		printf ("%e, %e\n",xband.nat_fraction[n],
+		xband.used_fraction[n]);
 	      xband.weight[n] = weight =
 		natural_weight * xband.nat_fraction[n] /
 		xband.used_fraction[n];
-
+		printf ("About to go to xmake_phot, weight=%e\n",weight);
 	      xmake_phot (p, xband.f1[n], xband.f2[n],
 			  ioniz_or_final, iwind, weight, iphot_start,
 			  xband.nphot[n]);
@@ -296,6 +295,11 @@ calculates the boundaries of the various disk annulae depending on f1 and f2 */
     {
       bl_init (geo.lum_bl, geo.t_bl, f1, f2, ioniz_or_final, &geo.f_bl);
     }
+  if (geo.agn_radiation)
+  {
+	printf ("Going to agn_init from xdefine_phot\n");
+      agn_init(geo.r_agn,geo.lum_agn,geo.alpha_agn, f1, f2, ioniz_or_final,&geo.f_agn);
+  }
 
 /* The choices associated with iwind are
 iwind = -1 	Don't generate any wind photons at all
@@ -322,19 +326,20 @@ iwind = -1 	Don't generate any wind photons at all
       //spectral band of interest.
     }
 
-  Log_silent
-    ("define_phot: lum_star %8.2e lum_disk %8.2e lum_bl %8.2e lum_wind %8.2e\n!!               f_star %8.2e   f_disk %8.2e   f_bl %8.2e   f_wind %8.2e   f_matom %8.2e   f_kpkt %8.2e \n",
-     geo.lum_star, geo.lum_disk, geo.lum_bl, geo.lum_wind, geo.f_star,
-     geo.f_disk, geo.f_bl, geo.f_wind, geo.f_matom, geo.f_kpkt);
+  Log
+    ("define_phot: lum_star %8.2e lum_disk %8.2e lum_bl %8.2e lum_agn %8.2e lum_wind %8.2e\n",geo.lum_star, geo.lum_disk, geo.lum_bl, geo.lum_agn,geo.lum_wind);
+
+  Log
+     ("!!               f_star %8.2e   f_disk %8.2e   f_bl %8.2e   f_agn %8.2e f_wind %8.2e   f_matom %8.2e   f_kpkt %8.2e \n",
+     geo.f_star, geo.f_disk, geo.f_bl, geo.f_agn, geo.f_wind, geo.f_matom, geo.f_kpkt);
 
   Log_silent ("define_phot: wind  ff %8.2e       fb %8.2e   lines %8.2e \n",
        geo.lum_ff, geo.lum_fb, geo.lum_lines);
 
   geo.f_tot =
     geo.f_star + geo.f_disk + geo.f_bl + geo.f_wind + geo.f_kpkt +
-    geo.f_matom;
+    geo.f_matom+ geo.f_agn;
 
-  /* SS - Jun04 kpkt and matom added to line above. */
 
 
 //Store the 3 things that have to remain the same to avoid reinitialization 
@@ -386,14 +391,14 @@ xmake_phot (p, f1, f2, ioniz_or_final, iwind, weight, iphot_start,
 {
 
   int nphot, nn;
-  int nstar, nbl, nwind, ndisk, nmatom, nkpkt;
+  int nstar, nbl, nwind, ndisk, nmatom, nagn, nkpkt;
 
 /* Determine the number of photons of each type 
 Error ?? -- This is a kluge.  It is intended to preserve what was done with versions earlier than
 python 40 but it is not really what one wants.
 */
   nstar = nbl = nwind = ndisk = 0;
-  nkpkt = nmatom = 0;
+  nagn=nkpkt = nmatom = 0;
 
   if (geo.star_radiation)
     {
@@ -411,7 +416,10 @@ python 40 but it is not really what one wants.
     {
       ndisk = geo.f_disk / geo.f_tot * nphotons;	/* Ensure that nphot photons are created */
     }
-  /* Next two blocks new (SS June 04) */
+  if (geo.agn_radiation)
+    {
+      nagn = geo.f_agn / geo.f_tot * nphotons;	/* Ensure that nphot photons are created */
+    }
   if (geo.matom_radiation)
     {
       nkpkt = geo.f_kpkt / geo.f_tot * nphotons;
@@ -419,20 +427,28 @@ python 40 but it is not really what one wants.
     }
 
 
-  /* Adding kpkt and matom to next line (SS June 04) */
-  nphot = ndisk + nwind + nbl + nstar + nkpkt + nmatom;
+  nphot = ndisk + nwind + nbl + nstar + nagn + nkpkt + nmatom;
 
+  /* Error - This appears to be an attempt to make sure we have the right number of photons
+   * but this looks as iff it could end up with the sum of the photons exceeding the number that
+   * are desired.  Why isn't this a problem.  Error - ksl 101029
+   */
   if (nphot < nphotons)
-    {				// We need to augment something ??  Error -- should be done better
+    {			
       if (ndisk > 0)
 	ndisk += (nphotons - nphot);
       else if (nwind > 0)
 	nwind += (nphotons - nphot);
       else if (nbl > 0)
 	nbl += (nphotons - nphot);
+      else if (nagn > 0)
+	nagn += (nphotons - nphot);
       else
 	nstar += (nphotons - nphot);
     }
+
+
+  Log("photon_gen: weight %6.2e nphotons %d ndisk %d nwind %d nstar %d nagn %d \n",weight,nphotons,ndisk,nwind,nstar,nagn);
 
   /* Generate photons from the star, the bl, the wind and then from the disk */
   /* Now adding generation from kpkts and macro atoms too (SS June 04) */
@@ -502,7 +518,24 @@ stellar photons */
       iphot_start += nphot;
     }
 
-  /* New bit for macro atoms and k-packets. SS June 04 */
+/* Generate the agn photons */
+
+  if (geo.agn_radiation)
+    {
+      nphot = nagn;
+      if (nphot > 0)
+	{
+	  if (ioniz_or_final == 1)
+	    photo_gen_agn (p,geo.r_agn,geo.alpha_agn,weight, f1, f2, geo.agn_spectype,
+			    iphot_start, nphot);
+	  else
+	    photo_gen_agn (p, geo.r_agn,geo.alpha_agn, weight, f1, f2, geo.agn_ion_spectype,
+			    iphot_start, nphot);
+	}
+      iphot_start += nphot;
+    }
+
+  /* Now do macro atoms and k-packets. SS June 04 */
 
   if (geo.matom_radiation)
     {
@@ -841,6 +874,7 @@ extra factor of two arises because the disk radiates from both of its sides.  */
 	}
       else
 	{
+//	printf ("CALLING EMITTANCE_BB from disk init 1 r=%e\n",r);
 	  emit = emittance_bb (freqmin, freqmax, t);
 	}
 
@@ -873,6 +907,7 @@ extra factor of two arises because the disk radiates from both of its sides.  */
 	}
       else
 	{
+//	printf ("CALLING EMITTANCE_BB from disk init 2 ring r=%e\n",r);
 	  emit = emittance_bb (freqmin, freqmax, t);
 	}
 
@@ -1026,7 +1061,7 @@ photo_gen_disk (p, weight, f1, f2, spectype, istart, nphot)
 
       if ((nring < 0) || (nring > NRINGS - 2))
 	{
-	  Error ("photon_gen: photon lauch out of bounds. nring = %d\n",
+	  Error ("photon_gen: photon launch out of bounds. nring = %d\n",
 		 nring);
 	  exit (0);
 	}
@@ -1118,7 +1153,13 @@ photo_gen_disk (p, weight, f1, f2, spectype, istart, nphot)
          to moving frame */
       vdisk (p[i].x, v);
       p[i].freq /= (1. - dot (v, p[i].lmn) / C);
-
+  /*    if (p[i].freq < freqmin || freqmax < p[i].freq)
+	{
+	  Error_silent
+	    ("photo_gen_disk (after dopler) : phot no. %d freq %g out of range %g %g\n",
+	     i, p[i].freq, freqmin, freqmax);
+	}
+*/
     }
   return (0);
 }

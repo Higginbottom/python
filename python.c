@@ -10,7 +10,7 @@
  
 Arguments:		
 
-	Usage:  py [-h] [-r] [-t tmax] xxx  or simply py
+	Usage:  py [-h] [-r] [-t time_max] xxx  or simply py
 
 	where xxx is the rootname or full name of a parameter file, e. g. test.pf
 
@@ -19,7 +19,7 @@ Arguments:
 	-h 	to ge this help message
 	-r 	restart a run of the progarm reading the file xxx.windsave
 
-	-t tmax	limit the total time to approximately tmax seconds.  Note that the program checks
+	-t time_max	limit the total time to approximately time_max seconds.  Note that the program checks
 		for this limit somewhat infrequently, usually at the ends of cycles, because it
 		is attempting to save the program outputs so that the program can be restarted with
 		-r if theat is desired.
@@ -162,7 +162,10 @@ History:
 			purpose is to define some arrays in the main routine.  Note that
 			MSPEC still has meaning as the number of spectra of various types
 			that are construced without going through types.
-	
+	1108	ksl/nsh Adding code to keep track of gross spectra in a cell though xbands,
+			xj and xave_freq.  Just set up the frequence limits here.	
+	1112	ksl	Moved everything associated with frequency bands into bands_init
+	1212	nsh	changed the way DFUDGE is defined.
  	
  	Look in Readme.c for more text concerning the early history of the program.
 
@@ -178,8 +181,7 @@ History:
 
 
 #include "python.h"
-#define NSPEC	20	//68c moved the defintion here, because NSPEC is not needed by any other routine
-
+#define NSPEC	20
 int
 main (argc, argv)
      int argc;
@@ -204,9 +206,8 @@ should allocate the space for the spectra to avoid all this nonsense.  02feb ksl
 
   char yesno[20];
   int select_extract, select_spectype;
-  double tmax;
   char root[LINELENGTH], input[LINELENGTH], wspecfile[LINELENGTH],
-    specfile[LINELENGTH], diskfile[LINELENGTH];
+    lspecfile[LINELENGTH], specfile[LINELENGTH], diskfile[LINELENGTH];
   char windradfile[LINELENGTH], windsavefile[LINELENGTH];
   char specsavefile[LINELENGTH];
   char photfile[LINELENGTH], diagfile[LINELENGTH],
@@ -214,7 +215,7 @@ should allocate the space for the spectra to avoid all this nonsense.  02feb ksl
   char dummy[LINELENGTH];
   char tprofile[LINELENGTH];
   double xbl;
-  double n_ioniz, lum_ioniz;
+
   int j, nn;
   double zz, zzz, zze, ztot;
   int icheck;
@@ -240,7 +241,7 @@ should allocate the space for the spectra to avoid all this nonsense.  02feb ksl
   verbosity = 4;		/* Set the default verbosity to 4.  To get more info raise the verbosity level to a higher number. To
 				   get less set the verbosity to a lower level. */
 
-Log_set_verbosity (verbosity);
+  Log_set_verbosity (verbosity);
 
   /* Parse the command line.  Updated for 67 to allow for switches  - 0811 - ksl  */
 
@@ -287,7 +288,7 @@ Log_set_verbosity (verbosity);
 		  Error ("python: Expected verbosity after -v switch\n");
 		  exit (0);
 		}
-	    Log_set_verbosity (verbosity);
+	      Log_set_verbosity (verbosity);
 	      i++;
 
 	    }
@@ -323,11 +324,12 @@ Log_set_verbosity (verbosity);
     }
   else
     {
-      /* We want to restart if a windsave file exists */
+      /* Note that alghough we chekc that we dan open the windsave file, it is not read here.   */
+
       strcpy (windsavefile, root);
       strcat (windsavefile, ".wind_save");
-
       qptr = fopen (windsavefile, "r");
+
       if (qptr != NULL)
 	{
 	  /* Then the file does exist and we can restart */
@@ -401,6 +403,8 @@ Log_set_verbosity (verbosity);
   strcpy (basename, root);	//56d -- ksl --Added so filenames could be created by routines as necessary
 
   strcpy (wspecfile, root);
+  strcpy (lspecfile, root);
+
   strcpy (specfile, root);
   strcpy (windradfile, "python");
   strcpy (windsavefile, root);
@@ -409,6 +413,7 @@ Log_set_verbosity (verbosity);
   strcpy (diskfile, root);
 
   strcat (wspecfile, ".spec_tot");
+  strcat (lspecfile, ".log_spec_tot");
   strcat (specfile, ".spec");
   strcat (windradfile, ".wind_rad");
   strcat (windsavefile, ".wind_save");
@@ -424,27 +429,53 @@ Log_set_verbosity (verbosity);
 
   init_geo ();
 
+/* Set the global variables that define the size of the grid as defined in geo.  These are used for convenience */
+
   NDIM = geo.ndim;
   MDIM = geo.mdim;
   NDIM2 = geo.ndim * geo.mdim;
 
+/* dfudge is a parameter that is used to make sure a photon bundle pushes through a cell boundary */
+/* NSH 121219 - now (74b2) defined later on after we know how big the wind will be 
+
   dfudge = 1e5;
-  DFUDGE = dfudge;
+  DFUDGE = dfudge; */
 
 /* End of definition of wind arrays */
 
 
 /* Initialize variables which are used in the main routine */
+
   wcycles = pcycles = 1;
   photons_per_cycle = 20000;
 
 /* Initialize basis vectors for a cartesian coordinate system */
+
   x_axis[0] = 1.0;
   x_axis[1] = x_axis[2] = 0.0;
   y_axis[1] = 1.0;
   y_axis[0] = y_axis[2] = 0.0;
   z_axis[2] = 1.0;
   z_axis[1] = z_axis[0] = 0.0;
+
+/* Set up frequency bands in which to record the frequency */
+
+/* Next lines have been moved to a new routine freqs_init which is in bands.c so that we can get control of the frequencies we want
+ * to use in calculating the power law model.  This is routine is called near bands_init  below, because that puts these two
+ * things together in one place
+ */
+ 
+//OLD71 /* At present set up a single energy band for 2 - 10 keV */
+//OLD71   nxfreq = 7;			//NSH 70g - bands set up to match the bands we are currently using in the.pf files. This should probably end up tied together in the long run!
+//OLD71   xfreq[0] = 1.0 / HEV;
+//OLD71   xfreq[1] = 13.6 / HEV;
+//OLD71   xfreq[2] = 54.42 / HEV;
+//OLD71   xfreq[3] = 392. / HEV;
+//OLD71   xfreq[4] = 739. / HEV;
+//OLD71   xfreq[5] = 2000 / HEV;
+//OLD71   xfreq[6] = 10000 / HEV;
+//OLD71   xfreq[7] = 50000 / HEV;
+
 
 
 /* BEGIN GATHERING INPUT DATA */
@@ -459,7 +490,7 @@ Log_set_verbosity (verbosity);
     {
 
       rdint
-	("Wind_type(0=SV,1=Sphere,2=Previous,3=Proga,4=Corona,5=knigge,6=thierry,7=yso)",
+	("Wind_type(0=SV,1=Sphere,2=Previous,3=Proga,4=Corona,5=knigge,6=thierry,7=yso,8=elvis,9=shell)",
 	 &geo.wind_type);
 
 
@@ -467,7 +498,8 @@ Log_set_verbosity (verbosity);
 	{
 	  /* This option is for the confusing case where we want to start with
 	   * a previous wind model, but we are going to write the result to a
-	   * new windfile */
+	   * new windfile. In other words it is not a restart where we would overwrite
+	   * the previous wind model.  */
 
 	  strcpy (old_windsavefile, "earlier.run");
 	  rdstr ("Old_windfile(root_only)", old_windsavefile);
@@ -476,10 +508,22 @@ Log_set_verbosity (verbosity);
 
 	  Log
 	    ("Starting a new run from scratch starting with previous windfile");
-	  wind_read (old_windsavefile);	//program will exit if unable to read the file
+	  if (wind_read (old_windsavefile)<0){
+		  Error ("python: Unable to open %s\n", old_windsavefile);	//program will exit if unable to read the file
+		  exit(0);
+	  }
 	  geo.wind_type = 2;	// after wind_read one will have a different wind_type otherwise
 	  w = wmain;
 
+
+	}
+
+      else
+	{			/* Read the atomic datafile here, because for the cases where we have read
+				   and old wind files, we also got the atomic data */
+
+	  rdstr ("Atomic_data", geo.atomic_filename);
+	  get_atomic_data (geo.atomic_filename);
 
 	}
 
@@ -492,7 +536,10 @@ Log_set_verbosity (verbosity);
       Log ("Continuing a previous run of %s \n", root);
       strcpy (old_windsavefile, root);
       strcat (old_windsavefile, ".wind_save");
-      wind_read (old_windsavefile);	//program will exit if unable to read the file
+      if(wind_read (old_windsavefile)<0){
+		  Error ("python: Unable to open %s\n", old_windsavefile);	//program will exit if unable to read the file
+		  exit(0);
+      }
       w = wmain;
       geo.wind_type = 2;	// We read the data from a file
       xsignal (root, "%-20s Read %s\n", "COMMENT", old_windsavefile);
@@ -505,14 +552,9 @@ Log_set_verbosity (verbosity);
     }
 
 
-/* Read the atomic data file name if this is not the continuation of an earlier run */
 
-  if (geo.wind_type != 2)
-    rdstr ("Atomic_data", geo.atomic_filename);
 
-  get_atomic_data (geo.atomic_filename);
-
-/* Get the remainder of the data */
+/* Get the remainder of the data.  Note that this is done whether or not the windsave file was read in */
 
   rdint ("photons_per_cycle", &photons_per_cycle);
   NPHOT = photons_per_cycle;	// For now set NPHOT to be be photons/cycle --> subcycles==1
@@ -570,18 +612,20 @@ Log_set_verbosity (verbosity);
 
 
 //080808 - 62 - Ionization section has been cleaned up -- ksl
+/* ??? ksl - Ionization mode 4 apparently does not exist.  This should be fixed */
 
   rdint
-    ("Wind_ionization(0=on.the.spot,1=LTE,2=fixed,3=recalc)",
+    ("Wind_ionization(0=on.the.spot,1=LTE,2=fixed,3=recalc_bb,5=recalc_pow,6=pairwise_bb,7=pairwise_pow)",
      &geo.ioniz_mode);
 
   if (geo.ioniz_mode == 2)
     {
       rdstr ("Fixed.concentrations.filename", &geo.fixed_con_file[0]);
     }
-  if (geo.ioniz_mode > 3)
+  if (geo.ioniz_mode == 4 || geo.ioniz_mode > 8) /*NSH CLOUDY test - remove once done*/
     {
-      Error ("python not up to date on ionization modes > 3\n");
+      Log ("The allowed ionization modes are 0, 1, 2, 3, 5\n");
+      Error ("Unknown ionization mode %d\n", geo.ioniz_mode);
       exit (0);
     }
 
@@ -596,7 +640,7 @@ on levels and their multiplicities is taken into account.   */
     ("Line_transfer(0=pure.abs,1=pure.scat,2=sing.scat,3=escape.prob,6=macro_atoms,7=macro_atoms+aniso.scattering)",
      &geo.line_mode);
 
-/* ?? Next section seems rather a kluge.  Why don't we specifty the underlying variables explicitly 
+/* ?? ksl Next section seems rather a kluge.  Why don't we specifty the underlying variables explicitly 
 It also seems likely that we have mixed usage of some things, e.g ge.rt_mode and geo.macro_simple */
 
   /* For now handle scattering as part of a hidden line transfermode ?? */
@@ -640,8 +684,7 @@ It also seems likely that we have mixed usage of some things, e.g ge.rt_mode and
     }
 
 
-/*57h -- Next line added for speed when no macro atoms to prevent bf calculation of
-macro_estimaters.  Is this OK, Stuart??   */
+/*57h -- Next line prevents bf calculation of macro_estimaters when no macro atoms are present.   */
 
   if (nlevels_macro == 0)
     geo.macro_simple = 1;	// Make everything simple if no macro atoms -- 57h
@@ -656,15 +699,35 @@ macro_estimaters.  Is this OK, Stuart??   */
       geo.macro_ioniz_mode = 0;
     }
 
-  // Determine what radiation sources there are
+  //  Establish the overall system type  - Added for python_69 to allow qso's have different inputs
+  //  Note - ksl - What happened to the possibility of a true single star with no disk - 110914
 
-  rdint ("Star_radiation(y=1)", &geo.star_radiation);
-  rdint ("Disk_radiation(y=1)", &geo.disk_radiation);
-  rdint ("Boundary_layer_radiation(y=1)", &geo.bl_radiation);
-  rdint ("Wind_radiation(y=1)", &geo.wind_radiation);
+  rdint ("System_type(0=star,1=binary,2=agn)", &geo.system_type);
+
+
+  // Determine what radiation sources there are.  Note that most of these values are initilized in init_geo
+
+  if (geo.system_type != 2)
+    {				/* If is a stellar system */
+      rdint ("Star_radiation(y=1)", &geo.star_radiation);
+      rdint ("Disk_radiation(y=1)", &geo.disk_radiation);
+      rdint ("Boundary_layer_radiation(y=1)", &geo.bl_radiation);
+      rdint ("Wind_radiation(y=1)", &geo.wind_radiation);
+      geo.agn_radiation = 0;	// So far at least, our star systems don't have a BH
+    }
+  else				/* If it is an AGN */
+    {
+      geo.star_radiation = 0;	// 70b - AGN do not have a star at the center */
+      //OLD rdint ("Star_radiation(y=1)", &geo.star_radiation);
+      rdint ("Disk_radiation(y=1)", &geo.disk_radiation);
+      geo.bl_radiation = 0;
+      rdint ("Wind_radiation(y=1)", &geo.wind_radiation);
+      geo.agn_radiation = 1;
+      rdint ("QSO_BH_radiation(y=1)", &geo.agn_radiation);
+    }
 
   if (!geo.star_radiation && !geo.disk_radiation && !geo.bl_radiation
-      && !geo.bl_radiation)
+      && !geo.bl_radiation && !geo.agn_radiation)
     {
       Error ("python: No radiation sources so nothing to do but quit!\n");
       exit (0);
@@ -702,6 +765,11 @@ macro_estimaters.  Is this OK, Stuart??   */
 		"Rad_type_for_bl(0=bb,1=models)_to_make_wind",
 		&geo.bl_ion_spectype);
 
+  geo.agn_ion_spectype = SPECTYPE_POW;
+  get_spectype (geo.agn_radiation,
+		"Rad_type_for_agn(0=bb,1=models,3=power_law,4=cloudy_table)_to_make_wind",
+		&geo.agn_ion_spectype);
+
 
   if (geo.wind_type == 2)
     {
@@ -713,27 +781,44 @@ macro_estimaters.  Is this OK, Stuart??   */
     {
 
       /* Describe the basic binary star system */
-      geo.binary_system = 1;
-      rdint ("Overall_system_type(0=single_object,1=binary)",
-	     &geo.binary_system);
 
       geo.mstar /= MSOL;	// Convert to MSOL for ease of data entry
       rddoub ("mstar(msol)", &geo.mstar);
       geo.mstar *= MSOL;
 
+      /* If a BH we want geo.rstar to be at least as large as the last stable orbit for
+       * a non-rotating BH
+       */
+
+      if (geo.system_type == 2)
+	{
+	  geo.rstar = 6. * G * geo.mstar / (C * C); //correction - ISCO is 6x Rg NSH 121025
+	}
+
       rddoub ("rstar(cm)", &geo.rstar);
+
+
+      geo.r_agn = geo.rstar;	/* At present just set geo.r_agn to geo.rstar */
+      if (geo.system_type == 2)
+	{
+	  geo.diskrad = 100. * geo.r_agn;
+	}
+
       geo.rstar_sq = geo.rstar * geo.rstar;
       if (geo.star_radiation)
 	rddoub ("tstar", &geo.tstar);
 
-      if (geo.binary_system)
+
+/* Describe the secondary if that is required */
+
+      if (geo.system_type == 1)	/* It's a binary system */
 	{
 
 	  geo.m_sec /= MSOL;	// Convert units for ease of data entry
 	  rddoub ("msec(msol)", &geo.m_sec);
 	  geo.m_sec *= MSOL;
 
-	  geo.period /= 3600.;	// Convert units ro hours for easy of data entry
+	  geo.period /= 3600.;	// Convert units to hours for easy of data entry
 	  rddoub ("period(hr)", &geo.period);
 	  geo.period *= 3600.;	// Put back to cgs immediately                   
 	}
@@ -773,7 +858,7 @@ macro_estimaters.  Is this OK, Stuart??   */
 	   * models, e.g. knigge have wind structures that depend on teff.
 	   *
 	   * 080518 - ksl - this is quite confusing.  I understand that the KWD models have
-	   * base velociites that are affected by t_eff, but we have not done anything
+	   * base velocities that are affected by t_eff, but we have not done anything
 	   * yet.  Possible this is a consideration for restart, but I would have guessed
 	   * we recalculated all of that, and in any event this is within the block to
 	   * reset things.  this is likely a problem of some sort
@@ -831,7 +916,85 @@ macro_estimaters.  Is this OK, Stuart??   */
 	  geo.t_bl = 0;
 	}
 
+/* Describe the agn */
+
+      if (geo.agn_radiation)
+	{
+		xbl = geo.lum_agn = 0.5 * G * geo.mstar * geo.disk_mdot / geo.r_agn;
+
+		// At present we have set geo.r_agn = geo.rstar, and encouraged the user
+		// set the default for the radius of the BH to be 6 R_Schwartschild.
+	  	// rddoub("R_agn(cm)",&geo.r_agn);
+
+	  	rddoub ("lum_agn(ergs/s)", &geo.lum_agn);
+	  	Log ("OK, the agn lum will be about %.2e the disk lum\n",
+	       	geo.lum_agn / xbl);
+	  	geo.alpha_agn = (-1.5);
+	  	rddoub ("agn_power_law_index", &geo.alpha_agn);
+  
+/* Computes the constant for the power law spectrum from the input alpha and 2-10 luminosity. 
+* This is only used in the sim correction factor for the first time through. 
+* Afterwards, the photons are used to compute the sim parameters. */
+
+	  	geo.const_agn =
+	    	geo.lum_agn /
+	    	(((pow (2.42e18, geo.alpha_agn + 1.)) -
+	      	pow (4.84e17, geo.alpha_agn + 1.0)) / (geo.alpha_agn + 1.0));
+	  	Log ("AGN Input parameters give a power law constant of %e\n",
+ 	       	geo.const_agn);
+     		
+	   if (geo.agn_ion_spectype==SPECTYPE_CL_TAB) /*NSH 0412 - option added to allow direct comparison with cloudy power law table option */
+		{
+		geo.agn_cltab_low=1.0;
+		geo.agn_cltab_hi=10000;
+		rddoub ("low_energy_break(ev)", &geo.agn_cltab_low); /*lo frequency break - in ev */
+		rddoub ("high_energy_break(ev)", &geo.agn_cltab_hi);
+  		geo.agn_cltab_low_alpha=2.5; //this is the default value in cloudy
+  		geo.agn_cltab_hi_alpha=-2.0; //this is the default value in cloudy
+		}
+	}
+      else
+	{
+	  geo.r_agn = 0.0;
+	  geo.lum_agn = 0.0;
+	  geo.alpha_agn = 0.0;
+	  geo.const_agn = 0.0;
+	}
+
+/* Describe the Compton torus */
+
+/* 70b - ksl - 1108067 - Here we add parameters for the compton torus or blocking region 
+*
+* Note that the whole flow of this may be a bit odd as it seems as if we have to keep checking for whether
+* we are modelling an agn
+*
+* Note that these calls need to precede the calls below, because we want to keep the compton torus  ???
+* inside the actual wind, or at least that's what ksl believes on 110809.  ???
+*/
+
+      rdint ("Torus(0=no,1=yes)", &geo.compton_torus);
+      if (geo.compton_torus)
+	{
+	  rddoub ("Torus.rmin(cm)", &geo.compton_torus_rmin);
+	  rddoub ("Torus.rmax(cm)", &geo.compton_torus_rmax);
+	  rddoub ("Torus.height(cm)", &geo.compton_torus_zheight);
+	  rddoub ("Torus.optical_depth", &geo.compton_torus_tau);
+	  rddoub ("Torus.tinit", &geo.compton_torus_te);
+	  if (geo.compton_torus_tau <= 0)
+	    {
+	      geo.compton_torus_tau = 0.001;
+	      Error
+		("python: A torus with zero optical depth makes no sense. Setting to %f\n",
+		 geo.compton_torus_tau);
+	    }
+	}
+
 /* Describe the wind */
+
+      if (geo.system_type == 2)
+	{
+	  geo.rmax = 50. * geo.r_agn;
+	}
 
       rddoub ("wind.radmax(cm)", &geo.rmax);
       rddoub ("wind.t.init", &geo.twind);
@@ -839,12 +1002,12 @@ macro_estimaters.  Is this OK, Stuart??   */
       geo.diskrad_sq = geo.diskrad * geo.diskrad;
 
 
-      /* Now get parameters that are specific to a given wind model
+/* Now get parameters that are specific to a given wind model
 
-         Note: When one adds a new model, the only things that should be read in and modified
-         are parameters in geo.  This is in order to preserve the ability to continue a calculation
-         with the same basic wind geometry, without reading in all of the input parameters.  
-       */
+ Note: When one adds a new model, the only things that should be read in and modified
+ are parameters in geo.  This is in order to preserve the ability to continue a calculation
+ with the same basic wind geometry, without reading in all of the input parameters.  
+*/
 
       if (geo.wind_type == 1)
 	{
@@ -878,6 +1041,13 @@ macro_estimaters.  Is this OK, Stuart??   */
 	{
 	  get_elvis_wind_params ();
 	}
+      else if (geo.wind_type == 9)	//NSH 18/2/11 This is a new wind type to produce a thin shell.
+	{
+	  get_shell_wind_params ();
+/*NSH 121219 moved	  dfudge = (geo.wind_rmax - geo.wind_rmin) / 1000.0;	Stop photons getting pushed out of the cell 
+Modified again in python 71b to take account of change in parametrisation of shell wind 
+	  DFUDGE = dfudge; */
+	}
       else if (geo.wind_type != 2)
 	{
 	  Error ("python: Unknown wind type %d\n", geo.wind_type);
@@ -902,47 +1072,80 @@ macro_estimaters.  Is this OK, Stuart??   */
 	}
     }
 
+/* 121219 NSH Set up DFUDGE to be a value that makes some kind of sense
+given the scale of the wind. Up till py74b2 it was set to be fixed at
+1e5, so we ensure that this is a minimum, so any winds of CV type scale
+will keep the old dfudge, and hopefully look the same. We also need to
+set defudge slightly differently for the shell wind.*/
+
+  if (geo.wind_type==9)
+	{
+	dfudge = (geo.wind_rmax - geo.wind_rmin) / 1000.0;
+	}
+  else
+	{
+	if (geo.rmax / 1.e10 < 1e5)
+		{
+		dfudge=1e5;
+		Log ("DFUDGE set to minimum value of %e\n",DFUDGE);
+		}
+	else
+		{
+		dfudge=geo.rmax/1.e10;
+		Log ("DFUDGE set to %e based on geo.rmax\n",DFUDGE);
+		}
+	}
+
+	DFUDGE=dfudge; //NSH Unsure why exactly this is done this way.
+	
+	
 
 
-/* Now define the wind cones generically.  Note that thetamin and
-  thetamax are measured from disk plane, and so if thetamin = 90 one ends
-  up with a cone that is constant in rho.  
-  56d -- ksl -- updated windcone definitions  */
-/* ???? There is some confusion here regarding new and old.  This should be
- * ???? fixed.  ksl
- */
+
+/* Now define the wind cones generically.  The angles thetamin and
+   thetamax are all defined from the z axis, so that an angle of 0
+   is a flow that is perpeindicular to to the disk and one that is
+   close to 90 degrees will be parallel to the plane of the disk
+   geo.wind_thetamin and max are defined in the routines that initialize
+   the various wind models, e. g. get_sv_wind_parameters. These
+   have been called at this point.  
+
+   z is the place where the windcone intercepts the z axis
+   dzdr is the slope 
+
+   111124 fixed notes on this - ksl 
+   */
+
 
   if (geo.wind_thetamin > 0.0)
     {
-      windcone[0].dzdr = 1. / tan (geo.wind_thetamin);	// new definition
-      windcone[0].z = (-geo.wind_rho_min / tan (geo.wind_thetamin));	// new definition
+      windcone[0].dzdr = 1. / tan (geo.wind_thetamin);
+      windcone[0].z = (-geo.wind_rho_min / tan (geo.wind_thetamin));
     }
   else
     {
-      windcone[0].dzdr = VERY_BIG;	// new definition
-      windcone[0].z = -VERY_BIG;;	// new definition
+      windcone[0].dzdr = VERY_BIG;
+      windcone[0].z = -VERY_BIG;;
     }
 
-
-// 060908 -- 57h -- fixed a small error in next section in definition of outer windcone
 
   if (geo.wind_thetamax > 0.0)
     {
-      windcone[1].dzdr = 1. / tan (geo.wind_thetamax);	// new definition
-      windcone[1].z = (-geo.wind_rho_max / tan (geo.wind_thetamax));	// new definition
+      windcone[1].dzdr = 1. / tan (geo.wind_thetamax);
+      windcone[1].z = (-geo.wind_rho_max / tan (geo.wind_thetamax));
     }
   else
     {
-      windcone[1].dzdr = VERY_BIG;	// old definition
-      windcone[1].z = -VERY_BIG;;	// new definition
+      windcone[1].dzdr = VERY_BIG;
+      windcone[1].z = -VERY_BIG;;
     }
 
 
   geo.rmax_sq = geo.rmax * geo.rmax;
 
-  /* Calculate additonal parameters associated with the binary star system */
+  /* Calculate additional parameters associated with the binary star system */
 
-  if (geo.binary_system)
+  if (geo.system_type == 1)
     binary_basics ();
 
   /* Check that the parameters which have been supplied for the star, disk and boundary layer will
@@ -980,7 +1183,14 @@ macro_estimaters.  Is this OK, Stuart??   */
   else
     Log ("There is no boundary layer\n");
 
+  if (geo.agn_radiation)
+    Log ("There is a BH  which radiates\n");
+  else
+    Log ("There is no BH \n");
+
 /* Describe the spectra which will be extracted and the way it will be extracted */
+
+/* First initialise things to semi-reasonable values */
 
   nangles = 4;
   angle[0] = 10;
@@ -1001,6 +1211,8 @@ macro_estimaters.  Is this OK, Stuart??   */
   select_extract = 1;
   select_spectype = 1;
 
+/* Completed initialization of this section */
+
   if (pcycles > 0)
     {
 
@@ -1017,6 +1229,12 @@ macro_estimaters.  Is this OK, Stuart??   */
       get_spectype (geo.bl_radiation,
 		    "Rad_type_for_bl(0=bb,1=models,2=uniform)_in_final_spectrum",
 		    &geo.bl_spectype);
+
+      geo.agn_spectype = SPECTYPE_POW;
+      get_spectype (geo.agn_radiation,
+		    "Rad_type_for_agn(0=bb,1=models,3=power_law,4=cloudy_table)_in_final_spectrum",
+		    &geo.agn_spectype);
+
 
 
       rddoub ("spectrum_wavemin", &swavemin);
@@ -1038,13 +1256,11 @@ macro_estimaters.  Is this OK, Stuart??   */
 /* Note: Below here many of the variables which are read in are not currently part of geo stucture */
 
       rdint ("no_observers", &nangles);
- 
-//0ld68c      if (nangles < 1 || nangles > NSPEC - MSPEC)
+
       if (nangles < 1 || nangles > NSPEC)
 	{
 	  Error ("no_observers %d should not be > %d or <0\n", nangles,
 		 NSPEC);
-//OLD68c		 NSPEC - MSPEC);
 	  exit (0);
 	}
 
@@ -1152,30 +1368,43 @@ run -- 07jul -- ksl
 
 /* Determine the frequency range which will be used to establish the ionization balance of the wind */
 
-  // 59 - Increased to 20,000 A so could go further into NIR 
-  freqmin = C / 12000e-8;	/*20000 A */
+//OLD71  // 59 - Increased to 20,000 A so could go further into NIR 
+//OLD71  freqmin = C / 12000e-8;	/*20000 A */
 
-  tmax = TSTAR;
-  if (geo.twind > tmax)
-    tmax = geo.twind;
-  if (geo.tstar > tmax)
-    tmax = geo.tstar;
-  if (geo.t_bl > tmax && geo.lum_bl > 0.0)
-    tmax = geo.t_bl;
-  if ((0.488 * tdisk (geo.mstar, geo.disk_mdot, geo.rstar)) > tmax)
-    tmax = 0.488 * tdisk (geo.mstar, geo.disk_mdot, geo.rstar);
-  freqmax = BOLTZMANN * tmax / H * 10.;
-  if (freqmax < 2.0 * 54.418 / HEV)
-    {
-      Log ("Increasing maximum frequency to twice the Helium edge\n");
-      freqmax = 2.0 * 54.418 / HEV;
-    }
-  else
-    Log ("Maximum frequency %8.2e determined by T %8.2e\n", freqmax, tmax);
+//OLD71  tmax = TSTAR;
+//OLD71  if (geo.twind > tmax)
+//OLD71    tmax = geo.twind;
+//OLD71  if (geo.tstar > tmax)
+//OLD71    tmax = geo.tstar;
+//OLD71  if (geo.t_bl > tmax && geo.lum_bl > 0.0)
+//OLD71    tmax = geo.t_bl;
+//OLD71  if ((0.488 * tdisk (geo.mstar, geo.disk_mdot, geo.rstar)) > tmax)
+//OLD71    tmax = 0.488 * tdisk (geo.mstar, geo.disk_mdot, geo.rstar);
+//OLD71  freqmax = BOLTZMANN * tmax / H * 10.;
+//OLD71  if (freqmax < 2.0 * 54.418 / HEV)
+//OLD71    {
+//OLD71      Log ("Increasing maximum frequency to twice the Helium edge\n");
+//OLD71      freqmax = 2.0 * 54.418 / HEV;
+//OLD71    }
+//OLD71  else
+//OLD71    Log ("Maximum frequency %8.2e determined by T %8.2e\n", freqmax, tmax);
 
   // Note that bands_init asks .pf file or user what kind of banding is desired 
 
-  bands_init (0.0, freqmin, freqmax, -1, &xband);
+//Old71  bands_init (0.0, freqmin, freqmax, -1, &xband);
+//OLD71	bands_init (tmax, freqmin, freqmax, -1, &xband);
+	bands_init (-1, &xband);
+
+/*if we have changed min and max in bands_init, we need to make sure this is reflected in the frequency bounds*/
+  freqmin = xband.f1[0];
+  freqmax = xband.f2[xband.nbands - 1];
+
+/* 1112 - 71 - ksl Next routine sets up the frequencies that are used for charactizing the spectrum in a cell
+ * These need to be coordinated with the bands that are set up for spectral gneration
+ */
+	freqs_init(freqmin,freqmax);
+
+
 
 /* Wrap up and save all the inputs */
 
@@ -1200,9 +1429,9 @@ run -- 07jul -- ksl
 
 
   /* Next line finally defines the wind if this is the initial time this model is being run */
-
   if (geo.wind_type != 2)	// Define the wind and allocate the arrays the first time
-    define_wind ();		// Do not reinit if you want to use old windfile
+    define_wind ();
+  // Do not reinit if you want to use old windfile
 
   w = wmain;
 
@@ -1243,7 +1472,7 @@ run -- 07jul -- ksl
  *
  * */
 
-
+printf ("NSH GOING TO DISK_INIT\n");
   disk_init (geo.rstar, geo.diskrad, geo.mstar, geo.disk_mdot, freqmin,
 	     freqmax, 0, &geo.f_disk);
 
@@ -1276,6 +1505,13 @@ run -- 07jul -- ksl
   if (geo.wcycle == wcycles)
     xsignal (root, "%-20s No ionization needed: wcycles(%d)==wcyeles(%d)\n",
 	     "COMMENT", geo.wcycle, geo.wcycles);
+  else
+    {
+      geo.pcycle = 0;		/* Set the spectrum cycles executed to 0, because 
+				   we are going to modify the wind and hence any
+				   previously calculated spectra must be recreated
+				 */
+    }
 
 
   while (geo.wcycle < wcycles)
@@ -1310,12 +1546,14 @@ run -- 07jul -- ksl
 
       wind_rad_init ();		/*Zero the parameters pertaining to the radiation field */
 
+
+
 #if DEBUG
       ispy_init ("python", geo.wcycle);
 #endif
 
-      n_ioniz = 0.0;
-      lum_ioniz = 0.0;
+      geo.n_ioniz = 0.0;
+      geo.lum_ioniz = 0.0;
       ztot = 0.0;		/* ztot is the luminosity of the disk multipled by the number of cycles, which is used by save_disk_heating */
 
       /* Now execute each subcycle */
@@ -1338,10 +1576,14 @@ run -- 07jul -- ksl
 	   * photons_per_cycle is the number of photon bundles which will equal the luminosity; 
 	   * 0 => for ionization calculation 
 	   */
-
+//OLD70d        printf ("sent to define_phot freqmin=%e freqmax=%e \n",freqmin,freqmax);
 	  define_phot (p, freqmin, freqmax, photons_per_cycle, 0, iwind, 1);
+//OLD70d        printf ("sent to photon_checks freqmin=%e freqmax=%e \n",freqmin,freqmax);
 
 	  photon_checks (p, freqmin, freqmax, "Check before transport");
+
+	  wind_ip ();
+
 
 	  zz = 0.0;
 	  for (nn = 0; nn < NPHOT; nn++)
@@ -1350,10 +1592,10 @@ run -- 07jul -- ksl
 	    }
 
 	  Log
-	    ("!!python: Total photon luminosity before transphot %8.2e\n",
+	    ("!!python: Total photon luminosity before transphot %18.12e\n",
 	     zz);
 
-	  ztot += zz;		// Total luminosity in all subcycles, used for calculating disk heating
+	  ztot += zz;		/* Total luminosity in all subcycles, used for calculating disk heating */
 
 	  /* kbf_need determines how many & which bf processes one needs to considere.  It was introduced
 	   * as a way to speed up the program.  It has to be recalculated evey time one changes
@@ -1362,8 +1604,12 @@ run -- 07jul -- ksl
 
 	  kbf_need (freqmin, freqmax);
 
-	  /* Transport the photons through the wind */
+          /* NSH 22/10/12  This next call populates the prefactor for free free heating for each cell in the plasma array */
+	  /* NSH 4/12/12  Changed so it is only called if we have read in gsqrd data */
+	if (gaunt_n_gsqrd>0)
+	    pop_kappa_ff_array ();       
 
+	  /* Transport the photons through the wind */
 	  trans_phot (w, p, 0);
 
 	  /*Determine how much energy was absorbed in the wind */
@@ -1375,16 +1621,24 @@ run -- 07jul -- ksl
 		zze += p[nn].w;
 	    }
 	  Log
-	    ("!!python: Total photon luminosity after transphot %8.2e (diff %8.2e). Radiated luminosity %8.2e \n",
+	    ("!!python: Total photon luminosity after transphot %18.12e (diff %18.12e). Radiated luminosity %18.12e \n",
 	     zzz, zzz - zz, zze);
 
 #if DEBUG
 	  wind_rad_summary (w, windradfile, "a");
 #endif
 
+
+
 	  photon_checks (p, freqmin, freqmax, "Check after transport");
 
 	  spectrum_create (p, freqmin, freqmax, nangles, select_extract);
+
+
+
+
+
+
 
 
 	}
@@ -1403,9 +1657,10 @@ run -- 07jul -- ksl
 
       Log
 	("!!python: Number of ionizing photons %g lum of ionizing photons %g\n",
-	 n_ioniz, lum_ioniz);
+	 geo.n_ioniz, geo.lum_ioniz);
 
       wind_update (w);
+
       if (diag_on_off)
 	{
 	  strcpy (dummy, "");
@@ -1419,7 +1674,11 @@ run -- 07jul -- ksl
 	   geo.wcycle, timer ());
 
       Log ("Finished creating spectra\n");
-      spectrum_summary (wspecfile, "w", 0, 5, 0, 1.);
+
+//OLD70d        printf ("%s %s\n",wspecfile,lspecfile);
+
+      spectrum_summary (wspecfile, "w", 0, 5, 0, 1., 0);
+      spectrum_summary (lspecfile, "w", 0, 5, 0, 1., 1);	/* output the log spectrum */
       phot_gen_sum (photfile, "w");	/* Save info about the way photons are created and absorbed
 					   by the disk */
 
@@ -1480,6 +1739,12 @@ run -- 07jul -- ksl
 
 /* XXXX - BEGIN CYCLES TO CREATE THE DETAILED SPECTRUM */
 
+  /* the next section initializes the spectrum array in two cases, for the
+   * standard one where one is calulating the spectrum for the first time
+   * and in the somewhat abnormal case where additional ionization cylcles
+   * were calculated for the wind
+   */
+
   if (geo.pcycle == 0)
     {
       spectrum_init (freqmin, freqmax, nangles, angle, phase, scat_select,
@@ -1496,7 +1761,9 @@ run -- 07jul -- ksl
 
 
 
-  if (geo.pcycle == pcycles)
+  /* the next condition should really when one has nothing more to do */
+
+  if (geo.pcycle >= pcycles)
     xsignal (root, "%-20s No spectrum   needed: pcycles(%d)==pcycles(%d)\n",
 	     "COMMENT", geo.pcycle, geo.pcycles);
 
@@ -1506,9 +1773,6 @@ run -- 07jul -- ksl
 
       xsignal (root, "%-20s Starting %d of %d spectral cycle \n", "NOK",
 	       geo.pcycle, pcycles);
-
-
-
 
 #if DEBUG
       ispy_init ("python", geo.pcycle + 1000);
@@ -1524,7 +1788,7 @@ run -- 07jul -- ksl
       else
 	iwind = 0;		/* Create wind photons but do not force reinitialization */
 
-      /* Create the initial photon bundles which need to be trnaported through the wind 
+      /* Create the initial photon bundles which need to be trannsported through the wind 
 
          For the detailed spectra, NPHOT*pcycles is the number of photon bundles which will equal the luminosity, 
          1 implies that detailed spectra, as opposed to the ionization of the wind is being calculated 
@@ -1538,7 +1802,7 @@ run -- 07jul -- ksl
 	  if (sane_check (p[icheck].freq))
 	    {
 	      Error
-		("python after define phot: unnatural frequency for photon %d\n",
+		("python after define phot:sane_check unnatural frequency for photon %d\n",
 		 icheck);
 	    }
 	}
@@ -1557,7 +1821,7 @@ run -- 07jul -- ksl
 /* Write out the detailed spectrum each cycle so that one can see the statistics build up! */
       renorm = ((double) (pcycles)) / (geo.pcycle + 1.0);
       spectrum_summary (specfile, "w", 0, nspectra - 1, select_spectype,
-			renorm);
+			renorm, 0);
       Log ("Completed spectrum cycle %d :  The elapsed TIME was %f\n",
 	   geo.pcycle, timer ());
 
@@ -1622,7 +1886,7 @@ help ()
 \n\
 This program simulates radiative transfer in a (biconical) CV, YSO, quasar or (spherical) stellar wind \n\
 \n\
-	Usage:  py [-h] [-r] [-t tmax] xxx  or simply py \n\
+	Usage:  py [-h] [-r] [-t time_max] xxx  or simply py \n\
 \n\
 	where xxx is the rootname or full name of a parameter file, e. g. test.pf \n\
 \n\
@@ -1631,7 +1895,7 @@ This program simulates radiative transfer in a (biconical) CV, YSO, quasar or (s
 	-h 	to ge this help message \n\
 	-r 	restart a run of the progarm reading the file xxx.windsave \n\
 \n\
-	-t tmax	limit the total time to approximately tmax seconds.  Note that the program checks \n\
+	-t time_max	limit the total time to approximately time_max seconds.  Note that the program checks \n\
 		for this limit somewhat infrequently, usually at the ends of cycles, because it \n\
 		is attempting to save the program outputs so that the program can be restarted with \n\
 		-r if that is desired. \n\
@@ -1670,6 +1934,8 @@ Notes:
 	are the working units for the program.  This is necessary for consistncy when
 	one tries to restart the program.
 
+	Note that init_geo is set up for CVs and Stars and not AGN
+
 
 History:
  	98dec	ksl	Coded and debugged.  Much of code was copied from old main routine for
@@ -1693,7 +1959,7 @@ init_geo ()
   geo.ndim = 30;
   geo.mdim = 30;
   geo.disk_z0 = geo.disk_z1 = 0.0;	// 080518 - ksl - moved this up
-  geo.adiabatic = 0;		// Default is set so that adiabatic cooling is not included in the wind
+  geo.adiabatic = 1;		// Default is now set so that adiabatic cooling is included in the wind
   geo.auger_ionization = 1;	//Default is on.
 
 
@@ -1724,7 +1990,7 @@ init_geo ()
   geo.bl_radiation = 0;		/*1 implies boundary layer will radiate */
   geo.wind_radiation = 0;	/* 1 implies wind will radiate */
 
-  geo.disk_type = 1;		/*1 implies existence of a disk for purposes of absorbtion */
+  geo.disk_type = 1;		/*1 implies existence of a disk for purposes of absorption */
   geo.diskrad = 2.4e10;
   geo.disk_mdot = 1.e-8 * MSOL / YR;
 
@@ -1732,7 +1998,7 @@ init_geo ()
 
 
   strcpy (geo.atomic_filename, "atomic/standard39");
-  strcpy (geo.fixed_con_file, "none");	// 54e
+  strcpy (geo.fixed_con_file, "none");
 
   // Note that geo.model_list is initialized through get_spectype 
 
@@ -1764,11 +2030,12 @@ photon_checks (p, freqmin, freqmax, comment)
      double freqmin, freqmax;
 {
   int nnn, nn;
-  double lum_ioniz;
-  int n_ioniz;
+//  double lum_ioniz;  //NSH 16/2/2011 These are now declared externally to allow python to see them
+//  int n_ioniz;
   int nlabel;
 
-
+  geo.n_ioniz=0;
+  geo.lum_ioniz=0.0;
   nnn = 0;
   nlabel = 0;
 
@@ -1778,6 +2045,7 @@ photon_checks (p, freqmin, freqmax, comment)
    * if they are disk photons generated right up against one of the frequency
    * limits
    * 04aug--ksl-increased limit from 0.02 to 0.03, e.g from 6000 km/s to 9000 km/s
+   * 11apr--NSH-decreased freqmin to 0.4, to take account of double redshifted photons.
    * shift.
    */
 #if DEBUG
@@ -1787,10 +2055,11 @@ photon_checks (p, freqmin, freqmax, comment)
   freqmin *= (0.6);
   for (nn = 0; nn < NPHOT; nn++)
     {
+      p[nn].np = nn;		/*  NSH 13/4/11 This is a line to populate the new internal photon pointer */
       if (H * p[nn].freq > ion[0].ip)
 	{
-	  lum_ioniz += p[nn].w;
-	  n_ioniz += p[nn].w / (H * p[nn].freq);
+	  geo.lum_ioniz += p[nn].w;
+	  geo.n_ioniz += p[nn].w / (H * p[nn].freq);
 	}
       if (sane_check (p[nn].freq) != 0 || sane_check (p[nn].w))
 	{
@@ -1801,7 +2070,7 @@ photon_checks (p, freqmin, freqmax, comment)
 	      nlabel++;
 	    }
 	  Error
-	    ("photon_checks: %6d %5d %10.4e %10.4e %10.4e %5d w %10.4e sane_check failure\n",
+	    ("photon_checks:sane_check %6d %5d %10.4e %10.4e %10.4e %5d w %10.4e \n",
 	     nn, p[nn].origin, p[nn].freq, freqmin, freqmax, p[nn].w);
 	  p[nn].freq = freqmax;
 	  nnn++;
@@ -1827,7 +2096,7 @@ photon_checks (p, freqmin, freqmax, comment)
 	  exit (0);
 	}
     }
-
+	printf ("NSH Geo.n_ioniz=%e\n",geo.n_ioniz);
 #if DEBUG
   if (nnn == 0)
     Log ("photon_checks: All photons passed checks successfully\n");
@@ -1874,6 +2143,7 @@ Notes:
 History:
 	080518	ksl	Coded as part of effort to make models restart more
 			easily, but also simplifies some of the code
+        121025  nsh	added a mode for power law
 
 **************************************************************/
 
@@ -1896,6 +2166,8 @@ get_spectype (yesno, question, spectype)
 	stype = 0;
       else if (*spectype == SPECTYPE_UNIFORM)
 	stype = 2;
+      else if (*spectype == SPECTYPE_POW)
+	stype = 3;
       else
 	stype = 1;
       /* Now get the response */
@@ -1905,6 +2177,10 @@ get_spectype (yesno, question, spectype)
 	*spectype = SPECTYPE_BB;	// bb
       else if (stype == 2)
 	*spectype = SPECTYPE_UNIFORM;	// uniform
+      else if (stype == 3)
+	*spectype = SPECTYPE_POW;	// power law
+      else if (stype == 4)
+        *spectype = SPECTYPE_CL_TAB;
       else
 	{
 	  if (geo.wind_type == 2)

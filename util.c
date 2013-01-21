@@ -334,7 +334,7 @@ coord_fraction (ichoice, x, ii, frac, nelem)
       *nelem = 2;
       if (sane_check (dr))
 	{
-	  Error ("coord_frac: dr=%f for spherical coords. \n", dr);
+	  Error ("coord_frac:sane_check dr=%f for spherical coords. \n", dr);
 	}
     }
   else
@@ -357,7 +357,7 @@ coord_fraction (ichoice, x, ii, frac, nelem)
 
       if (sane_check (dr) || sane_check (dz))
 	{
-	  Error ("coord_frac: dr=%f dz=%f for 2d coords\n", dr, dz);
+	  Error ("coord_frac:sane_check dr=%f dz=%f for 2d coords\n", dr, dz);
 	}
     }
   /* At this point i,j are just outside the x position */

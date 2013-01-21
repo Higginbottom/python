@@ -71,6 +71,10 @@ History:
 			over the entire grid and ultimately eveything here is likely to be
 			contained in the plasma structure.  Therefore here we want to use
 			plasmamain
+	11aug	nsh	70: modifications made to wind_update  and wind_rad_init to incorporate 
+			compton heating and cooling.
+        12apr	nh	72: modifications makde to wind_update and wind_rad_init to incoprorate
+			induced copmton heating.
 
 
 **************************************************************/
@@ -84,7 +88,7 @@ WindPtr (w);
 {
   int n, i, j;
   double trad, nh;
-  double wtest, xsum, asum, psum, fsum, lsum;
+  double wtest, xsum, asum, psum, fsum, lsum, csum, icsum;  /*1108 NSH csum added to sum compton heating 1204 NSH icsum added to sum induced compton heating */
   double volume;
   char string[LINELEN];
   double t_r_old, t_e_old, dt_r, dt_e;
@@ -92,7 +96,10 @@ WindPtr (w);
   int iave, nmax_r, nmax_e;
   int nplasma;
   int nwind;
-
+   int first,last,m;
+   double tot,agn_ip;
+double nsh_lum_hhe;
+double nsh_lum_metals;
   dt_r = dt_e = 0.0;
   iave = 0;
   nmax_r = nmax_e = -1;
@@ -120,7 +127,6 @@ WindPtr (w);
       t_r_ave_old += plasmamain[n].t_r;
       t_e_ave_old += plasmamain[n].t_e;
       iave++;
-
       if (plasmamain[n].ntot < 100)
 	{
 	  Log
@@ -132,10 +138,9 @@ WindPtr (w);
 	{
 	  wtest = plasmamain[n].ave_freq;
 	  plasmamain[n].ave_freq /= plasmamain[n].j;	/* Normalization to frequency moment */
-
 	  if (sane_check (plasmamain[n].ave_freq))
 	    {
-	      Error ("wind_update: %d ave_freq %e j %e ntot %d\n",
+	      Error ("wind_update:sane_check %d ave_freq %e j %e ntot %d\n",
 		     n, wtest, plasmamain[n].j, plasmamain[n].ntot);
 	    }
 
@@ -147,6 +152,7 @@ WindPtr (w);
 	    PI * plasmamain[n].j / (STEFAN_BOLTZMANN * trad * trad * trad *
 				    trad);
 
+
 	  if (plasmamain[n].w > 1e10)
 	    {
 	      Error
@@ -155,7 +161,7 @@ WindPtr (w);
 	    }
 	  if (sane_check (trad) || sane_check (plasmamain[n].w))
 	    {
-	      Error ("wind_update: %d trad %8.2e w %8.2g\n", n, trad,
+	      Error ("wind_update:sane_check %d trad %8.2e w %8.2g\n", n, trad,
 		     plasmamain[n].w);
 	      Error ("wind_update: ave_freq %8.2e j %8.2e\n",
 		     plasmamain[n].ave_freq, plasmamain[n].j);
@@ -173,7 +179,37 @@ WindPtr (w);
 	  plasmamain[n].w = 0;
 	}
 
+
+/* 1108 NSH/KSL  This loop is to calculate the frequency banded j and ave_freq variables */
+/* 71 - 111279 - ksl - Small modification to reflect the fact that nxfreq has been moved into the geo structure */
+     for (i=0 ; i<geo.nxfreq ; i++) /*loop over number of bands */
+	{
+	if (plasmamain[n].nxtot[i] > 0)   /*Check we actually have some photons in the cell in this band */
+		{
+		plasmamain[n].xave_freq[i] /= plasmamain[n].xj[i];   /*Normalise the average frequency */
+		plasmamain[n].xsd_freq[i] /= plasmamain[n].xj[i];  /*Normalise the mean square frequency */
+		plasmamain[n].xsd_freq[i] = sqrt(plasmamain[n].xsd_freq[i] - (plasmamain[n].xave_freq[i] * plasmamain[n].xave_freq[i])); /*Compute standard deviation */
+		plasmamain[n].xj[i] /= (4 * PI * volume);     /*Convert to radiation density */
+		}
+	else
+		{
+		plasmamain[n].xj[i]=0;   /*If no photons, set both radiation estimators to zero */
+		plasmamain[n].xave_freq[i]=0;
+		plasmamain[n].xsd_freq[i]=0; /*NSH 120815 and also the SD ???? */
+		}
+	}
+
+/* 1108 NSH End of loop */
+	
+
+
       nh = plasmamain[n].rho * rho2nh;
+
+/* 1110 NSH Normalise IP, which at this point should be the number of photons in a cell by dividing by volume and number density of hydrogen in the cell */
+
+      plasmamain[n].ip /= (C*volume*nh);
+      printf ("NSH Log Ionisation parameter for cell %i = %2.2f\n",n,log10(plasmamain[n].ip));
+
 
       /* If geo.adiabatic is true, then alculate the adiabatic cooling using the current, i.e 
        * previous value of t_e.  Note that this may not be  best way to determien the cooling. 
@@ -181,16 +217,20 @@ WindPtr (w);
        * is not included in updates to the temperature, even if the adiabatic cooling is calculated
        * here. 04nov -- ksl */
       /* 05apr -- ksl -- The index being used was incorrect.  This has been fixed now */
+      /* 11sep -- nsh -- The index for the wind (&w) for adiabatic cooling was incorrect - was being called with the plasma cell rather than the approriate wind cell fixed */
 
       if (geo.adiabatic)
-	plasmamain[n].lum_adiabatic =
-	  adiabatic_cooling (&w[n], plasmamain[n].t_e);
-      else
+// incorrect indexing nsh 110921 plasmamain[n].lum_adiabatic =
+//old	  adiabatic_cooling (&w[n], plasmamain[n].t_e);
+     plasmamain[n].lum_adiabatic =
+	  adiabatic_cooling (&w[nwind], plasmamain[n].t_e);
+	 else
 	plasmamain[n].lum_adiabatic = 0.0;
 
 
-      /* Calculate the densities in various ways depending on the ioniz_mode */
 
+
+      /* Calculate the densities in various ways depending on the ioniz_mode */
 
       ion_abundances (&plasmamain[n], geo.ioniz_mode);
 
@@ -248,45 +288,51 @@ WindPtr (w);
 
   /* Check the balance between the absorbed and the emitted flux */
 
-  xsum = psum = lsum = fsum = 0;
+  xsum = psum = lsum = fsum = csum = icsum = 0;  //1108 NSH zero the new csum counter for compton heating
 
-  // 59a - ksl - Corrected problem with calculating sums that has existed
-  // since tried to reduce the size of the structures.
-  //OLD for (i = 0; i < NDIM2; i++)
-  //OLD   nplasma = w[n].nplasma;
   for (nplasma = 0; nplasma < NPLASMA; nplasma++)
     {
       if (sane_check (plasmamain[nplasma].heat_tot))
-	Error ("wind_update: w\[%d).heat_tot is %e\n", nplasma,
+	Error ("wind_update:sane_check w\[%d).heat_tot is %e\n", nplasma,
 	       plasmamain[nplasma].heat_tot);
       if (sane_check (plasmamain[nplasma].heat_photo))
-	Error ("wind_update: w\[%d).heat_photo is %e\n", nplasma,
+	Error ("wind_update:sane_check w\[%d).heat_photo is %e\n", nplasma,
 	       plasmamain[nplasma].heat_photo);
       if (sane_check (plasmamain[nplasma].heat_photo_macro))
-	Error ("wind_update: w\[%d).heat_photo_macro is %e\n", nplasma,
+	Error ("wind_update:sane_check w\[%d).heat_photo_macro is %e\n", nplasma,
 	       plasmamain[nplasma].heat_photo_macro);
       if (sane_check (plasmamain[nplasma].heat_ff))
-	Error ("wind_update: w\[%d).heat_ff is %e\n", nplasma,
+	Error ("wind_update:sane_check w\[%d).heat_ff is %e\n", nplasma,
 	       plasmamain[nplasma].heat_ff);
       if (sane_check (plasmamain[nplasma].heat_lines))
-	Error ("wind_update: w\[%d).heat_lines is %e\n", nplasma,
+	Error ("wind_update:sane_check w\[%d).heat_lines is %e\n", nplasma,
 	       plasmamain[nplasma].heat_lines);
       if (sane_check (plasmamain[nplasma].heat_lines_macro))
-	Error ("wind_update: w\[%d}).heat_lines_macro is %e\n", nplasma,
+	Error ("wind_update:sane_check w\[%d}).heat_lines_macro is %e\n", nplasma,
 	       plasmamain[nplasma].heat_lines_macro);
+ /* 1108 NSH extra Sane check for compton heating */
+      if (sane_check (plasmamain[nplasma].heat_comp))
+	Error ("wind_update:sane_check w\[%d).heat_comp is %e\n", nplasma,
+	       plasmamain[nplasma].heat_comp);
       xsum += plasmamain[nplasma].heat_tot;
       psum += plasmamain[nplasma].heat_photo;
       fsum += plasmamain[nplasma].heat_ff;
       lsum += plasmamain[nplasma].heat_lines;
+      csum += plasmamain[nplasma].heat_comp; //1108 NSH Increment the compton heating counter
+      icsum += plasmamain[nplasma].heat_ind_comp; //1205 NSH Increment the induced compton heating counter
+       	Log ("OUTPUT logIP(cloudy_thoeretical)= %e logIP(cloudy_actual)=%e\n",log10(plasmamain[nplasma].ferland_ip),log10(plasmamain[nplasma].ip)); 
     }
 
   asum = wind_luminosity (0.0, VERY_BIG);
-  Log
-    ("!!wind_update:  Absorbed flux   %8.2e  (photo %8.2e ff %8.2e lines %8.2e)\n",
-     xsum, psum, fsum, lsum);
+   Log
+    ("!!wind_update: Absorbed flux    %8.2e  (photo %8.2e ff %8.2e compton %8.2e induced_compton %8.2e lines %8.2e)\n",
+     xsum, psum, fsum, csum, icsum, lsum); //1108 NSH Added commands to report compton heating
   Log
     ("!!wind_update: Wind luminosity  %8.2e (recomb %8.2e ff %8.2e lines %8.2e) after update\n",
-     asum, geo.lum_fb, geo.lum_ff, geo.lum_lines);
+     asum, geo.lum_fb, geo.lum_ff, geo.lum_lines); //1108 NSH added commands to report compton cooling 1110 removed, this line now just reports cooling mechanisms that will generate photons
+  Log
+    ("!!wind_update: Wind cooling     %8.2e (recomb %8.2e ff %8.2e compton %8.2e DR %8.2e adiabatic %8.2e lines %8.2e) after update\n",
+     asum+geo.lum_comp+geo.lum_dr+geo.lum_adiabatic, geo.lum_fb, geo.lum_ff, geo.lum_comp, geo.lum_dr, geo.lum_adiabatic, geo.lum_lines); //1110 NSH Added this line to report all cooling mechanisms, including those that do not generate photons.
 
   /* Print out some diagnositics of the changes in the wind update */
   t_r_ave_old /= iave;
@@ -310,8 +356,59 @@ WindPtr (w);
        (t_r_ave - t_r_ave_old));
 
   check_convergence ();
-/* Sumarize the raditive temperatures (ksl 04 mar)*/
+/* Summarize the raditive temperatures (ksl 04 mar)*/
   xtemp_rad (w);
+
+
+/* This next block is to allow the output of data relating to the abundances of ions when python is being tested. We will only want this to run if the wind mode is test */
+
+
+	
+	if (geo.wind_type == 9)
+		{     
+		n = plasmamain[0].nwind;
+	    	for (i=0 ; i<geo.nxfreq ; i++) /*loop over number of bands */	
+			{
+			Log ("Band %i f1 %e f2 %e model %i pl_alpha %f pl_w %e exp_t %e exp_w %e\n",i,geo.xfreq[i],geo.xfreq[i+1],plasmamain[0].spec_mod_type[i],plasmamain[0].pl_alpha[i],plasmamain[0].pl_w[i],plasmamain[0].exp_temp[i],plasmamain[0].exp_w[i]);		
+			}
+                /* Get some line diagnostics */
+		nsh_lum_hhe=0.0;
+		nsh_lum_metals=0.0;
+	
+		for (i=0; i<nlines; i++)
+			{
+			if (lin_ptr[i]->z < 3) nsh_lum_hhe=nsh_lum_hhe+lin_ptr[i]->pow;
+			else nsh_lum_metals=nsh_lum_metals+lin_ptr[i]->pow;
+			}
+		agn_ip=geo.const_agn*(((pow (50000/HEV, geo.alpha_agn + 1.0)) - pow (100/HEV,geo.alpha_agn + 1.0)) /  	(geo.alpha_agn + 1.0));
+		agn_ip /= (w[n].r*w[n].r);
+		agn_ip /= plasmamain[0].rho * rho2nh;
+         	Log ("OUTPUT Lum_agn= %e T_e= %e N_h= %e N_e= %e alpha= %f IP(sim_2010)= %e Meaured_IP(cloudy)= %e distance= %e volume= %e mean_ds=%e\n",geo.lum_agn,plasmamain[0].t_e,plasmamain[0].rho * rho2nh,plasmamain[0].ne,geo.alpha_agn,agn_ip,plasmamain[0].ip,w[n].r,w[n].vol,plasmamain[0].mean_ds/plasmamain[0].n_ds);
+		Log ("OUTPUT Absorbed_flux(ergs-1cm-3)    %8.2e  (photo %8.2e ff %8.2e compton %8.2e induced_compton %8.2e lines %8.2e )\n", xsum/w[n].vol, psum/w[n].vol, fsum/w[n].vol, csum/w[n].vol, icsum/w[n].vol, lsum/w[n].vol); //1108 NSH Added commands to report compton heating
+  		Log ("OUTPUT Wind_cooling(ergs-1cm-3)     %8.2e (recomb %8.2e ff %8.2e compton %8.2e DR %8.2e adiabatic %8.2e lines %8.2e ) after update\n", (asum+geo.lum_comp+geo.lum_dr+geo.lum_adiabatic)/w[n].vol, geo.lum_fb/w[n].vol, geo.lum_ff/w[n].vol, geo.lum_comp/w[n].vol, geo.lum_dr/w[n].vol, geo.lum_adiabatic/w[n].vol ,geo.lum_lines/w[n].vol); //1110 NSH Added this line to report all cooling mechanisms, including those that do not generate photons.
+  		Log ("OUTPUT Wind_line_cooling(ergs-1cm-3)  HHe %8.2e Metals %8.2e\n",nsh_lum_hhe/w[n].vol, nsh_lum_metals/w[n].vol);
+	  	Log ("OUTPUT Balance      Cooling=%8.2e Heating=%8.2e Lum=%8.2e T_e=%e after update\n", asum+geo.lum_comp+geo.lum_dr+geo.lum_adiabatic, xsum,asum,plasmamain[0].t_e); //1110 NSH Added this line to report all cooling mechanisms, including those that do not generate photons.
+
+		for (n = 0; n < nelements; n++)
+			{
+      			first = ele[n].firstion;
+      			last = first + ele[n].nions;
+      			Log ("OUTPUT %-5s ", ele[n].name);
+      			tot = 0;
+      			for (m = first; m < last; m++)
+				tot += plasmamain[0].density[m];
+      			for (m = first; m < last; m++)
+				{
+	  			Log (" %8.2e", plasmamain[0].density[m]/tot);
+				}
+      			Log ("\n");
+    			}
+		}
+
+
+
+
+
 
 
   return (0);
@@ -371,16 +468,34 @@ wind_rad_init ()
   for (n = 0; n < NPLASMA; n++)
     {
       plasmamain[n].j = plasmamain[n].ave_freq = plasmamain[n].ntot = 0;
+      plasmamain[n].mean_ds = 0.0;
+      plasmamain[n].n_ds = 0;
+      plasmamain[n].ntot_disk = plasmamain[n].ntot_agn = 0; //NSH 15/4/11 counters to see where photons come from
+      plasmamain[n].ntot_star = plasmamain[n].ntot_bl = plasmamain[n].ntot_wind = 0;
       plasmamain[n].heat_tot = plasmamain[n].heat_ff =
 	plasmamain[n].heat_photo = plasmamain[n].heat_lines = 0.0;
       plasmamain[n].heat_z = 0.0;
-
+      plasmamain[n].max_freq = 0.0; //NSH 120814 Zero the counter which works out the maximum frequency seen in a cell and hence the maximum applicable frequency of the power law estimators.
       plasmamain[n].lum = plasmamain[n].lum_rad = plasmamain[n].lum_lines =
 	plasmamain[n].lum_ff = 0.0;
       plasmamain[n].lum_fb = plasmamain[n].lum_z = 0.0;
       plasmamain[n].nrad = plasmamain[n].nioniz = 0;
+      plasmamain[n].lum_comp = 0.0; //1108 NSH Zero the compton luminosity for the cell
+      plasmamain[n].heat_comp = 0.0; //1108 NSH Zero the compton heating for the cell
+      plasmamain[n].heat_ind_comp = 0.0; //1108 NSH Zero the induced compton heating for the cell
       if (nlevels_macro > 1)
 	macromain[n].kpkt_rates_known = -1;
+
+/* 1108 NSH Loop to zero the frequency banded radiation estimators */
+/* 71 - 111279 - ksl - Small modification to reflect the fact that nxfreq has been moved into the geo structure */
+      for (i=0 ; i<geo.nxfreq ; i++)
+	{
+      	plasmamain[n].xj[i] = plasmamain[n].xave_freq[i] = plasmamain[n].nxtot[i] = 0;
+	plasmamain[n].xsd_freq[i] = 0.0; /* NSH 120815 Zero the standard deviation counter */
+	}
+
+
+
 
       for (i = 0; i < nions; i++)
 	{
@@ -551,3 +666,49 @@ wind_rad_summary (w, filename, mode)
 
   return (0);
 }
+
+
+
+
+
+
+
+
+/***********************************************************
+                                       Space Telescope Science Institute
+
+ Synopsis: wind_ip() populates the plasma object ferland_ip which is intended to be an 
+      estimate of the ionization parameter for that cell. It assumes all ionizaing photons
+      are produces from the origin.
+
+Arguments:		
+
+Returns:
+ 
+Description:	
+	
+Notes:
+	There is not much point in calling this until you have propagated a few photons
+History:
+ 	11Oct - NSH Coded to try and provide a 'correct' ionisation parameter for the wind,
+               calculated exactly as per the ionization parameter in hazy1 (eq 5.4)
+
+**************************************************************/
+
+
+   int wind_ip()
+{
+int n;
+float r;
+  for (n = 0; n < NPLASMA; n++)
+{
+r=sqrt((wmain[plasmamain[n].nwind].x[0]*wmain[plasmamain[n].nwind].x[0]+wmain[plasmamain[n].nwind].x[1]*wmain[plasmamain[n].nwind].x[1]+wmain[plasmamain[n].nwind].x[2]*wmain[plasmamain[n].nwind].x[2]));
+
+      plasmamain[n].ferland_ip=geo.n_ioniz/(4*PI*C*plasmamain[n].rho*rho2nh*(r*r));
+
+     printf ("NSH log(ferland_ip) for cell %i = %e (r=%e nh=%e nioniz=%e)\n",n,log10(plasmamain[n].ferland_ip),r,plasmamain[n].rho*rho2nh,geo.n_ioniz);
+}
+return(0);
+}
+
+

@@ -268,6 +268,9 @@ define_wind_grid (w, xmin, xmax, zmin, zmax)
 
 /* Copy physical conditions from one wind cell to another, that is copy everything but properties
  * that directly depend on the geometry
+ *
+ * 1108-ksl-What is copied here is the PlasmaPtr and the variables that are copied do not 
+ * appear to be complete.  This is an error
  */
 
 

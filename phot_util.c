@@ -42,6 +42,7 @@ stuff_phot (pin, pout)
   pout->grid = pin->grid;
   pout->origin = pin->origin;
   pout->nnscat = pin->nnscat;
+  pout->np = pin->np;
 
 
   return (0);
@@ -181,7 +182,7 @@ int phot_history_summarize()
                                                                                                                                  
 Synopsis:
    ds_to_cone (cc, p) This is a new version of ds_to_cone introduced in order to 
-   allow cylvar coordianates  Eventually it is intended to replace ds_to_windcone 
+   allow cylvar coordinates  Eventually it is intended to replace ds_to_windcone 
    completely, or at least the guts of ds_to_windcone. 
 							                                                                                                                                  
 Returns:
@@ -232,7 +233,7 @@ As part of the conversion, the old ds_to_cone was renamed to ds_to_windcone
 History:
 	05jul	ksl	Created so that cylvar coordinates could be incorporated
 			into python.
-	06sep	ksl	57h -- Corrected an error discovered by SS in the seup of the
+	06sep	ksl	57h -- Corrected an error discovered by SS in the setup of the
 			quadratic for a cone.  Note that if this routing ever became
 			a "heavy hitter" in terms of efficiency, there are a few
 			changes that could speed it up a bit since the magnitude
@@ -419,7 +420,7 @@ quadratic (a, b, c, r)
  * ds_to_plane calculates the distance of a photon must travel to hit the plane. 
  *
  * Calcululate the distance a photon must travel to hit a plane.  The plane, just for simplicity,
-   is defined as a photon structure since you need both a point a a direction to define it.  
+   is defined as a photon structure since you need both a point and a direction to define it.  
    A plane can be defined by a position x_p and a normal lmn_p.  If the photon ray is then
    defined by x=x_v+s lmn_v and the allowed values of s are determined by the equation
 
