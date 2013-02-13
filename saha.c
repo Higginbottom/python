@@ -144,7 +144,7 @@ nebular_concentrations (xplasma, mode)
 
       partition_functions (xplasma, mode);	// t_r with weights
 
-      m = concentrations (xplasma, 0);	// Saha equation using t_r
+      m = concentrations (xplasma, 2);	// Saha equation using t_r, JM edited this!
 
       m = lucy (xplasma);	// Main routine for running LucyMazzali
 
