@@ -490,7 +490,7 @@ wind_rad_init ()
 /* 71 - 111279 - ksl - Small modification to reflect the fact that nxfreq has been moved into the geo structure */
       for (i=0 ; i<geo.nxfreq ; i++)
 	{
-      	plasmamain[n].xj[i] = plasmamain[n].xave_freq[i] = plasmamain[n].nxtot[i] = 0;
+      	plasmamain[n].xj[i] = plasmamain[n].xave_freq[i] = plasmamain[n].nxtot[i] = 0.2;  //JM edited this too in his branch
 	plasmamain[n].xsd_freq[i] = 0.0; /* NSH 120815 Zero the standard deviation counter */
 	}
 
