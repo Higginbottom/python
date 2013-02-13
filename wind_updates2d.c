@@ -706,7 +706,7 @@ r=sqrt((wmain[plasmamain[n].nwind].x[0]*wmain[plasmamain[n].nwind].x[0]+wmain[pl
 
       plasmamain[n].ferland_ip=geo.n_ioniz/(4*PI*C*plasmamain[n].rho*rho2nh*(r*r));
 
-     printf ("NSH log(ferland_ip) for cell %i = %e (r=%e nh=%e nioniz=%e)\n",n,log10(plasmamain[n].ferland_ip),r,plasmamain[n].rho*rho2nh,geo.n_ioniz);
+     //printf ("NSH log(ferland_ip) for cell %i = %e (r=%e nh=%e nioniz=%e)\n",n,log10(plasmamain[n].ferland_ip),r,plasmamain[n].rho*rho2nh,geo.n_ioniz);
 }
 return(0);
 }
