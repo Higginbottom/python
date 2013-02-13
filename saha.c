@@ -136,7 +136,7 @@ nebular_concentrations (xplasma, mode)
 
       partition_functions (xplasma, mode);
 
-      m = concentrations (xplasma, 3); //Other person edited this
+      m = concentrations (xplasma, mode); //Other person edited this
 
     }
   else if (mode == 2)		// This is the standard LM method
@@ -144,7 +144,7 @@ nebular_concentrations (xplasma, mode)
 
       partition_functions (xplasma, mode);	// t_r with weights
 
-      m = concentrations (xplasma, 2);	// Saha equation using t_r, JM edited this!
+      m = concentrations (xplasma, 0);	// Saha equation using t_r
 
       m = lucy (xplasma);	// Main routine for running LucyMazzali
 
