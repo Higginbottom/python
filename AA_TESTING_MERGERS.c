@@ -13,7 +13,7 @@ Imagine we have 2 workers, JM and OtherPerson
 double main()
 {
   double lumstar, r, tstar;
-  lumstar = 8 * PI * STEFAN_BOLTZMANN * r * r * tstar * tstar * tstar; /* JM Edited this */
+  lumstar = 8 * PI * STEFAN_BOLTZMANN * r * r * tstar * tstar * tstar; 
   return (lumstar);
 }
 
