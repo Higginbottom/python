@@ -718,7 +718,6 @@ It also seems likely that we have mixed usage of some things, e.g ge.rt_mode and
   else				/* If it is an AGN */
     {
       geo.star_radiation = 0;	// 70b - AGN do not have a star at the center */
-      //OLD rdint ("Star_radiation(y=1)", &geo.star_radiation);
       rdint ("Disk_radiation(y=1)", &geo.disk_radiation);
       geo.bl_radiation = 0;
       rdint ("Wind_radiation(y=1)", &geo.wind_radiation);

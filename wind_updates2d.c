@@ -490,7 +490,7 @@ wind_rad_init ()
 /* 71 - 111279 - ksl - Small modification to reflect the fact that nxfreq has been moved into the geo structure */
       for (i=0 ; i<geo.nxfreq ; i++)
 	{
-      	plasmamain[n].xj[i] = plasmamain[n].xave_freq[i] = plasmamain[n].nxtot[i] = 0; //0 is the correct one
+      	plasmamain[n].xj[i] = plasmamain[n].xave_freq[i] = plasmamain[n].nxtot[i] = 0;
 	plasmamain[n].xsd_freq[i] = 0.0; /* NSH 120815 Zero the standard deviation counter */
 	}
 
@@ -707,7 +707,6 @@ r=sqrt((wmain[plasmamain[n].nwind].x[0]*wmain[plasmamain[n].nwind].x[0]+wmain[pl
       plasmamain[n].ferland_ip=geo.n_ioniz/(4*PI*C*plasmamain[n].rho*rho2nh*(r*r));
 
      printf ("NSH log(ferland_ip) for cell %i = %e (r=%e nh=%e nioniz=%e)\n",n,log10(plasmamain[n].ferland_ip),r,plasmamain[n].rho*rho2nh,geo.n_ioniz);
-
 }
 return(0);
 }

@@ -591,7 +591,7 @@ double
 emittance_bb (freqmin, freqmax, t)
      double freqmin, freqmax, t;
 {
-  double alphamin, alphamax, q1,x;
+  double alphamin, alphamax, q1;
   double integ_planck_d ();
   q1 =
     2. * PI * (BOLTZMANN *
