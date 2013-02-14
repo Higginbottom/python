@@ -324,6 +324,7 @@ iwind = -1 	Don't generate any wind photons at all
       geo.f_matom = get_matom_f ();
       geo.f_kpkt = get_kpkt_f ();	//This returns the specific luminosity in the
       //spectral band of interest.
+      printf("setting geo.f_matom and geo.f_kpkt");
     }
 
   Log
