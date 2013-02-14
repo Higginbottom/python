@@ -24,7 +24,7 @@ double main(r, tstar, freqmin, freqmax, ioniz_or_final, f)
   int spectype;
 
   log_g = geo.gstar = log10 (G * geo.mstar / (geo.rstar * geo.rstar));
-  lumstar = 4 * PI * STEFAN_BOLTZMANN * r * r * tstar * tstar * tstar * tstar;
+  lumstar = 4 * PI * STEFAN_BOLTZMANN  * r * tstar * tstar * tstar * tstar; /* Other person edited this */
 
   if (ioniz_or_final == 1)
     spectype = geo.star_spectype;	/* type for final spectrum */
@@ -37,7 +37,9 @@ double main(r, tstar, freqmin, freqmax, ioniz_or_final, f)
     }
   else
     {
+
       emit = emittance_bb (freqmin, freqmax, tstar);
+      /* Other person edited this */
     }
 
   *f = emit;			/* Calculate the surface flux between freqmin and freqmax */
