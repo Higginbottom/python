@@ -123,7 +123,7 @@ matom (p, nres, escape)
   double pjnorm_known[NLEVELS_MACRO], penorm_known[NLEVELS_MACRO];
   int prbs_known[NLEVELS_MACRO];
 
-
+  printf("Calling matom");
   for (n = 0; n < NLEVELS_MACRO; n++)
     {
       prbs_known[n] = -1;	//flag all as unknown
