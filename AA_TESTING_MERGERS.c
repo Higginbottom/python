@@ -15,6 +15,7 @@ double main()
   double lumstar, r, tstar;
   tstar=40000.0 	//JM edited this too
   lumstar = 8 * PI * STEFAN_BOLTZMANN * r * r * tstar * tstar * tstar; // JM edited this
+  /* We chose JM's version */
   return (lumstar);
 }
 
