@@ -226,8 +226,9 @@ should allocate the space for the spectra to avoid all this nonsense.  02feb ksl
   int opar_stat, restart_stat;
   double time_max;		// The maximum time the program is allowed to run before halting
 
-
-
+  printf("*******************************************************************************************\n\n");
+  printf("This is a test version of Python used by JM to track the macro atom implementation\n\n"); 
+   printf("*******************************************************************************************");
 
   opar_stat = 0;		/* 59a - ksl - 08aug - Initialize opar_stat to indicate that if we do not open a rdpar file, 
 				   the assumption is that we are reading from the command line */
