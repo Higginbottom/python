@@ -228,7 +228,7 @@ should allocate the space for the spectra to avoid all this nonsense.  02feb ksl
 
   printf("*******************************************************************************************\n\n");
   printf("This is a test version of Python used by JM to track the macro atom implementation\n\n"); 
-   printf("*******************************************************************************************");
+   printf("*******************************************************************************************\n");
 
   opar_stat = 0;		/* 59a - ksl - 08aug - Initialize opar_stat to indicate that if we do not open a rdpar file, 
 				   the assumption is that we are reading from the command line */
@@ -564,7 +564,7 @@ should allocate the space for the spectra to avoid all this nonsense.  02feb ksl
   if (photons_per_cycle < NPHOT)
     photons_per_cycle = NPHOT;
   subcycles = photons_per_cycle / NPHOT;
-  Log ("Photons_per_cycle adjusted to %d\n", photons_per_cycle);
+  //Log ("Photons_per_cycle adjusted to %d\n", photons_per_cycle);
 
   rdint ("Ionization_cycles", &geo.wcycles);
 
