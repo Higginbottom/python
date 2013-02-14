@@ -136,7 +136,7 @@ nebular_concentrations (xplasma, mode)
 
       partition_functions (xplasma, mode);
 
-      m = concentrations (xplasma, mode);
+      m = concentrations (xplasma, mode); //Other person edited this
 
     }
   else if (mode == 2)		// This is the standard LM method
