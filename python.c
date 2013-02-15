@@ -194,7 +194,7 @@ main (argc, argv)
   double freqmin, freqmax;
   double swavemin, swavemax, renorm;
   int n, nangles, photons_per_cycle, subcycles;
-  int iwind;
+  int iwind, James_variable_print;
 
 /* Next three lines have variables that should be a structure, or possibly we
 should allocate the space for the spectra to avoid all this nonsense.  02feb ksl */
@@ -233,8 +233,8 @@ should allocate the space for the spectra to avoid all this nonsense.  02feb ksl
   opar_stat = 0;		/* 59a - ksl - 08aug - Initialize opar_stat to indicate that if we do not open a rdpar file, 
 				   the assumption is that we are reading from the command line */
   restart_stat = 0;		/* 67 -ksl - 08nov - Assume initially that these is a new run from scratch, and not 
-				   a restart
-				 */
+				   a restart */
+  James_variable_print=1;			 
   time_max = 13.8e9 * 3.2e7;	/* 67 - ksl - 08nov - The maximum time the program will run without stopping.  This
 				   is initially set to the lifetime of the universe
 				 */

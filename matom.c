@@ -105,7 +105,7 @@ matom (p, nres, escape)
 {
   struct lines *line_ptr;
   struct topbase_phot *cont_ptr;
-  int uplvl, uplvl_old;
+  int uplvl, uplvl_old, James_variable_print;
   double jprbs[2 * (NBBJUMPS + NBFJUMPS)];
   double eprbs[NBBJUMPS + NBFJUMPS];
   double pjnorm, penorm;
@@ -125,8 +125,11 @@ matom (p, nres, escape)
   double pjnorm_known[NLEVELS_MACRO], penorm_known[NLEVELS_MACRO];
   int prbs_known[NLEVELS_MACRO];
   
-  
-  printf("Calling matom");
+  if (James_variable_print>0) {
+  	printf("Calling matom\n");
+	James_variable_print=0;
+  }
+
   for (n = 0; n < NLEVELS_MACRO; n++)
     {
       prbs_known[n] = -1;	//flag all as unknown

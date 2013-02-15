@@ -324,7 +324,7 @@ iwind = -1 	Don't generate any wind photons at all
       geo.f_matom = get_matom_f ();
       geo.f_kpkt = get_kpkt_f ();	//This returns the specific luminosity in the
       //spectral band of interest.
-      printf("setting geo.f_matom and geo.f_kpkt");
+      printf("setting geo.f_matom and geo.f_kpkt\n");
     }
 
   Log
@@ -617,7 +617,7 @@ star_init (r, tstar, freqmin, freqmax, ioniz_or_final, f)
 /* 57g -- 07jul -- fixed error calculating gravity of star that has been here forever -- ksl */
   log_g = geo.gstar = log10 (G * geo.mstar / (geo.rstar * geo.rstar));
   lumstar = 4 * PI * STEFAN_BOLTZMANN * r * r * tstar * tstar * tstar * tstar;
-
+  printf("Initialising star!\n\n\n");
   if (ioniz_or_final == 1)
     spectype = geo.star_spectype;	/* type for final spectrum */
   else
