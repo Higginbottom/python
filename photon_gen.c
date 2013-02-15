@@ -626,10 +626,12 @@ star_init (r, tstar, freqmin, freqmax, ioniz_or_final, f)
   if (spectype >= 0)
     {
       emit = emittance_continuum (spectype, freqmin, freqmax, tstar, log_g);
+      printf("Our emittance is spectype >0: %lf, tstar is %lf", emit, tstar);
     }
   else
     {
       emit = emittance_bb (freqmin, freqmax, tstar);
+      printf("Our emittance is spectype bb: %lf, tstar is %lf", emit, tstar);
     }
 
   *f = emit;			// Calculate the surface flux between freqmin and freqmax
