@@ -110,6 +110,7 @@ py_smooth: py_smooth.o
 
 test_bb: bb.o test_bb.o pdf.o recipes.o bilinear.o time.o 
 	gcc  ${CFLAGS} bb.o pdf.o test_bb.o  recipes.o bilinear.o time.o $(LDFLAGS) -o test_bb
+	mv $@ $(BIN)
 	
 test_pow: test_pow.o pdf.o recipes.o bilinear.o time.o 
 	gcc  ${CFLAGS} pdf.o test_pow.o  recipes.o bilinear.o time.o $(LDFLAGS) -o test_pow
