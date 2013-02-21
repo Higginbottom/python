@@ -617,7 +617,7 @@ star_init (r, tstar, freqmin, freqmax, ioniz_or_final, f)
 /* 57g -- 07jul -- fixed error calculating gravity of star that has been here forever -- ksl */
   log_g = geo.gstar = log10 (G * geo.mstar / (geo.rstar * geo.rstar));
   lumstar = 4 * PI * STEFAN_BOLTZMANN * r * r * tstar * tstar * tstar * tstar;
-  printf("Initialising star!\n\n\n");
+  printf("******************\nInitialising star!\n\n\n");
   if (ioniz_or_final == 1)
     spectype = geo.star_spectype;	/* type for final spectrum */
   else
@@ -626,14 +626,13 @@ star_init (r, tstar, freqmin, freqmax, ioniz_or_final, f)
   if (spectype >= 0)
     {
       emit = emittance_continuum (spectype, freqmin, freqmax, tstar, log_g);
-      printf("Our emittance is spectype >0: %lf, tstar is %lf", emit, tstar);
     }
   else
     {
       emit = emittance_bb (freqmin, freqmax, tstar);
-      printf("Our emittance is spectype bb: %lf, tstar is %lf", emit, tstar);
     }
-
+  printf("Our emittance is spectype %d, emit=%lf, tstar=%lf \n\n", spectype, emit, tstar);
+  printf("Ourluminosity is %lf \n\n", lumstar);
   *f = emit;			// Calculate the surface flux between freqmin and freqmax
   *f *= (4. * PI * r * r);
 
