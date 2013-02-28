@@ -101,7 +101,7 @@ int
 bands_init (imode, band, lambdamx)
      int imode;			// A switch used for determining how the bands are to be populated
      struct xbands *band;
-     double lambdamx		// added by JM to allow user to specify minimum frequency
+     double lambdamx;		// added by JM to allow user to specify minimum frequency
 
 {
   int mode;
