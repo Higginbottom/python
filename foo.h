@@ -299,7 +299,7 @@ int rebalance(double rates_up[], double rates_down[], double fraction[], int nto
 int wind_update_after_detailed_balance(PlasmaPtr xplasma, int nelem, double newden[]);
 /* bands.c */
 int bands_init (int imode, struct xbands *band);
-int JM_bands_init (int imode, struct xbands *band double lambdamx);
+int JM_bands_init (int imode, struct xbands *band, double lambdamx);
 int freqs_init (double freqmin, double freqmax);
 /* time.c */
 double timer(void);
