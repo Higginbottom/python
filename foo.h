@@ -298,8 +298,9 @@ int detailed_balance(PlasmaPtr xplasma, int nelem, double newden[]);
 int rebalance(double rates_up[], double rates_down[], double fraction[], int ntot);
 int wind_update_after_detailed_balance(PlasmaPtr xplasma, int nelem, double newden[]);
 /* bands.c */
-int bands_init(int imode, struct xbands *band);
-int freqs_init(double freqmin, double freqmax);
+int bands_init (int imode, struct xbands *band);
+int JM_bands_init (int imode, struct xbands *band double lambdamx);
+int freqs_init (double freqmin, double freqmax);
 /* time.c */
 double timer(void);
 int get_time(char curtime[]);
