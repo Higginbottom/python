@@ -192,7 +192,7 @@ main (argc, argv)
 
   int i, wcycles, pcycles;
   double freqmin, freqmax;
-  double swavemin, swavemax, renorm, freqmax_ion, alphamin;
+  double swavemin, swavemax, renorm, lambdamx;
   int n, nangles, photons_per_cycle, subcycles;
   int iwind, James_variable_print;
 
@@ -1359,8 +1359,8 @@ run -- 07jul -- ksl
 
   /* These lines have been added by JM to allow one to vary ALPHAMIN and freqmax from the parameter file. They should be removed once YSO testing is done */
 
-  rddoub ("lambdamax_for_ionisaton_cycles", &lambdamax_ion);
-  rddoub ("alphamin", &alphamin);
+  rddoub ("lambdamax_for_ionisaton_cycles(Angstroms)", &lambdamx);
+  //rddoub ("alphamin", &alphamin);	not necessary for the moment
 
 
 
@@ -1400,7 +1400,7 @@ run -- 07jul -- ksl
 
 //Old71  bands_init (0.0, freqmin, freqmax, -1, &xband);
 //OLD71	bands_init (tmax, freqmin, freqmax, -1, &xband);
-	bands_init (-1, &xband);
+	bands_init (-1, &xband, lambdamx);
 
 /*if we have changed min and max in bands_init, we need to make sure this is reflected in the frequency bounds*/
   freqmin = xband.f1[0];
