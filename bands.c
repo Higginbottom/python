@@ -98,9 +98,10 @@ xband;
 
 
 int
-bands_init (imode, band)
+bands_init (imode, band, lambdamx)
      int imode;			// A switch used for determining how the bands are to be populated
      struct xbands *band;
+     double lambdamx		// added by JM to allow user to specify minimum frequency
 
 {
   int mode;
@@ -116,7 +117,7 @@ bands_init (imode, band)
   /* Imported from python.c */
 
   // 59 - Increased to 20,000 A so could go further into NIR 
-  freqmin = C / 100000e-8;	/*30000 A - JM set this to 100000A for YSO testing, will remove later*/
+  freqmin = C / lambdamx*1.0e-8;	/*added by JM to allow user to specify minimum frequency*/
   tmax = TSTAR; 
   if (geo.twind > tmax)
     tmax = geo.twind;

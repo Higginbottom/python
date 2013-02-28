@@ -192,7 +192,7 @@ main (argc, argv)
 
   int i, wcycles, pcycles;
   double freqmin, freqmax;
-  double swavemin, swavemax, renorm;
+  double swavemin, swavemax, renorm, freqmax_ion, alphamin;
   int n, nangles, photons_per_cycle, subcycles;
   int iwind, James_variable_print;
 
@@ -227,7 +227,7 @@ should allocate the space for the spectra to avoid all this nonsense.  02feb ksl
   double time_max;		// The maximum time the program is allowed to run before halting
 
   printf("*******************************************************************************************\n\n");
-  printf("This is a test version of Python used by JM to track the macro atom implementation\n\n"); 
+  printf("This is a test version of Python used by JM to track the macro atom implementation.\nIt is maintained under the JM branch on GitHub\n"); 
    printf("*******************************************************************************************\n");
 
   opar_stat = 0;		/* 59a - ksl - 08aug - Initialize opar_stat to indicate that if we do not open a rdpar file, 
@@ -1357,6 +1357,13 @@ run -- 07jul -- ksl
       rdint ("Keep.photoabs.during.final.spectrum(1=yes)", &keep_photoabs);
     }
 
+  /* These lines have been added by JM to allow one to vary ALPHAMIN and freqmax from the parameter file. They should be removed once YSO testing is done */
+
+  rddoub ("lambdamax_for_ionisaton_cycles", &lambdamax_ion);
+  rddoub ("alphamin", &alphamin);
+
+
+
 /* 081221 - 67c - Establish limits on the frequency intervals to be used by the ionization cycles and 
  * the fraquency bands for stratified sampling.  Changes here were made to allow more control
  * over statified sampling, since we have expanded the temperature ranges of the types of systems
@@ -1404,8 +1411,6 @@ run -- 07jul -- ksl
  */
 	freqs_init(freqmin,freqmax);
 
-
-
 /* Wrap up and save all the inputs */
 
   if (strncmp (root, "mod", 3) == 0)
@@ -1421,6 +1426,7 @@ run -- 07jul -- ksl
     }
   else
     cpar ("python.pf");
+
 
 /* OK all inputs have been obtained at this point and the inputs have been copied to "mod.pf" or "python.pf" */
 
