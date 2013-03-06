@@ -192,7 +192,7 @@ main (argc, argv)
 
   int i, wcycles, pcycles;
   double freqmin, freqmax;
-  double swavemin, swavemax, renorm, lambdamx;
+  double swavemin, swavemax, renorm, lambdamx, nphot_tot;
   int n, nangles, photons_per_cycle, subcycles;
   int iwind, James_variable_print;
 
@@ -559,10 +559,12 @@ should allocate the space for the spectra to avoid all this nonsense.  02feb ksl
 
   rdint ("photons_per_cycle", &photons_per_cycle);
   NPHOT = photons_per_cycle;	// For now set NPHOT to be be photons/cycle --> subcycles==1
-
+  Log("!!JAMES: %d\t%d\t",NPHOT,photons_per_cycle);
   photons_per_cycle = (photons_per_cycle / NPHOT) * NPHOT;
+  Log("!!JAMES: %d\t%d\t",NPHOT,photons_per_cycle);
   if (photons_per_cycle < NPHOT)
     photons_per_cycle = NPHOT;
+  Log("!!JAMES: %d\t%d\t",NPHOT,photons_per_cycle);
   subcycles = photons_per_cycle / NPHOT;
   //Log ("Photons_per_cycle adjusted to %d\n", photons_per_cycle);
 
@@ -1801,8 +1803,11 @@ printf ("NSH GOING TO DISK_INIT\n");
          1 implies that detailed spectra, as opposed to the ionization of the wind is being calculated 
 
        */
-
-      define_phot (p, freqmin, freqmax, NPHOT * pcycles, 1, iwind, 0);
+      Log("!!JAMES: %d\t%d\t\n\n",NPHOT,NPHOT * pcycles);
+      nphot_tot=(double)NPHOT * (double)pcycles;			/* Convert to float to get round max-out BUG */
+      Log("!!JAMES: %d\t%lf\t\n\n",NPHOT,nphot_tot);
+      define_phot (p, freqmin, freqmax, nphot_tot, 1, iwind, 0);
+      //Log("!!JAMES: %d\t%d\t\n\n",NPHOT,NPHOT * pcycles);
 
       for (icheck = 0; icheck < NPHOT; icheck++)
 	{

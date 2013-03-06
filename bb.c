@@ -540,8 +540,8 @@ init_integ_planck_d ()
   double x;
   double planck_d (), qromb ();
   int n;
-  integ_planck[0] = 0;
-  for (n = 1; n <= NMAX; n++)
+  //integ_planck[0] = qromb (planck_d, 0.0, x, 1e-7);;
+  for (n = 0; n <= NMAX; n++)
     {
       x = ALPHAMIN + n * (ALPHAMAX - ALPHAMIN) / NMAX;
 // 1e-7 is the fractional accuracy in my modified version of qromb -- ksl

@@ -76,7 +76,7 @@ int
 define_phot (p, f1, f2, nphot_tot, ioniz_or_final, iwind, freq_sampling)
      PhotPtr p;
      double f1, f2;
-     int nphot_tot;
+     double nphot_tot;
      int ioniz_or_final;
      int iwind;
      int freq_sampling;		// 0 --> old uniform approach, 1 --> mininimum fractions ins various bins
@@ -99,6 +99,7 @@ define_phot (p, f1, f2, nphot_tot, ioniz_or_final, iwind, freq_sampling)
          a way that it mimics the energy distribution of the star. */
 
       geo.weight = (weight) = (geo.f_tot) / (nphot_tot);
+      Log("!!JAMES define phot: %lf\t%lf\t%lf\n\n", geo.weight, geo.f_tot, nphot_tot);
       xmake_phot (p, f1, f2, ioniz_or_final, iwind, weight, 0, NPHOT);
     }
   else
