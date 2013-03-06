@@ -298,9 +298,8 @@ int detailed_balance(PlasmaPtr xplasma, int nelem, double newden[]);
 int rebalance(double rates_up[], double rates_down[], double fraction[], int ntot);
 int wind_update_after_detailed_balance(PlasmaPtr xplasma, int nelem, double newden[]);
 /* bands.c */
-int bands_init (int imode, struct xbands *band);
-int JM_bands_init (int imode, struct xbands *band, double lambdamx);
-int freqs_init (double freqmin, double freqmax);
+int bands_init(int imode, struct xbands *band);
+int freqs_init(double freqmin, double freqmax);
 /* time.c */
 double timer(void);
 int get_time(char curtime[]);
@@ -421,6 +420,7 @@ int get_shell_wind_params(void);
 double kappa_comp(PlasmaPtr xplasma, double freq);
 double kappa_ind_comp(PlasmaPtr xplasma, double freq, double ds, double w);
 double total_comp(WindPtr one, double t_e);
+double klein_nishina(double nu);
 /* torus.c */
 double torus_rho(double x[]);
 double ds_to_cylinder(double rho, struct photon *p);
@@ -489,6 +489,7 @@ int dvds_summary(WindPtr w, char rootname[], int ochoice);
 int inner_shell_summary(WindPtr w, char rootname[], int ochoice);
 int IP_summary(WindPtr w, char rootname[], int ochoice);
 int alpha_summary(WindPtr w, char rootname[], int ochoice);
+int J_summary(WindPtr w, char rootname[], int ochoice);
 int phot_split(WindPtr w, char rootname[], int ochoice);
 int thompson(WindPtr w, char rootname[], int ochoice);
 int nscat_split(WindPtr w, char rootname[], int ochoice);

@@ -345,6 +345,8 @@ pdf_gen_from_func (pdf, func, xmin, xmax, njumps, jump)
   pdf->norm=1.;                 /* pdf_gen_from array produces a properly nomalized cdf and so the
 				   normalization is 1.  110629 ksl
 				*/
+//OLD  pdf->norm = xstep;		/* The normalizing factor that would convert the function we
+//OLD				   have been given into a proper probability density function */
 
 /* Calculate the gradients */
   recalc_pdf_from_cdf (pdf);	// 57ib 

@@ -166,6 +166,8 @@ History:
 			xj and xave_freq.  Just set up the frequence limits here.	
 	1112	ksl	Moved everything associated with frequency bands into bands_init
 	1212	nsh	changed the way DFUDGE is defined.
+        0213	jm	74b5 introduced double precision variable for photon number for calling 
+			define_phot. Fixes Bug JM130302 in photon weights.
  	
  	Look in Readme.c for more text concerning the early history of the program.
 
@@ -192,9 +194,9 @@ main (argc, argv)
 
   int i, wcycles, pcycles;
   double freqmin, freqmax;
-  double swavemin, swavemax, renorm, lambdamx, nphot_tot;
+  double swavemin, swavemax, renorm, nphot_to_define;
   int n, nangles, photons_per_cycle, subcycles;
-  int iwind, James_variable_print;
+  int iwind;
 
 /* Next three lines have variables that should be a structure, or possibly we
 should allocate the space for the spectra to avoid all this nonsense.  02feb ksl */
@@ -226,15 +228,14 @@ should allocate the space for the spectra to avoid all this nonsense.  02feb ksl
   int opar_stat, restart_stat;
   double time_max;		// The maximum time the program is allowed to run before halting
 
-  printf("*******************************************************************************************\n\n");
-  printf("This is a test version of Python used by JM to track the macro atom implementation.\nIt is maintained under the JM branch on GitHub\n"); 
-   printf("*******************************************************************************************\n");
+
+
 
   opar_stat = 0;		/* 59a - ksl - 08aug - Initialize opar_stat to indicate that if we do not open a rdpar file, 
 				   the assumption is that we are reading from the command line */
   restart_stat = 0;		/* 67 -ksl - 08nov - Assume initially that these is a new run from scratch, and not 
-				   a restart */
-  James_variable_print=1;			 
+				   a restart
+				 */
   time_max = 13.8e9 * 3.2e7;	/* 67 - ksl - 08nov - The maximum time the program will run without stopping.  This
 				   is initially set to the lifetime of the universe
 				 */
@@ -559,14 +560,12 @@ should allocate the space for the spectra to avoid all this nonsense.  02feb ksl
 
   rdint ("photons_per_cycle", &photons_per_cycle);
   NPHOT = photons_per_cycle;	// For now set NPHOT to be be photons/cycle --> subcycles==1
-  Log("!!JAMES: %d\t%d\t",NPHOT,photons_per_cycle);
+
   photons_per_cycle = (photons_per_cycle / NPHOT) * NPHOT;
-  Log("!!JAMES: %d\t%d\t",NPHOT,photons_per_cycle);
   if (photons_per_cycle < NPHOT)
     photons_per_cycle = NPHOT;
-  Log("!!JAMES: %d\t%d\t",NPHOT,photons_per_cycle);
   subcycles = photons_per_cycle / NPHOT;
-  //Log ("Photons_per_cycle adjusted to %d\n", photons_per_cycle);
+  Log ("Photons_per_cycle adjusted to %d\n", photons_per_cycle);
 
   rdint ("Ionization_cycles", &geo.wcycles);
 
@@ -721,6 +720,7 @@ It also seems likely that we have mixed usage of some things, e.g ge.rt_mode and
   else				/* If it is an AGN */
     {
       geo.star_radiation = 0;	// 70b - AGN do not have a star at the center */
+      //OLD rdint ("Star_radiation(y=1)", &geo.star_radiation);
       rdint ("Disk_radiation(y=1)", &geo.disk_radiation);
       geo.bl_radiation = 0;
       rdint ("Wind_radiation(y=1)", &geo.wind_radiation);
@@ -1359,14 +1359,6 @@ run -- 07jul -- ksl
       rdint ("Keep.photoabs.during.final.spectrum(1=yes)", &keep_photoabs);
     }
 
-  /* These lines have been added by JM to allow one to vary ALPHAMIN and freqmax from the parameter file. They should be removed once YSO testing is done */
-
-  rddoub ("lambdamax_for_ionisaton_cycles(Angstroms)", &lambdamx);
-  Log ("JM: User has specified the maximum wavelength in the ionisation cycles");
-  //rddoub ("alphamin", &alphamin);	not necessary for the moment
-
-
-
 /* 081221 - 67c - Establish limits on the frequency intervals to be used by the ionization cycles and 
  * the fraquency bands for stratified sampling.  Changes here were made to allow more control
  * over statified sampling, since we have expanded the temperature ranges of the types of systems
@@ -1403,7 +1395,7 @@ run -- 07jul -- ksl
 
 //Old71  bands_init (0.0, freqmin, freqmax, -1, &xband);
 //OLD71	bands_init (tmax, freqmin, freqmax, -1, &xband);
-	JM_bands_init (-1, &xband, lambdamx);
+	bands_init (-1, &xband);
 
 /*if we have changed min and max in bands_init, we need to make sure this is reflected in the frequency bounds*/
   freqmin = xband.f1[0];
@@ -1413,6 +1405,8 @@ run -- 07jul -- ksl
  * These need to be coordinated with the bands that are set up for spectral gneration
  */
 	freqs_init(freqmin,freqmax);
+
+
 
 /* Wrap up and save all the inputs */
 
@@ -1429,7 +1423,6 @@ run -- 07jul -- ksl
     }
   else
     cpar ("python.pf");
-
 
 /* OK all inputs have been obtained at this point and the inputs have been copied to "mod.pf" or "python.pf" */
 
@@ -1586,7 +1579,13 @@ printf ("NSH GOING TO DISK_INIT\n");
 	   * 0 => for ionization calculation 
 	   */
 //OLD70d        printf ("sent to define_phot freqmin=%e freqmax=%e \n",freqmin,freqmax);
-	  define_phot (p, freqmin, freqmax, photons_per_cycle, 0, iwind, 1);
+
+
+	  /* JM 130306 need to convert photons_per_cycle to double precision for define_phot */
+          nphot_to_define=(double) photons_per_cycle;
+
+	  define_phot (p, freqmin, freqmax, nphot_to_define, 0, iwind, 1);
+
 //OLD70d        printf ("sent to photon_checks freqmin=%e freqmax=%e \n",freqmin,freqmax);
 
 	  photon_checks (p, freqmin, freqmax, "Check before transport");
@@ -1800,14 +1799,14 @@ printf ("NSH GOING TO DISK_INIT\n");
       /* Create the initial photon bundles which need to be trannsported through the wind 
 
          For the detailed spectra, NPHOT*pcycles is the number of photon bundles which will equal the luminosity, 
-         1 implies that detailed spectra, as opposed to the ionization of the wind is being calculated 
+         1 implies that detailed spectra, as opposed to the ionization of the wind is being calculated
+
+ 	 JM 130306 must convert NPHOT and pcycles to double precision variable nphot_to_define
 
        */
-      Log("!!JAMES: %d\t%d\t\n\n",NPHOT,NPHOT * pcycles);
-      nphot_tot=(double)NPHOT * (double)pcycles;			/* Convert to float to get round max-out BUG */
-      Log("!!JAMES: %d\t%lf\t\n\n",NPHOT,nphot_tot);
-      define_phot (p, freqmin, freqmax, nphot_tot, 1, iwind, 0);
-      //Log("!!JAMES: %d\t%d\t\n\n",NPHOT,NPHOT * pcycles);
+
+      nphot_to_define= (double) NPHOT * (double) pcycles; 
+      define_phot (p, freqmin, freqmax, nphot_to_define, 1, iwind, 0);
 
       for (icheck = 0; icheck < NPHOT; icheck++)
 	{

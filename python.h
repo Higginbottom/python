@@ -868,6 +868,7 @@ typedef struct spectrum
 {
   char name[40];
   float freqmin, freqmax, dfreq;
+  float lfreqmin, lfreqmax, ldfreq; /* NSH 1302 - values for logarithmic spectra */
   double lmn[3];
   double mmax, mmin;		/* Used only in live or die situations, mmax=cos(angle-DANG_LIVE_OR_DIE)
 				   and mmim=cos(angle+DANG_LIVE_OR_DIE).   In actually defining this

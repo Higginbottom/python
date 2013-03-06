@@ -24,8 +24,6 @@ Synopsis:
 	the process by which deactivation occurs. At output "nres" identifies this 
 	process and the packet information has been updates. 
 
-        matom() is called by macro_gov() which is called by get_matom_f()
-
 Arguments:
 
        WindPtr w                   the ptr to the structure defining the wind
@@ -105,7 +103,7 @@ matom (p, nres, escape)
 {
   struct lines *line_ptr;
   struct topbase_phot *cont_ptr;
-  int uplvl, uplvl_old, James_variable_print;
+  int uplvl, uplvl_old;
   double jprbs[2 * (NBBJUMPS + NBFJUMPS)];
   double eprbs[NBBJUMPS + NBFJUMPS];
   double pjnorm, penorm;
@@ -124,11 +122,7 @@ matom (p, nres, escape)
     eprbs_known[NLEVELS_MACRO][2 * (NBBJUMPS + NBFJUMPS)];
   double pjnorm_known[NLEVELS_MACRO], penorm_known[NLEVELS_MACRO];
   int prbs_known[NLEVELS_MACRO];
-  
-  if (James_variable_print>0) {
-  	printf("Calling matom\n");
-	James_variable_print=0;
-  }
+
 
   for (n = 0; n < NLEVELS_MACRO; n++)
     {

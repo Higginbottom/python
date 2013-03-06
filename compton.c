@@ -46,6 +46,7 @@
 
   History:
 2011	nsh	Coded as part of the effort to include compton scattering in August 2011 at Southampton.
+feb 2013 - nsh - approximate KN cross section replaced by correct value
 
  ************************************************************************/
 
@@ -55,9 +56,13 @@
 	double freq;  // Frequency of the current photon being tracked
 {
 	double x;  // The opacity of the cell by the time we return it.
-        double alpha; /*The approximate Klein - Nishina cross section computed from equation 6.6 in Hazy 3/10 */
- 	alpha=1/(1+freq*HRYD*(1.1792e-4+(7.084e-10*freq*HRYD)));
-	x=(THOMPSON * alpha * H)/(MELEC * C * C); //Calculate the constant
+        double sigma; /*The cross section, thompson, or KN if hnu/mec2 > 0.01*/
+ 
+/*	alpha=1/(1+freq*HRYD*(1.1792e-4+(7.084e-10*freq*HRYD))); NSH 130214 This is the approximate way of doing it.*/
+
+	sigma=klein_nishina(freq); //NSH 130214 - full KN formula
+		
+	x=(sigma * H)/(MELEC * C * C); //Calculate the constant
 	x*= xplasma->ne * freq; //Multiply by cell electron density and frequency of the packet.
 	return (x);
 }
@@ -79,6 +84,7 @@
 
   History:
 2011	nsh	Coded as part of the effort to include compton scattering in August 2011 at Southampton.
+feb 2013 - nsh - approximate KN cross section replaced by correct value
 
  ************************************************************************/
 
@@ -90,7 +96,7 @@
 	double ds; //The distance the photon travels
 {
 	double x;  // The opacity of the cell by the time we return it.
-        double alpha; /*The approximate Klein - Nishina cross section computed from equation 6.6 in Hazy 3/10 */
+        double sigma; /*The cross section, thompson, or KN if hnu/mec2 > 0.01*/
 	double J,expo; //The estimated intensity in the cell
 	int i;
 //	J=(4*PI*w*ds)/(C*xplasma->vol); //Calcuate the intensity NSH This works for a thin shell... Why? Dont know.
@@ -133,9 +139,13 @@
 
 
 //	printf("We think ds is %e vol is %e area is %e\n",ds,xplasma->vol,pow((xplasma->vol/(4*PI*ds)),0.5));
- 	alpha=1/(1+freq*HRYD*(1.1792e-4+(7.084e-10*freq*HRYD))); //KN cross section
+// 	alpha1=THOMPSON/(1+freq*HRYD*(1.1792e-4+(7.084e-10*freq*HRYD))); //KN cross section NSH 130214 - approximate
+
+	sigma=klein_nishina(freq); //NSH 130214 - full KN formula
+
+
         x=(xplasma->ne)/(MELEC);
-	x*=THOMPSON*alpha*J;
+	x*=sigma*J; // NSH 130214 factor of THOMPSON removed, since alpha is now the actual compton cross section
 	x*=1/(2*freq*freq);
 	if (sane_check(x)) 
 		{
@@ -184,7 +194,54 @@
 	return(x);
 }
 
-	
+
+
+/**************************************************************************
+                    Space Telescope Science Institute
+
+
+  Synopsis:  klein_nishina computes the KN cross section for a photon of frequency nu.
+
+  Description:	
+
+  Arguments:   nu - photon frequency
+
+
+  Returns:   the KN cross section.
+
+  Notes:   This implements equation 7.5 in Rybicki and Lightman
+
+  History:
+2013	nsh	Coded
+
+ ************************************************************************/
+
+	double klein_nishina(nu)
+	double nu;   	//The frequency of the photon packet
+{
+	double x;   	//h nu / kt
+	double x1, x2, x3, x4;  //variables to store intermediate results.
+	double kn; // the final cross section
+
+	x=(H*nu)/(MELEC*C*C);
+	if (x < 0.0001)	
+		{
+		kn=THOMPSON;
+		}
+	else
+		{
+		x1=1.+x;
+		x2=1.+(2.*x);
+		x3=log(x2);
+		x4=((2.*x*x1)/x2)-x3;
+		x4*=x1/(x*x*x);
+		x4=x4+x3/(2.*x);
+		x4=x4-(1+3.*x)/(x2*x2);
+		kn*=0.75*THOMPSON*x4;
+		}
+
+	return(kn);
+}	
 
 
 

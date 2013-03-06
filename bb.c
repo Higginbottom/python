@@ -540,7 +540,7 @@ init_integ_planck_d ()
   double x;
   double planck_d (), qromb ();
   int n;
-  //integ_planck[0] = qromb (planck_d, 0.0, x, 1e-7);;
+  //OLD74b4 integ_planck[0] = 0;	JM: this should be set to ALPHAMIN
   for (n = 0; n <= NMAX; n++)
     {
       x = ALPHAMIN + n * (ALPHAMAX - ALPHAMIN) / NMAX;
@@ -591,7 +591,7 @@ double
 emittance_bb (freqmin, freqmax, t)
      double freqmin, freqmax, t;
 {
-  double alphamin, alphamax, q1;
+  double alphamin, alphamax, q1,x;
   double integ_planck_d ();
   q1 =
     2. * PI * (BOLTZMANN *

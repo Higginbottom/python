@@ -1502,6 +1502,57 @@ alpha_summary (w, rootname, ochoice)
 
 }
 
+
+
+/* A summary of frequency banded radiation density - a crude spectrum for a cell.
+
+ 1301 nsh	Written
+ */
+
+int
+J_summary (w, rootname, ochoice)
+     WindPtr w;
+     char rootname[];
+     int ochoice;
+{
+  int i, n;
+  char filename[LINELENGTH];
+  char number[2];
+  int nplasma;
+
+
+  i = 1;
+  rdint ("Band number for J", &i);
+
+  for (n = 0; n < NDIM2; n++)
+    {
+      aaa[n] = 0;
+      if (w[n].vol > 0.0)
+	{
+	  nplasma = w[n].nplasma;
+	  aaa[n] = (plasmamain[nplasma].xj[i]);
+	}
+    }
+  display ("J in cell");
+	printf ("i=%i",i);
+	sprintf(number,"%i",i);
+  if (ochoice)
+    {
+      strcpy (filename, rootname);
+      strcat (filename, ".J_band");
+      strcat (filename, number);
+      write_array (filename, ochoice);
+
+    }
+  return (0);
+
+}
+
+
+
+
+
+
 //Split of photons from different sources in the cell.
 
 int
