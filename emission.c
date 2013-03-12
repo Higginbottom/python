@@ -107,8 +107,6 @@ wind_luminosity (f1, f2)
   geo.lum_lines = lum_lines;
   geo.lum_fb = lum_fb;
   geo.lum_ff = lum_ff;
-   Log ("!!JM:define_phot: wind  geo.ff %8.2e       ff %8.2e  \n",
-       geo.lum_ff, geo.lum_fb);
   geo.lum_comp = lum_comp; //1108 NSH The total compton luminosity of the wind is stored in the geo structure
   geo.lum_dr = lum_dr; //1109 NSH the total DR luminosity of the wind is stored in the geo structure
   geo.lum_adiabatic = lum_adiab;
