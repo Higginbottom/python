@@ -488,23 +488,19 @@ kappa_ff (xplasma, freq)
 
 if (gaunt_n_gsqrd==0) //Maintain old behaviour
 	{
-        Log("!!JM: maintain older behavior loop\n");
   	if (nelements > 1)
     		{
       		x = x1 =
 		3.692e8 * xplasma->ne * (xplasma->density[1] +
 				 4. * xplasma->density[4]);
-		Log("!!JM: nelements>1\n");
     		}
   	else
     		{
       		x = x1 = 3.692e8 * xplasma->ne * (xplasma->density[1]);
-		Log("!!JM: else loop1\n");
     		}
 	}
 else
 	{
-	Log("!!JM: Else loop, no old behavior\n");
    	x=x1=xplasma->kappa_ff_factor;
 	}
   x *= x2 = (1. - exp (-H_OVER_K * freq / xplasma->t_e));
