@@ -391,6 +391,7 @@ if (sane_check(tau)) {
       //If statement added 01mar18 ksl to correct problem of zero divide
       //  in odd situations where no continuum opacity
       z = (energy_abs) / kappa_tot;
+      Log("!!JMHEAT: heat_tot %8.2e  heat_photo %8.2e", xplasma->heat_tot, xplasma->heat_ff );
       xplasma->heat_ff += z * frac_ff;
       xplasma->heat_tot += z * frac_ff;
       xplasma->heat_comp += z * frac_comp; /* NSH 1108 Calculate the heating in the cell due to compton heating */
@@ -407,6 +408,7 @@ if (sane_check(tau)) {
 	 */
 	{
 	  xplasma->heat_photo += z * frac_tot;
+	  Log("!!JMHEAT: heat_tot %8.2e  heat_photo %8.2e", xplasma->heat_tot, xplasma->heat_ff );
 	  xplasma->heat_z += z * frac_z;
 	  xplasma->heat_tot += z * frac_tot;	//All of the photoinization opacities
 /* Calculate the number of photoionizations per unit volume for H and He */

@@ -456,7 +456,6 @@ subroutine radiation can be avoided.
 
   if (geo.rt_mode == 2)
     {				// Macro-method
-
       one = &w[p->grid];	/* So one is the grid cell of interest */
       nplasma = one->nplasma;
       xplasma = &plasmamain[nplasma];
@@ -467,6 +466,7 @@ for consistency.  Delete comment when satisfied OK */
 
       if (geo.ioniz_or_extract == 1)	//don't need to record estimators if this is set to 0 (spectrum cycle)
 	{
+
 	  bf_estimators_increment (one, p, ds_current);
 /*photon weight times distance in the shell is proportional to the mean intensity */
 	  xplasma->j += p->w * ds_current;
