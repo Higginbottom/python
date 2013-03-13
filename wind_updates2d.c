@@ -320,6 +320,7 @@ double nsh_lum_metals;
       lsum += plasmamain[nplasma].heat_lines;
       csum += plasmamain[nplasma].heat_comp; //1108 NSH Increment the compton heating counter
       icsum += plasmamain[nplasma].heat_ind_comp; //1205 NSH Increment the induced compton heating counter
+      Log("!!JMHEAT: Cell  %d  heat_tot  %8.2e  heat_photo  %8.2e  heat_ff  %8.2e  heat_lines  %8.2e  \n", nplasma, plasmamain[nplasma].heat_tot, plasmamain[nplasma].heat_photo, plasmamain[nplasma].heat_ff, plasmamain[nplasma].heat_lines);
        	//Log ("OUTPUT logIP(cloudy_thoeretical)= %e logIP(cloudy_actual)=%e\n",log10(plasmamain[nplasma].ferland_ip),log10(plasmamain[nplasma].ip)); 
     }
 
