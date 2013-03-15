@@ -240,6 +240,11 @@ saha_inv: saha_inv.o get_atomicdata.c
 	cp $@ $(BIN)/saha_inv
 	mv $@ $(BIN)/saha_inv$(VERSION)
 
+release: 
+	git checkout JM
+	git status
+	git commit -am 'v$(VERSION) Commit'
+
 
 
 

@@ -325,6 +325,7 @@ return and record an error */
   one = &wmain[n];		/* one is the grid cell where the photon is */
   nplasma = one->nplasma;
   xplasma = &plasmamain[nplasma];
+  printf("N: %d \n", n);
   
 
 
@@ -466,7 +467,7 @@ for consistency.  Delete comment when satisfied OK */
 
       if (geo.ioniz_or_extract == 1)	//don't need to record estimators if this is set to 0 (spectrum cycle)
 	{
-
+	  
 	  bf_estimators_increment (one, p, ds_current);
 /*photon weight times distance in the shell is proportional to the mean intensity */
 	  xplasma->j += p->w * ds_current;

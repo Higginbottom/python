@@ -143,9 +143,10 @@ bf_estimators_increment (one, p, ds)
 	      x = sigma_phot_topbase (&phot_top[n], freq_av);	//this is the cross section
 	      weight_of_packet = p->w;
 	      y = weight_of_packet * x * ds;
-	     
+	      printf("!!JMHEAT: in bf_estimators_increment before-  heat_tot    %8.2e  heat_photo %8.2e heat_contribution %8.2e \n", xplasma->heat_tot, xplasma->heat_photo, heat_contribution);
 	      xplasma->heat_photo += heat_contribution = y * density * (1.0 - (ft / freq_av));	
 	      xplasma->heat_tot += heat_contribution;
+	      printf("!!JMHEAT: in bf_estimators_increment after- heat_tot    %8.2e  heat_photo %8.2e heat_contribution %8.2e \n", xplasma->heat_tot, xplasma->heat_photo, heat_contribution);
 	      /* This heat contribution is also the contibution to making k-packets in this volume. So we record it. */
 
 	      xplasma->kpkt_abs += heat_contribution;
@@ -158,7 +159,6 @@ bf_estimators_increment (one, p, ds)
 
   weight_of_packet = p->w;
   y = weight_of_packet * kappa_ff (xplasma, freq_av) * ds;
-
   xplasma->heat_ff += heat_contribution = y;	
   xplasma->heat_tot += heat_contribution;
 
