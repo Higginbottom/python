@@ -241,9 +241,12 @@ saha_inv: saha_inv.o get_atomicdata.c
 	mv $@ $(BIN)/saha_inv$(VERSION)
 
 release: 
-	git checkout JM
-	git status
-	git commit -am 'v$(VERSION) Commit'
+	#git checkout progs
+	#git status
+	#git commit -am 'v$(VERSION) Commit'
+	#git tag -a v$(VERSION) -m "Python $(VERSION) Release"
+	#git push origin progs
+	#git push --tags
 
 
 
