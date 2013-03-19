@@ -412,7 +412,7 @@ one_shot (xplasma, mode)
   double gain;
 
 
-//printf ("NSH here we are in oneshot - running at mode %i\n",mode);
+printf ("NSH here we are in oneshot - running at mode %i\n",mode);
 
   gain = xplasma->gain;
 

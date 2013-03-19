@@ -204,7 +204,6 @@ trans_phot (w, p, iextract)
 
 
 	  istat = translate (w, &pp, tau_scat, &tau, &nres);
-
 //	  printf("Photon=%i,weight=%e,tauscat=%f,nres=%i,istat=%i\n",nphot,p[nphot].w,tau_scat,nres,istat);
 /* nres is the resonance at which the photon was stopped.  At present the
 same value is also stored in pp->nres, but I have not yet eliminated 

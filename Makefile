@@ -34,7 +34,7 @@ CFLAGS = -g -pg -Wall -I$(INCLUDE) -I$(INCLUDE2)
 LDFLAGS= -L$(LIB) -L$(LIB2)  -lm -lkpar -lcfitsio -lgsl -lgslcblas 
 
 #Note that version should be a single string without spaces. 
-VERSION = 74b5JM
+VERSION = 74b5JM_test
 CHOICE=1             // Compress plasma as much as possible
 # CHOICE=0           //  Keep relation between plasma and wind identical
 
@@ -239,14 +239,6 @@ saha_inv: saha_inv.o get_atomicdata.c
 	gcc ${CFLAGS} saha_inv.o get_atomicdata.o
 	cp $@ $(BIN)/saha_inv
 	mv $@ $(BIN)/saha_inv$(VERSION)
-
-release: 
-	#git checkout progs
-	#git status
-	#git commit -am 'v$(VERSION) Commit'
-	#git tag -a v$(VERSION) -m "Python $(VERSION) Release"
-	#git push origin progs
-	#git push --tags
 
 
 

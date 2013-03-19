@@ -334,7 +334,7 @@ iwind = -1 	Don't generate any wind photons at all
      ("!!               f_star %8.2e   f_disk %8.2e   f_bl %8.2e   f_agn %8.2e f_wind %8.2e   f_matom %8.2e   f_kpkt %8.2e \n",
      geo.f_star, geo.f_disk, geo.f_bl, geo.f_agn, geo.f_wind, geo.f_matom, geo.f_kpkt);
 
-  Log ("define_phot: wind  ff %8.2e       fb %8.2e   lines %8.2e \n",
+  Log_silent ("define_phot: wind  ff %8.2e       fb %8.2e   lines %8.2e \n",
        geo.lum_ff, geo.lum_fb, geo.lum_lines);
 
   geo.f_tot =
