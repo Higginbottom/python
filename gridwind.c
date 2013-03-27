@@ -431,17 +431,14 @@ calloc_estimators(nelem)
 
 	for (n = 0; n < nelem; n++) {
 		if(macromain[n].jbar!=NULL){
-			printf("JM!!1");
 			free(macromain[n].jbar);
 		}
-
 		if ((macromain[n].jbar = calloc(sizeof(double), size_Jbar_est)) == NULL) {
 			Error("calloc_estimators: Error in allocating memory for MA estimators\n");
 			exit(0);
 		}
 
 		if(macromain[n].jbar_old!=NULL){
-			printf("JM!!2");
 			free(macromain[n].jbar_old);
 					}
 		if ((macromain[n].jbar_old = calloc(sizeof(double), size_Jbar_est)) == NULL) {
@@ -450,11 +447,9 @@ calloc_estimators(nelem)
 		}
 
 		if(macromain[n].gamma !=NULL){
-			printf("JM!!3");
 			free(macromain[n].gamma);
 		}
 		if ((macromain[n].gamma = calloc(sizeof(double), size_gamma_est)) == NULL) {
-			printf("JM!!4");
 			Error("calloc_estimators: Error in allocating memory for MA estimators\n");
 			exit(0);
 		}
@@ -573,7 +568,7 @@ calloc_estimators(nelem)
 		}
 	}
 
-	printf("JM!!:got to end");
+
 
 	if (nlevels_macro > 0 || geo.nmacro > 0) {
 		Log_silent

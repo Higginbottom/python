@@ -116,7 +116,7 @@ bands_init (imode, band)
   /* Imported from python.c */
 
   // 59 - Increased to 20,000 A so could go further into NIR 
-  freqmin = C / 60000e-8;	/*60000 A for YSO model testing */
+  freqmin = C / 12000e-8;	/*20000 A */
   tmax = TSTAR; 
   if (geo.twind > tmax)
     tmax = geo.twind;
