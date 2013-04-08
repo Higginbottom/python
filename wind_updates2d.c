@@ -208,7 +208,7 @@ double nsh_lum_metals;
 /* 1110 NSH Normalise IP, which at this point should be the number of photons in a cell by dividing by volume and number density of hydrogen in the cell */
 
       plasmamain[n].ip /= (C*volume*nh);
-      printf ("NSH Log Ionisation parameter for cell %i = %2.2f\n",n,log10(plasmamain[n].ip));
+//OLD      printf ("NSH Log Ionisation parameter for cell %i = %2.2f\n",n,log10(plasmamain[n].ip));
 
 
       /* If geo.adiabatic is true, then alculate the adiabatic cooling using the current, i.e 
@@ -706,12 +706,12 @@ r=sqrt((wmain[plasmamain[n].nwind].xcen[0]*wmain[plasmamain[n].nwind].xcen[0]+wm
 
       plasmamain[n].ferland_ip=geo.n_ioniz/(4*PI*C*plasmamain[n].rho*rho2nh*(r*r));
 
-     printf ("NSH log(ferland_ip) for cell %i = %e (r=%e nh=%e nioniz=%e)\n",n,log10(plasmamain[n].ferland_ip),r,plasmamain[n].rho*rho2nh,geo.n_ioniz);
+//OLD     printf ("NSH log(ferland_ip) for cell %i = %e (r=%e nh=%e nioniz=%e)\n",n,log10(plasmamain[n].ferland_ip),r,plasmamain[n].rho*rho2nh,geo.n_ioniz);
 r=sqrt((wmain[plasmamain[n].nwind].x[0]*wmain[plasmamain[n].nwind].x[0]+wmain[plasmamain[n].nwind].x[1]*wmain[plasmamain[n].nwind].x[1]+wmain[plasmamain[n].nwind].x[2]*wmain[plasmamain[n].nwind].x[2]));
 
       plasmamain[n].ferland_ip=geo.n_ioniz/(4*PI*C*plasmamain[n].rho*rho2nh*(r*r));
 
-     printf ("NSH log(ferland_ip) for cell %i = %e (r=%e nh=%e nioniz=%e)\n",n,log10(plasmamain[n].ferland_ip),r,plasmamain[n].rho*rho2nh,geo.n_ioniz);
+//OLD     printf ("NSH log(ferland_ip) for cell %i = %e (r=%e nh=%e nioniz=%e)\n",n,log10(plasmamain[n].ferland_ip),r,plasmamain[n].rho*rho2nh,geo.n_ioniz);
 }
 return(0);
 }

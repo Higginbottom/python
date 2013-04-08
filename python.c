@@ -98,7 +98,7 @@ History:
 			and recombination were made.  The initial attemps to allow
 			for using a more accurate detailed balance approach were
 			included in the ionizatio routines.
-	03dec	ksl	Added back some timeing ability
+	03dec	ksl	Added back some timing ability
         04Mar   SS      Minor changes to set switch for macro atom method.
                         geo.line_mode=6 switches geo.rt_mode=2 (macro method)
                         and then geo.ine_mode back to =3. (SS)
@@ -166,8 +166,11 @@ History:
 			xj and xave_freq.  Just set up the frequence limits here.	
 	1112	ksl	Moved everything associated with frequency bands into bands_init
 	1212	nsh	changed the way DFUDGE is defined.
-        0213	jm	74b5 introduced double precision variable for photon number for calling 
-			define_phot. Fixes Bug JM130302 in photon weights.
+        1302	jm	74b5 introduced double precision variable for photon number for calling 
+			define_phot. Fixes Bug JM130302 in photon weights. It has been suggested
+			that we should make NPHOT a long integer- at the moment I have not done 
+			this and simply comverted to double before calling define_phot (otherwise 
+			I believe rdint would have to be redone for long integers).
  	
  	Look in Readme.c for more text concerning the early history of the program.
 
@@ -611,6 +614,13 @@ should allocate the space for the spectra to avoid all this nonsense.  02feb ksl
 	geo.mdim = 1;
 
     }
+
+/* 130405 ksl - Check that NDIM_MAX is greater than NDIM and MDIM.  */
+
+  if ((geo.ndim>NDIM_MAX) || (geo.mdim>NDIM_MAX)) {
+	  Error("NDIM_MAX %d is less than NDIM %d or MDIM %d. Fix in python.h and recompile\n",NDIM_MAX,geo.ndim,geo.mdim);
+	  exit(0);
+  }
 
 
 //080808 - 62 - Ionization section has been cleaned up -- ksl
@@ -1833,7 +1843,7 @@ printf ("NSH GOING TO DISK_INIT\n");
       renorm = ((double) (pcycles)) / (geo.pcycle + 1.0);
       spectrum_summary (specfile, "w", 0, nspectra - 1, select_spectype,
 			renorm, 0);
-      Log ("Completed spectrum cycle %d :  The elapsed TIME was %f\n",
+      Log ("Completed spectrum cycle %3d :  The elapsed TIME was %f\n",
 	   geo.pcycle, timer ());
 
       wind_save (windsavefile);	// This is only needed to update pcycle
@@ -1841,7 +1851,7 @@ printf ("NSH GOING TO DISK_INIT\n");
       geo.pcycle++;		// Increment the spectal cycles
 
 
-      xsignal (root, "%-20s Finished %d of %d spectrum cycles \n", "OK",
+      xsignal (root, "%-20s Finished %3d of %3d spectrum cycles \n", "OK",
 	       geo.pcycle, pcycles);
       check_time (root);
     }

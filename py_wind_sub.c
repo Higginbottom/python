@@ -337,7 +337,9 @@ adiabatic_cooling_summary (w, rootname, ochoice)
 }
 
 
-/* A summary of e lum of a cell */
+/* A summary of the lum of a cell.  The routine
+ * simply reads variables that are already contained
+ * in the plasma structure */
 
 int
 lum_summary (w, rootname, ochoice)
@@ -393,7 +395,7 @@ lum_summary (w, rootname, ochoice)
       strcat (filename, ".he2_recomb_lum");
       break;
     case 'z':			/* Line lumosity */
-      strcpy (name, "Metal RecombinationsLuminosity");
+      strcpy (name, "Metal Recombination Luminosity");
       strcat (filename, ".z_recomb_lum");
       break;
     default:
@@ -1406,7 +1408,7 @@ inner_shell_summary (w, rootname, ochoice)
 }
 
 
-/* A summary of the Ionisation parameter - might not always be present */
+/* A summary of the Ionization parameter - might not always be present */
 
 int
 IP_summary (w, rootname, ochoice)
@@ -1427,7 +1429,7 @@ IP_summary (w, rootname, ochoice)
 	  aaa[n] = (log10 (plasmamain[nplasma].ferland_ip));
 	}
     }
-  display ("Log Ionisation parameter");
+  display ("Log Ionization parameter (Ferland)");
 
   if (ochoice)
     {
@@ -1446,7 +1448,7 @@ IP_summary (w, rootname, ochoice)
 	  aaa[n] = (log10 (plasmamain[nplasma].ip));
 	}
     }
-  display ("Log Ionisation parameter");
+  display ("Log Ionization parameter");
 
   if (ochoice)
     {
