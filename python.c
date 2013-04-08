@@ -1593,7 +1593,7 @@ printf ("NSH GOING TO DISK_INIT\n");
 
 	  /* JM 130306 need to convert photons_per_cycle to double precision for define_phot */
           nphot_to_define=(double) photons_per_cycle;
-
+	  printf("!!JM: %lf\t%d", nphot_to_define, photons_per_cycle);
 	  define_phot (p, freqmin, freqmax, nphot_to_define, 0, iwind, 1);
 
 //OLD70d        printf ("sent to photon_checks freqmin=%e freqmax=%e \n",freqmin,freqmax);
@@ -1816,6 +1816,7 @@ printf ("NSH GOING TO DISK_INIT\n");
        */
 
       nphot_to_define= (double) NPHOT * (double) pcycles; 
+      printf("!!JM: spectral: %lf\t%lf\t%lf\t%d\t%d", nphot_to_define, (double)NPHOT, (double)pcycles,NPHOT,pcycles);
       define_phot (p, freqmin, freqmax, nphot_to_define, 1, iwind, 0);
 
       for (icheck = 0; icheck < NPHOT; icheck++)
