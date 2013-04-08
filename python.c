@@ -1700,8 +1700,8 @@ printf ("NSH GOING TO DISK_INIT\n");
       phot_gen_sum (photfile, "w");	/* Save info about the way photons are created and absorbed
 					   by the disk */
 
-      /* Save everything after each cycle and prepare for the next cycle */
-      geo.wcycle++;
+      /* Save everything after each cycle and prepare for the next cycle 
+	 JM1304: move geo.wcycle after xsignal to record cycles correctly */
 
       wind_save (windsavefile);
       Log ("Saved wind structure in %s after cycle %d\n", windsavefile,
@@ -1709,6 +1709,9 @@ printf ("NSH GOING TO DISK_INIT\n");
 
       xsignal (root, "%-20s Finished %d of %d ionization cycle \n", "OK",
 	       geo.wcycle, wcycles);
+      
+      geo.wcycle++;
+      
       check_time (root);
 
 
@@ -1849,11 +1852,14 @@ printf ("NSH GOING TO DISK_INIT\n");
 
       wind_save (windsavefile);	// This is only needed to update pcycle
       spec_save (specsavefile);
-      geo.pcycle++;		// Increment the spectal cycles
+	
+      /* JM1304: moved geo.wcycle after xsignal to record cycles correctly */
 
 
       xsignal (root, "%-20s Finished %3d of %3d spectrum cycles \n", "OK",
 	       geo.pcycle, pcycles);
+      geo.pcycle++;		// Increment the spectal cycles
+
       check_time (root);
     }
 
