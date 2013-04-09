@@ -91,7 +91,7 @@ To avoid problems with solving, we need to find a reasonable range of values wit
 	  spec_numin = geo.xfreq[n];	/*1108 NSH n is defined in python.c, and says which band of radiation estimators we are interested in using the for power law ionisation calculation */
 	  if (xplasma->max_freq < geo.xfreq[n + 1])
 		{
-		Log ("NSH resetting max frequency of band %i from %e to %e due to lack of photons\n",n,geo.xfreq[n+1],xplasma->max_freq);
+		Log_silent ("NSH resetting max frequency of band %i from %e to %e due to lack of photons\n",n,geo.xfreq[n+1],xplasma->max_freq);
 		spec_numax = xplasma->max_freq;
 		}
 	  else
@@ -102,7 +102,7 @@ To avoid problems with solving, we need to find a reasonable range of values wit
 	  j = xplasma->xj[n];
 	
 
-      Log
+      Log_silent
 	("NSH We are about to calculate w and alpha, j=%10.2e, mean_freq=%10.2e, numin=%10.2e(%8.2fev), numax=%10.2e(%8.2fev), number of photons in band=%i\n",
 	 j, spec_numean, spec_numin, spec_numin*HEV, spec_numax ,spec_numax*HEV, xplasma->nxtot[n]);
 
@@ -203,8 +203,8 @@ To avoid problems with solving, we need to find a reasonable range of values wit
 	
        	exp_sd=exp_stddev (xplasma->exp_temp[n],spec_numin,spec_numax);
         pl_sd=pl_stddev (xplasma->pl_alpha[n], spec_numin, spec_numax);
-	Log ("NSH in this cell band %i PL estimators are w=%10.2e, alpha=%5.3f giving sd=%e compared to %e\n",n,xplasma->pl_w[n],xplasma->pl_alpha[n],pl_sd,xplasma->xsd_freq[n]); 
-	Log ("NSH in this cell band %i exp estimators are w=%10.2e, temp=%10.2e giving sd=%e compared to %e\n",n,xplasma->exp_w[n],xplasma->exp_temp[n],exp_sd,xplasma->xsd_freq[n]); 
+	Log_silent ("NSH in this cell band %i PL estimators are w=%10.2e, alpha=%5.3f giving sd=%e compared to %e\n",n,xplasma->pl_w[n],xplasma->pl_alpha[n],pl_sd,xplasma->xsd_freq[n]); 
+	Log_silent ("NSH in this cell band %i exp estimators are w=%10.2e, temp=%10.2e giving sd=%e compared to %e\n",n,xplasma->exp_w[n],xplasma->exp_temp[n],exp_sd,xplasma->xsd_freq[n]); 
 	exp_sd=fabs((exp_sd-xplasma->xsd_freq[n])/xplasma->xsd_freq[n]);
 	pl_sd=fabs((pl_sd-xplasma->xsd_freq[n])/xplasma->xsd_freq[n]);
 	/* NSH 120817 These commands decide upon the best model, based upon how well the models predict the standard deviation */
@@ -226,7 +226,7 @@ To avoid problems with solving, we need to find a reasonable range of values wit
 		xplasma->spec_mod_type[n] = -1; //Oh dear, there is no suitable model
 		Error ("No suitable model in band %i cell %i\n",n,xplasma->nplasma);
 		}
-	Log ("NSH In cell %i, band %i, the best model is %i\n",xplasma->nplasma, n,xplasma->spec_mod_type[n]);
+	Log_silent ("NSH In cell %i, band %i, the best model is %i\n",xplasma->nplasma, n,xplasma->spec_mod_type[n]);
 	}  //End of loop that does things if there are more than zero photons in the band.
     }  //End of loop over bands	
 

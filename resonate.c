@@ -1172,7 +1172,6 @@ scatter (p, nres, nnscat)
 	     we don't want a k-packet immediately. macro_gov now makes the decision
 	     regarding the treament (simple or full macro). */
 	  macro_gov (p, nres, 1, &which_out);
-	  printf("bb line: call macro_gov");
 	}
 
       else if (*nres > NLINES)
@@ -1249,7 +1248,7 @@ scatter (p, nres, nnscat)
 
 	      if (gamma_twiddle > 0 && gamma_twiddle_e > 0)
 		{
-		  prob_kpkt = 1. - gamma_twiddle / gamma_twiddle_e; // As in Lucy 2003
+		  prob_kpkt = 1. - gamma_twiddle / gamma_twiddle_e;
 		}
 	      else if (gamma_twiddle == 0 && gamma_twiddle_e == 0)
 		{
@@ -1270,12 +1269,10 @@ scatter (p, nres, nnscat)
 	      if (prob_kpkt > kpkt_choice)
 		{
 		  macro_gov (p, nres, 2, &which_out);	//routine to deal with kpkt
-		  printf("resonate.c, kpkt: call macro_gov\n");
 		}
 	      else
 		{
 		  macro_gov (p, nres, 1, &which_out);	//routine to deal with macro atom excitation
-		  printf("resonate.c, matom: call macro_gov\n");
 		}
 	    }
 	  else if (phot_top[*nres - NLINES - 1].macro_info == 0
@@ -1299,12 +1296,10 @@ scatter (p, nres, nnscat)
 	      if (prob_kpkt > kpkt_choice)
 		{
 		  macro_gov (p, nres, 2, &which_out);	//routine to deal with kpkt
-		  printf("resonate.c, kpkt: call macro_gov, simple ion\n");
 		}
 	      else
 		{
 		  macro_gov (p, nres, 1, &which_out);	//routine to deal with fake macro atom bf excitation
-		  printf("resonate.c, fake macro atom bf excitation: call macro_gov, simple ion\n");
 
 		}
 	    }
@@ -1320,7 +1315,6 @@ scatter (p, nres, nnscat)
       else if (*nres == -2)
 	{			/* This is a ff event (SS). */
 	  macro_gov (p, nres, 2, &which_out);	//ff always make a k-packet
-	   printf("resonate.c, ff kpkt: call macro_gov\n");
 	}
     }
 

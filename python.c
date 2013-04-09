@@ -98,7 +98,7 @@ History:
 			and recombination were made.  The initial attemps to allow
 			for using a more accurate detailed balance approach were
 			included in the ionizatio routines.
-	03dec	ksl	Added back some timeing ability
+	03dec	ksl	Added back some timing ability
         04Mar   SS      Minor changes to set switch for macro atom method.
                         geo.line_mode=6 switches geo.rt_mode=2 (macro method)
                         and then geo.ine_mode back to =3. (SS)
@@ -166,6 +166,11 @@ History:
 			xj and xave_freq.  Just set up the frequence limits here.	
 	1112	ksl	Moved everything associated with frequency bands into bands_init
 	1212	nsh	changed the way DFUDGE is defined.
+        1302	jm	74b5 introduced double precision variable for photon number for calling 
+			define_phot. Fixes Bug JM130302 in photon weights. It has been suggested
+			that we should make NPHOT a long integer- at the moment I have not done 
+			this and simply comverted to double before calling define_phot (otherwise 
+			I believe rdint would have to be redone for long integers).
  	
  	Look in Readme.c for more text concerning the early history of the program.
 
@@ -192,9 +197,9 @@ main (argc, argv)
 
   int i, wcycles, pcycles;
   double freqmin, freqmax;
-  double swavemin, swavemax, renorm, lambdamx, nphot_tot;
+  double swavemin, swavemax, renorm, nphot_to_define;
   int n, nangles, photons_per_cycle, subcycles;
-  int iwind, James_variable_print;
+  int iwind;
 
 /* Next three lines have variables that should be a structure, or possibly we
 should allocate the space for the spectra to avoid all this nonsense.  02feb ksl */
@@ -226,15 +231,14 @@ should allocate the space for the spectra to avoid all this nonsense.  02feb ksl
   int opar_stat, restart_stat;
   double time_max;		// The maximum time the program is allowed to run before halting
 
-  printf("*******************************************************************************************\n\n");
-  printf("This is a test version of Python used by JM to track the macro atom implementation.\nIt is maintained under the JM branch on GitHub\n"); 
-   printf("*******************************************************************************************\n");
+
+
 
   opar_stat = 0;		/* 59a - ksl - 08aug - Initialize opar_stat to indicate that if we do not open a rdpar file, 
 				   the assumption is that we are reading from the command line */
   restart_stat = 0;		/* 67 -ksl - 08nov - Assume initially that these is a new run from scratch, and not 
-				   a restart */
-  James_variable_print=1;			 
+				   a restart
+				 */
   time_max = 13.8e9 * 3.2e7;	/* 67 - ksl - 08nov - The maximum time the program will run without stopping.  This
 				   is initially set to the lifetime of the universe
 				 */
@@ -566,7 +570,7 @@ should allocate the space for the spectra to avoid all this nonsense.  02feb ksl
     photons_per_cycle = NPHOT;
   Log("!!JAMES: %d\t%d\t",NPHOT,photons_per_cycle);
   subcycles = photons_per_cycle / NPHOT;
-  //Log ("Photons_per_cycle adjusted to %d\n", photons_per_cycle);
+  Log ("Photons_per_cycle adjusted to %d\n", photons_per_cycle);
 
   rdint ("Ionization_cycles", &geo.wcycles);
 
@@ -612,6 +616,13 @@ should allocate the space for the spectra to avoid all this nonsense.  02feb ksl
 	geo.mdim = 1;
 
     }
+
+/* 130405 ksl - Check that NDIM_MAX is greater than NDIM and MDIM.  */
+
+  if ((geo.ndim>NDIM_MAX) || (geo.mdim>NDIM_MAX)) {
+	  Error("NDIM_MAX %d is less than NDIM %d or MDIM %d. Fix in python.h and recompile\n",NDIM_MAX,geo.ndim,geo.mdim);
+	  exit(0);
+  }
 
 
 //080808 - 62 - Ionization section has been cleaned up -- ksl
@@ -721,6 +732,7 @@ It also seems likely that we have mixed usage of some things, e.g ge.rt_mode and
   else				/* If it is an AGN */
     {
       geo.star_radiation = 0;	// 70b - AGN do not have a star at the center */
+      //OLD rdint ("Star_radiation(y=1)", &geo.star_radiation);
       rdint ("Disk_radiation(y=1)", &geo.disk_radiation);
       geo.bl_radiation = 0;
       rdint ("Wind_radiation(y=1)", &geo.wind_radiation);
@@ -1078,7 +1090,7 @@ Modified again in python 71b to take account of change in parametrisation of she
 given the scale of the wind. Up till py74b2 it was set to be fixed at
 1e5, so we ensure that this is a minimum, so any winds of CV type scale
 will keep the old dfudge, and hopefully look the same. We also need to
-set defudge slightly differently for the shell wind.*/
+set dfudge slightly differently for the shell wind.*/
 
   if (geo.wind_type==9)
 	{
@@ -1359,14 +1371,6 @@ run -- 07jul -- ksl
       rdint ("Keep.photoabs.during.final.spectrum(1=yes)", &keep_photoabs);
     }
 
-  /* These lines have been added by JM to allow one to vary ALPHAMIN and freqmax from the parameter file. They should be removed once YSO testing is done */
-
-  rddoub ("lambdamax_for_ionisaton_cycles(Angstroms)", &lambdamx);
-  Log ("JM: User has specified the maximum wavelength in the ionisation cycles");
-  //rddoub ("alphamin", &alphamin);	not necessary for the moment
-
-
-
 /* 081221 - 67c - Establish limits on the frequency intervals to be used by the ionization cycles and 
  * the fraquency bands for stratified sampling.  Changes here were made to allow more control
  * over statified sampling, since we have expanded the temperature ranges of the types of systems
@@ -1403,7 +1407,7 @@ run -- 07jul -- ksl
 
 //Old71  bands_init (0.0, freqmin, freqmax, -1, &xband);
 //OLD71	bands_init (tmax, freqmin, freqmax, -1, &xband);
-	JM_bands_init (-1, &xband, lambdamx);
+	bands_init (-1, &xband);
 
 /*if we have changed min and max in bands_init, we need to make sure this is reflected in the frequency bounds*/
   freqmin = xband.f1[0];
@@ -1413,6 +1417,8 @@ run -- 07jul -- ksl
  * These need to be coordinated with the bands that are set up for spectral gneration
  */
 	freqs_init(freqmin,freqmax);
+
+
 
 /* Wrap up and save all the inputs */
 
@@ -1429,7 +1435,6 @@ run -- 07jul -- ksl
     }
   else
     cpar ("python.pf");
-
 
 /* OK all inputs have been obtained at this point and the inputs have been copied to "mod.pf" or "python.pf" */
 
@@ -1586,7 +1591,13 @@ printf ("NSH GOING TO DISK_INIT\n");
 	   * 0 => for ionization calculation 
 	   */
 //OLD70d        printf ("sent to define_phot freqmin=%e freqmax=%e \n",freqmin,freqmax);
-	  define_phot (p, freqmin, freqmax, photons_per_cycle, 0, iwind, 1);
+
+
+	  /* JM 130306 need to convert photons_per_cycle to double precision for define_phot */
+          nphot_to_define=(double) photons_per_cycle;
+	  printf("!!JM: %lf\t%d", nphot_to_define, photons_per_cycle);
+	  define_phot (p, freqmin, freqmax, nphot_to_define, 0, iwind, 1);
+
 //OLD70d        printf ("sent to photon_checks freqmin=%e freqmax=%e \n",freqmin,freqmax);
 
 	  photon_checks (p, freqmin, freqmax, "Check before transport");
@@ -1691,8 +1702,8 @@ printf ("NSH GOING TO DISK_INIT\n");
       phot_gen_sum (photfile, "w");	/* Save info about the way photons are created and absorbed
 					   by the disk */
 
-      /* Save everything after each cycle and prepare for the next cycle */
-      geo.wcycle++;
+      /* Save everything after each cycle and prepare for the next cycle 
+	 JM1304: moved geo.wcycle++ after xsignal to record cycles correctly */
 
       wind_save (windsavefile);
       Log ("Saved wind structure in %s after cycle %d\n", windsavefile,
@@ -1700,6 +1711,9 @@ printf ("NSH GOING TO DISK_INIT\n");
 
       xsignal (root, "%-20s Finished %d of %d ionization cycle \n", "OK",
 	       geo.wcycle, wcycles);
+      
+      geo.wcycle++;	//Increment ionisation cycles
+      
       check_time (root);
 
 
@@ -1801,14 +1815,15 @@ printf ("NSH GOING TO DISK_INIT\n");
       /* Create the initial photon bundles which need to be trannsported through the wind 
 
          For the detailed spectra, NPHOT*pcycles is the number of photon bundles which will equal the luminosity, 
-         1 implies that detailed spectra, as opposed to the ionization of the wind is being calculated 
+         1 implies that detailed spectra, as opposed to the ionization of the wind is being calculated
+
+ 	 JM 130306 must convert NPHOT and pcycles to double precision variable nphot_to_define
 
        */
-      Log("!!JAMES: %d\t%d\t\n\n",NPHOT,NPHOT * pcycles);
-      nphot_tot=(double)NPHOT * (double)pcycles;			/* Convert to float to get round max-out BUG */
-      Log("!!JAMES: %d\t%lf\t\n\n",NPHOT,nphot_tot);
-      define_phot (p, freqmin, freqmax, nphot_tot, 1, iwind, 0);
-      //Log("!!JAMES: %d\t%d\t\n\n",NPHOT,NPHOT * pcycles);
+
+      nphot_to_define= (double) NPHOT * (double) pcycles; 
+      printf("!!JM: spectral: %lf\t%lf\t%lf\t%d\t%d", nphot_to_define, (double)NPHOT, (double)pcycles,NPHOT,pcycles);
+      define_phot (p, freqmin, freqmax, nphot_to_define, 1, iwind, 0);
 
       for (icheck = 0; icheck < NPHOT; icheck++)
 	{
@@ -1835,16 +1850,19 @@ printf ("NSH GOING TO DISK_INIT\n");
       renorm = ((double) (pcycles)) / (geo.pcycle + 1.0);
       spectrum_summary (specfile, "w", 0, nspectra - 1, select_spectype,
 			renorm, 0);
-      Log ("Completed spectrum cycle %d :  The elapsed TIME was %f\n",
+      Log ("Completed spectrum cycle %3d :  The elapsed TIME was %f\n",
 	   geo.pcycle, timer ());
 
       wind_save (windsavefile);	// This is only needed to update pcycle
       spec_save (specsavefile);
+	
+      /* JM1304: moved geo.pcycle++ after xsignal to record cycles correctly */
+
+      xsignal (root, "%-20s Finished %3d of %3d spectrum cycles \n", "OK",
+	       geo.pcycle, pcycles);
+
       geo.pcycle++;		// Increment the spectal cycles
 
-
-      xsignal (root, "%-20s Finished %d of %d spectrum cycles \n", "OK",
-	       geo.pcycle, pcycles);
       check_time (root);
     }
 

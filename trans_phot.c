@@ -104,11 +104,13 @@ trans_phot (w, p, iextract)
     {
 
       //This is just a watchdog method to tell the user the program is still running
+      //130306 - ksl since we don't really care what the frequencies are any more
       if (nphot % 10000 == 0)
-	printf ("Photon %7d %9.2e %9.2e %9.2e %9.2e %9.2e %9.2e %9.2e\n",
-		nphot, p[nphot].x[0], p[nphot].x[1], p[nphot].x[2],
-		p[nphot].lmn[0], p[nphot].lmn[1], p[nphot].lmn[2],
-		p[nphot].freq);
+      	printf("Photon %7d of %7d or %6.3f per cent \n",nphot,NPHOT, nphot*100./NPHOT);
+	//printf ("Photon %7d %9.2e %9.2e %9.2e %9.2e %9.2e %9.2e %9.2e\n",
+	//	nphot, p[nphot].x[0], p[nphot].x[1], p[nphot].x[2],
+	//	p[nphot].lmn[0], p[nphot].lmn[1], p[nphot].lmn[2],
+	//	p[nphot].freq);
 
 
       /* 74a_ksl Check that the weights are real */

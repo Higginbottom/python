@@ -34,7 +34,7 @@ CFLAGS = -g -pg -Wall -I$(INCLUDE) -I$(INCLUDE2)
 LDFLAGS= -L$(LIB) -L$(LIB2)  -lm -lkpar -lcfitsio -lgsl -lgslcblas 
 
 #Note that version should be a single string without spaces. 
-VERSION = 74JM
+VERSION = 75JM
 CHOICE=1             // Compress plasma as much as possible
 # CHOICE=0           //  Keep relation between plasma and wind identical
 
@@ -110,7 +110,6 @@ py_smooth: py_smooth.o
 
 test_bb: bb.o test_bb.o pdf.o recipes.o bilinear.o time.o 
 	gcc  ${CFLAGS} bb.o pdf.o test_bb.o  recipes.o bilinear.o time.o $(LDFLAGS) -o test_bb
-	mv $@ $(BIN)
 	
 test_pow: test_pow.o pdf.o recipes.o bilinear.o time.o 
 	gcc  ${CFLAGS} pdf.o test_pow.o  recipes.o bilinear.o time.o $(LDFLAGS) -o test_pow

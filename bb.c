@@ -89,7 +89,10 @@ History:
 	12aug	nsh	73e -- check_fmax written to check qromb calls will work properly.
 	12nov	ksl	74a_ksl -- Revised  rand_exp, which is used to allow us to reasonalbly 
 			approximate photons in the high alpha limit.  Eliminated some old notes about
-			this routine that seemed no longer very relevant.
+			this routine that seemed no longer very relevant.\
+	13mar	jm	74b5_JM -- fixed bug JM130303 in init_integ_planck. This bug was causing 
+			the emittance in the range wavemin-wavemax in the spectral cycles to be calculated 
+			wrongly. Was noticed when testing YSO models.
 
 **************************************************************/
 
@@ -543,8 +546,8 @@ init_integ_planck_d ()
   double x;
   double planck_d (), qromb ();
   int n;
-  integ_planck[0] = 0;
-  for (n = 1; n <= NMAX; n++)
+  //OLD74b5 integ_planck[0] = 0;   JM130319: this should be set to ALPHAMIN- done in the for loop for simplicity (n=0).
+  for (n = 0; n <= NMAX+1; n++)
     {
       x = ALPHAMIN + n * (ALPHAMAX - ALPHAMIN) / NMAX;
 // 1e-7 is the fractional accuracy in my modified version of qromb -- ksl
@@ -594,7 +597,7 @@ double
 emittance_bb (freqmin, freqmax, t)
      double freqmin, freqmax, t;
 {
-  double alphamin, alphamax, q1;
+  double alphamin, alphamax, q1,x;
   double integ_planck_d ();
   q1 =
     2. * PI * (BOLTZMANN *

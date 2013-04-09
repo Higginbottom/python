@@ -20,9 +20,6 @@ Synopsis:
 	processes where the packet frequency is above the threshold frequency
 	is incremented. The estimator is not normalised here. That is done later.
 
-
-	This is JM's TEST VERSION
-
 Arguments:
 
        WindPtr one                 pointer to cell
@@ -176,7 +173,7 @@ bf_estimators_increment (one, p, ds)
       ft = augerion[n].freq_t;
       if (freq_av > ft)
  	{
- 	  printf("Adding a packet to AUGER %g \n", freq_av);
+ 	  printf("Adding a pacjet to AUGER %g \n", freq_av);
 	  
  	  weight_of_packet = p->w;
  	  x = sigma_phot_verner(&augerion[n], freq_av); //this is the cross section

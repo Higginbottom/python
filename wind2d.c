@@ -738,6 +738,11 @@ History:
 			theta.  It was also helpful for spherical models, 
 			since it avoids the necessity of going from 1d to
 			2d specification.
+	13mar	nsh	74b6 -- Several of the calls were addressing the
+			wind as if it was a single cell, however the call
+			to wind_div_v supplies the whole wind structure.
+			calls that looked like w-> have been replaced by
+			w[icell].
 
  
 **************************************************************/
@@ -757,7 +762,8 @@ wind_div_v (w)
     {
       /* Find the center of the cell */
 
-      stuff_v (w->xcen, x_zero);
+  /*   stuff_v (w->xcen, x_zero); OLD NSH 130322 - this line seems to assume w is a cell, rather than the whole wind structure */
+      stuff_v (w[icell].xcen, x_zero); /*NEW NSH 130322 - now gets the centre of the current cell in the loop */
 
       delta = 0.01 * x_zero[2];	//new 04mar ksl
 
@@ -780,11 +786,11 @@ wind_div_v (w)
       vwind_xyz (&ppp, v);
       div += xxx[2] = (v[2] - v_zero[2]) / delta;
       w[icell].div_v = div;
-      if (div < 0 && (wind_div_err < 0 || w->inwind == W_ALL_INWIND))
+      if (div < 0 && (wind_div_err < 0 || w[icell].inwind == W_ALL_INWIND)) /*NSH 130322 another fix needed here the inwind check was w->inwind and was returning the wrong value */
 	{
 	  Error
 	    ("wind_div_v: div v %e is negative in cell %d. Major problem if inwind (%d) == 0\n",
-	     div, icell, w->inwind);
+	     div, icell, w[icell].inwind); /*NSH 130222 - last fix */
 	  wind_div_err++;
 	}
     }

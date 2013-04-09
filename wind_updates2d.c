@@ -208,7 +208,7 @@ double nsh_lum_metals;
 /* 1110 NSH Normalise IP, which at this point should be the number of photons in a cell by dividing by volume and number density of hydrogen in the cell */
 
       plasmamain[n].ip /= (C*volume*nh);
-      //printf ("NSH Log Ionisation parameter for cell %i = %2.2f\n",n,log10(plasmamain[n].ip));
+//OLD      printf ("NSH Log Ionisation parameter for cell %i = %2.2f\n",n,log10(plasmamain[n].ip));
 
 
       /* If geo.adiabatic is true, then alculate the adiabatic cooling using the current, i.e 
@@ -320,11 +320,11 @@ double nsh_lum_metals;
       lsum += plasmamain[nplasma].heat_lines;
       csum += plasmamain[nplasma].heat_comp; //1108 NSH Increment the compton heating counter
       icsum += plasmamain[nplasma].heat_ind_comp; //1205 NSH Increment the induced compton heating counter
-       	//Log ("OUTPUT logIP(cloudy_thoeretical)= %e logIP(cloudy_actual)=%e\n",log10(plasmamain[nplasma].ferland_ip),log10(plasmamain[nplasma].ip)); 
+       	Log ("OUTPUT logIP(cloudy_thoeretical)= %e logIP(cloudy_actual)=%e\n",log10(plasmamain[nplasma].ferland_ip),log10(plasmamain[nplasma].ip)); 
     }
 
   asum = wind_luminosity (0.0, VERY_BIG);
-   /*Log
+   Log
     ("!!wind_update: Absorbed flux    %8.2e  (photo %8.2e ff %8.2e compton %8.2e induced_compton %8.2e lines %8.2e)\n",
      xsum, psum, fsum, csum, icsum, lsum); //1108 NSH Added commands to report compton heating
   Log
@@ -332,7 +332,7 @@ double nsh_lum_metals;
      asum, geo.lum_fb, geo.lum_ff, geo.lum_lines); //1108 NSH added commands to report compton cooling 1110 removed, this line now just reports cooling mechanisms that will generate photons
   Log
     ("!!wind_update: Wind cooling     %8.2e (recomb %8.2e ff %8.2e compton %8.2e DR %8.2e adiabatic %8.2e lines %8.2e) after update\n",
-     asum+geo.lum_comp+geo.lum_dr+geo.lum_adiabatic, geo.lum_fb, geo.lum_ff, geo.lum_comp, geo.lum_dr, geo.lum_adiabatic, geo.lum_lines); //1110 NSH Added this line to report all cooling mechanisms, including those that do not generate photons.*/
+     asum+geo.lum_comp+geo.lum_dr+geo.lum_adiabatic, geo.lum_fb, geo.lum_ff, geo.lum_comp, geo.lum_dr, geo.lum_adiabatic, geo.lum_lines); //1110 NSH Added this line to report all cooling mechanisms, including those that do not generate photons.
 
   /* Print out some diagnositics of the changes in the wind update */
   t_r_ave_old /= iave;
@@ -702,11 +702,16 @@ int n;
 float r;
   for (n = 0; n < NPLASMA; n++)
 {
+r=sqrt((wmain[plasmamain[n].nwind].xcen[0]*wmain[plasmamain[n].nwind].xcen[0]+wmain[plasmamain[n].nwind].xcen[1]*wmain[plasmamain[n].nwind].xcen[1]+wmain[plasmamain[n].nwind].xcen[2]*wmain[plasmamain[n].nwind].xcen[2]));
+
+      plasmamain[n].ferland_ip=geo.n_ioniz/(4*PI*C*plasmamain[n].rho*rho2nh*(r*r));
+
+//OLD     printf ("NSH log(ferland_ip) for cell %i = %e (r=%e nh=%e nioniz=%e)\n",n,log10(plasmamain[n].ferland_ip),r,plasmamain[n].rho*rho2nh,geo.n_ioniz);
 r=sqrt((wmain[plasmamain[n].nwind].x[0]*wmain[plasmamain[n].nwind].x[0]+wmain[plasmamain[n].nwind].x[1]*wmain[plasmamain[n].nwind].x[1]+wmain[plasmamain[n].nwind].x[2]*wmain[plasmamain[n].nwind].x[2]));
 
       plasmamain[n].ferland_ip=geo.n_ioniz/(4*PI*C*plasmamain[n].rho*rho2nh*(r*r));
 
-     //NSHprintf ("NSH log(ferland_ip) for cell %i = %e (r=%e nh=%e nioniz=%e)\n",n,log10(plasmamain[n].ferland_ip),r,plasmamain[n].rho*rho2nh,geo.n_ioniz);
+//OLD     printf ("NSH log(ferland_ip) for cell %i = %e (r=%e nh=%e nioniz=%e)\n",n,log10(plasmamain[n].ferland_ip),r,plasmamain[n].rho*rho2nh,geo.n_ioniz);
 }
 return(0);
 }

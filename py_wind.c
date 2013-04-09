@@ -125,7 +125,7 @@ char *choice_options = "\n\
    a=abs, c=c4,   g=photo,       h=recomb,  k=tau H,   l=lum,     m=F_rad, x=total, y=mod_te,\n\
    o=overview,    e=everything, P=Partial emission meas, I=Ionisation parameter\n\
    W=wind_region, D=dvds_ave, X=position summary, M=macro atom info, G=inner shell\n\
-   d=convergence status  E=convergence_all_info   B=PlasmaPtr\n\
+   d=convergence status  E=convergence_all_info   B=PlasmaPtr  J=Radiation density\n\
    z=Zoom,u=unZoom,Z=switch to/from raw and yz projected modes, F=Create files, A=Change file write defaults\n\
    N=new.windfile q=quit (preferred over EOF)\n";
 
@@ -439,6 +439,9 @@ one_choice (choice, root, ochoice)
 	  tau_ave_summary (wmain, n, istate, freq, root, ochoice);
 	}
       break;
+    case 'J':			/* radiation density in cell*/
+	J_summary   (wmain, root, ochoice);
+	break;
     case 'k':			/* tau at H edge */
       tau_h_summary (wmain, root, ochoice);
       break;

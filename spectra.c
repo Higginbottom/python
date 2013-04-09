@@ -77,6 +77,7 @@ History:
 			and the wind.  Replaced the old fixed number 3 with MSPEC.  Also
 			elimininated some checks which should no longer be needed.
 	05apr	ksl	55d -- Eliminated initialization of shell, since no longer used
+	13feb	nsh	74b5 -- Included lines to initialize the log spectrum
 
 **************************************************************/
 
@@ -95,6 +96,7 @@ spectrum_init (f1, f2, nangle, angle, phase, scat_select, top_bot_select,
   int i, n;
   int nspec;
   double freqmin, freqmax, dfreq;
+  double lfreqmin, lfreqmax, ldfreq; /* NSH 1302 Min, max and delta for the log spectrum */
   double x1, x2;
   char dummy[20];
 
@@ -104,6 +106,11 @@ spectrum_init (f1, f2, nangle, angle, phase, scat_select, top_bot_select,
 
   nspec = nangle + MSPEC;
 
+/* NSH 1302 Lines to set up a logarithmic spectrum */
+
+  lfreqmin=log10(freqmin);
+  lfreqmax=log10(freqmax);
+  ldfreq=(lfreqmax-lfreqmin) / NWAVE;	
 
   /* Create the spectrum arrays the first time routine is called */
   if (i_spec_start == 0)
@@ -137,10 +144,14 @@ spectrum_init (f1, f2, nangle, angle, phase, scat_select, top_bot_select,
       s[n].freqmin = freqmin;
       s[n].freqmax = freqmax;
       s[n].dfreq = dfreq;
+      s[n].lfreqmin = lfreqmin;
+      s[n].lfreqmax = lfreqmax;
+      s[n].ldfreq = ldfreq;
       for (i = 0; i < NSTAT; i++)
 	s[n].nphot[i] = 0;
       for (i = 0; i < NWAVE; i++)
 	s[n].f[i] = 0;
+	s[n].lf[i] = 0; /* NSH 1302 zero the logarithmic spectra */
     }
 
   strcpy (s[0].name, "Emitted");

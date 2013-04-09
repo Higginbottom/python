@@ -87,6 +87,7 @@ define_phot (p, f1, f2, nphot_tot, ioniz_or_final, iwind, freq_sampling)
   int n;
   int iphot_start;
 
+
   if (freq_sampling == 0)
     {				/* Original approach, uniform sampling of entire wavelength interval, 
 				   used for detailed spectrum calculaation */
@@ -325,7 +326,6 @@ iwind = -1 	Don't generate any wind photons at all
       geo.f_matom = get_matom_f ();
       geo.f_kpkt = get_kpkt_f ();	//This returns the specific luminosity in the
       //spectral band of interest.
-      printf("setting geo.f_matom and geo.f_kpkt\n");
     }
 
   Log
@@ -618,7 +618,7 @@ star_init (r, tstar, freqmin, freqmax, ioniz_or_final, f)
 /* 57g -- 07jul -- fixed error calculating gravity of star that has been here forever -- ksl */
   log_g = geo.gstar = log10 (G * geo.mstar / (geo.rstar * geo.rstar));
   lumstar = 4 * PI * STEFAN_BOLTZMANN * r * r * tstar * tstar * tstar * tstar;
-  printf("******************\nInitialising star!\n\n\n");
+
   if (ioniz_or_final == 1)
     spectype = geo.star_spectype;	/* type for final spectrum */
   else
@@ -632,8 +632,7 @@ star_init (r, tstar, freqmin, freqmax, ioniz_or_final, f)
     {
       emit = emittance_bb (freqmin, freqmax, tstar);
     }
-  printf("Our emittance is spectype %d, emit=%lf, tstar=%lf \n\n", spectype, emit, tstar);
-  printf("Ourluminosity is %lf \n\n", lumstar);
+
   *f = emit;			// Calculate the surface flux between freqmin and freqmax
   *f *= (4. * PI * r * r);
 
