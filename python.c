@@ -1088,7 +1088,7 @@ Modified again in python 71b to take account of change in parametrisation of she
 given the scale of the wind. Up till py74b2 it was set to be fixed at
 1e5, so we ensure that this is a minimum, so any winds of CV type scale
 will keep the old dfudge, and hopefully look the same. We also need to
-set defudge slightly differently for the shell wind.*/
+set dfudge slightly differently for the shell wind.*/
 
   if (geo.wind_type==9)
 	{
@@ -1701,7 +1701,7 @@ printf ("NSH GOING TO DISK_INIT\n");
 					   by the disk */
 
       /* Save everything after each cycle and prepare for the next cycle 
-	 JM1304: move geo.wcycle after xsignal to record cycles correctly */
+	 JM1304: moved geo.wcycle++ after xsignal to record cycles correctly */
 
       wind_save (windsavefile);
       Log ("Saved wind structure in %s after cycle %d\n", windsavefile,
@@ -1710,7 +1710,7 @@ printf ("NSH GOING TO DISK_INIT\n");
       xsignal (root, "%-20s Finished %d of %d ionization cycle \n", "OK",
 	       geo.wcycle, wcycles);
       
-      geo.wcycle++;
+      geo.wcycle++;	//Increment ionisation cycles
       
       check_time (root);
 
@@ -1853,11 +1853,11 @@ printf ("NSH GOING TO DISK_INIT\n");
       wind_save (windsavefile);	// This is only needed to update pcycle
       spec_save (specsavefile);
 	
-      /* JM1304: moved geo.wcycle after xsignal to record cycles correctly */
-
+      /* JM1304: moved geo.pcycle++ after xsignal to record cycles correctly */
 
       xsignal (root, "%-20s Finished %3d of %3d spectrum cycles \n", "OK",
 	       geo.pcycle, pcycles);
+
       geo.pcycle++;		// Increment the spectal cycles
 
       check_time (root);
