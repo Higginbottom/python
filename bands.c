@@ -463,15 +463,15 @@ for (nband=0;nband<band->nbands;nband++)
     }
 
 
-  Log ("band_init: There are %d bands\n", band->nbands);
+  Log ("bands_init: There are %d bands\n", band->nbands);
   for (nband = 0; nband < band->nbands; nband++)
     {
-      Log ("band_init: band %i,  f1=%10.3e,  f2=%10.3e, frac=%.2f\n", nband,
+      Log ("bands_init: band %i,  f1=%10.3e,  f2=%10.3e, frac=%.2f\n", nband,
 	   band->f1[nband], band->f2[nband], band->min_fraction[nband]);
-      Log ("band_init: band %i, eV1=%10.3e, eV2=%10.3e, frac=%.2f\n", nband,
+      Log ("bands_init: band %i, eV1=%10.3e, eV2=%10.3e, frac=%.2f\n", nband,
 	   band->f1[nband] * HEV, band->f2[nband] * HEV,
 	   band->min_fraction[nband]);
-      Log ("band_init: band %i, alpha1=%f, alpha2=%f, frac=%.2f\n", nband,
+      Log ("bands_init: band %i, alpha1=%f, alpha2=%f, frac=%.2f\n", nband,
 	   band->f1[nband] * H/(BOLTZMANN*tmax), band->f2[nband] * H/(BOLTZMANN*tmax),
 	   band->min_fraction[nband]);
     }
@@ -611,7 +611,7 @@ xfreq[10]=freqmax;
       geo.xfreq[0] = freqmin;
     }
 
-  Log("test %e %e\n",freqmax , geo.xfreq[geo.nxfreq]);
+  Log("freqs_init: test %e %e\n",freqmax , geo.xfreq[geo.nxfreq]);
   if (freqmax < geo.xfreq[geo.nxfreq])
     {
       geo.xfreq[geo.nxfreq] = freqmax;
