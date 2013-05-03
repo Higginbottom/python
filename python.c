@@ -171,6 +171,10 @@ History:
 			that we should make NPHOT a long integer- at the moment I have not done 
 			this and simply comverted to double before calling define_phot (otherwise 
 			I believe rdint would have to be redone for long integers).
+	1304	ksl	75 rewrote the fix above to use a long, instead of double.  
+			This has plenty of range.  Notge that there is no need to make NPHOT
+			a long, as suggested above.  We do not expect it to exceed 2e9,
+			although some kind of error check might be reasonble.
  	
  	Look in Readme.c for more text concerning the early history of the program.
 
@@ -197,7 +201,8 @@ main (argc, argv)
 
   int i, wcycles, pcycles;
   double freqmin, freqmax;
-  double swavemin, swavemax, renorm, nphot_to_define;
+  double swavemin, swavemax, renorm; 
+  long nphot_to_define;
   int n, nangles, photons_per_cycle, subcycles;
   int iwind;
 
@@ -732,7 +737,6 @@ It also seems likely that we have mixed usage of some things, e.g ge.rt_mode and
   else				/* If it is an AGN */
     {
       geo.star_radiation = 0;	// 70b - AGN do not have a star at the center */
-      //OLD rdint ("Star_radiation(y=1)", &geo.star_radiation);
       rdint ("Disk_radiation(y=1)", &geo.disk_radiation);
       geo.bl_radiation = 0;
       rdint ("Wind_radiation(y=1)", &geo.wind_radiation);
@@ -1090,7 +1094,7 @@ Modified again in python 71b to take account of change in parametrisation of she
 given the scale of the wind. Up till py74b2 it was set to be fixed at
 1e5, so we ensure that this is a minimum, so any winds of CV type scale
 will keep the old dfudge, and hopefully look the same. We also need to
-set dfudge slightly differently for the shell wind.*/
+set defudge slightly differently for the shell wind.*/
 
   if (geo.wind_type==9)
 	{
@@ -1594,8 +1598,13 @@ printf ("NSH GOING TO DISK_INIT\n");
 
 
 	  /* JM 130306 need to convert photons_per_cycle to double precision for define_phot */
-          nphot_to_define=(double) photons_per_cycle;
-	  printf("!!JM: %lf\t%d", nphot_to_define, photons_per_cycle);
+	  /* ksl 130410 - This is needed here not because we expect photons per cycle to 
+	   * exceed the size of an integer, but because of the call to define phot in the
+	   * spectrum cyecle, which can exceed this
+	   */
+
+          nphot_to_define=(long) photons_per_cycle;
+
 	  define_phot (p, freqmin, freqmax, nphot_to_define, 0, iwind, 1);
 
 //OLD70d        printf ("sent to photon_checks freqmin=%e freqmax=%e \n",freqmin,freqmax);
@@ -1703,7 +1712,7 @@ printf ("NSH GOING TO DISK_INIT\n");
 					   by the disk */
 
       /* Save everything after each cycle and prepare for the next cycle 
-	 JM1304: moved geo.wcycle++ after xsignal to record cycles correctly */
+	 JM1304: moved geo.wcycle++ after xsignal to record cycles correctly. First cycle is cycle 0. */
 
       wind_save (windsavefile);
       Log ("Saved wind structure in %s after cycle %d\n", windsavefile,
@@ -1821,8 +1830,7 @@ printf ("NSH GOING TO DISK_INIT\n");
 
        */
 
-      nphot_to_define= (double) NPHOT * (double) pcycles; 
-      printf("!!JM: spectral: %lf\t%lf\t%lf\t%d\t%d", nphot_to_define, (double)NPHOT, (double)pcycles,NPHOT,pcycles);
+      nphot_to_define= (long) NPHOT * (long) pcycles; 
       define_phot (p, freqmin, freqmax, nphot_to_define, 1, iwind, 0);
 
       for (icheck = 0; icheck < NPHOT; icheck++)
@@ -1853,15 +1861,15 @@ printf ("NSH GOING TO DISK_INIT\n");
       Log ("Completed spectrum cycle %3d :  The elapsed TIME was %f\n",
 	   geo.pcycle, timer ());
 
-      wind_save (windsavefile);	// This is only needed to update pcycle
+      wind_save (windsavefile);		// This is only needed to update pcycle
       spec_save (specsavefile);
 	
-      /* JM1304: moved geo.pcycle++ after xsignal to record cycles correctly */
+      /* JM1304: moved geo.pcycle++ after xsignal to record cycles correctly. First cycle is cycle 0. */
 
       xsignal (root, "%-20s Finished %3d of %3d spectrum cycles \n", "OK",
 	       geo.pcycle, pcycles);
 
-      geo.pcycle++;		// Increment the spectal cycles
+      geo.pcycle++;		// Increment the spectral cycles
 
       check_time (root);
     }

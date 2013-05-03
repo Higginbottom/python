@@ -320,7 +320,8 @@ double nsh_lum_metals;
       lsum += plasmamain[nplasma].heat_lines;
       csum += plasmamain[nplasma].heat_comp; //1108 NSH Increment the compton heating counter
       icsum += plasmamain[nplasma].heat_ind_comp; //1205 NSH Increment the induced compton heating counter
-       	Log ("OUTPUT logIP(cloudy_thoeretical)= %e logIP(cloudy_actual)=%e\n",log10(plasmamain[nplasma].ferland_ip),log10(plasmamain[nplasma].ip)); 
+// Comment - ksl - Next line generated an inappopriate amount of output in the .diag file
+//OLD       	Log ("OUTPUT logIP(cloudy_thoeretical)= %e logIP(cloudy_actual)=%e\n",log10(plasmamain[nplasma].ferland_ip),log10(plasmamain[nplasma].ip)); 
     }
 
   asum = wind_luminosity (0.0, VERY_BIG);
