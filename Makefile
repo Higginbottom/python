@@ -97,8 +97,6 @@ py_wind_objects = py_wind.o get_atomicdata.o py_wind_sub.o windsave.o py_wind_io
 		spectral_estimators.o power_sub.o shell_wind.o compton.o torus.o zeta.o dielectronic.o \
                 variable_temperature.o bb.o
 
-
-
 py_wind: startup $(py_wind_objects)
 	gcc $(CFLAGS) $(py_wind_objects) $(LDFLAGS) -o py_wind
 	cp $@ $(BIN)
@@ -122,6 +120,12 @@ test_saha: test_saha.o $(python_objects)
 test_dielectronic: test_dielectronic.o $(python_objects)
 	gcc ${CFLAGS} test_dielectronic.o $(python_objects) $(LDFLAGS) -o test_dielectronic
 		mv $@ $(BIN)
+
+convert_verner: convert_verner.o
+	gcc $(CFLAGS) convert_verner.o $(LDFLAGS) -o convert_verner
+	#cp $@ $(BIN)
+	mv $@ $(BIN)
+
 
 t_bilinear:  t_bilinear.o bilinear.o  
 	$(CC) $(CFLAGS) t_bilinear.o  bilinear.o  $(LDFLAGS)  -o t_bilinear
