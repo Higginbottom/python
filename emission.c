@@ -630,7 +630,7 @@ total_free (one, t_e, f1, f2)
   x *= sqrt (t_e) * one->vol;
   x *= (exp (-H_OVER_K * f1 / t_e) - exp (-H_OVER_K * f2 / t_e));
 
-  return (0);
+  return (x);
 }
 
 
