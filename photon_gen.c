@@ -314,6 +314,7 @@ iwind = -1 	Don't generate any wind photons at all
 		the wind needs to be reinitialized.  Initialization is forced
 		in that case by init
 */
+  printf("IWIND %d", iwind);
   if (iwind == -1)
     geo.f_wind = geo.lum_wind = 0.0;
 
