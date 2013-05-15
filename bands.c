@@ -116,7 +116,7 @@ bands_init (imode, band)
   /* Imported from python.c */
 
   // 59 - Increased to 20,000 A so could go further into NIR 
-  freqmin = C / 12000e-8;	/*20000 A */
+  freqmin = C / 60000e-8;	/*JM changed to 60000A for macro atoms */
   tmax = TSTAR; 
   if (geo.twind > tmax)
     tmax = geo.twind;
