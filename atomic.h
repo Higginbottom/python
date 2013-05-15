@@ -342,6 +342,7 @@ Innershell augerion[NAUGER];
 
 
 
+
 /* now do the table of fractions of recombinations going straight to the ground state */
 struct ground_fracs
   {

@@ -104,7 +104,6 @@ define_phot (p, f1, f2, nphot_tot, ioniz_or_final, iwind, freq_sampling)
          a way that it mimics the energy distribution of the star. */
 
       geo.weight = (weight) = (geo.f_tot) / (nphot_tot);
-
       xmake_phot (p, f1, f2, ioniz_or_final, iwind, weight, 0, NPHOT);
     }
   else
@@ -314,7 +313,6 @@ iwind = -1 	Don't generate any wind photons at all
 		the wind needs to be reinitialized.  Initialization is forced
 		in that case by init
 */
-  printf("IWIND %d", iwind);
   if (iwind == -1)
     geo.f_wind = geo.lum_wind = 0.0;
 
@@ -332,7 +330,6 @@ iwind = -1 	Don't generate any wind photons at all
       geo.f_matom = get_matom_f ();
       geo.f_kpkt = get_kpkt_f ();	//This returns the specific luminosity in the
       //spectral band of interest.
-      Log("JM MACRO: f_matom %le f_kpkt %le", geo.f_matom, geo.f_kpkt);
     }
 
   Log_silent

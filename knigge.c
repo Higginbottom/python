@@ -147,7 +147,7 @@ in units of WD radii */
  */
 
   geo.xlog_scale = geo.rstar;
-  geo.zlog_scale = 1.0e7;
+  geo.zlog_scale = geo.rstar;
 
 
 

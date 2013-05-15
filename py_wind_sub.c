@@ -448,8 +448,7 @@ lum_summary (w, rootname, ochoice)
 	      return (0);
 	    }
 	  xtot += x;
-	  if (x > 1.0e41) 
-	    printf("JM: %e, %d\n", x, nplasma);
+
 	}
       aaa[n] = x;
     }

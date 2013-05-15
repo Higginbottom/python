@@ -219,7 +219,7 @@ planck (t, freqmin, freqmax)
 
 
       cdf_bb_tot = qromb (planck_d, 0, ALPHABIG, 1e-8);
-      cdf_bb_lo = qromb (planck_d, 0, ALPHAMIN, 1e-8) / cdf_bb_tot;	//position in the full cdf of low frequcny boundary 
+      cdf_bb_lo = qromb (planck_d, 0, ALPHAMIN, 1e-8) / cdf_bb_tot;	//position in the full cdf of low frequcny boundary
       cdf_bb_hi = 1. - qromb (planck_d, ALPHAMAX, ALPHABIG, 1e-8) / cdf_bb_tot;	//postion in fhe full hi frequcny boundary
 
 //      pdf_to_file (&pdf_bb, "pdf.out");
@@ -264,7 +264,8 @@ reset.  A careful review of them is warranted.
       lo_freq_alphamin = alphamin;	// Never used if 
       lo_freq_alphamax = alphamax;
       if (lo_freq_alphamax > ALPHAMIN)
-	lo_freq_alphamax = ALPHAMIN;		
+	lo_freq_alphamax = ALPHAMIN;
+
       hi_freq_alphamax = alphamax;
       hi_freq_alphamin = alphamin;
       if (hi_freq_alphamin < ALPHAMAX)
@@ -542,7 +543,7 @@ init_integ_planck_d ()
   double x;
   double planck_d (), qromb ();
   int n;
-  /* OLD74b5 integ_planck[0] = 0;   JM130319: this should be set to ALPHAMIN- done in the for loop for simplicity */
+  //OLD74b5 integ_planck[0] = 0;   JM130319: this should be set to ALPHAMIN- done in the for loop for simplicity (n=0).
   for (n = 0; n <= NMAX+1; n++)
     {
       x = ALPHAMIN + n * (ALPHAMAX - ALPHAMIN) / NMAX;

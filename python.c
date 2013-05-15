@@ -568,6 +568,7 @@ should allocate the space for the spectra to avoid all this nonsense.  02feb ksl
 
   rdint ("photons_per_cycle", &photons_per_cycle);
   NPHOT = photons_per_cycle;	// For now set NPHOT to be be photons/cycle --> subcycles==1
+
   photons_per_cycle = (photons_per_cycle / NPHOT) * NPHOT;
   if (photons_per_cycle < NPHOT)
     photons_per_cycle = NPHOT;
@@ -1816,7 +1817,7 @@ printf ("NSH GOING TO DISK_INIT\n");
 	iwind = 1;		/* Create wind photons and force a reinitialization of wind parms */
       else
 	iwind = 0;		/* Create wind photons but do not force reinitialization */
-  printf("IWIND: %d", iwind);
+
       /* Create the initial photon bundles which need to be trannsported through the wind 
 
          For the detailed spectra, NPHOT*pcycles is the number of photon bundles which will equal the luminosity, 

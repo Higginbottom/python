@@ -340,7 +340,7 @@ spectrum_create (p, f1, f2, nangle, select_extract)
   int nphot, i, j, k, k1, n;
   int nspec, spectype;
   double freqmin, freqmax, dfreq;
-  double lfreqmin, lfreqmax, ldfreq, JMSUM;
+  double lfreqmin, lfreqmax, ldfreq;
   double x1;
   int wind_n_to_ij ();
   int mscat, mtopbot;
@@ -359,18 +359,7 @@ spectrum_create (p, f1, f2, nangle, select_extract)
 
 	lfreqmin=log10(freqmin);
 	lfreqmax=log10(freqmax);
-	ldfreq=(lfreqmax-lfreqmin) / NWAVE;
-
-  /* Diagnostics added by JM to test zeroing of log_spec_tot */
-  JMSUM=0.0;	
-  for (nphot = 0; nphot < NPHOT; nphot++)
-    {
-      k1 = (log10(p[nphot].freq) -log10(freqmin)) / ldfreq;
-      JMSUM+=p[nphot].w;
-      if ( s[n].lf[k1] != 0 )
-	Log("JMERROR %e", s[n].lf[k1]);
-    }
-  Log("JM PHOT: %e\n", JMSUM);
+	ldfreq=(lfreqmax-lfreqmin) / NWAVE;	
 
 
   for (nphot = 0; nphot < NPHOT; nphot++)
@@ -430,7 +419,7 @@ spectrum_create (p, f1, f2, nangle, select_extract)
 		  nhigh=nhigh+1;
 	  k = NWAVE - 1;
 	}
-	
+
       if ((i = p[nphot].istat) == P_ESCAPE)
 	{
 	  s[0].f[k] += p[nphot].w;	/* emitted spectrum */
@@ -694,7 +683,7 @@ spectrum_summary (filename, mode, nspecmin, nspecmax, select_spectype, renorm, l
 	{
   	freqmin = s[nspecmin].freqmin;
   	dfreq = (s[nspecmin].freqmax - freqmin) / NWAVE;
-  	for (i = 0; i < NWAVE; i++)
+  	for (i = 1; i < NWAVE - 1; i++)
     		{
       		freq = freqmin + i * dfreq;
       		fprintf (fptr, "%-8e %.3f ", freq, C * 1e8 / freq);
@@ -724,7 +713,7 @@ spectrum_summary (filename, mode, nspecmin, nspecmax, select_spectype, renorm, l
 	ldfreq=(lfreqmax-lfreqmin)/NWAVE;
 		
 	printf("lfreqmin=%e lfreqmax=%e ldfreq=%e\n",lfreqmin,lfreqmax,ldfreq);
-	for (i = 0; i < NWAVE; i++)
+	for (i = 1; i < NWAVE - 1; i++)
     		{
       		freq = pow(10.,(lfreqmin + i * ldfreq));
 		dfreq=freq-freq1;
