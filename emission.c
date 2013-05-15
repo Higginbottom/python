@@ -106,7 +106,7 @@ wind_luminosity (f1, f2)
   geo.lum_lines = lum_lines;
   geo.lum_fb = lum_fb;
   geo.lum_ff = lum_ff;
-  Log("JM MACRO: wind_luminosity lumff %le lumfb %le", lum_ff, lum_fb);
+  Log("JM MACRO: wind_luminosity lumff %le lumfb %le\n", lum_ff, lum_fb);
   geo.lum_comp = lum_comp; //1108 NSH The total compton luminosity of the wind is stored in the geo structure
   geo.lum_dr = lum_dr; //1109 NSH the total DR luminosity of the wind is stored in the geo structure
   geo.lum_adiabatic = lum_adiab;
@@ -341,6 +341,7 @@ photo_gen_wind (p, weight, freqmin, freqmax, photstart, nphot)
 
 
   photstop = photstart + nphot;
+  Log ("JM macro: photo_gen_wind called\n"); 
   Log ("photo_gen_wind creates nphot %5d photons from %5d to %5d \n", nphot,
        photstart, photstop);
 
