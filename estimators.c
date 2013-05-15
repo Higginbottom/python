@@ -638,7 +638,7 @@ total_fb_matoms (xplasma, t_e, f1, f2)
 
     }
 
-  return (total);
+  return (0);
 
   //All done (SS).
 
