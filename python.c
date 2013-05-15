@@ -1817,7 +1817,7 @@ printf ("NSH GOING TO DISK_INIT\n");
 	iwind = 1;		/* Create wind photons and force a reinitialization of wind parms */
       else
 	iwind = 0;		/* Create wind photons but do not force reinitialization */
-
+  Log("JM MACRO: python.c iwind %d", iwind);
       /* Create the initial photon bundles which need to be trannsported through the wind 
 
          For the detailed spectra, NPHOT*pcycles is the number of photon bundles which will equal the luminosity, 
