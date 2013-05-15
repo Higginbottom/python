@@ -249,7 +249,6 @@ reset.  A careful review of them is warranted.
       if (alphamin < ALPHABIG)
 	{
 	  cdf_bb_ylo = qromb (planck_d, 0, alphamin, 1e-8) / cdf_bb_tot;	//position in the full cdf of current low frequcny boundary
-          Log("!!JAMES, pdfbblo and relative %lf\t%lf\n", cdf_bb_ylo-cdf_bb_lo,cdf_bb_lo);
 	  if (cdf_bb_ylo > 1.0)
 	    cdf_bb_ylo = 1.0;
 	}
@@ -264,10 +263,8 @@ reset.  A careful review of them is warranted.
 /* These variables are not always used */
       lo_freq_alphamin = alphamin;	// Never used if 
       lo_freq_alphamax = alphamax;
-      Log("!!JAMESALP: %lf\t%lf\t%lf\n", lo_freq_alphamax, lo_freq_alphamin, ALPHAMIN);	
       if (lo_freq_alphamax > ALPHAMIN)
-	lo_freq_alphamax = ALPHAMIN;
-      Log("!!JAMESALP2: %lf\t%lf\t%lf\n", lo_freq_alphamax, lo_freq_alphamin, ALPHAMIN);		
+	lo_freq_alphamax = ALPHAMIN;		
       hi_freq_alphamax = alphamax;
       hi_freq_alphamin = alphamin;
       if (hi_freq_alphamin < ALPHAMAX)
@@ -312,7 +309,6 @@ reset.  A careful review of them is warranted.
     {
       Error ("planck: freq %g out of range %g %g\n", freq, freqmin, freqmax);
     }
-  //Log("!!JAMESBB: in bb.c, has freq changed:%g  %g\n", freqmin, old_freqmin); 
   return (freq);
 }
 
@@ -546,7 +542,7 @@ init_integ_planck_d ()
   double x;
   double planck_d (), qromb ();
   int n;
-  //OLD74b5 integ_planck[0] = 0;   JM130319: this should be set to ALPHAMIN- done in the for loop for simplicity (n=0).
+  /* OLD74b5 integ_planck[0] = 0;   JM130319: this should be set to ALPHAMIN- done in the for loop for simplicity */
   for (n = 0; n <= NMAX+1; n++)
     {
       x = ALPHAMIN + n * (ALPHAMAX - ALPHAMIN) / NMAX;

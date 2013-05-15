@@ -104,7 +104,7 @@ define_phot (p, f1, f2, nphot_tot, ioniz_or_final, iwind, freq_sampling)
          a way that it mimics the energy distribution of the star. */
 
       geo.weight = (weight) = (geo.f_tot) / (nphot_tot);
-      Log("!!JAMES define phot: %lf\t%lf\t%lf\n\n", geo.weight, geo.f_tot, nphot_tot);
+
       xmake_phot (p, f1, f2, ioniz_or_final, iwind, weight, 0, NPHOT);
     }
   else

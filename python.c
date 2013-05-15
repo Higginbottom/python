@@ -568,12 +568,9 @@ should allocate the space for the spectra to avoid all this nonsense.  02feb ksl
 
   rdint ("photons_per_cycle", &photons_per_cycle);
   NPHOT = photons_per_cycle;	// For now set NPHOT to be be photons/cycle --> subcycles==1
-  Log("!!JAMES: %d\t%d\t",NPHOT,photons_per_cycle);
   photons_per_cycle = (photons_per_cycle / NPHOT) * NPHOT;
-  Log("!!JAMES: %d\t%d\t",NPHOT,photons_per_cycle);
   if (photons_per_cycle < NPHOT)
     photons_per_cycle = NPHOT;
-  Log("!!JAMES: %d\t%d\t",NPHOT,photons_per_cycle);
   subcycles = photons_per_cycle / NPHOT;
   Log ("Photons_per_cycle adjusted to %d\n", photons_per_cycle);
 
@@ -1737,7 +1734,6 @@ printf ("NSH GOING TO DISK_INIT\n");
 /* XXXX - THE CALCULATION OF A DETAILED SPECTRUM IN A SPECIFIC REGION OF WAVELENGTH SPACE */
 
   freqmax = C / (swavemin * 1.e-8);
-  Log("!!JAMES, spectral cycle, freqmax: %lf\t%lf\n", swavemin, freqmax); 
   freqmin = C / (swavemax * 1.e-8);
 
 
