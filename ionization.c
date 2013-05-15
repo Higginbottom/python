@@ -657,7 +657,7 @@ zero_emit (t)
 
 /* 70g compton cooling calculated here to avoid generating photons */
   xxxplasma->lum_comp = total_comp (&wmain[xxxplasma->nwind], t);
-
+  Log("JM macro: zero_emit about to call total_emission\n");
   difference = xxxplasma->heat_tot - xxxplasma->lum_adiabatic - xxxplasma->lum_dr - xxxplasma->lum_comp - total_emission (&wmain[xxxplasma->nwind], 0., VERY_BIG);	//NSH 1110 - total emission no longer computes compton.
 
 
