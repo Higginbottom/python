@@ -1588,7 +1588,6 @@ printf ("NSH GOING TO DISK_INIT\n");
 	    iwind = 0;		/* Create wind photons but do not force reinitialization */
 
 
-      Log("JM MACRO: python.c iwind %d\n", iwind);
 	  /* Create the photons that need to be transported through the wind
 	   *
 	   * photons_per_cycle is the number of photon bundles which will equal the luminosity; 
@@ -1821,7 +1820,6 @@ printf ("NSH GOING TO DISK_INIT\n");
 	iwind = 0;		/* Create wind photons but do not force reinitialization */
     
 
-    Log("JM MACRO: python.c iwind %d\n", iwind);
       /* Create the initial photon bundles which need to be trannsported through the wind 
 
          For the detailed spectra, NPHOT*pcycles is the number of photon bundles which will equal the luminosity, 
@@ -1866,7 +1864,7 @@ printf ("NSH GOING TO DISK_INIT\n");
       spec_save (specsavefile);
 	
       /* JM1304: moved geo.pcycle++ after xsignal to record cycles correctly. First cycle is cycle 0. */
-
+      Log("JM MACRO: spectral cycle %d f_matom %le f_kpkt %le\n", geo.pcycle, geo.f_matom, geo.f_kpkt );
       xsignal (root, "%-20s Finished %3d of %3d spectrum cycles \n", "OK",
 	       geo.pcycle, pcycles);
 

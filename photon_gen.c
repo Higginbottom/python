@@ -347,7 +347,12 @@ iwind = -1 	Don't generate any wind photons at all
     geo.f_star + geo.f_disk + geo.f_bl + geo.f_wind + geo.f_kpkt +
     geo.f_matom+ geo.f_agn;
 
-
+  /* JM log lines for macro atom testing */
+  if (ioniz_or_final != 1)  {
+    Log("JM spectral cycles, define_phot: f_matom %le f_kpkt %le\n", geo.f_matom, geo.f_kpkt );
+    Log("JM spectral cycles, define_phot: wind  ff %8.2e fb %8.2e lines %8.2e \n",
+        geo.lum_ff, geo.lum_fb, geo.lum_lines); 
+  }
 
 //Store the 3 variables that have to remain the same to avoid reinitialization 
   f1_old = f1;
