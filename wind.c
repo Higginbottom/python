@@ -60,6 +60,11 @@ History:
 			some of the same defined variables as w->inwind
 	11Nov	ksl	Made changes to attempt to fix errors in the
 			implementation of the Elvis model
+	13May	nsh	Attempt to cope with an issue where code runs
+			very slowly on iridis if thetamax is pi/2,
+			now if it is within machine precision of
+			pi/2, is returns that the photon is in wind
+			and does not do the check. 
 			
 **************************************************************/
 
@@ -135,11 +140,16 @@ where_in_wind (x)
     }
 
   /* Finally check if positon is outside the outer windcone */
+  /* NSH 130401 - The check below was taking a long time if geo.wind_thetamax was very close to pi/2.
+  	check inserted to simply return INWIND if geo.wind_thetamax is within machine precision of pi/2.*/
 
-  else if (rho > (rho_max = geo.wind_rho_max + z * tan (geo.wind_thetamax)))
-    {
-      ireturn = (-2);
-    }
+  else if (fabs(geo.wind_thetamax - PI/2.0) > 1e-6)  /* Only perform the next check if thetamax is not equal to pi/2*/
+	{	
+	if (rho > (rho_max = geo.wind_rho_max + z * tan (geo.wind_thetamax)))
+    		{
+      		ireturn = (-2);
+    		}
+	} /* If thetamax is equal to pi/2, then the photon must be in the wind if it has got to this point */
 
 
   return (ireturn);

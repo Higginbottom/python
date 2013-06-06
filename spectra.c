@@ -150,8 +150,10 @@ spectrum_init (f1, f2, nangle, angle, phase, scat_select, top_bot_select,
       for (i = 0; i < NSTAT; i++)
 	s[n].nphot[i] = 0;
       for (i = 0; i < NWAVE; i++)
+	{
 	s[n].f[i] = 0;
 	s[n].lf[i] = 0; /* NSH 1302 zero the logarithmic spectra */
+	}
     }
 
   strcpy (s[0].name, "Emitted");

@@ -22,19 +22,22 @@ LIB2 = ../../gsl/lib
 BIN = ../../bin
 
 # use pg when you want to use gprof the profiler
-FFLAGS = -g -pg   
-CFLAGS = -g -pg -Wall -I$(INCLUDE) -I$(INCLUDE2)  
+#FFLAGS = -g -pg   
+#CFLAGS = -g -pg -Wall -I$(INCLUDE) -I$(INCLUDE2)  
  
+
+
+
 # Use this for large runs
-#  CFLAGS = -O3 -Wall -I$(INCLUDE)  -I$(INCLUDE2)
-#  FFLAGS =     
+  CFLAGS = -O3 -Wall -I$(INCLUDE)  -I$(INCLUDE2)
+  FFLAGS =     
 
 # next LIne for debugging when concerned about memory problems
 # LDFLAGS= -L$(LIB) -L$(LIB2)  -lm -lkpar -lcfitsio -lgsl -lgslcblas ../../duma_2_5_3/libduma.a -lpthread
 LDFLAGS= -L$(LIB) -L$(LIB2)  -lm -lkpar -lcfitsio -lgsl -lgslcblas 
 
 #Note that version should be a single string without spaces. 
-VERSION = 75macro
+VERSION = 75a
 CHOICE=1             // Compress plasma as much as possible
 # CHOICE=0           //  Keep relation between plasma and wind identical
 

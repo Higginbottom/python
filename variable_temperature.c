@@ -97,7 +97,8 @@ variable_temperature (xplasma, mode)
   double newden[NIONS]; //NSH 121217 - recoded so density is computed in a temperary array
  // double xip; //ionzation potential of lower ion.
   int nelem,first,last;
-  double t_r_part_correct,t_e_part_correct;
+//  double t_r_part_correct, NSH 130401 - this variable no longer used in 75. It may come back tho!
+  double t_e_part_correct;
   double sum,big;
   double pi_fudge,recomb_fudge,gs_fudge,tot_fudge; /*The three correction factors for photoionization rate, recombination to ground state, and recombination rate */
   xxxplasma = xplasma;    /*Copy xplasma to local plasma varaible, used to communicate w and alpha to the power law correction routine. NSH 120703 - also used to set the denominator calculated for a given ion for this cell last time round*/

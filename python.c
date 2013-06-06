@@ -1488,7 +1488,7 @@ run -- 07jul -- ksl
  *
  * */
 
-printf ("NSH GOING TO DISK_INIT\n");
+
   disk_init (geo.rstar, geo.diskrad, geo.mstar, geo.disk_mdot, freqmin,
 	     freqmax, 0, &geo.f_disk);
 
@@ -1507,6 +1507,7 @@ printf ("NSH GOING TO DISK_INIT\n");
 
   xsignal (root, "%-20s Finished initialization for %s\n", "NOK", root);
   check_time (root);
+
 
 /* XXXX - THE CALCULATION OF THE IONIZATION OF THE WIND */
 
@@ -1539,7 +1540,7 @@ printf ("NSH GOING TO DISK_INIT\n");
 
       Log ("!!Python: Begining cycle %d of %d for defining wind\n",
 	   geo.wcycle, wcycles);
-
+      Log_flush();  /*NSH June 13 Added call to flush logfile */
 
       /* Initialize all of the arrays, etc, that need initialization for each cycle
        */
@@ -1587,7 +1588,6 @@ printf ("NSH GOING TO DISK_INIT\n");
 	  else
 	    iwind = 0;		/* Create wind photons but do not force reinitialization */
 
-
 	  /* Create the photons that need to be transported through the wind
 	   *
 	   * photons_per_cycle is the number of photon bundles which will equal the luminosity; 
@@ -1622,7 +1622,7 @@ printf ("NSH GOING TO DISK_INIT\n");
 	  Log
 	    ("!!python: Total photon luminosity before transphot %18.12e\n",
 	     zz);
-
+          Log_flush();  /*NSH June 13 Added call to flush logfile */
 	  ztot += zz;		/* Total luminosity in all subcycles, used for calculating disk heating */
 
 	  /* kbf_need determines how many & which bf processes one needs to considere.  It was introduced
@@ -1723,7 +1723,7 @@ printf ("NSH GOING TO DISK_INIT\n");
       geo.wcycle++;	//Increment ionisation cycles
       
       check_time (root);
-
+      Log_flush();  /*NSH June 13 Added call to flush logfile */
 
     }				// End of Cycle loop
 
@@ -1811,14 +1811,13 @@ printf ("NSH GOING TO DISK_INIT\n");
 
       Log ("!!Cycle %d of %d to calculate a detailed spectrum\n", geo.pcycle,
 	   pcycles);
-
+      Log_flush();  /*NSH June 13 Added call to flush logfile */
       if (!geo.wind_radiation)
 	iwind = -1;		/* Do not generate photons from wind */
       else if (geo.pcycle == 0)
 	iwind = 1;		/* Create wind photons and force a reinitialization of wind parms */
       else
 	iwind = 0;		/* Create wind photons but do not force reinitialization */
-    
 
       /* Create the initial photon bundles which need to be trannsported through the wind 
 
@@ -1864,7 +1863,7 @@ printf ("NSH GOING TO DISK_INIT\n");
       spec_save (specsavefile);
 	
       /* JM1304: moved geo.pcycle++ after xsignal to record cycles correctly. First cycle is cycle 0. */
-      Log("JM MACRO: spectral cycle %d f_matom %le f_kpkt %le\n", geo.pcycle, geo.f_matom, geo.f_kpkt );
+
       xsignal (root, "%-20s Finished %3d of %3d spectrum cycles \n", "OK",
 	       geo.pcycle, pcycles);
 
@@ -2249,7 +2248,7 @@ get_spectype (yesno, question, spectype)
                                        Space Telescope Science Institute
 
  Synopsis:
-	The next couple od routines are for recording information about photons/energy impinging
+	The next couple of routines are for recording information about photons/energy impinging
 	on the disk, which is stored in a disk structure called qdisk.
 
 	qdisk_init() just initializes the structure (once the disk structue has been initialized.

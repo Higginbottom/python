@@ -66,6 +66,8 @@ History:
 	07jul	kls	58f -- Added code to copy volumes from wmain[].vol to plasmamain[].vol
         12aug   nsh	73d -- Added some code to zero some parameters in the plasma structure used to 
 			try and speed up the pairwise ionization scheme
+	13may	nsh	added code to use temprature computed from internal energy in a
+			zeus file as a first guess for temperature in a proga type model
 
 **************************************************************/
 
@@ -321,6 +323,19 @@ be optional which variables beyond here are moved to structures othere than Wind
       }
 
       nh = plasmamain[n].rho * rho2nh;
+
+/* NSH 130530 Next few lines allow the use of the temperature which can be computed from Zeus models to be used as an initial guess for the wind temperature */
+      if (geo.wind_type == 3)
+	{
+	plasmamain[n].t_r = proga_temp(x);
+	}
+      else
+	{   
+	     plasmamain[n].t_r = geo.twind;
+	}
+
+
+
       plasmamain[n].t_r = geo.twind;
 
       /* 70b - Initialize the temperature in the torus to a different value */
