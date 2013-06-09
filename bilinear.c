@@ -45,7 +45,7 @@
      double *f, *g;                     The fractional position
      					along the "x" and "z" direction of 
 					the cell respectively
-    The routine itself returns 0 if the postion is inside the cell, and 
+    The routine itself returns 0 if the position is inside the cell, and 
     -1 otherwise.
 
   Notes:
@@ -107,7 +107,7 @@
 
   History:
 	05jul	ksl	56d -- coded as part of effort to create CYLVAR
-			coordiantes within python
+			coordinates within python
 
  ************************************************************************/
 int
@@ -158,7 +158,6 @@ bilin (x, x00, x01, x10, x11, f, g)
       b = r[0] * s[2] + q[0] * t[2] - (r[2] * s[0] + q[2] * t[0]);
       c = q[0] * s[2] - q[2] * s[0];
 
-//      printf ("abc %f %f %f\n", a, b, c);
 
       if (c == 0)
 	{

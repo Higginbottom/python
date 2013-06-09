@@ -111,7 +111,7 @@ trans_phot (w, p, iextract)
 	//	nphot, p[nphot].x[0], p[nphot].x[1], p[nphot].x[2],
 	//	p[nphot].lmn[0], p[nphot].lmn[1], p[nphot].lmn[2],
 	//	p[nphot].freq);
-      Log_flush();  /*NSH June 13 Added call to flush logfile */
+
 
       /* 74a_ksl Check that the weights are real */
 

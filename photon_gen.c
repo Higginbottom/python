@@ -241,12 +241,12 @@ Arguments:
 
 Returns:
 
-The rosults are stored in the goe structure (see below).  
+The results are stored in the geo structure (see below).  
  
  
 Description:	
 
-This is an routine that initilizes things.  It does not generate photons itself.
+This is an routine that initializes things.  It does not generate photons itself.
 
 		
 Notes:
@@ -327,9 +327,12 @@ iwind = -1 	Don't generate any wind photons at all
   /* New block follow for dealing with emission via k-packets and macro atoms. SS */
   if (geo.matom_radiation)
     {
+      Log("Calculating macro-atom and k-packet level emissivites. This might take a while.");
       geo.f_matom = get_matom_f ();
       geo.f_kpkt = get_kpkt_f ();	//This returns the specific luminosity in the
       //spectral band of interest.
+
+      matom_emiss_report();       /* JM130609 function which reports on matom level emissivites */
     }
 
   Log_silent
@@ -346,6 +349,18 @@ iwind = -1 	Don't generate any wind photons at all
     geo.f_star + geo.f_disk + geo.f_bl + geo.f_wind + geo.f_kpkt +
     geo.f_matom+ geo.f_agn;
 
+
+  /* JM log lines for macro atom testing */
+  if (ioniz_or_final == 0)  {
+    Log("JM ionization cycles, define_phot: f_matom %le f_kpkt %le\n", geo.f_matom, geo.f_kpkt );
+    Log("JM ionization cycles, define_phot: wind  ff %8.2e fb %8.2e lines %8.2e \n",
+        geo.lum_ff, geo.lum_fb, geo.lum_lines); 
+  }
+  if (ioniz_or_final == 1)  {
+    Log("JM spectral cycles, define_phot: f_matom %le f_kpkt %le\n", geo.f_matom, geo.f_kpkt );
+    Log("JM spectral cycles, define_phot: wind  ff %8.2e fb %8.2e lines %8.2e \n",
+        geo.lum_ff, geo.lum_fb, geo.lum_lines); 
+  }
 
 
 //Store the 3 variables that have to remain the same to avoid reinitialization 

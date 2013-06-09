@@ -4,7 +4,7 @@
                                        Space Telescope Science Institute
 
  Synopsis:
- 	Compute the abundances baset on the power law approximation
+ 	Compute the abundances based on the power law approximation
 	use by Stuart in one of his early AGN papers.
 	
  Arguments:		
@@ -55,7 +55,7 @@ spectral_estimators (xplasma)
   double exp_temp_min,exp_temp_max; /*120817 the 'temperature' range we are going to search for an effective temperature for the exponential model */
   double  exp_temp_temp, exp_w_temp; /*120817 the temporary values for temperature and weight of the exponential model */  
   int n;
-  double pl_sd,exp_sd; /*120817 Computed standard decviations for two models for comparison with true value */
+  double pl_sd,exp_sd; /*120817 Computed standard deviations for two models for comparison with true value */
   double ALPHAMAX=20.0; /*120817 Something to make it a bit more obvious as to what values of the powerlaw exponent we consider reasonable */
   int plflag,expflag; /*120817 Two flags to say if we have a reasonable PL or EXP model, set to 1 initially, -1 means there has been some failure that means we must not use this model, +1 means it is OK */
 

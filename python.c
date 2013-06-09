@@ -257,7 +257,7 @@ should allocate the space for the spectra to avoid all this nonsense.  02feb ksl
 
   restart_stat = 0;
   time_max = -1;
-
+  matom_emiss_report();
   if (argc == 1)
     {
       printf ("Input file (interactive=stdin):");
@@ -1488,7 +1488,7 @@ run -- 07jul -- ksl
  *
  * */
 
-
+printf ("NSH GOING TO DISK_INIT\n");
   disk_init (geo.rstar, geo.diskrad, geo.mstar, geo.disk_mdot, freqmin,
 	     freqmax, 0, &geo.f_disk);
 
@@ -1508,7 +1508,6 @@ run -- 07jul -- ksl
   xsignal (root, "%-20s Finished initialization for %s\n", "NOK", root);
   check_time (root);
 
-
 /* XXXX - THE CALCULATION OF THE IONIZATION OF THE WIND */
 
   geo.ioniz_or_extract = 1;	//SS July 04 - want to compute MC estimators during ionization cycles
@@ -1520,7 +1519,7 @@ run -- 07jul -- ksl
 /* XXXX - BEGINNING OF CYCLE TO CALCULATE THE IONIZATION OF THE WIND */
 
   if (geo.wcycle == wcycles)
-    xsignal (root, "%-20s No ionization needed: wcycles(%d)==wcyeles(%d)\n",
+    xsignal (root, "%-20s No ionization needed: wcycle(%d)==wcycles(%d)\n",
 	     "COMMENT", geo.wcycle, geo.wcycles);
   else
     {
@@ -1540,7 +1539,7 @@ run -- 07jul -- ksl
 
       Log ("!!Python: Begining cycle %d of %d for defining wind\n",
 	   geo.wcycle, wcycles);
-      Log_flush();  /*NSH June 13 Added call to flush logfile */
+
 
       /* Initialize all of the arrays, etc, that need initialization for each cycle
        */
@@ -1622,7 +1621,7 @@ run -- 07jul -- ksl
 	  Log
 	    ("!!python: Total photon luminosity before transphot %18.12e\n",
 	     zz);
-          Log_flush();  /*NSH June 13 Added call to flush logfile */
+
 	  ztot += zz;		/* Total luminosity in all subcycles, used for calculating disk heating */
 
 	  /* kbf_need determines how many & which bf processes one needs to considere.  It was introduced
@@ -1723,7 +1722,7 @@ run -- 07jul -- ksl
       geo.wcycle++;	//Increment ionisation cycles
       
       check_time (root);
-      Log_flush();  /*NSH June 13 Added call to flush logfile */
+
 
     }				// End of Cycle loop
 
@@ -1811,7 +1810,7 @@ run -- 07jul -- ksl
 
       Log ("!!Cycle %d of %d to calculate a detailed spectrum\n", geo.pcycle,
 	   pcycles);
-      Log_flush();  /*NSH June 13 Added call to flush logfile */
+
       if (!geo.wind_radiation)
 	iwind = -1;		/* Do not generate photons from wind */
       else if (geo.pcycle == 0)
@@ -2248,7 +2247,7 @@ get_spectype (yesno, question, spectype)
                                        Space Telescope Science Institute
 
  Synopsis:
-	The next couple of routines are for recording information about photons/energy impinging
+	The next couple od routines are for recording information about photons/energy impinging
 	on the disk, which is stored in a disk structure called qdisk.
 
 	qdisk_init() just initializes the structure (once the disk structue has been initialized.

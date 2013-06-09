@@ -108,7 +108,7 @@ get_sv_wind_params ()
  */
 
 //OLD70d  geo.zlog_scale = 1e7;
-geo.zlog_scale = geo.rstar;
+geo.zlog_scale = 1.0e7;		//set to old value for macro testing
 
 /*Now calculate the normalization factor for the wind*/
 
