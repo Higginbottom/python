@@ -71,4 +71,19 @@ int matom_emiss_report()
   
   return (0);
 }
+
+/***********************************************************
+                                       University of Southampton
+
+Synopsis:
+	matom_trap is a simple trap and exit for debugging
+
+**************************************************************/
+
+int matom_trap()
+{
+  Log("matom_trap!! EXITING...\n");
+  exit(0);
+  return (0);
+}
      

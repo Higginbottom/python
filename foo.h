@@ -340,6 +340,7 @@ double get_alpha_st_e(struct topbase_phot *cont_ptr, PlasmaPtr xplasma);
 double alpha_st_e_integrand(double freq);
 /* matom_diag.c */
 int matom_emiss_report();
+int matom_trap();
 /* wind_sum.c */
 int xtemp_rad(WindPtr w);
 /* yso.c */

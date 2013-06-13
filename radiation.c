@@ -493,6 +493,8 @@ if (gaunt_n_gsqrd==0) //Maintain old behaviour
       		x = x1 =
 		3.692e8 * xplasma->ne * (xplasma->density[1] +
 				 4. * xplasma->density[4]);
+                Log("matom_trap: nelements=%d", nelements);
+                matom_trap();
     		}
   	else
     		{
@@ -502,6 +504,8 @@ if (gaunt_n_gsqrd==0) //Maintain old behaviour
 else
 	{
    	x=x1=xplasma->kappa_ff_factor;
+	Log("matom_trap: gaunt_n_gsqrd=%d", gaunt_n_gsqrd);
+        matom_trap();
 	}
   x *= x2 = (1. - exp (-H_OVER_K * freq / xplasma->t_e));
   x /= x3 = (sqrt (xplasma->t_e) * freq * freq * freq);
