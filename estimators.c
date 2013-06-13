@@ -50,8 +50,8 @@ History:
 ************************************************************/
 
 int
-bf_estimators_increment (one, p, ds)
-     WindPtr one;
+bf_estimators_increment (xplasma, p, ds)
+     PlasmaPtr xplasma;
      PhotPtr p;
      double ds;
 
@@ -66,12 +66,11 @@ bf_estimators_increment (one, p, ds)
   double density;
   double abs_cont;
   int nplasma;
-  PlasmaPtr xplasma;
+  //PlasmaPtr xplasma;
   MacroPtr mplasma;
 
 
-  nplasma = one->nplasma;
-  xplasma = &plasmamain[nplasma];
+  nplasma = xplasma->nplasma;
   mplasma = &macromain[xplasma->nplasma];
 
 
@@ -158,7 +157,6 @@ bf_estimators_increment (one, p, ds)
 
   weight_of_packet = p->w;
   y = weight_of_packet * kappa_ff (xplasma, freq_av) * ds;
-
   xplasma->heat_ff += heat_contribution = y;	
   xplasma->heat_tot += heat_contribution;
 
@@ -179,7 +177,7 @@ bf_estimators_increment (one, p, ds)
  	  x = sigma_phot_verner(&augerion[n], freq_av); //this is the cross section
  	  y = weight_of_packet * x * ds;
 	  
- 	  xplasma->gamma_inshl[n] += y / freq_av / H /one->vol;
+ 	  xplasma->gamma_inshl[n] += y / freq_av / H /xplasma->vol;
  	}
     }
 

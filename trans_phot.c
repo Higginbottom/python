@@ -212,7 +212,6 @@ same value is also stored in pp->nres, but I have not yet eliminated
 it from translate. ?? 02jan ksl */
 
 
-
 	  icell++;
 	  istat = walls (&pp, &p[nphot]);
 //pp is where the photon is going, p is where it was

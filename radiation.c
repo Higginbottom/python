@@ -385,7 +385,7 @@ if (sane_check(tau)) {
 	     xplasma->ave_freq);
     }
 
-
+  matom_trap();
   if (kappa_tot > 0)
     {
       //If statement added 01mar18 ksl to correct problem of zero divide
@@ -509,7 +509,6 @@ else
 	}
   x *= x2 = (1. - exp (-H_OVER_K * freq / xplasma->t_e));
   x /= x3 = (sqrt (xplasma->t_e) * freq * freq * freq);
-
   return (x);
 }
 

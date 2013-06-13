@@ -467,7 +467,7 @@ for consistency.  Delete comment when satisfied OK */
 
       if (geo.ioniz_or_extract == 1)	//don't need to record estimators if this is set to 0 (spectrum cycle)
 	{
-	  bf_estimators_increment (one, p, ds_current);
+	  bf_estimators_increment (xplasma, p, ds_current);
 /*photon weight times distance in the shell is proportional to the mean intensity */
 	  xplasma->j += p->w * ds_current;
 
@@ -480,7 +480,7 @@ for consistency.  Delete comment when satisfied OK */
     }
   else
     {
-      Log("about to call radation- shouldnt be here in matom mode!\n");
+      Log("about to call radiation- shouldnt be here in matom mode!\n");
       matom_trap();
       radiation (p, ds_current);
     }
