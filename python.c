@@ -257,7 +257,7 @@ should allocate the space for the spectra to avoid all this nonsense.  02feb ksl
 
   restart_stat = 0;
   time_max = -1;
-  matom_emiss_report();
+
   if (argc == 1)
     {
       printf ("Input file (interactive=stdin):");
