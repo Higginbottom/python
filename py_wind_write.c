@@ -109,24 +109,27 @@ write_array (filename, choice)
 
   /* Write out the header information for the file */
   fprintf (fptr, "# TITLE= \"%s\"\n", outfile);
-      if (geo.coord_type == SPHERICAL){
-	  fprintf (fptr, "# Coord_Sys SPHERICAL\n");
-      }
-      else if (geo.coord_type == CYLIND)
-	    {
-	      fprintf (fptr, "# Coord_Sys CYLIND\n");
-	    }
-	  else if (geo.coord_type == RTHETA)
-	    {
-	      fprintf (fptr, "# Coord_Sys RTHETA\n");
-	    }
-	  else if (geo.coord_type == CYLVAR)
-	    {
-	      fprintf (fptr, "# Coord_Sys CYLVAR\n");
-	    }
-      else {
-	      Error("write_array: Unknown coordinaate system type: %d\n",geo.coord_type);
-      }
+  if (geo.coord_type == SPHERICAL)
+    {
+      fprintf (fptr, "# Coord_Sys SPHERICAL\n");
+    }
+  else if (geo.coord_type == CYLIND)
+    {
+      fprintf (fptr, "# Coord_Sys CYLIND\n");
+    }
+  else if (geo.coord_type == RTHETA)
+    {
+      fprintf (fptr, "# Coord_Sys RTHETA\n");
+    }
+  else if (geo.coord_type == CYLVAR)
+    {
+      fprintf (fptr, "# Coord_Sys CYLVAR\n");
+    }
+  else
+    {
+      Error ("write_array: Unknown coordinaate system type: %d\n",
+	     geo.coord_type);
+    }
 
 
 // Put the r and z coord. grid  into easier to understand arrays
@@ -147,7 +150,8 @@ are linear, and x otherwise.  This is not particularly transparent ?? ksl */
 	{
 	  for (i = 0; i < NDIM; i++)
 	    {
-	      fprintf (fptr, "%8.2e %8.2e %3d %3d \n", wmain[i].r, aaa[i],wmain[i].inwind,i);
+	      fprintf (fptr, "%8.2e %8.2e %3d %3d \n", wmain[i].r, aaa[i],
+		       wmain[i].inwind, i);
 	    }
 	}
       else
@@ -155,9 +159,9 @@ are linear, and x otherwise.  This is not particularly transparent ?? ksl */
 	  for (i = 0; i < NDIM2; i++)
 	    {
 	      wind_n_to_ij (i, &ii, &jj);
-		fprintf (fptr, "%8.2e %8.2e %8.2e %3d %3d %3d\n",
-			 wmain[i].x[0], wmain[i].x[2], aaa[i],
-			 wmain[i].inwind, ii, jj);
+	      fprintf (fptr, "%8.2e %8.2e %8.2e %3d %3d %3d\n",
+		       wmain[i].x[0], wmain[i].x[2], aaa[i],
+		       wmain[i].inwind, ii, jj);
 	    }
 	}
 
@@ -193,7 +197,7 @@ are linear, and x otherwise.  This is not particularly transparent ?? ksl */
       /* Now print out the array */
       // fprintf (fptr, "VARIABLES= \"X\" \"Z\" \"Var1\" \n");
       // fprintf (fptr, "ZONE I=%d J=%d DATAPACKING=POINT\n", ODIM, ODIM);
-      fprintf(fptr,"# Resampled outputs\n");
+      fprintf (fptr, "# Resampled outputs\n");
       for (jj = 0; jj < ODIM; jj++)
 	{
 	  z = zmin + (zmax - zmin) * jj / (ODIM - 1);

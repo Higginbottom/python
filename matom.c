@@ -280,7 +280,9 @@ matom (p, nres, escape)
 	  for (n = 0; n < nbbu; n++)
 	    {
 	      line_ptr = &line[config[uplvl].bbu_jump[n]];
-	      rad_rate = (b12 (line_ptr) * mplasma->jbar_old[config[uplvl].bbu_indx_first + n]);
+	      rad_rate =
+		(b12 (line_ptr) *
+		 mplasma->jbar_old[config[uplvl].bbu_indx_first + n]);
 	      coll_rate = q12 (line_ptr, t_e);
 	      if (coll_rate < 0)
 		{
@@ -305,19 +307,20 @@ matom (p, nres, escape)
 	      /* For bf ionization the jump probability is just gamma * energy
 	         gamma is the photoionisation rate. Stimulated recombination also included. */
 	      cont_ptr = &phot_top[config[uplvl].bfu_jump[n]];	//pointer to continuum
-	      
-	      jprbs_known[uplvl][m] = jprbs[m] = (mplasma->gamma_old[config[uplvl].bfu_indx_first + n] - (mplasma->alpha_st_old[config[uplvl].bfu_indx_first+n] * xplasma->ne * den_config (xplasma, cont_ptr->uplev) / den_config (xplasma, cont_ptr->nlev)) + (q_ioniz (cont_ptr, t_e) * ne)) * config[uplvl].ex;	//energy of lower state
+
+	      jprbs_known[uplvl][m] = jprbs[m] = (mplasma->gamma_old[config[uplvl].bfu_indx_first + n] - (mplasma->alpha_st_old[config[uplvl].bfu_indx_first + n] * xplasma->ne * den_config (xplasma, cont_ptr->uplev) / den_config (xplasma, cont_ptr->nlev)) + (q_ioniz (cont_ptr, t_e) * ne)) * config[uplvl].ex;	//energy of lower state
 	      if (jprbs[m] < 0.)	//test (can be deleted eventually SS)
 		{
 		  Error ("Negative probability (matom, 6). Abort?\n");
 		  printf
 		    ("mplasma->gamma_old[uplvl][n] %g, (mplasma->alpha_st_old[uplvl][n] * xplasma->ne * den_config (xplasma, cont_ptr->uplev) / den_config (xplasma, cont_ptr->nlev)) %g\n",
-		     mplasma->gamma_old[config[uplvl].bfu_indx_first+n],
-		     (mplasma->alpha_st_old[config[uplvl].bfu_indx_first + n] * xplasma->ne *
-		      den_config (xplasma,
-				  cont_ptr->uplev) / den_config (xplasma,
-								 cont_ptr->
-								 nlev)));
+		     mplasma->gamma_old[config[uplvl].bfu_indx_first + n],
+		     (mplasma->
+		      alpha_st_old[config[uplvl].bfu_indx_first +
+				   n] * xplasma->ne * den_config (xplasma,
+								  cont_ptr->
+								  uplev) /
+		      den_config (xplasma, cont_ptr->nlev)));
 		  jprbs_known[uplvl][m] = jprbs[m] = 0.0;
 
 		}
@@ -454,7 +457,7 @@ matom (p, nres, escape)
 	  /* This is the comoving frequency - changed to rest frequency by doppler */
 	}
       else
-	{ /* This is collisional deactivation. In this case a k-packet is created and so it must be processed by
+	{			/* This is collisional deactivation. In this case a k-packet is created and so it must be processed by
 				   the appropriate routine. (SS, Apr04) */
 	  /* This is done by returning escape = 0 */
 	  *escape = 0;
@@ -530,6 +533,7 @@ b12 (line_ptr)
 
   return (b12_a);
 }
+
 /************************************************************/
 
 
@@ -750,8 +754,12 @@ kpkt (p, nres, escape)
 	      upper_density = den_config (xplasma, ulvl);
 	      /* SS July 04 - for macro atoms the recombination coefficients are stored so use the
 	         stored values rather than recompue them. */
-	      cooling_bf[i] = mplasma->cooling_bf[i] = upper_density * H * cont_ptr->freq[0] * (mplasma->recomb_sp_e[config[ulvl].bfd_indx_first + cont_ptr->down_index]);	
-               // _sp_e is defined as the difference 
+	      cooling_bf[i] = mplasma->cooling_bf[i] =
+		upper_density * H * cont_ptr->freq[0] *
+		(mplasma->
+		 recomb_sp_e[config[ulvl].bfd_indx_first +
+			     cont_ptr->down_index]);
+	      // _sp_e is defined as the difference 
 	    }
 	  else
 	    {
@@ -800,7 +808,7 @@ kpkt (p, nres, escape)
 	    }
 
 
-	  
+
 	}
 
       /* end of loop over ntop_phot */
@@ -882,13 +890,13 @@ kpkt (p, nres, escape)
 	     time. Don't recall that we ever actually fixed it,
 	     however. Perhaps the improved volume calculations
 	     removed it? We delete this whole "else" if we're sure
-	     volumes are never zero.*/
+	     volumes are never zero. */
 
 	  cooling_ff = mplasma->cooling_ff = 0.0;
 	  Error ("kpkt: A scattering event in cell %d with vol = 0???\n",
 		 one->nwind);
 	  //Diagnostic      return(-1);  //57g -- Cannot diagnose with an exit
-	   exit (0);
+	  exit (0);
 	}
 
 
@@ -964,12 +972,10 @@ kpkt (p, nres, escape)
 	}
     }
   else if (destruction_choice <
-	   (mplasma->cooling_bftot +
-	    mplasma->cooling_bbtot))
+	   (mplasma->cooling_bftot + mplasma->cooling_bbtot))
     {				//this means that a collisional destruction has occurred - this results in 
       //a macro atom being excited. Choose which macro atom and level to excite
-      destruction_choice =
-	destruction_choice - mplasma->cooling_bftot;
+      destruction_choice = destruction_choice - mplasma->cooling_bftot;
       for (i = 0; i < nlines; i++)
 	{
 	  if (destruction_choice < mplasma->cooling_bb[i])
@@ -1005,14 +1011,13 @@ kpkt (p, nres, escape)
     }
   else if (destruction_choice <
 	   (mplasma->cooling_bftot +
-	    mplasma->cooling_bbtot +
-	    mplasma->cooling_ff))
+	    mplasma->cooling_bbtot + mplasma->cooling_ff))
     {				//this is a ff destruction
 
       /* The limits for ff emission are hard-wired: 40 microns ->
-	 twice energy of He II edge. Shouldn't be a problem unless
-	 we're in plasma with temperatures that gives significant ff
-	 emission outside this range. */
+         twice energy of He II edge. Shouldn't be a problem unless
+         we're in plasma with temperatures that gives significant ff
+         emission outside this range. */
 
       *escape = 1;		//we are making an r-packet not exciting a macro atom
 
@@ -1020,7 +1025,7 @@ kpkt (p, nres, escape)
 
       p->freq = one_ff (one, 7.5e12, 2.626e16);	//get frequency of resulting energy packet
 
-      return (0);		
+      return (0);
     }
   else
     {
@@ -1462,7 +1467,8 @@ macro_pops (xplasma, xne)
 		      line_ptr = &line[config[index_lvl].bbu_jump[index_bbu]];
 		      rate =
 			b12 (line_ptr) *
-			mplasma->jbar_old[config[index_lvl].bbu_indx_first + index_bbu];
+			mplasma->jbar_old[config[index_lvl].bbu_indx_first +
+					  index_bbu];
 		      rate += q12 (line_ptr, xplasma->t_e) * xne;
 
 		      /* This is the rate out of the level in question. We need to add it
@@ -1504,7 +1510,7 @@ macro_pops (xplasma, xne)
 		      rate_matrix[lower][upper] += rate;
 		    }
 
-		
+
 
 		  for (index_bfu = 0;
 		       index_bfu < config[index_lvl].n_bfu_jump; index_bfu++)
@@ -1514,7 +1520,9 @@ macro_pops (xplasma, xne)
 
 		      cont_ptr =
 			&phot_top[config[index_lvl].bfu_jump[index_bfu]];
-		      rate = mplasma->gamma_old[config[index_lvl].bfu_indx_first+index_bfu];
+		      rate =
+			mplasma->gamma_old[config[index_lvl].bfu_indx_first +
+					   index_bfu];
 		      rate += q_ioniz (cont_ptr, xplasma->t_e) * xne;
 
 		      /* This is the rate out of the level in question. We need to add it
@@ -1535,7 +1543,9 @@ macro_pops (xplasma, xne)
 		         other direction. */
 
 		      rate =
-			mplasma->alpha_st_old[config[index_lvl].bfu_indx_first + index_bfu] * xne;
+			mplasma->alpha_st_old[config[index_lvl].
+					      bfu_indx_first +
+					      index_bfu] * xne;
 
 		      rate_matrix[upper][upper] += -1. * rate;
 		      rate_matrix[lower][upper] += rate;
@@ -1552,11 +1562,15 @@ macro_pops (xplasma, xne)
 		      cont_ptr =
 			&phot_top[config[index_lvl].bfd_jump[index_bfd]];
 		      /* Get new values of the recombination rates and store them. */
-		      mplasma->recomb_sp[config[index_lvl].bfd_indx_first + index_bfd] =
+		      mplasma->recomb_sp[config[index_lvl].bfd_indx_first +
+					 index_bfd] =
 			alpha_sp (cont_ptr, xplasma, 0);
-		      mplasma->recomb_sp_e[config[index_lvl].bfd_indx_first + index_bfd] =
+		      mplasma->recomb_sp_e[config[index_lvl].bfd_indx_first +
+					   index_bfd] =
 			alpha_sp (cont_ptr, xplasma, 2);
-		      rate = mplasma->recomb_sp[config[index_lvl].bfd_indx_first + index_bfd] * xne;
+		      rate =
+			mplasma->recomb_sp[config[index_lvl].bfd_indx_first +
+					   index_bfd] * xne;
 		      rate += q_recomb (cont_ptr, xplasma->t_e) * xne * xne;
 
 
@@ -2084,7 +2098,7 @@ get_matom_f ()
 			  /* First find a suitable transition in which to excite the macro atom (to get it
 			     in the correct starting level. */
 
-                          /* As Knox pointed out in an earlier comment
+			  /* As Knox pointed out in an earlier comment
 			     here, the next loop isn't the best way to
 			     do this - however I'm not sure we can
 			     just replace nlines->nlines_macro since
@@ -2148,7 +2162,7 @@ get_matom_f ()
 			  /* kpkt case. */
 
 			  nres = -2;	//will do - just need
-					//something that will tigger kpkt
+			  //something that will tigger kpkt
 
 			  ppp.nres = nres;
 			  ppp.grid = plasmamain[n].nwind;
@@ -2178,8 +2192,8 @@ get_matom_f ()
 				}
 			      else
 				{
-				  level_emit[phot_top[nres - NLINES - 1].
-					     uplev] += 1;
+				  level_emit[phot_top
+					     [nres - NLINES - 1].uplev] += 1;
 				}
 			    }
 			  else if (which_out == 2)
@@ -2299,7 +2313,7 @@ photo_gen_kpkt (p, weight, photstart, nphot)
   double dot ();
   int wind_n_to_ij (), stuff_v (), randvec ();
   int get_random_location ();
-  double  test;
+  double test;
   double ztest, dvds, z, tau;
   int nnscat;
   double dvwind_ds (), sobolev ();
@@ -2577,7 +2591,7 @@ photo_gen_matom (p, weight, photstart, nphot)
       /* !! ERROR - need to account for posibilyt that photon is in torus */
 
       get_random_location (icell, 0, p[n].x);
-  
+
       p[n].grid = icell;
 
 
@@ -2611,7 +2625,8 @@ photo_gen_matom (p, weight, photstart, nphot)
 	      ztest = (rand () + 0.5) / MAXRAND;
 	      dvds = dvwind_ds (&p[n]);	//Here w is entire wind
 	      tau =
-		sobolev (&wmain[icell], &p[n], -1.0, lin_ptr[p[n].nres], dvds);
+		sobolev (&wmain[icell], &p[n], -1.0, lin_ptr[p[n].nres],
+			 dvds);
 	      if (tau < 1.0e-5)
 		z = 1.0;
 	      else
@@ -2871,4 +2886,3 @@ q_recomb (cont_ptr, electron_temperature)
 
   return (coeff);
 }
-

@@ -260,20 +260,20 @@ I did not change this now.  Though it could be done.  02apr ksl */
     {
       /* Write the sumary ascii files for all of the diagnostic files 
        * as well as the original */
-       zoom (1);                    /* This affects the logfile */
+      zoom (1);			/* This affects the logfile */
       ochoice = 1;
       complete_file_summary (wmain, root, ochoice);
       i = 0;
-      strcpy(root,"");
-      sprintf(root,"python%02d", i);
+      strcpy (root, "");
+      sprintf (root, "python%02d", i);
       strcpy (windsavefile, "");
       sprintf (windsavefile, "python%02d.wind_save", i);
       while (wind_read (windsavefile) > 0)
 	{
-		Log("Trying %s %s\n", windsavefile,root);
+	  Log ("Trying %s %s\n", windsavefile, root);
 	  complete_file_summary (wmain, root, ochoice);
-      strcpy(root,"");
-      sprintf(root,"python%02d", i);
+	  strcpy (root, "");
+	  sprintf (root, "python%02d", i);
 	  strcpy (windsavefile, "");
 	  sprintf (windsavefile, "python%02d.wind_save", i);
 	  i++;
@@ -382,8 +382,8 @@ one_choice (choice, root, ochoice)
       dvds_summary (wmain, root, ochoice);
       break;
     case 'E':
-      printf("Doing convergence all\n");
-      convergence_all(wmain,root,ochoice);
+      printf ("Doing convergence all\n");
+      convergence_all (wmain, root, ochoice);
       break;
     case 'e':			/* print out everything about an element */
       wind_element (wmain);
@@ -403,6 +403,9 @@ one_choice (choice, root, ochoice)
     case 'h':			/*n photo */
       Log ("Don't get discouraged.  This takes a little while!");
       recomb_summary (wmain, root, ochoice);
+      break;
+    case 'H':			/* heating and cooling mechanisms breakdown */
+      heatcool_summary (wmain, root, ochoice);
       break;
     case 'i':			/* Allow user to display information about ions in the wind */
 
@@ -439,9 +442,9 @@ one_choice (choice, root, ochoice)
 	  tau_ave_summary (wmain, n, istate, freq, root, ochoice);
 	}
       break;
-    case 'J':			/* radiation density in cell*/
-	J_summary   (wmain, root, ochoice);
-	break;
+    case 'J':			/* radiation density in cell */
+      J_summary (wmain, root, ochoice);
+      break;
     case 'k':			/* tau at H edge */
       tau_h_summary (wmain, root, ochoice);
       break;

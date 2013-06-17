@@ -119,32 +119,32 @@ radiation (p, ds)
 
   double freq;
   double kappa_tot, frac_tot, frac_ff;
-  double frac_z, frac_comp;  /* nsh 1108 added frac_comp - the heating in the cell due to compton heating */
-  double frac_ind_comp; /* nsh 1205 added frac_ind_comp - the heating due to induced compton heating */
+  double frac_z, frac_comp;	/* nsh 1108 added frac_comp - the heating in the cell due to compton heating */
+  double frac_ind_comp;		/* nsh 1205 added frac_ind_comp - the heating due to induced compton heating */
   double kappa_ion[NIONS];
   double frac_ion[NIONS];
   double density, ft, tau, tau2;
   double energy_abs;
-  int n, nion, i; /* nsh 1108 i added as counter for banded j and ave_freq */
+  int n, nion, i;		/* nsh 1108 i added as counter for banded j and ave_freq */
   double q, x, z;
   double w_ave, w_in, w_out;
   double den_config ();
   int nconf;
   double weight_of_packet, y;
-  int ii,jj;  
+  int ii, jj;
 
-
+  ii = jj = 0;			/* NSH 130605 to remove o3 compile error */
   one = &wmain[p->grid];	/* So one is the grid cell of interest */
   xplasma = &plasmamain[one->nplasma];
   check_plasma (xplasma, "radiation");
   freq = p->freq;
-  
+
   kappa_tot = frac_ff = kappa_ff (xplasma, freq);	/* Add ff opacity */
-  kappa_tot += frac_comp = kappa_comp (xplasma, freq);    /* 70 NSH 1108 calculate compton opacity, store it in kappa_comp and also add it to kappa_tot, the total opacity for the photon path */
+  kappa_tot += frac_comp = kappa_comp (xplasma, freq);	/* 70 NSH 1108 calculate compton opacity, store it in kappa_comp and also add it to kappa_tot, the total opacity for the photon path */
   kappa_tot += frac_ind_comp = kappa_ind_comp (xplasma, freq, ds, p->w);
   frac_tot = frac_z = 0;	/* 59a - ksl - Moved this line out of loop to avoid warning, but notes 
 				   indicate this is all disagnostic and might be removed */
-//	printf ("In radiation we have ds=%e, W=%e, nu=%e\n",ds,p->w,p->freq);
+//      printf ("In radiation we have ds=%e, W=%e, nu=%e\n",ds,p->w,p->freq);
 
   if (freq > phot_freq_min)
 
@@ -184,7 +184,7 @@ of the energy that goes into heating electrons carefully.  */
 		    {
 		      kappa_tot += x =
 			sigma_phot_topbase (x_top_ptr, freq) * density;
-//		printf("Freq=%e, lower level=%i, ion=%i sigma=%e\n",freq,nconf,phot_top_ptr[n]->z,sigma_phot_topbase (x_top_ptr, freq));
+//              printf("Freq=%e, lower level=%i, ion=%i sigma=%e\n",freq,nconf,phot_top_ptr[n]->z,sigma_phot_topbase (x_top_ptr, freq));
 /* I believe most of next steps are totally diagnsitic; it is possible if 
 statement could be deleted entirely 060802 -- ksl */
 		      if (geo.ioniz_or_extract)	// 57h -- ksl -- 060715
@@ -203,7 +203,7 @@ statement could be deleted entirely 060802 -- ksl */
 
 
 		}
-					
+
 	    }
 
 // Next section is for photoionization of those ions using VFKY values
@@ -248,9 +248,11 @@ statement could be deleted entirely 060802 -- ksl */
   tau = kappa_tot * ds;
   w_in = p->w;
 
-if (sane_check(tau)) {
-	Error("Radiation:sane_check CHECKING ff=%e, comp=%e, ind_comp=%e\n",frac_ff,frac_comp,frac_ind_comp);
-}
+  if (sane_check (tau))
+    {
+      Error ("Radiation:sane_check CHECKING ff=%e, comp=%e, ind_comp=%e\n",
+	     frac_ff, frac_comp, frac_ind_comp);
+    }
 /* Calculate the reduction in the w of the photon bundle along with the average
    weight in the cell */
 
@@ -270,9 +272,11 @@ if (sane_check(tau)) {
     }
 
   /*74a_ksl: 121215 -- Added to check on a problem photon */
-  if (sane_check(p->w)){
-		  Error("Radiation:sane_check photon weight is %e for tau %e\n",p->w,tau);
-		  }
+  if (sane_check (p->w))
+    {
+      Error ("Radiation:sane_check photon weight is %e for tau %e\n", p->w,
+	     tau);
+    }
 
   if (geo.ioniz_or_extract == 0)
     return (0);			// 57h -- ksl -- 060715
@@ -283,13 +287,13 @@ if (sane_check(tau)) {
   xplasma->ntot++;
 
 
-  if (HEV*p->freq > 13.6)
-	{
-  	xplasma->ip+=((w_ave*ds)/(H*p->freq)); 
-	/* 70h -- nsh -- 111004 added to try to calculate the IP for the cell. Note that 
-	 * this may well end up not being correct, since the same photon could be counted 
-	 * several times if it is rattling around.... */
-	}
+  if (HEV * p->freq > 13.6)
+    {
+      xplasma->ip += ((w_ave * ds) / (H * p->freq));
+      /* 70h -- nsh -- 111004 added to try to calculate the IP for the cell. Note that 
+       * this may well end up not being correct, since the same photon could be counted 
+       * several times if it is rattling around.... */
+    }
 
 /* NSH 15/4/11 Lines added to try to keep track of where the photons are coming from, 
  * and hence get an idea of how 'agny' or 'disky' the cell is. */
@@ -301,27 +305,27 @@ if (sane_check(tau)) {
 
 
 //OLD71  if (p->origin == 0)
-//OLD71	xplasma->ntot_star+=(w_in/(H*p->freq));
+//OLD71 xplasma->ntot_star+=(w_in/(H*p->freq));
 //OLD71  else if (p->origin == 1)
-//OLD71	xplasma->ntot_bl+=(w_in/(H*p->freq));
+//OLD71 xplasma->ntot_bl+=(w_in/(H*p->freq));
 //OLD71  else if (p->origin == 2)
-//OLD71	xplasma->ntot_disk+=(w_in/(H*p->freq));
+//OLD71 xplasma->ntot_disk+=(w_in/(H*p->freq));
 //OLD71  else if (p->origin == 3)
-//OLD71	xplasma->ntot_wind+=(w_in/(H*p->freq));
+//OLD71 xplasma->ntot_wind+=(w_in/(H*p->freq));
 //OLD71  else if (p->origin == 4)
-//OLD71	xplasma->ntot_agn+=(w_in/(H*p->freq));
+//OLD71 xplasma->ntot_agn+=(w_in/(H*p->freq));
 
 
   if (p->origin == PTYPE_STAR)
-	xplasma->ntot_star++;
+    xplasma->ntot_star++;
   else if (p->origin == PTYPE_BL)
-	xplasma->ntot_bl++;
+    xplasma->ntot_bl++;
   else if (p->origin == PTYPE_DISK)
-	xplasma->ntot_disk++;
+    xplasma->ntot_disk++;
   else if (p->origin == PTYPE_WIND)
-	xplasma->ntot_wind++;
+    xplasma->ntot_wind++;
   else if (p->origin == PTYPE_AGN)
-	xplasma->ntot_agn++;
+    xplasma->ntot_agn++;
 
 
 /*photon weight times distance in the shell is proportional to the mean intensity */
@@ -329,31 +333,34 @@ if (sane_check(tau)) {
 
 /* frequency weighted by the weights and distance       in the shell .  See eqn 2 ML93 */
   xplasma->mean_ds += ds;
-  xplasma->n_ds ++;
+  xplasma->n_ds++;
   xplasma->ave_freq += p->freq * w_ave * ds;
 
   if (p->freq > xplasma->max_freq)
-	xplasma->max_freq = p->freq;
+    xplasma->max_freq = p->freq;
 
 
 //wind_n_to_if(one->nwind,&ii,&jj);  ??? Not complete. Intended to allow more flexible tracking of photon spectra  ksl 1108
 //if ii==ndim/2:  // 110804 - ksl - Adapt to print out a column in the middle no matter what the dimensions
-//	if (one->nwind > 59 && one->nwind < 90)
+//      if (one->nwind > 59 && one->nwind < 90)
 //  1.75e16 <     (2*sqrt(one->xcen[0]*one->xcen[0]+one->xcen[1]*one->xcen[1]) - sqrt(one->x[0]*one->x[0]+one->x[1]*one->x[1]))) 
-//	if (geo.wind_type == 9)
-//	if (one->nwind==22)
+//      if (geo.wind_type == 9)
+//      if (one->nwind==22)
 //printf ("PHOTON_DETAILS %3d %3d %3d %8.3e %8.3e %8.3e cell%3d wind cell%3d %e %e %e\n",geo.wcycle,ii,jj,p->freq,w_ave,ds,one->nplasma,one->nwind,p->w,w_in,tau);
 
   if (diag_on_off == 1 && ncstat > 0)
+    {
+      for (i = 0; i < ncstat; i++)
 	{
-	for (i=0;i<ncstat;i++)
-		{
-		if (one->nplasma==ncell_stats[i])
-			{
-			fprintf (pstatptr,"PHOTON_DETAILS %3d %3d %3d %8.3e %8.3e %8.3e cell%3d wind cell%3d\n",geo.wcycle,ii,jj,p->freq,w_ave,ds,one->nplasma,one->nwind);
-			}
-		}
+	  if (one->nplasma == ncell_stats[i])
+	    {
+	      fprintf (pstatptr,
+		       "PHOTON_DETAILS %3d %3d %3d %8.3e %8.3e %8.3e cell%3d wind cell%3d\n",
+		       geo.wcycle, ii, jj, p->freq, w_ave, ds, one->nplasma,
+		       one->nwind);
+	    }
 	}
+    }
 
 
 /* 1108 NSH  THe next loop updates the banded versions of j and ave_freq, note that the lines above still update 
@@ -365,25 +372,26 @@ if (sane_check(tau)) {
 
 /* 71 - 111229 - ksl - modified to reflect fact that I have moved nxbands and xfreq into the geo structure */
 
-  for (i=0 ; i<geo.nxfreq ; i++)  
+  for (i = 0; i < geo.nxfreq; i++)
+    {
+      if (geo.xfreq[i] < p->freq && p->freq <= geo.xfreq[i + 1])
 	{
-	if (geo.xfreq[i] < p->freq && p->freq <= geo.xfreq[i+1])
-		{
-		xplasma->xave_freq[i] += p->freq * w_ave * ds;  /*1108 NSH/KSL frequency weighted by weight and distance */
-		xplasma->xsd_freq[i] += p->freq * p->freq * w_ave * ds; /*1208 NSH imput to allow standard deviation to be calculated */
-		xplasma->xj[i] += w_ave * ds;  			/*1108 NSH/KSL photon weight times distance travelled */
-		xplasma->nxtot[i] ++; 				/*1108 NSH increment the frequency banded photon counter */
+	  xplasma->xave_freq[i] += p->freq * w_ave * ds;	/*1108 NSH/KSL frequency weighted by weight and distance */
+	  xplasma->xsd_freq[i] += p->freq * p->freq * w_ave * ds;	/*1208 NSH imput to allow standard deviation to be calculated */
+	  xplasma->xj[i] += w_ave * ds;	/*1108 NSH/KSL photon weight times distance travelled */
+	  xplasma->nxtot[i]++;	/*1108 NSH increment the frequency banded photon counter */
 
-		}
 	}
+    }
 
 
 
   if (sane_check (xplasma->j) || sane_check (xplasma->ave_freq))
     {
-      Error ("radiation:sane_check Problem with j %g or ave_freq %g\n", xplasma->j,
-	     xplasma->ave_freq);
+      Error ("radiation:sane_check Problem with j %g or ave_freq %g\n",
+	     xplasma->j, xplasma->ave_freq);
     }
+
 
   if (kappa_tot > 0)
     {
@@ -392,10 +400,10 @@ if (sane_check(tau)) {
       z = (energy_abs) / kappa_tot;
       xplasma->heat_ff += z * frac_ff;
       xplasma->heat_tot += z * frac_ff;
-      xplasma->heat_comp += z * frac_comp; /* NSH 1108 Calculate the heating in the cell due to compton heating */
-      xplasma->heat_tot += z * frac_comp;  /* NSH 1108 Add the compton heating to the total heating for the cell */
-      xplasma->heat_tot += z * frac_ind_comp; /* NSH 1205 Calculate the heating in the celldue to induced compton heating */
-      xplasma->heat_ind_comp += z * frac_ind_comp; /* NSH 1205 Increment the induced compton heating counter for the cell */
+      xplasma->heat_comp += z * frac_comp;	/* NSH 1108 Calculate the heating in the cell due to compton heating */
+      xplasma->heat_tot += z * frac_comp;	/* NSH 1108 Add the compton heating to the total heating for the cell */
+      xplasma->heat_tot += z * frac_ind_comp;	/* NSH 1205 Calculate the heating in the celldue to induced compton heating */
+      xplasma->heat_ind_comp += z * frac_ind_comp;	/* NSH 1205 Increment the induced compton heating counter for the cell */
       if (freq > phot_freq_min)
 	//
 //      if (freq > (CR / 100.)) //modified CR to CR/100 - SS June 04
@@ -431,19 +439,19 @@ if (sane_check(tau)) {
       ft = augerion[n].freq_t;
       //printf("Auger tests: %g %g %g\n", augerion[n].freq_t, freq, p->freq);
       if (p->freq > ft)
- 	{
- 	  //	  printf("Adding a packet to AUGER via radiation %g \n", freq);
-	  
- 	  weight_of_packet = w_ave;
- 	  x = sigma_phot_verner(&augerion[n], freq); //this is the cross section
- 	  y = weight_of_packet * x * ds;
-	  
- 	  xplasma->gamma_inshl[n] += y / (freq * H * one->vol);
- 	}
+	{
+	  //      printf("Adding a packet to AUGER via radiation %g \n", freq);
+
+	  weight_of_packet = w_ave;
+	  x = sigma_phot_verner (&augerion[n], freq);	//this is the cross section
+	  y = weight_of_packet * x * ds;
+
+	  xplasma->gamma_inshl[n] += y / (freq * H * one->vol);
+	}
     }
-  
-  
-  
+
+
+
   return (0);
 }
 
@@ -483,31 +491,28 @@ kappa_ff (xplasma, freq)
 {
   double x;
   double exp ();
-  double x1,x2, x3;
+  double x1, x2, x3;
 
-if (gaunt_n_gsqrd==0) //Maintain old behaviour
+  if (gaunt_n_gsqrd == 0)	//Maintain old behaviour
+    {
+      if (nelements > 1)
 	{
-  	if (nelements > 1)
-    		{
-      		x = x1 =
-		3.692e8 * xplasma->ne * (xplasma->density[1] +
-				 4. * xplasma->density[4]);
-                Log("matom_trap: nelements=%d", nelements);
-                matom_trap();
-    		}
-  	else
-    		{
-      		x = x1 = 3.692e8 * xplasma->ne * (xplasma->density[1]);
-    		}
+	  x = x1 =
+	    3.692e8 * xplasma->ne * (xplasma->density[1] +
+				     4. * xplasma->density[4]);
 	}
-else
+      else
 	{
-   	x=x1=xplasma->kappa_ff_factor;
-	Log("matom_trap: gaunt_n_gsqrd=%d", gaunt_n_gsqrd);
-        matom_trap();
+	  x = x1 = 3.692e8 * xplasma->ne * (xplasma->density[1]);
 	}
+    }
+  else
+    {
+      x = x1 = xplasma->kappa_ff_factor;
+    }
   x *= x2 = (1. - exp (-H_OVER_K * freq / xplasma->t_e));
   x /= x3 = (sqrt (xplasma->t_e) * freq * freq * freq);
+
   return (x);
 }
 
@@ -619,7 +624,7 @@ sigma_phot_topbase (x_ptr, freq)
   int linterp ();
   int nlast;
 
-  
+
 
   if (freq < x_ptr->freq[0])
     return (0.0);		// Since this was below threshold
@@ -684,18 +689,18 @@ sigma_phot_verner (x_ptr, freq)
   double y;
   double f1, f2, f3;
   double xsection;
-  
+
   ft = x_ptr->freq_t;		/* threshold frequency */
-  
+
   if (ft < freq)
     {
-      y = freq/x_ptr->E_0*HEV;
-      
+      y = freq / x_ptr->E_0 * HEV;
+
       f1 = ((y - 1.0) * (y - 1.0)) + (x_ptr->yw * x_ptr->yw);
       f2 = pow (y, 0.5 * x_ptr->P - 5.5 - x_ptr->l);
       f3 = pow (1.0 + sqrt (y / x_ptr->ya), -x_ptr->P);
       xsection = x_ptr->Sigma * f1 * f2 * f3;	// the photoinization xsection
-      
+
       return (xsection);
     }
   else
@@ -795,30 +800,33 @@ History:
 
 double
 pop_kappa_ff_array ()
-
 {
 
-double gsqrd,gaunt,sum;
-int i,j;
+  double gsqrd, gaunt, sum;
+  int i, j;
 
-sum=0.0;
-	for (i=0;i<NPLASMA+1;i++)
-		{
-		for (j=0;j<nions;j++)
-			{
-			gsqrd=(ion[j].z*ion[j].z*RYD2ERGS)/(BOLTZMANN*plasmamain[i].t_e);
-			gaunt=gaunt_ff(gsqrd);
-			sum += plasmamain[i].density[j] * ion[j].z * ion[j].z * gaunt;
-			/* 74a_ksl  Added to diagnose problem with kappa_ff_fact producing NaN */
-			if (sane_check(sum)){
-				Error("pop_kappa_ff_array:sane_check sum is %e this is a problem, possible in gaunt %3\n",sum,gaunt);
-			}
+  sum = 0.0;
+  for (i = 0; i < NPLASMA + 1; i++)
+    {
+      for (j = 0; j < nions; j++)
+	{
+	  gsqrd =
+	    (ion[j].z * ion[j].z * RYD2ERGS) / (BOLTZMANN *
+						plasmamain[i].t_e);
+	  gaunt = gaunt_ff (gsqrd);
+	  sum += plasmamain[i].density[j] * ion[j].z * ion[j].z * gaunt;
+	  /* 74a_ksl  Added to diagnose problem with kappa_ff_fact producing NaN */
+	  if (sane_check (sum))
+	    {
+	      Error
+		("pop_kappa_ff_array:sane_check sum is %e this is a problem, possible in gaunt %3\n",
+		 sum, gaunt);
+	    }
 
-			}
-		plasmamain[i].kappa_ff_factor =  plasmamain[i].ne*sum*3.692e8;
+	}
+      plasmamain[i].kappa_ff_factor = plasmamain[i].ne * sum * 3.692e8;
 
-		}
+    }
 
   return (0);
 }
-

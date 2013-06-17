@@ -75,30 +75,59 @@ wind_save (filename)
   if (geo.nmacro)
     {
       n += fwrite (macromain, sizeof (macro_dummy), NPLASMA, fptr);
-      for (m=0;m<NPLASMA;m++)
+      for (m = 0; m < NPLASMA; m++)
 	{
-	  n += fwrite(macromain[m].jbar,sizeof(double),size_Jbar_est, fptr);
-	  n += fwrite(macromain[m].jbar_old,sizeof(double),size_Jbar_est, fptr);
-	  n += fwrite(macromain[m].gamma,sizeof(double),size_gamma_est, fptr);
-	  n += fwrite(macromain[m].gamma_old,sizeof(double),size_gamma_est, fptr);
-	  n += fwrite(macromain[m].gamma_e,sizeof(double),size_gamma_est, fptr);
-	  n += fwrite(macromain[m].gamma_e_old,sizeof(double),size_gamma_est, fptr);
-	  n += fwrite(macromain[m].alpha_st,sizeof(double),size_gamma_est, fptr);
-	  n += fwrite(macromain[m].alpha_st_old,sizeof(double),size_gamma_est, fptr);
-	  n += fwrite(macromain[m].alpha_st_e,sizeof(double),size_gamma_est, fptr);
-	  n += fwrite(macromain[m].alpha_st_e_old,sizeof(double),size_gamma_est, fptr);
-	  n += fwrite(macromain[m].recomb_sp,sizeof(double),size_alpha_est, fptr);
-	  n += fwrite(macromain[m].recomb_sp_e,sizeof(double),size_alpha_est, fptr);
-	  n += fwrite(macromain[m].matom_emiss,sizeof(double),nlevels_macro, fptr);
-	  n += fwrite(macromain[m].matom_abs,sizeof(double),nlevels_macro, fptr);
-	  
-	} 
+	  n +=
+	    fwrite (macromain[m].jbar, sizeof (double), size_Jbar_est, fptr);
+	  n +=
+	    fwrite (macromain[m].jbar_old, sizeof (double), size_Jbar_est,
+		    fptr);
+	  n +=
+	    fwrite (macromain[m].gamma, sizeof (double), size_gamma_est,
+		    fptr);
+	  n +=
+	    fwrite (macromain[m].gamma_old, sizeof (double), size_gamma_est,
+		    fptr);
+	  n +=
+	    fwrite (macromain[m].gamma_e, sizeof (double), size_gamma_est,
+		    fptr);
+	  n +=
+	    fwrite (macromain[m].gamma_e_old, sizeof (double), size_gamma_est,
+		    fptr);
+	  n +=
+	    fwrite (macromain[m].alpha_st, sizeof (double), size_gamma_est,
+		    fptr);
+	  n +=
+	    fwrite (macromain[m].alpha_st_old, sizeof (double),
+		    size_gamma_est, fptr);
+	  n +=
+	    fwrite (macromain[m].alpha_st_e, sizeof (double), size_gamma_est,
+		    fptr);
+	  n +=
+	    fwrite (macromain[m].alpha_st_e_old, sizeof (double),
+		    size_gamma_est, fptr);
+	  n +=
+	    fwrite (macromain[m].recomb_sp, sizeof (double), size_alpha_est,
+		    fptr);
+	  n +=
+	    fwrite (macromain[m].recomb_sp_e, sizeof (double), size_alpha_est,
+		    fptr);
+	  n +=
+	    fwrite (macromain[m].matom_emiss, sizeof (double), nlevels_macro,
+		    fptr);
+	  n +=
+	    fwrite (macromain[m].matom_abs, sizeof (double), nlevels_macro,
+		    fptr);
+
+	}
 
     }
 
   fclose (fptr);
 
-  Log("wind_write sizes: NPLASMA %d size_Jbar_est %d size_gamma_est %d size_alpha_est %d nlevels_macro %d\n", NPLASMA,size_Jbar_est,size_gamma_est,size_alpha_est,nlevels_macro);
+  Log
+    ("wind_write sizes: NPLASMA %d size_Jbar_est %d size_gamma_est %d size_alpha_est %d nlevels_macro %d\n",
+     NPLASMA, size_Jbar_est, size_gamma_est, size_alpha_est, nlevels_macro);
 
   return (n);
 
@@ -115,13 +144,13 @@ wind_read (filename)
      char filename[];
 {
   FILE *fptr, *fopen ();
-  int n,m;
+  int n, m;
   char line[LINELENGTH];
   char version[LINELENGTH];
 
   if ((fptr = fopen (filename, "r")) == NULL)
     {
-	    return(-1); 
+      return (-1);
     }
 
   n = fread (line, sizeof (line), 1, fptr);
@@ -138,7 +167,7 @@ wind_read (filename)
    */
 
   get_atomic_data (geo.atomic_filename);
- 
+
 
 
 
@@ -162,27 +191,53 @@ wind_read (filename)
       calloc_macro (NPLASMA);
       n += fread (macromain, sizeof (macro_dummy), NPLASMA, fptr);
       calloc_estimators (NPLASMA);
-      
-      for (m=0;m<NPLASMA;m++)
+
+      for (m = 0; m < NPLASMA; m++)
 	{
-	  n += fread(macromain[m].jbar,sizeof(double),size_Jbar_est, fptr);
-	  n += fread(macromain[m].jbar_old,sizeof(double),size_Jbar_est, fptr);
-	  n += fread(macromain[m].gamma,sizeof(double),size_gamma_est, fptr);
-	  n += fread(macromain[m].gamma_old,sizeof(double),size_gamma_est, fptr);
-	  n += fread(macromain[m].gamma_e,sizeof(double),size_gamma_est, fptr);
-	  n += fread(macromain[m].gamma_e_old,sizeof(double),size_gamma_est, fptr);
-	  n += fread(macromain[m].alpha_st,sizeof(double),size_gamma_est, fptr);
-	  n += fread(macromain[m].alpha_st_old,sizeof(double),size_gamma_est, fptr);
-	  n += fread(macromain[m].alpha_st_e,sizeof(double),size_gamma_est, fptr);
-	  n += fread(macromain[m].alpha_st_e_old,sizeof(double),size_gamma_est, fptr);
-	  n += fread(macromain[m].recomb_sp,sizeof(double),size_alpha_est, fptr);
-	  n += fread(macromain[m].recomb_sp_e,sizeof(double),size_alpha_est, fptr);
-	  n += fread(macromain[m].matom_emiss,sizeof(double),nlevels_macro, fptr);
-	  n += fread(macromain[m].matom_abs,sizeof(double),nlevels_macro, fptr);
+	  n +=
+	    fread (macromain[m].jbar, sizeof (double), size_Jbar_est, fptr);
+	  n +=
+	    fread (macromain[m].jbar_old, sizeof (double), size_Jbar_est,
+		   fptr);
+	  n +=
+	    fread (macromain[m].gamma, sizeof (double), size_gamma_est, fptr);
+	  n +=
+	    fread (macromain[m].gamma_old, sizeof (double), size_gamma_est,
+		   fptr);
+	  n +=
+	    fread (macromain[m].gamma_e, sizeof (double), size_gamma_est,
+		   fptr);
+	  n +=
+	    fread (macromain[m].gamma_e_old, sizeof (double), size_gamma_est,
+		   fptr);
+	  n +=
+	    fread (macromain[m].alpha_st, sizeof (double), size_gamma_est,
+		   fptr);
+	  n +=
+	    fread (macromain[m].alpha_st_old, sizeof (double), size_gamma_est,
+		   fptr);
+	  n +=
+	    fread (macromain[m].alpha_st_e, sizeof (double), size_gamma_est,
+		   fptr);
+	  n +=
+	    fread (macromain[m].alpha_st_e_old, sizeof (double),
+		   size_gamma_est, fptr);
+	  n +=
+	    fread (macromain[m].recomb_sp, sizeof (double), size_alpha_est,
+		   fptr);
+	  n +=
+	    fread (macromain[m].recomb_sp_e, sizeof (double), size_alpha_est,
+		   fptr);
+	  n +=
+	    fread (macromain[m].matom_emiss, sizeof (double), nlevels_macro,
+		   fptr);
+	  n +=
+	    fread (macromain[m].matom_abs, sizeof (double), nlevels_macro,
+		   fptr);
 
 	  /* Force recalculation of kpkt_rates */
 
-	  macromain[m].kpkt_rates_known=0;
+	  macromain[m].kpkt_rates_known = 0;
 	}
 
     }

@@ -96,25 +96,29 @@ ion_summary (w, element, istate, iswitch, rootname, ochoice)
       if (w[n].vol > 0.0 && plasmamain[nplasma].ne > 1.0)
 	{
 	  if (iswitch == 0)
-	  {
-	  	aaa[n] = plasmamain[nplasma].density[nion];
-	    aaa[n] /=
-	      ((plasmamain[nplasma].density[0] +
-		plasmamain[nplasma].density[1]) * ele[nelem].abun);
-	  }
-	  else if (iswitch==1){
-	  	aaa[n] = plasmamain[nplasma].density[nion];
-	  }
-	  else if (iswitch==2) {
-	  	aaa[n] = plasmamain[nplasma].scatters[nion];
-	  }
-	  else if (iswitch==3) {
-	  	aaa[n] = plasmamain[nplasma].xscatters[nion];
-	  }
-	  else {
-		  Error("ion_summary : Unknown switch %d \n",iswitch);
-		  exit(0);
-	  }
+	    {
+	      aaa[n] = plasmamain[nplasma].density[nion];
+	      aaa[n] /=
+		((plasmamain[nplasma].density[0] +
+		  plasmamain[nplasma].density[1]) * ele[nelem].abun);
+	    }
+	  else if (iswitch == 1)
+	    {
+	      aaa[n] = plasmamain[nplasma].density[nion];
+	    }
+	  else if (iswitch == 2)
+	    {
+	      aaa[n] = plasmamain[nplasma].scatters[nion];
+	    }
+	  else if (iswitch == 3)
+	    {
+	      aaa[n] = plasmamain[nplasma].xscatters[nion];
+	    }
+	  else
+	    {
+	      Error ("ion_summary : Unknown switch %d \n", iswitch);
+	      exit (0);
+	    }
 	}
     }
 
@@ -135,20 +139,24 @@ ion_summary (w, element, istate, iswitch, rootname, ochoice)
 		x /=
 		  ((plasmamain[nplasma].density[0] +
 		    plasmamain[nplasma].density[1]) * ele[nelem].abun);
-	      else if (iswitch==1){
-	      x = plasmamain[nplasma].density[nion];
-		x = log10 (x);
-	      }
-	      else if (iswitch==2) {
-		      x=plasmamain[nplasma].scatters[nion];
-	      }
-	      else if (iswitch==3) {
-		      x=plasmamain[nplasma].xscatters[nion];
-	      }
-      else {
-		  Error("ion_summary : Unknown switch %d \n",iswitch);
-		  exit(0);
-      }
+	      else if (iswitch == 1)
+		{
+		  x = plasmamain[nplasma].density[nion];
+		  x = log10 (x);
+		}
+	      else if (iswitch == 2)
+		{
+		  x = plasmamain[nplasma].scatters[nion];
+		}
+	      else if (iswitch == 3)
+		{
+		  x = plasmamain[nplasma].xscatters[nion];
+		}
+	      else
+		{
+		  Error ("ion_summary : Unknown switch %d \n", iswitch);
+		  exit (0);
+		}
 
 
 	    }
@@ -161,16 +169,17 @@ ion_summary (w, element, istate, iswitch, rootname, ochoice)
       strcpy (filename, rootname);
       if (iswitch == 0)
 	strcpy (choice, ".ion");
-      else if (iswitch==1)
+      else if (iswitch == 1)
 	strcpy (choice, ".ionc");
-      else if (iswitch==2) 
+      else if (iswitch == 2)
 	strcpy (choice, ".ions");
-      else if (iswitch==3) 
+      else if (iswitch == 3)
 	strcpy (choice, ".iona");
-      else {
-		  Error("ion_summary : Unknown switch %d \n",iswitch);
-		  exit(0);
-      }
+      else
+	{
+	  Error ("ion_summary : Unknown switch %d \n", iswitch);
+	  exit (0);
+	}
 
       strcat (choice, ele[nelem].name);
       sprintf (iname, "%d", istate);

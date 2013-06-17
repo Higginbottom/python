@@ -150,29 +150,29 @@ nebular_concentrations (xplasma, mode)
 
 
     }
-  else if (mode == 5)           /* This replicates Sim's (2008) power
+  else if (mode == 5)		/* This replicates Sim's (2008) power
 				   law method for ionization in a non-BB radiation
 				   field.  */
     {
 
-      partition_functions (xplasma, 1);   //lte partition function using t_e and no weights
+      partition_functions (xplasma, 1);	//lte partition function using t_e and no weights
 
       m = concentrations (xplasma, 1);	// Saha equation using t_e 
 
       m = sim_driver (xplasma);
-   }
+    }
 /* Two new modes, they could proably be combined into one if statement, but having two adds little complexity and allows for other modifications if required. No call to partition functions is required, since this is done on a pairwise basis in the routine. Similarly there is no call to concentrations, since this is also done pairwise inside the routine. */
-  else if (mode == 6)         /* Pairwise calculation of abundances, using a 
-				temperature computed to ensure a reasonable
-				ratio between the two, and then corrected for
-				a dilute blackbody radiation field. */
+  else if (mode == 6)		/* Pairwise calculation of abundances, using a 
+				   temperature computed to ensure a reasonable
+				   ratio between the two, and then corrected for
+				   a dilute blackbody radiation field. */
     {
       m = variable_temperature (xplasma, mode);
     }
-  else if (mode == 7)         /* Pairwise calculation of abundances, using a 
-				temperature computed to ensure a reasonable
-				ratio between the two, and then corrected for
-				a radiation field modelled by a power law*/
+  else if (mode == 7)		/* Pairwise calculation of abundances, using a 
+				   temperature computed to ensure a reasonable
+				   ratio between the two, and then corrected for
+				   a radiation field modelled by a power law */
     {
       m = variable_temperature (xplasma, mode);
     }
@@ -265,10 +265,10 @@ concentrations (xplasma, mode)
 
 
 
-//#define SAHA 4.82907e15		/* 2* (2.*PI*MELEC*k)**1.5 / h**3  (Calculated in constants) */
-//#define MAXITERATIONS	200
+//#define SAHA 4.82907e15               /* 2* (2.*PI*MELEC*k)**1.5 / h**3  (Calculated in constants) */
+//#define MAXITERATIONS 200
 //#define FRACTIONAL_ERROR 0.03
-//#define THETAMAX	 1e4
+//#define THETAMAX       1e4
 //#define MIN_TEMP         100. NSH 0712 - moved into python.h because this is used in severalpaces
 
 
@@ -352,7 +352,7 @@ concentrations (xplasma, mode)
   niterate = 0;
   while (niterate < MAXITERATIONS)
     {
-//	Log("Saha Iteration %i, with ne=%e and t=%e\n",niterate,xne,t);
+//      Log("Saha Iteration %i, with ne=%e and t=%e\n",niterate,xne,t);
       /* Assuming a value of ne calculate the relative densities of each ion for each element */
 
       saha (xplasma, xne, t);
@@ -479,16 +479,17 @@ saha (xplasma, ne, t)
 	{
 	  b = xsaha * partition[nion]
 	    * exp (-ion[nion - 1].ip / (BOLTZMANN * t)) / (ne *
-							   partition[nion-1]);
-//	  if (b > big && nh < 1e5) this is a line to only modify things if the density is high enough to matter
-          if (b > big)	 
-	   b = big;		//limit step so there is no chance of overflow
+							   partition[nion -
+								     1]);
+//        if (b > big && nh < 1e5) this is a line to only modify things if the density is high enough to matter
+	  if (b > big)
+	    b = big;		//limit step so there is no chance of overflow
 	  a = density[nion - 1] * b;
 	  sum += density[nion] = a;
 	  if (density[nion] < 0.0)
 	    mytrap ();
 	  if (sane_check (sum))
-	    Error("saha:sane_check failed for density summation\n");
+	    Error ("saha:sane_check failed for density summation\n");
 
 
 	}
@@ -498,7 +499,7 @@ saha (xplasma, ne, t)
 	{
 	  density[nion] *= a;
 	  if (sane_check (density[nion]))
-		Error("saha:sane_check failed for density of ion %i\n",nion);
+	    Error ("saha:sane_check failed for density of ion %i\n", nion);
 	}
     }
 
@@ -689,7 +690,7 @@ lucy_mazzali1 (nh, t_r, t_e, www, nelem, ne, density, xne, newden)
      int nelem;
      double ne, density[], xne, newden[];
 {
-  double fudge;  // dummy, interpfrac; 0712 zeta calculation moved into zeta.c
+  double fudge;			// dummy, interpfrac; 0712 zeta calculation moved into zeta.c
   double fudge2, q;
   double sum, a;
 //  int ilow, ihi; 0712 nsh zeta moved into subroutine
@@ -702,27 +703,28 @@ lucy_mazzali1 (nh, t_r, t_e, www, nelem, ne, density, xne, newden)
 //NSH 0712These lines now moved into zeta.c we retain the caculation of sqrt t_e/t_r
       /* now get the right place in the ground_frac tables  CK */
 //      dummy = t_e / TMIN - 1.;
-//      ilow = dummy;		/* have now truncated to integer below */
-//      ihi = ilow + 1;		/*these are the indeces bracketing the true value */
-//      interpfrac = (dummy - ilow);	/*this is the interpolation fraction */
+//      ilow = dummy;           /* have now truncated to integer below */
+//      ihi = ilow + 1;         /*these are the indeces bracketing the true value */
+//      interpfrac = (dummy - ilow);    /*this is the interpolation fraction */
 //      if (ilow < 0)
-//	{
-//	  ilow = 0;
-//	  ihi = 0;
-//	  interpfrac = 1.;
-//	}
+//      {
+//        ilow = 0;
+//        ihi = 0;
+//        interpfrac = 1.;
+//      }
 //    if (ihi > 19)
-//	{
-//	  ilow = 19;
-//	  ihi = 19;
-//	  interpfrac = 1.;
-//	}
+//      {
+//        ilow = 19;
+//        ihi = 19;
+//        interpfrac = 1.;
+//      }
 
     }
   else
     {
-      Error_silent ("lucy_mazzali1: t_r too low www %8.2e t_e %8.2e  t_r %8.2e \n",
-	     www, t_e, t_r);
+      Error_silent
+	("lucy_mazzali1: t_r too low www %8.2e t_e %8.2e  t_r %8.2e \n", www,
+	 t_e, t_r);
       fudge = 0.0;
 //      interpfrac = 0.0;
 //      ihi = ilow = 0;
@@ -764,8 +766,8 @@ lucy_mazzali1 (nh, t_r, t_e, www, nelem, ne, density, xne, newden)
          first find fraction of recombinations going directly to
          the ground state for this temperature and ion */
 
-      fudge2 = compute_zeta (t_e, nion-1, 2); /* NSH 1207 - call external function, mode 2 uses chianti and badnell data to try to take account of DR in zeta - if atomic data is not read in, then the old interpolated zeta will be returned */
-    
+      fudge2 = compute_zeta (t_e, nion - 1, 2);	/* NSH 1207 - call external function, mode 2 uses chianti and badnell data to try to take account of DR in zeta - if atomic data is not read in, then the old interpolated zeta will be returned */
+
 
 /* NSH 0712 - Old way of doing it, not moved into routines in zeta.c 
 	ground_frac[nion - 1].frac[ilow] +

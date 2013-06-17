@@ -118,7 +118,7 @@ dot (a, b)
   if (sane_check (x))
     {
       Error ("dot:sane_check of x: a %f %f %f b %f %f %f\n",
-	      a[0], a[1], a[2], b[0], b[1], b[2]);
+	     a[0], a[1], a[2], b[0], b[1], b[2]);
     }
   return (x);
 }
@@ -132,11 +132,11 @@ length (a)
   double x, y;
   double sqrt ();
   y = (a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);
-  if  (sane_check (y))
-	Error ("length:sane_check of y: a %f %f %f \n",a[0], a[1], a[2]);
+  if (sane_check (y))
+    Error ("length:sane_check of y: a %f %f %f \n", a[0], a[1], a[2]);
   x = sqrt (y);
   if (sane_check (x))
-	Error ("length:sane_check of x=sqrt(y): y= %f\n",y);
+    Error ("length:sane_check of x=sqrt(y): y= %f\n", y);
   return (x);
 }
 

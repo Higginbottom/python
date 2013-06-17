@@ -113,32 +113,32 @@ to match heating and cooling in the wind element! */
     }
   else if (mode == 5)
     {				// One shot at updating t_e before calculating densities using Stuart's power law correction
-  ireturn=spectral_estimators(xplasma); //Slight recoding - now this just computes the estimators - this was the code clogging up this mode. Now it looks like the others.
+      ireturn = spectral_estimators (xplasma);	//Slight recoding - now this just computes the estimators - this was the code clogging up this mode. Now it looks like the others.
 
-  xplasma->dt_e_old = xplasma->dt_e;
-  xplasma->dt_e = xplasma->t_e - xplasma->t_e_old;	//Must store this before others
-  xplasma->t_e_old = xplasma->t_e;
-  xplasma->t_r_old = xplasma->t_r;
-  xplasma->lum_rad_old = xplasma->lum_rad;
+      xplasma->dt_e_old = xplasma->dt_e;
+      xplasma->dt_e = xplasma->t_e - xplasma->t_e_old;	//Must store this before others
+      xplasma->t_e_old = xplasma->t_e;
+      xplasma->t_r_old = xplasma->t_r;
+      xplasma->lum_rad_old = xplasma->lum_rad;
 
 
- /* Log ("NSH in this cell, we have %e AGN photons and %e disk photons\n",
-       xplasma->ntot_agn, xplasma->ntot_disk); Removed, no longer gives reasonable answers due to banding */
+      /* Log ("NSH in this cell, we have %e AGN photons and %e disk photons\n",
+         xplasma->ntot_agn, xplasma->ntot_disk); Removed, no longer gives reasonable answers due to banding */
 
-  ireturn = one_shot (xplasma, mode);
+      ireturn = one_shot (xplasma, mode);
 
 
 /* Convergence check */
-  convergence (xplasma);
+      convergence (xplasma);
 
 
 
     }
   else if (mode == 6)
-   {
+    {
       /* Feb 2012 new for mode 6. New abundances have been computed using pairwise Saha equation
-	approach. We can now attempt to balance heating and cooling with the new abundance in the
-	same way as mode 3. */
+         approach. We can now attempt to balance heating and cooling with the new abundance in the
+         same way as mode 3. */
 
 /* Shift values to old */
       xplasma->dt_e_old = xplasma->dt_e;
@@ -151,25 +151,25 @@ to match heating and cooling in the wind element! */
 
 /* Convergence check */
       convergence (xplasma);
-   }
+    }
   else if (mode == 7)
-   {
+    {
 /* Feb 2012 NSH - new for mode 7. KSL has moved a lot of the mechanics that used to be here into
  power_abundances. This, once called, calculates the weight and alpha for each band in this cell. There is a lot of code that was clogging up this routine. Once this is done, one_shot gets called from within that routine. */
-      ireturn = spectral_estimators(xplasma);  /*Aug 2012 NSH - slight change to help integrate this into balance, power_estimators does the work of getting banded W and alpha. Then oneshot gets called. */
-	  xplasma->dt_e_old = xplasma->dt_e;
-  xplasma->dt_e = xplasma->t_e - xplasma->t_e_old;	//Must store this before others
-  xplasma->t_e_old = xplasma->t_e;
-  xplasma->t_r_old = xplasma->t_r;
-  xplasma->lum_rad_old = xplasma->lum_rad;
+      ireturn = spectral_estimators (xplasma);	/*Aug 2012 NSH - slight change to help integrate this into balance, power_estimators does the work of getting banded W and alpha. Then oneshot gets called. */
+      xplasma->dt_e_old = xplasma->dt_e;
+      xplasma->dt_e = xplasma->t_e - xplasma->t_e_old;	//Must store this before others
+      xplasma->t_e_old = xplasma->t_e;
+      xplasma->t_r_old = xplasma->t_r;
+      xplasma->lum_rad_old = xplasma->lum_rad;
 
 
-  ireturn = one_shot (xplasma, mode);
+      ireturn = one_shot (xplasma, mode);
 
 
 /* Convergence check */
-  convergence (xplasma);
-   }
+      convergence (xplasma);
+    }
 
 
   else
@@ -368,6 +368,7 @@ check_convergence ()
   Log
     ("Summary  convergence %4d %.3f  %4d  %.3f  %d  #  n_converged fraction_converged  converging fraction_converging total cells\n",
      nconverge, xconverge, nconverging, xconverging, ntot);
+  Log_flush ();			/*NSH June 13 Added call to flush logfile */
   return (0);
 }
 
@@ -436,7 +437,7 @@ meaning in nebular concentrations.
 
   if (mode == 3)
     mode = 2;
-  else if (mode <= 1 || mode >= 8)	/* modification to cope with mode 5 - SIM + two new modes in Feb 2012*/
+  else if (mode <= 1 || mode >= 8)	/* modification to cope with mode 5 - SIM + two new modes in Feb 2012 */
     {
 
       Error ("one_shot: Sorry, Charlie, don't know how to process mode %d\n",
@@ -516,21 +517,21 @@ calc_te (xplasma, tmin, tmax)
   double z1, z2;
   int macro_pops ();
   int n;
-  double temptmin,temptmax,temp,dt,zemtemp;
+  double temptmin, temptmax, temp, dt, zemtemp;
   /* 110916 - ksl - Note that we assign a plasma pointer here to a fixed structure because
    * we need to call zbrent and we cannot pass the xplasma ptr directly
    */
 
   xxxplasma = xplasma;
 
-   temptmin=1e4;
-   temptmax=1e6;
-   dt=1e3;
-   for (n=0;n<190;n++)
-	{
-	temp=temptmin+(n*dt);
-	zemtemp=zero_emit(temp);
-	}
+  temptmin = 1e4;
+  temptmax = 1e6;
+  dt = 1e3;
+  for (n = 0; n < 190; n++)
+    {
+      temp = temptmin + (n * dt);
+      zemtemp = zero_emit (temp);
+    }
 
 
 
@@ -557,9 +558,9 @@ calc_te (xplasma, tmin, tmax)
       xplasma->t_e = tmin;
     }
   else
-   {
-    xplasma->t_e = tmax;
-}
+    {
+      xplasma->t_e = tmax;
+    }
   /* With the new temperature in place for the cell, get the correct value of heat_tot.
      SS June  04 */
 

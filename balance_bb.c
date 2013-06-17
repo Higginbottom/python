@@ -104,7 +104,8 @@ xbb (p, t, weight, f1, f2, freq_sampling)
 //02jul         emittance_bb (band[n].freq, band[n + 1].freq, t);
 	      ftot += xband.flux[n] =
 		emittance_bb (xband.f1[n], xband.f2[n], t);
-		printf ("BAND %i from %e to %e at temp %f has flux %e\n",n,xband.f1[n], xband.f2[n], t,xband.flux[n]);
+	      printf ("BAND %i from %e to %e at temp %f has flux %e\n", n,
+		      xband.f1[n], xband.f2[n], t, xband.flux[n]);
 	    }
 	  else
 //02jul     uband[n].f = 0.0;
@@ -132,7 +133,7 @@ xbb (p, t, weight, f1, f2, freq_sampling)
 //02jul   nphottot += uband[n].nphot = NPHOT * uband[n].used_fraction;
 	  xband.used_fraction[n] =
 	    xband.min_fraction[n] + (1 - frac_used) * xband.nat_fraction[n];
-	
+
 	  nphottot += xband.nphot[n] = NPHOT * xband.used_fraction[n];
 
 //02jul   if (uband[n].used_fraction > z)

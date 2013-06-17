@@ -96,7 +96,7 @@ spectrum_init (f1, f2, nangle, angle, phase, scat_select, top_bot_select,
   int i, n;
   int nspec;
   double freqmin, freqmax, dfreq;
-  double lfreqmin, lfreqmax, ldfreq; /* NSH 1302 Min, max and delta for the log spectrum */
+  double lfreqmin, lfreqmax, ldfreq;	/* NSH 1302 Min, max and delta for the log spectrum */
   double x1, x2;
   char dummy[20];
 
@@ -108,9 +108,9 @@ spectrum_init (f1, f2, nangle, angle, phase, scat_select, top_bot_select,
 
 /* NSH 1302 Lines to set up a logarithmic spectrum */
 
-  lfreqmin=log10(freqmin);
-  lfreqmax=log10(freqmax);
-  ldfreq=(lfreqmax-lfreqmin) / NWAVE;	
+  lfreqmin = log10 (freqmin);
+  lfreqmax = log10 (freqmax);
+  ldfreq = (lfreqmax - lfreqmin) / NWAVE;
 
   /* Create the spectrum arrays the first time routine is called */
   if (i_spec_start == 0)
@@ -151,8 +151,8 @@ spectrum_init (f1, f2, nangle, angle, phase, scat_select, top_bot_select,
 	s[n].nphot[i] = 0;
       for (i = 0; i < NWAVE; i++)
 	{
-	s[n].f[i] = 0;
-	s[n].lf[i] = 0; /* NSH 1302 zero the logarithmic spectra */
+	  s[n].f[i] = 0;
+	  s[n].lf[i] = 0;	/* NSH 1302 zero the logarithmic spectra */
 	}
     }
 
@@ -224,12 +224,12 @@ disk. The minus sign in the terms associated with phase are to make this happen.
  */
       //
 //OLD091125      if (phase[n - MSPEC] > 0.75 || phase[n - MSPEC] < 0.25)
-//OLD091125	{			/*Then conditions
-//OLD091125			   have been place on the phases so update the names */
-	  strcpy (dummy, "");
-	  sprintf (dummy, "P%04.2f", phase[n - MSPEC]);
-	  strcat (s[n].name, dummy);
-//OLD091125	}
+//OLD091125     {                       /*Then conditions
+//OLD091125                        have been place on the phases so update the names */
+      strcpy (dummy, "");
+      sprintf (dummy, "P%04.2f", phase[n - MSPEC]);
+      strcat (s[n].name, dummy);
+//OLD091125     }
       s[n].nscat = scat_select[n - MSPEC];
       if (s[n].nscat < MAXSCAT)
 	{			/* Then conditions have been place on the
@@ -347,21 +347,21 @@ spectrum_create (p, f1, f2, nangle, select_extract)
   int wind_n_to_ij ();
   int mscat, mtopbot;
   double delta;
-  double nlow,nhigh;
+  double nlow, nhigh;
 
   freqmin = f1;
   freqmax = f2;
   dfreq = (freqmax - freqmin) / NWAVE;
   nspec = nangle + MSPEC;
-  nlow=0.0;   // variable to storte the number of photons that have frequencies which are too low
-  nhigh=0.0;  // variable to storte the number of photons that have frequencies which are too high
-  delta=0.0;  // fractional frequency error allowod
+  nlow = 0.0;			// variable to storte the number of photons that have frequencies which are too low
+  nhigh = 0.0;			// variable to storte the number of photons that have frequencies which are too high
+  delta = 0.0;			// fractional frequency error allowod
 
 /* Lines to set up a logarithmic spectrum */
 
-	lfreqmin=log10(freqmin);
-	lfreqmax=log10(freqmax);
-	ldfreq=(lfreqmax-lfreqmin) / NWAVE;	
+  lfreqmin = log10 (freqmin);
+  lfreqmax = log10 (freqmax);
+  ldfreq = (lfreqmax - lfreqmin) / NWAVE;
 
 
   for (nphot = 0; nphot < NPHOT; nphot++)
@@ -378,15 +378,15 @@ spectrum_create (p, f1, f2, nangle, select_extract)
 
 /* At some undocumented point, logarithmic frequency intervals were added */
 /* lines to work out where we are in a logarithmic spectrum */
-	k1 = (log10(p[nphot].freq) -log10(freqmin)) / ldfreq;
-	if (k1<0) 
-		{
-		k1=0; 
-		}
-	if (k1>NWAVE) 
-		{
-		k1=NWAVE; 
-		}
+      k1 = (log10 (p[nphot].freq) - log10 (freqmin)) / ldfreq;
+      if (k1 < 0)
+	{
+	  k1 = 0;
+	}
+      if (k1 > NWAVE)
+	{
+	  k1 = NWAVE;
+	}
 
 /* lines to work out where we are in a normal spectrum */
       k = (p[nphot].freq - freqmin) / dfreq;
@@ -397,28 +397,28 @@ spectrum_create (p, f1, f2, nangle, select_extract)
 //OLD 74a_ksl  * so far out of bounds (>3000 km/s) that it suggests a real error.
 //OLD 74a_ksl */
 //OLD 74a_ksl 
-//OLD 74a_ksl   	  delta=0.02;  /* 111211 ksl -  Added a variable so that we could control how tightly to limit the photon boundaries 
-//OLD 74a_ksl 			 It would be possible to calculate what delta should be from the maximum velocity in the disk or wind
-//OLD 74a_ksl 		 */
+//OLD 74a_ksl             delta=0.02;  /* 111211 ksl -  Added a variable so that we could control how tightly to limit the photon boundaries 
+//OLD 74a_ksl                    It would be possible to calculate what delta should be from the maximum velocity in the disk or wind
+//OLD 74a_ksl            */
 
 	  if (((1. - p[nphot].freq / freqmin) > delta) && (geo.rt_mode != 2))
-//OLD 74a_ksl	    Error_silent
-//OLD 74a_ksl	      ("spectrum_create: photon %6d freq low  %g < %g v %.2e scat %d n res scat %d origin %d\n",
-//OLD 74a_ksl	       nphot, p[nphot].freq, freqmin,
-//OLD 74a_ksl	       (1. - p[nphot].freq / freqmin) * 2.99795e5, p[nphot].nscat,
-//OLD 74a_ksl	       p[nphot].nrscat, p[nphot].origin);
-	  nlow=nlow+1;
+//OLD 74a_ksl       Error_silent
+//OLD 74a_ksl         ("spectrum_create: photon %6d freq low  %g < %g v %.2e scat %d n res scat %d origin %d\n",
+//OLD 74a_ksl          nphot, p[nphot].freq, freqmin,
+//OLD 74a_ksl          (1. - p[nphot].freq / freqmin) * 2.99795e5, p[nphot].nscat,
+//OLD 74a_ksl          p[nphot].nrscat, p[nphot].origin);
+	    nlow = nlow + 1;
 	  k = 0;
 	}
       else if (k > NWAVE - 1)
 	{
 	  if (((1. - freqmax / p[nphot].freq) > delta) && (geo.rt_mode != 2))
-//OLD 74a_ksl	    Error_silent
-//OLD 74a_ksl	      ("spectrum_create: photon %6d freq high %g > %g v %.2e scat %d  res scat %d origin %d\n",
-//OLD 74a_ksl	       nphot, p[nphot].freq, freqmax,
-//OLD 74a_ksl	       (1. - freqmax / p[nphot].freq) * 2.99795e5, p[nphot].nscat,
-//OLD 74a_ksl	       p[nphot].nrscat, p[nphot].origin);
-		  nhigh=nhigh+1;
+//OLD 74a_ksl       Error_silent
+//OLD 74a_ksl         ("spectrum_create: photon %6d freq high %g > %g v %.2e scat %d  res scat %d origin %d\n",
+//OLD 74a_ksl          nphot, p[nphot].freq, freqmax,
+//OLD 74a_ksl          (1. - freqmax / p[nphot].freq) * 2.99795e5, p[nphot].nscat,
+//OLD 74a_ksl          p[nphot].nrscat, p[nphot].origin);
+	    nhigh = nhigh + 1;
 	  k = NWAVE - 1;
 	}
 
@@ -473,7 +473,7 @@ spectrum_create (p, f1, f2, nangle, select_extract)
 		    {
 		      if (s[n].mmin < x1 && x1 < s[n].mmax)
 			s[n].f[k] += p[nphot].w;
-			s[n].lf[k1] += p[nphot].w;   /* logarithmic spectrum */
+		      s[n].lf[k1] += p[nphot].w;	/* logarithmic spectrum */
 		    }
 
 		}
@@ -505,12 +505,18 @@ spectrum_create (p, f1, f2, nangle, select_extract)
     }
 
 
-  if ((nlow/nphot>0.05) || (nhigh/nphot>0.05)) {
-  	Error("spectrum_create: Fraction of photons lost: %4.2f wi/ freq. low, %4.2f w/freq hi\n",nlow/nphot,nhigh/nphot);
-  }
-  else {
-	 Log("spectrum_create: Fraction of photons lost:  %4.2f wi/ freq. low, %4.2f w/freq hi\n",nlow/nphot,nhigh/nphot);
-  }
+  if ((nlow / nphot > 0.05) || (nhigh / nphot > 0.05))
+    {
+      Error
+	("spectrum_create: Fraction of photons lost: %4.2f wi/ freq. low, %4.2f w/freq hi\n",
+	 nlow / nphot, nhigh / nphot);
+    }
+  else
+    {
+      Log
+	("spectrum_create: Fraction of photons lost:  %4.2f wi/ freq. low, %4.2f w/freq hi\n",
+	 nlow / nphot, nhigh / nphot);
+    }
 
 
   Log ("\nNo. of photons which have scattered n times\n");
@@ -620,9 +626,10 @@ History:
 
 
 int
-spectrum_summary (filename, mode, nspecmin, nspecmax, select_spectype, renorm, loglin)
+spectrum_summary (filename, mode, nspecmin, nspecmax, select_spectype, renorm,
+		  loglin)
      char filename[], mode[];
-     int loglin;          // switch to tell the code if we are outputting a log or a lin
+     int loglin;		// switch to tell the code if we are outputting a log or a lin
      int nspecmin, nspecmax;
      int select_spectype;
      double renorm;		// parameter used to rescale spectrum as it is building up 
@@ -632,7 +639,7 @@ spectrum_summary (filename, mode, nspecmin, nspecmax, select_spectype, renorm, l
   int i, n;
   char string[LINELENGTH];
   double freq, freqmin, dfreq, freq1;
-  double lfreqmin,lfreqmax,ldfreq;
+  double lfreqmin, lfreqmax, ldfreq;
   double x, dd;
 
 
@@ -645,8 +652,8 @@ spectrum_summary (filename, mode, nspecmin, nspecmax, select_spectype, renorm, l
     }
 
   /* Check that nspecmin and nspecmax are reasonable */
-  if (nspecmin < 0 || nspecmax < 0 || nspecmin > nspecmax
-      ) {
+  if (nspecmin < 0 || nspecmax < 0 || nspecmin > nspecmax)
+    {
       Error
 	("spectrum_summary: nspecmin %d or nspecmax %d not reasonable \n",
 	 nspecmin, nspecmax);
@@ -670,9 +677,9 @@ spectrum_summary (filename, mode, nspecmin, nspecmax, select_spectype, renorm, l
 
   for (n = nspecmin; n <= nspecmax; n++)
     {
-      fprintf(fptr," %8s",s[n].name);
+      fprintf (fptr, " %8s", s[n].name);
     }
-    
+
 
   fprintf (fptr, "\n");
 
@@ -681,67 +688,67 @@ spectrum_summary (filename, mode, nspecmin, nspecmax, select_spectype, renorm, l
      as a result of the fact that the bb function generate some IR photons */
   dd = 4. * PI * (100. * PC) * (100. * PC);
 
-  if (loglin==0)
+  if (loglin == 0)
+    {
+      freqmin = s[nspecmin].freqmin;
+      dfreq = (s[nspecmin].freqmax - freqmin) / NWAVE;
+      for (i = 1; i < NWAVE - 1; i++)
 	{
-  	freqmin = s[nspecmin].freqmin;
-  	dfreq = (s[nspecmin].freqmax - freqmin) / NWAVE;
-  	for (i = 1; i < NWAVE - 1; i++)
-    		{
-      		freq = freqmin + i * dfreq;
-      		fprintf (fptr, "%-8e %.3f ", freq, C * 1e8 / freq);
-      		for (n = nspecmin; n <= nspecmax; n++)
-			{
-	  		x = s[n].f[i] * s[n].renorm;
-	  		if (select_spectype == 1)
-	    			{			/* flambda */
-	      			x *= (freq * freq * 1e-8) / (dfreq * dd * C);
-	    			}
-	  		else if (select_spectype == 2)
-	    			{			/*fnu */
-	      			x /= (dfreq * dd);
-	    			}
-	  		fprintf (fptr, " %8.3g", x * renorm);
-			}
+	  freq = freqmin + i * dfreq;
+	  fprintf (fptr, "%-8e %.3f ", freq, C * 1e8 / freq);
+	  for (n = nspecmin; n <= nspecmax; n++)
+	    {
+	      x = s[n].f[i] * s[n].renorm;
+	      if (select_spectype == 1)
+		{		/* flambda */
+		  x *= (freq * freq * 1e-8) / (dfreq * dd * C);
+		}
+	      else if (select_spectype == 2)
+		{		/*fnu */
+		  x /= (dfreq * dd);
+		}
+	      fprintf (fptr, " %8.3g", x * renorm);
+	    }
 
 
-      		fprintf (fptr, "\n");
-    		}
+	  fprintf (fptr, "\n");
 	}
-   else if (loglin==1)
+    }
+  else if (loglin == 1)
+    {
+      lfreqmin = log10 (s[nspecmin].freqmin);
+      freq1 = lfreqmin;
+      lfreqmax = log10 (s[nspecmin].freqmax);
+      ldfreq = (lfreqmax - lfreqmin) / NWAVE;
+
+      printf ("lfreqmin=%e lfreqmax=%e ldfreq=%e\n", lfreqmin, lfreqmax,
+	      ldfreq);
+      for (i = 1; i < NWAVE - 1; i++)
 	{
-	lfreqmin=log10(s[nspecmin].freqmin);
-	freq1=lfreqmin;
-	lfreqmax=log10(s[nspecmin].freqmax);
-	ldfreq=(lfreqmax-lfreqmin)/NWAVE;
-		
-	printf("lfreqmin=%e lfreqmax=%e ldfreq=%e\n",lfreqmin,lfreqmax,ldfreq);
-	for (i = 1; i < NWAVE - 1; i++)
-    		{
-      		freq = pow(10.,(lfreqmin + i * ldfreq));
-		dfreq=freq-freq1;
-      		fprintf (fptr, "%-8e %.3f ", freq, C * 1e8 / freq);
-      		for (n = nspecmin; n <= nspecmax; n++)
-			{
-	  		x = s[n].lf[i] * s[n].renorm;
-	  		if (select_spectype == 1)
-	    			{			/* flambda */
-	      			x *= (freq * freq * 1e-8) / (dfreq * dd * C);
-	    			}
-	  		else if (select_spectype == 2)
-	    			{			/*fnu */
-	      			x /= (dfreq * dd);
-	    			}
-	  		fprintf (fptr, " %8.3g", x * renorm);   /* this really shouldn't get called if we are outputting log data */
-			}
+	  freq = pow (10., (lfreqmin + i * ldfreq));
+	  dfreq = freq - freq1;
+	  fprintf (fptr, "%-8e %.3f ", freq, C * 1e8 / freq);
+	  for (n = nspecmin; n <= nspecmax; n++)
+	    {
+	      x = s[n].lf[i] * s[n].renorm;
+	      if (select_spectype == 1)
+		{		/* flambda */
+		  x *= (freq * freq * 1e-8) / (dfreq * dd * C);
+		}
+	      else if (select_spectype == 2)
+		{		/*fnu */
+		  x /= (dfreq * dd);
+		}
+	      fprintf (fptr, " %8.3g", x * renorm);	/* this really shouldn't get called if we are outputting log data */
+	    }
 
 
-      		fprintf (fptr, "\n");
-		freq1=freq;
-    		}
+	  fprintf (fptr, "\n");
+	  freq1 = freq;
 	}
+    }
   fclose (fptr);
 
   return (0);
 
 }
-

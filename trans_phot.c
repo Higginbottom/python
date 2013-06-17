@@ -106,18 +106,21 @@ trans_phot (w, p, iextract)
       //This is just a watchdog method to tell the user the program is still running
       //130306 - ksl since we don't really care what the frequencies are any more
       if (nphot % 10000 == 0)
-      	printf("Photon %7d of %7d or %6.3f per cent \n",nphot,NPHOT, nphot*100./NPHOT);
-	//printf ("Photon %7d %9.2e %9.2e %9.2e %9.2e %9.2e %9.2e %9.2e\n",
-	//	nphot, p[nphot].x[0], p[nphot].x[1], p[nphot].x[2],
-	//	p[nphot].lmn[0], p[nphot].lmn[1], p[nphot].lmn[2],
-	//	p[nphot].freq);
-
+	printf ("Photon %7d of %7d or %6.3f per cent \n", nphot, NPHOT,
+		nphot * 100. / NPHOT);
+      //printf ("Photon %7d %9.2e %9.2e %9.2e %9.2e %9.2e %9.2e %9.2e\n",
+      //      nphot, p[nphot].x[0], p[nphot].x[1], p[nphot].x[2],
+      //      p[nphot].lmn[0], p[nphot].lmn[1], p[nphot].lmn[2],
+      //      p[nphot].freq);
+      Log_flush ();		/*NSH June 13 Added call to flush logfile */
 
       /* 74a_ksl Check that the weights are real */
 
-      if (sane_check(p[nphot].w)){
-	      Error("trans_phot:sane_check photon %d has weight %e\n",nphot,p[nphot].w);
-      }
+      if (sane_check (p[nphot].w))
+	{
+	  Error ("trans_phot:sane_check photon %d has weight %e\n", nphot,
+		 p[nphot].w);
+	}
       /* Next block added by SS Jan 05 - for anisotropic scattering 
          with extract we want to be sure that everything is initialised
          (by scatter?) before calling extract for macro atom photons.
@@ -132,16 +135,26 @@ trans_phot (w, p, iextract)
 		{
 		  geo.rt_mode = 1;
 		  /*74a_ksl Check to see when a photon weight is becoming unreal */
-      		if (sane_check(p[nphot].w)){
-	      		Error("trans_phot:sane_check photon %d has weight %e before scatter\n",nphot,p[nphot].w);
-      		}
-		  if ((nerr= scatter (&p[nphot], &p[nphot].nres, &nnscat))!=0) {
-				  Error("trans_phot: Bad return from scatter %d at point 1",nerr);
-		  }
+		  if (sane_check (p[nphot].w))
+		    {
+		      Error
+			("trans_phot:sane_check photon %d has weight %e before scatter\n",
+			 nphot, p[nphot].w);
+		    }
+		  if ((nerr =
+		       scatter (&p[nphot], &p[nphot].nres, &nnscat)) != 0)
+		    {
+		      Error
+			("trans_phot: Bad return from scatter %d at point 1",
+			 nerr);
+		    }
 		  /*74a_ksl Check to see when a photon weight is becoming unreal */
-      		if (sane_check(p[nphot].w)){
-	      		Error("trans_phot:sane_check photon %d has weight %e aftger scatter\n",nphot,p[nphot].w);
-      		}
+		  if (sane_check (p[nphot].w))
+		    {
+		      Error
+			("trans_phot:sane_check photon %d has weight %e aftger scatter\n",
+			 nphot, p[nphot].w);
+		    }
 		  geo.rt_mode = 2;
 		}
 	    }
@@ -159,7 +172,7 @@ trans_phot (w, p, iextract)
        * generated 
        */
 
-      if (iextract)		
+      if (iextract)
 	{
 	  //SS - for reflecting disk have to make sure disk photons are only extracted once!
 	  if (disk_illum == 1 && p[nphot].origin == PTYPE_DISK)
@@ -195,21 +208,22 @@ trans_phot (w, p, iextract)
       while (istat == P_INWIND)
 	{
 
-      /* translate involves only a single shell (or alternatively a single tranfer in the windless region).
-         istat as returned by should either be 
-         0 in which case the photon hit the other side of the shell without scattering or
-         1 in which case there was a scattering event in the shell, 
-         2 in which case the photon reached the outside edge of the grid and escaped, 
-         3 in which case it reach the inner edge and was reabsorbed.  
-         If the photon escapes then we leave the photon at the position of it's last scatter.  In most other cases 
-         though we store the final position of the photon. */
+	  /* translate involves only a single shell (or alternatively a single tranfer in the windless region).
+	     istat as returned by should either be 
+	     0 in which case the photon hit the other side of the shell without scattering or
+	     1 in which case there was a scattering event in the shell, 
+	     2 in which case the photon reached the outside edge of the grid and escaped, 
+	     3 in which case it reach the inner edge and was reabsorbed.  
+	     If the photon escapes then we leave the photon at the position of it's last scatter.  In most other cases 
+	     though we store the final position of the photon. */
 
 
 	  istat = translate (w, &pp, tau_scat, &tau, &nres);
-//	  printf("Photon=%i,weight=%e,tauscat=%f,nres=%i,istat=%i\n",nphot,p[nphot].w,tau_scat,nres,istat);
+//        printf("Photon=%i,weight=%e,tauscat=%f,nres=%i,istat=%i\n",nphot,p[nphot].w,tau_scat,nres,istat);
 /* nres is the resonance at which the photon was stopped.  At present the
 same value is also stored in pp->nres, but I have not yet eliminated 
 it from translate. ?? 02jan ksl */
+
 
 
 	  icell++;
@@ -272,29 +286,29 @@ it from translate. ?? 02jan ksl */
 	    {			/* Cause the photon to scatter and reinitilize */
 
 
-		    /* 71 - 1112 - ksl - placed this line here to try to avoid an error
-		     * I was seeing in scatter.  I believe the first if statement has
-		     * a loophole that needs to be plugged, when it comes back with avalue of
-		     * n = -1
-		     */
-		    pp.grid=n= where_in_grid(pp.x);
+	      /* 71 - 1112 - ksl - placed this line here to try to avoid an error
+	       * I was seeing in scatter.  I believe the first if statement has
+	       * a loophole that needs to be plugged, when it comes back with avalue of
+	       * n = -1
+	       */
+	      pp.grid = n = where_in_grid (pp.x);
 
-//OLD71	      if (pp.grid > -1)
-//OLD71		{
-//OLD71		  if ((n = where_in_grid (pp.x)) != pp.grid)
-//OLD71		    {
+//OLD71       if (pp.grid > -1)
+//OLD71         {
+//OLD71           if ((n = where_in_grid (pp.x)) != pp.grid)
+//OLD71             {
 //OLD71/* This error condition happens occassionally.  The reason is that we have added a "push through 
 //OLD71 * distance" to get a photon to move on to the next cell, and have not updated the grid cell 
 //OLD71 * before returning from translate. If one is concerned about this restore some of the lines
 //OLD71 * that can befound in trans_phot in versions up through 54a.  04dec -- ksl
 //OLD71 */
-//OLD71		      pp.grid = n;
+//OLD71               pp.grid = n;
 //OLD71
-//OLD71		    }
-//OLD71		}
-//OLD71	      else
+//OLD71             }
+//OLD71         }
+//OLD71       else
 
-		    if (n<0)
+	      if (n < 0)
 		{
 		  Error
 		    ("trans_phot: Trying to scatter a photon which is not in the wind\n");
@@ -305,7 +319,7 @@ it from translate. ?? 02jan ksl */
 		  stuff_phot (&pp, &p[nphot]);
 		  break;
 		}
-	     
+
 /*57+ -- ksl -- Add check to see if there is a cell in the plasma structure for this.  This is
 a problem that needs fixing */
 
@@ -349,18 +363,26 @@ the current version of scattering really does what the old code did for two-leve
 	      ptr_nres = &nres;
 
 	      /*74a_ksl - Check added to search for error in weights */
-      		if (sane_check(pp.w)){
-	      		Error("trans_phot:sane_checl photon %d has weight %e before scatter\n",nphot,pp.w);
-      		}
-		  if ((nerr= scatter (&pp, ptr_nres, &nnscat))!=0) {
-				  Error("trans_phot: Bad return from scatter %d at point 2",nerr);
-		  }
+	      if (sane_check (pp.w))
+		{
+		  Error
+		    ("trans_phot:sane_checl photon %d has weight %e before scatter\n",
+		     nphot, pp.w);
+		}
+	      if ((nerr = scatter (&pp, ptr_nres, &nnscat)) != 0)
+		{
+		  Error ("trans_phot: Bad return from scatter %d at point 2",
+			 nerr);
+		}
 	      pp.nscat++;
 	      /* 74a_ksl - Check added to search for error in weights */
 
-      		if (sane_check(pp.w)){
-	      		Error("trans_phot:sane_check photon %d has weight %e after scatter\n",nphot,pp.w);
-      		}
+	      if (sane_check (pp.w))
+		{
+		  Error
+		    ("trans_phot:sane_check photon %d has weight %e after scatter\n",
+		     nphot, pp.w);
+		}
 
 	      /* SS June 04: During the spectrum calculation cycles, photons are thrown away
 	         when they interact with macro atoms or become k-packets. This is done by setting
@@ -392,12 +414,16 @@ the current version of scattering really does what the old code did for two-leve
 		  pp.nrscat++;
 /* This next statement writes out the position of every resonant scattering event to a file */
 		  if (diag_on_off)
-		    fprintf (pltptr, "Photon %i has resonant scatter at %.2e %.2e %.2e in wind cell %i (grid cell=%i). Freq=%e Weight=%e\n", nphot,pp.x[0], pp.x[1],pp.x[2],wmain[n].nplasma,pp.grid,pp.freq,pp.w);
+		    fprintf (pltptr,
+			     "Photon %i has resonant scatter at %.2e %.2e %.2e in wind cell %i (grid cell=%i). Freq=%e Weight=%e\n",
+			     nphot, pp.x[0], pp.x[1], pp.x[2],
+			     wmain[n].nplasma, pp.grid, pp.freq, pp.w);
 
 		  /* 68a - 090124 - ksl - Increment the number of scatters by this ion in this cell */
 		  /* 68c - 090408 - ksl - Changed this to the weight of the photon at the time of the scatter */
 
-		  plasmamain[wmain[n].nplasma].scatters[line[nres].nion]+=pp.w;
+		  plasmamain[wmain[n].nplasma].scatters[line[nres].nion] +=
+		    pp.w;
 
 		  if (geo.rt_mode == 1)	//only do next line for non-macro atom case
 		    {

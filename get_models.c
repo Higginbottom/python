@@ -507,15 +507,15 @@ even, and so for those cases we want to make sure to calculate the ratio of qs d
 
 
 	  /* q can be large line below is attempt to keep exponents in range in that case */
-	  if (q1 > 50. ||  q2 > 50.)
+	  if (q1 > 50. || q2 > 50.)
 	    {
-	      xxx = exp (q2 - q1);   // q2 - q1 should be negative since q1 is model desired
+	      xxx = exp (q2 - q1);	// q2 - q1 should be negative since q1 is model desired
 	    }
 	  else
 	    {
 
-	      q2 = exp (q2) - 1.0;   // Model that exists has higher temperature
-	      q1 = exp (q1) - 1.0;   // Model desired has lowe T, hence q1 is larger
+	      q2 = exp (q2) - 1.0;	// Model that exists has higher temperature
+	      q1 = exp (q1) - 1.0;	// Model desired has lowe T, hence q1 is larger
 	      xxx = q2 / q1;
 	    }
 

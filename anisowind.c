@@ -154,7 +154,8 @@ the cartesian frame */
 
   if (sane_check (lmn[0]) || sane_check (lmn[1]) || sane_check (lmn[2]))
     {
-      Error ("Randwind:sane_check NAN problem lmn %f %f %f\n", lmn[0], lmn[1], lmn[2]);
+      Error ("Randwind:sane_check NAN problem lmn %f %f %f\n", lmn[0], lmn[1],
+	     lmn[2]);
     }
 
   return (0);
@@ -311,8 +312,9 @@ what we do here */
 
   if (sane_check (x) || x > 2.0)
     {
-      Error ("Reweightwind:sane_check x %f tau %f ctheta %f z %e pdf_randwind->norm %f\n", x, tau, ctheta,
-	     z,pdf_randwind->norm);
+      Error
+	("Reweightwind:sane_check x %f tau %f ctheta %f z %e pdf_randwind->norm %f\n",
+	 x, tau, ctheta, z, pdf_randwind->norm);
       x = 2.0;
     }
 
@@ -377,8 +379,9 @@ make_pdf_randwind (tau)
 
   if (sane_check (tau))
     {
-      Error ("make_pdf_randwind:sane_check Need proper tau (%e) to make pdf_randwind\n",
-	     tau);
+      Error
+	("make_pdf_randwind:sane_check Need proper tau (%e) to make pdf_randwind\n",
+	 tau);
       tau = 10.;		// Forces something close to isotropic
     }
 

@@ -377,9 +377,9 @@ cylvar_wind_complete (w)
 
 
 int
-cylvar_volumes (w,icomp)
+cylvar_volumes (w, icomp)
      WindPtr w;
-     int icomp; // The component for which we want the volume
+     int icomp;			// The component for which we want the volume
 {
   int i, j, n;
   int jj, kk;
@@ -474,13 +474,13 @@ cylvar_volumes (w,icomp)
 	    }
 	  else if (jj == kk)
 	    {
-	      //OLD 70b w[n].inwind = W_ALL_INWIND;	// All of cell is inwind
+	      //OLD 70b w[n].inwind = W_ALL_INWIND;     // All of cell is inwind
 	      w[n].inwind = icomp;	// All of cell is inwind
 	    }
 	  else
 	    {
-	      //OLD 70b w[n].inwind = W_PART_INWIND;	// Some of cell is inwind
-	      w[n].inwind = icomp+1;	// Some of cell is inwind
+	      //OLD 70b w[n].inwind = W_PART_INWIND;    // Some of cell is inwind
+	      w[n].inwind = icomp + 1;	// Some of cell is inwind
 	    }
 	}
     }
@@ -706,7 +706,7 @@ cylvar_where_in_grid (x, ichoice, fx, fz)
 **************************************************************/
 
 int
-cylvar_get_random_location (n, icomp,x)
+cylvar_get_random_location (n, icomp, x)
      int n;			// Cell in which to create position
      int icomp;			// Component in which to create position
      double x[];		// Returned position
@@ -840,7 +840,7 @@ cylvar_extend_density (w)
 	      wind_ij_to_n (i + 1, j, &m);
 
 	      if (w[m].vol > 0)
-		{		
+		{
 		  w[n].nplasma = w[m].nplasma;
 
 		}
@@ -848,7 +848,7 @@ cylvar_extend_density (w)
 		{
 		  wind_ij_to_n (i - 1, j, &m);
 		  if (w[m].vol > 0)
-		    {		
+		    {
 		      w[n].nplasma = w[m].nplasma;
 
 		    }

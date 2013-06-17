@@ -238,7 +238,7 @@ main (argc, argv)
       strcpy (out_file, cont_file);
       strcat (out_file, "_smo");
     }
-  else if (strcmp(out_file,"mod.spec_smo")==0)
+  else if (strcmp (out_file, "mod.spec_smo") == 0)
     {
       strcpy (out_file, "");
       get_root (out_file, cont_file);
@@ -272,7 +272,8 @@ main (argc, argv)
 	  if (line[0] != '#')
 	    {
 	      if ((nwords =
-		   sscanf (line, "%e %e %e %e %e %e %e %e %e %e %e %e %e %e %e %e %e %e %e %e %e %e",
+		   sscanf (line,
+			   "%e %e %e %e %e %e %e %e %e %e %e %e %e %e %e %e %e %e %e %e %e %e",
 			   &spec_in[imax].freq, &spec_in[imax].wav,
 			   &spec_in[imax].x[0], &spec_in[imax].x[1],
 			   &spec_in[imax].x[2], &spec_in[imax].x[3],

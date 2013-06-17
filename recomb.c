@@ -238,7 +238,7 @@ fb_topbase_partial (freq)
 						  (fthresh - freq) / fbt) * x;
 // 0=emissivity, 1=heat loss from electrons, 2=photons emissivity
   if (fbfr == 1)
-   partial *= (freq - fthresh) / freq;
+    partial *= (freq - fthresh) / freq;
   else if (fbfr == 2)
     partial /= (H * freq);
 
@@ -315,7 +315,7 @@ integ_fb (t, f1, f2, nion, fb_choice)
     {
       for (n = 0; n < nfb; n++)
 	{
-		/* See if the frequencies correspond to one previously calculated */
+	  /* See if the frequencies correspond to one previously calculated */
 	  if (f1 == freebound[n].f1 && f2 == freebound[n].f2)
 	    {
 	      fnu = get_fb (t, nion, n);
@@ -328,7 +328,7 @@ integ_fb (t, f1, f2, nion, fb_choice)
     }
   else if (fb_choice == 2)
     {
-		/* See if the frequencies correspond to one previously calculated */
+      /* See if the frequencies correspond to one previously calculated */
       if (nfb > 0)
 	{
 	  fnu = get_nrecomb (t, nion);
@@ -1066,10 +1066,10 @@ xinteg_fb (t, f1, f2, nion, fb_choice)
 
   if (f1 < 3e12)
     f1 = 3e12;			// 10000 Angstroms
-  if (f2 > 3e18)                // 110819 nsh increase upper limits to include  highly ionised ions that we are now seeing in x-ray illuminated nebulas.
+  if (f2 > 3e18)		// 110819 nsh increase upper limits to include  highly ionised ions that we are now seeing in x-ray illuminated nebulas.
     f2 = 3e18;			// This is 1 Angstroms  - ksl
   if (f2 < f1)
-    return (0);			/* Because there is nothing to integrate */ 
+    return (0);			/* Because there is nothing to integrate */
 
   fnu = 0.0;
 
@@ -1326,54 +1326,60 @@ History:
 **************************************************************/
 
 double
-total_rrate (nion,T)
+total_rrate (nion, T)
      int nion;
      double T;
 {
 
 
-  double rate;  //The returned rate
-  double  rrA, rrB, rrT0, rrT1, rrC, rrT2;  //The parameters
-  double term1, term2, term3; //Some temporary parameters to make calculation simpler
+  double rate;			//The returned rate
+  double rrA, rrB, rrT0, rrT1, rrC, rrT2;	//The parameters
+  double term1, term2, term3;	//Some temporary parameters to make calculation simpler
 
+
+  rate = 0.0;			/* NSH 130605 to remove o3 compile error */
 
   if (ion[nion].total_rrflag != 1)
-	{
-	Error ("total_rrate: No T_RR parameters for ion %i\n", nion);
-	return (0);
-	}
-  if (total_rr[ion[nion].nxtotalrr].type==RRTYPE_BADNELL)
-	{
-	rrA=total_rr[ion[nion].nxtotalrr].params[0];
-  	rrB=total_rr[ion[nion].nxtotalrr].params[1];
-  	rrT0=total_rr[ion[nion].nxtotalrr].params[2];
-  	rrT1=total_rr[ion[nion].nxtotalrr].params[3];
-  	rrC=total_rr[ion[nion].nxtotalrr].params[4];
-  	rrT2=total_rr[ion[nion].nxtotalrr].params[5];
+    {
+      Error ("total_rrate: No T_RR parameters for ion %i\n", nion);
+      return (0);
+    }
+  if (total_rr[ion[nion].nxtotalrr].type == RRTYPE_BADNELL)
+    {
+      rrA = total_rr[ion[nion].nxtotalrr].params[0];
+      rrB = total_rr[ion[nion].nxtotalrr].params[1];
+      rrT0 = total_rr[ion[nion].nxtotalrr].params[2];
+      rrT1 = total_rr[ion[nion].nxtotalrr].params[3];
+      rrC = total_rr[ion[nion].nxtotalrr].params[4];
+      rrT2 = total_rr[ion[nion].nxtotalrr].params[5];
 
 
-  	rrB=rrB+rrC*exp((-1.0*rrT2)/T); //If C=0, this does nothing
+      rrB = rrB + rrC * exp ((-1.0 * rrT2) / T);	//If C=0, this does nothing
 
 
-  	term1=sqrt(T/rrT0);
-  	term2=1.0+sqrt(T/rrT0);
-  	term2=pow(term2,(1-rrB));
-  	term3=1.0+sqrt(T/rrT1);
-  	term3=pow(term3,(1+rrB));
-  
+      term1 = sqrt (T / rrT0);
+      term2 = 1.0 + sqrt (T / rrT0);
+      term2 = pow (term2, (1 - rrB));
+      term3 = 1.0 + sqrt (T / rrT1);
+      term3 = pow (term3, (1 + rrB));
 
-  	rate=pow((term1*term2*term3),-1.0);
-  	rate*=rrA;
-  	}
-  else if (total_rr[ion[nion].nxtotalrr].type==RRTYPE_SHULL)
-	{
-	rate=total_rr[ion[nion].nxtotalrr].params[0]*pow((T/1.0e4),total_rr[ion[nion].nxtotalrr].params[1]);
-	}
+
+      rate = pow ((term1 * term2 * term3), -1.0);
+      rate *= rrA;
+    }
+  else if (total_rr[ion[nion].nxtotalrr].type == RRTYPE_SHULL)
+    {
+      rate =
+	total_rr[ion[nion].nxtotalrr].params[0] * pow ((T / 1.0e4),
+						       total_rr[ion[nion].
+								nxtotalrr].
+						       params[1]);
+    }
   else
-	{
-	Error ("total_rrate: unknown parameter type for ion %i\n", nion);
-	}
- 
+    {
+      Error ("total_rrate: unknown parameter type for ion %i\n", nion);
+    }
+
 
   return (rate);
 
@@ -1417,65 +1423,72 @@ History:
 **************************************************************/
 
 double
-badnell_gs_rr (nion,T)
+badnell_gs_rr (nion, T)
      int nion;
      double T;
 {
-	double rate,drdt,dt;
-	int i,imin,imax;
-	double rates[BAD_GS_RR_PARAMS],temps[BAD_GS_RR_PARAMS];
+  double rate, drdt, dt;
+  int i, imin, imax;
+  double rates[BAD_GS_RR_PARAMS], temps[BAD_GS_RR_PARAMS];
 
 
-  if (ion[nion].bad_gs_rr_t_flag != 1 && ion[nion].bad_gs_rr_r_flag != 1 )
+  imin = imax = 0;		/* NSH 130605 to remove o3 compile error */
+
+
+  if (ion[nion].bad_gs_rr_t_flag != 1 && ion[nion].bad_gs_rr_r_flag != 1)
+    {
+      Error ("bad_gs_rr: Insufficient GS_RR parameters for ion %i\n", nion);
+      return (0);
+    }
+
+
+  for (i = 0; i < BAD_GS_RR_PARAMS; i++)
+    {
+      rates[i] = bad_gs_rr[ion[nion].nxbadgsrr].rates[i];
+      temps[i] = bad_gs_rr[ion[nion].nxbadgsrr].temps[i];
+//      printf ("%i, %e, %e\n",i,bad_gs_rr[ion[nion].nxbadgsrr].temps[i],bad_gs_rr[ion[nion].nxbadgsrr].rates[i]);
+    }
+
+
+
+//      printf ("We are getting gs for T=%e, tmin=%e, tmax=%e\n",T,temps[0],temps[BAD_GS_RR_PARAMS-1]);
+
+
+  if (T < temps[0])		//we are below the range of GS data
+    {
+      Log_silent
+	("bad_gs_rr: Requested temp %e is below limit of data for ion %i(Tmin= %e)\n",
+	 T, nion, temps[0]);
+      rate = rates[0];
+    }
+  else if (T >= temps[BAD_GS_RR_PARAMS - 1])	//we are above the range of GS data
+    {
+      Log_silent
+	("bad_gs_rr: Requested temp %e is above limit (%e) of data for ion %i\n",
+	 T, nion, bad_gs_rr[ion[nion].nxbadgsrr].temps[BAD_GS_RR_PARAMS - 1]);
+      rate = rates[BAD_GS_RR_PARAMS - 1];
+    }
+  else				//We must be within the range of tabulated data
+    {
+      for (i = 0; i < BAD_GS_RR_PARAMS - 1; i++)
 	{
-	Error ("bad_gs_rr: Insufficient GS_RR parameters for ion %i\n", nion);
-	return (0);
+//              printf ("We are searching for %e between %e (%i) and %e (%i)\n",T,temps[i],i,temps[i+1],i+1);
+	  if (temps[i] <= T && T < temps[i + 1])	//We have bracketed the correct temperature
+	    {
+	      imin = i;
+	      imax = i + 1;
+	    }
 	}
-
-
-for (i=0;i<BAD_GS_RR_PARAMS;i++)
-	{
-	rates[i]=bad_gs_rr[ion[nion].nxbadgsrr].rates[i];
-	temps[i]=bad_gs_rr[ion[nion].nxbadgsrr].temps[i];
-//	printf ("%i, %e, %e\n",i,bad_gs_rr[ion[nion].nxbadgsrr].temps[i],bad_gs_rr[ion[nion].nxbadgsrr].rates[i]);
-	}
+//              printf ("We have found that %e is bracketed by %e (%i) and %e (%i)\n",T,temps[imin],imin,temps[imax],imax);
+      drdt = (rates[imax] - rates[imin]) / (temps[imax] - temps[imin]);
+      dt = (T - temps[imin]);
+      rate = rates[imin] + drdt * dt;
 
 
 
-//	printf ("We are getting gs for T=%e, tmin=%e, tmax=%e\n",T,temps[0],temps[BAD_GS_RR_PARAMS-1]);
+    }
+  //     printf ("Rate=%e\n",rate);
 
-
-	if (T<temps[0])   //we are below the range of GS data
-		{
-		Log_silent("bad_gs_rr: Requested temp %e is below limit of data for ion %i(Tmin= %e)\n",T,nion,temps[0]);
-		rate=rates[0];
-		}
-	else if  (T>=temps[BAD_GS_RR_PARAMS-1] )  //we are above the range of GS data
-		{
-		Log_silent("bad_gs_rr: Requested temp %e is above limit (%e) of data for ion %i\n",T,nion,bad_gs_rr[ion[nion].nxbadgsrr].temps[BAD_GS_RR_PARAMS-1]);
-		rate=rates[BAD_GS_RR_PARAMS-1];
-		}
-	else    //We must be within the range of tabulated data
-		{
-		for (i=0;i<BAD_GS_RR_PARAMS-1;i++)
-			{	
-//		printf ("We are searching for %e between %e (%i) and %e (%i)\n",T,temps[i],i,temps[i+1],i+1);
-			if (temps[i] <= T && T < temps[i+1]) //We have bracketed the correct temperature
-				{
-				imin=i;
-				imax=i+1;			
-				}
-			}
-//		printf ("We have found that %e is bracketed by %e (%i) and %e (%i)\n",T,temps[imin],imin,temps[imax],imax);
-		drdt=(rates[imax]-rates[imin])/(temps[imax]-temps[imin]);
-		dt=(T-temps[imin]);
-		rate=rates[imin]+ drdt*dt;
-
-
-
-		}
- //	printf ("Rate=%e\n",rate);
- 
 
   return (rate);
 
@@ -1517,53 +1530,54 @@ History:
 **************************************************************/
 
 double
-milne_gs_rr (nion,T)
+milne_gs_rr (nion, T)
      int nion;
      double T;
 {
-	double rate;
-	int ntmin,nvmin,n;
-	double fthresh,fmax,dnu;
+  double rate;
+  int ntmin, nvmin, n;
+  double fthresh, fmax, dnu;
 
-			fbt=T;
-			fbfr = 2;
-
-			if (ion[nion].phot_info == 1)  //topbase
-      				{
-				ntmin = ion[nion].ntop_ground;
-//				printf ("We are looking at topbase data for ion %i \n",j-1);
-      				fb_xtop = &phot_top[ntmin];
-				fthresh = fb_xtop->freq[0];
-	  			fmax = fb_xtop->freq[fb_xtop->np - 1];
-				dnu=100.0*(fbt/H_OVER_K);
-				if (fthresh+dnu < fmax)
-					{
-					fmax=fthresh+dnu;
-					}		
-				rate = qromb (fb_topbase_partial, fthresh,fmax, 1e-5);
-				}
-			 else if (ion[nion].phot_info == 0)  // verner
-    				{
-      				nvmin = nion;
-      				n = nvmin;		
-      				fb_xver = &xphot[ion[n].nxphot];
-//				printf ("We are looking at verner data for ion %i \n",j);
-      				fthresh = fb_xver->freq_t;
-      				fmax=fb_xver->freq_max;	
-				dnu=100.0*(fbt/H_OVER_K);
-				if (fthresh+dnu < fmax)
-					{
-					fmax=fthresh+dnu;
-					}		
-				rate = qromb (fb_verner_partial, fthresh,fmax, 1e-5);
-				}
+  rate = 0.0;			/* NSH 130605 to remove o3 compile error */
 
 
- 
+  fbt = T;
+  fbfr = 2;
+
+  if (ion[nion].phot_info == 1)	//topbase
+    {
+      ntmin = ion[nion].ntop_ground;
+//                              printf ("We are looking at topbase data for ion %i \n",j-1);
+      fb_xtop = &phot_top[ntmin];
+      fthresh = fb_xtop->freq[0];
+      fmax = fb_xtop->freq[fb_xtop->np - 1];
+      dnu = 100.0 * (fbt / H_OVER_K);
+      if (fthresh + dnu < fmax)
+	{
+	  fmax = fthresh + dnu;
+	}
+      rate = qromb (fb_topbase_partial, fthresh, fmax, 1e-5);
+    }
+  else if (ion[nion].phot_info == 0)	// verner
+    {
+      nvmin = nion;
+      n = nvmin;
+      fb_xver = &xphot[ion[n].nxphot];
+//                              printf ("We are looking at verner data for ion %i \n",j);
+      fthresh = fb_xver->freq_t;
+      fmax = fb_xver->freq_max;
+      dnu = 100.0 * (fbt / H_OVER_K);
+      if (fthresh + dnu < fmax)
+	{
+	  fmax = fthresh + dnu;
+	}
+      rate = qromb (fb_verner_partial, fthresh, fmax, 1e-5);
+    }
+
+
+
 
   return (rate);
 
 
 }
-
-

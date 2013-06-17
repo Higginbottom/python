@@ -72,14 +72,14 @@ double
 wind_luminosity (f1, f2)
      double f1, f2;		/* freqmin and freqmax */
 {
-  double lum, lum_lines, lum_fb, lum_ff, lum_comp, lum_dr, lum_adiab; //1108 NSH Added a new variable for compton cooling
+  double lum, lum_lines, lum_fb, lum_ff, lum_comp, lum_dr, lum_adiab;	//1108 NSH Added a new variable for compton cooling
 //1109 NSH Added a new variable for dielectronic cooling
   int n;
   double x;
   int nplasma;
 
 
-  lum = lum_lines = lum_fb = lum_ff = lum_comp = lum_dr = lum_adiab = 0; //1108 NSH Zero the new counter 1109 including DR counter
+  lum = lum_lines = lum_fb = lum_ff = lum_comp = lum_dr = lum_adiab = 0;	//1108 NSH Zero the new counter 1109 including DR counter
   for (n = 0; n < NDIM2; n++)
     {
       if (wmain[n].vol > 0.0)
@@ -89,9 +89,9 @@ wind_luminosity (f1, f2)
 	  lum_lines += plasmamain[nplasma].lum_lines;
 	  lum_fb += plasmamain[nplasma].lum_fb;
 	  lum_ff += plasmamain[nplasma].lum_ff;
-	  lum_comp += plasmamain[nplasma].lum_comp;  //1108 NSH Increment the new counter by the compton luminosity for that cell.
-          lum_dr += plasmamain[nplasma].lum_dr; //1109 NSH Increment the new counter by the DR luminosity for the cell.
-  	  lum_adiab += plasmamain[nplasma].lum_adiabatic;
+	  lum_comp += plasmamain[nplasma].lum_comp;	//1108 NSH Increment the new counter by the compton luminosity for that cell.
+	  lum_dr += plasmamain[nplasma].lum_dr;	//1109 NSH Increment the new counter by the DR luminosity for the cell.
+	  lum_adiab += plasmamain[nplasma].lum_adiabatic;
 	  if (x < 0)
 	    mytrap ();
 	  if (recipes_error != 0)
@@ -107,8 +107,8 @@ wind_luminosity (f1, f2)
   geo.lum_lines = lum_lines;
   geo.lum_fb = lum_fb;
   geo.lum_ff = lum_ff;
-  geo.lum_comp = lum_comp; //1108 NSH The total compton luminosity of the wind is stored in the geo structure
-  geo.lum_dr = lum_dr; //1109 NSH the total DR luminosity of the wind is stored in the geo structure
+  geo.lum_comp = lum_comp;	//1108 NSH The total compton luminosity of the wind is stored in the geo structure
+  geo.lum_dr = lum_dr;		//1109 NSH the total DR luminosity of the wind is stored in the geo structure
   geo.lum_adiabatic = lum_adiab;
   return (lum);
 }
@@ -181,8 +181,7 @@ total_emission (one, f1, f2)
 
   if (f2 < f1)
     {
-      xplasma->lum_rad = xplasma->lum_lines = xplasma->lum_ff =
-	xplasma->lum_fb = 0;    //NSH 1108 Zero the new lum_comp variable NSH 1101 - removed
+      xplasma->lum_rad = xplasma->lum_lines = xplasma->lum_ff = xplasma->lum_fb = 0;	//NSH 1108 Zero the new lum_comp variable NSH 1101 - removed
     }
   else
     {
@@ -217,12 +216,12 @@ total_emission (one, f1, f2)
 
 	}
       /* NSH 1108 - This line calls the function total_comp which returns the compton luminosity for the cell
-	this is then added to lum_rad, the total luminosity of the cell */  
+         this is then added to lum_rad, the total luminosity of the cell */
       /* NSH 1110 - Ths line has now been commented out. It was adding the compton luminosity to the lum_rad 
-       variable. This was then generating line photons to fill the compton luminosity. We need to do something
-        better, but at the moment, simply removing this line, and putting the calculation of compton luminosity 
-       into calc_te with the adiabatic cooling and the new DR cooling is the way to make things a little more stable */
- //OLD     xplasma->lum_rad += xplasma->lum_comp = total_comp (one, t_e); 
+         variable. This was then generating line photons to fill the compton luminosity. We need to do something
+         better, but at the moment, simply removing this line, and putting the calculation of compton luminosity 
+         into calc_te with the adiabatic cooling and the new DR cooling is the way to make things a little more stable */
+      //OLD     xplasma->lum_rad += xplasma->lum_comp = total_comp (one, t_e); 
     }
 
   return (xplasma->lum_rad);
@@ -357,32 +356,32 @@ photo_gen_wind (p, weight, freqmin, freqmax, photstart, nphot)
       while (xlumsum < xlum)
 	{
 //?? 57+ This is not the best way to do this.  We should be able to sum over the plasma structure
-	  if (wmain[icell].vol > 0.0)  //only consider cells with volume greater than zero
+	  if (wmain[icell].vol > 0.0)	//only consider cells with volume greater than zero
 	    {
-	      nplasma = wmain[icell].nplasma; //get the plasma cell in this wind cell
-	      xlumsum += plasmamain[nplasma].lum_rad; /*increment the xlumsum by the lum_rad in this plasma cell - note that due to the way wind_luminosity gets called, this is actually the band limited flux not the luminosity. */
+	      nplasma = wmain[icell].nplasma;	//get the plasma cell in this wind cell
+	      xlumsum += plasmamain[nplasma].lum_rad;	/*increment the xlumsum by the lum_rad in this plasma cell - note that due to the way wind_luminosity gets called, this is actually the band limited flux not the luminosity. */
 	    }
-	  icell++; /*If we are not yet up to xlum, go to the next cell */
+	  icell++;		/*If we are not yet up to xlum, go to the next cell */
 	}
       icell--;			/* We have got up to xlum, so this is the cell in which the photon must be generated */
 
-      nplasma = wmain[icell].nplasma; 
+      nplasma = wmain[icell].nplasma;
 
 
       /* Now generate a single photon in this cell */
 
       /*Get the total luminosity and MORE IMPORTANT populate xcol.pow and other parameters */
-      lum = plasmamain[nplasma].lum_rad; /* Whilst this says lum - I'm (nsh) pretty sure this is actually a flux between two frequency limits) */
+      lum = plasmamain[nplasma].lum_rad;	/* Whilst this says lum - I'm (nsh) pretty sure this is actually a flux between two frequency limits) */
 
-      xlum = lum * (rand () + 0.5) / (MAXRAND);  /*this makes a small test luminosity*/
+      xlum = lum * (rand () + 0.5) / (MAXRAND);	/*this makes a small test luminosity */
 
       xlumsum = 0;
 
       p[n].nres = -1;
       p[n].nnscat = 1;
-      if ((xlumsum += plasmamain[nplasma].lum_ff) > xlum) /*Add the free free luminosity of the cell to the running total. If it is more than our small test luminosity, then we need to make some ff photons */
+      if ((xlumsum += plasmamain[nplasma].lum_ff) > xlum)	/*Add the free free luminosity of the cell to the running total. If it is more than our small test luminosity, then we need to make some ff photons */
 	{
-	  p[n].freq = one_ff (&wmain[icell], freqmin, freqmax);  /*Get the frequency of one ff photon */
+	  p[n].freq = one_ff (&wmain[icell], freqmin, freqmax);	/*Get the frequency of one ff photon */
 	  if (p[n].freq <= 0.0)
 	    {
 	      Error_silent
@@ -391,26 +390,26 @@ photo_gen_wind (p, weight, freqmin, freqmax, photstart, nphot)
 	      p[n].freq = 0.0;
 	    }
 	}
-      else if ((xlumsum += plasmamain[nplasma].lum_fb) > xlum) /*Do the same for fb */
+      else if ((xlumsum += plasmamain[nplasma].lum_fb) > xlum)	/*Do the same for fb */
 	{
 	  p[n].freq = one_fb (&wmain[icell], freqmin, freqmax);
 	}
       else
 	{
-	  p[n].freq = one_line (&wmain[icell], freqmin, freqmax, &p[n].nres); /*And fill all the rest of the luminosity up with line photons */
+	  p[n].freq = one_line (&wmain[icell], freqmin, freqmax, &p[n].nres);	/*And fill all the rest of the luminosity up with line photons */
 	}
       p[n].w = weight;
       /* Determine the position of the photon in the moving frame */
 
       /* !! ERROR - Need to account for emission from torus if it exists */
 
-      if (wmain[icell].inwind>1) 
+      if (wmain[icell].inwind > 1)
 	{
-	get_random_location (icell, 2, p[n].x);  /* NSH 1110 Added this if statement to take account of photons being generated from the torus. Hope I've done it correctly!! */
+	  get_random_location (icell, 2, p[n].x);	/* NSH 1110 Added this if statement to take account of photons being generated from the torus. Hope I've done it correctly!! */
 	}
       else
 	{
-	get_random_location (icell, 0, p[n].x);
+	  get_random_location (icell, 0, p[n].x);
 	}
 
       p[n].grid = icell;
@@ -577,9 +576,9 @@ total_free (one, t_e, f1, f2)
 {
   double g_ff_h, g_ff_he;
   double gaunt;
-  double x,sum;
-  double gsqrd; /*The scaled inverse temperature experienced by an ion - used to compute the gaunt factor */
-  int nplasma,nion;
+  double x, sum;
+  double gsqrd;			/*The scaled inverse temperature experienced by an ion - used to compute the gaunt factor */
+  int nplasma, nion;
   PlasmaPtr xplasma;
 
   nplasma = one->nplasma;
@@ -596,36 +595,36 @@ total_free (one, t_e, f1, f2)
 //  if (nelements > 1)
 //    {
 /*NSH 120924 - this summation works out the z^2 times number density term for all ions the gaunt factor is calculated for each ion */
-       
 
-    if (gaunt_n_gsqrd==0) //Maintain old behaviour
+
+  if (gaunt_n_gsqrd == 0)	//Maintain old behaviour
+    {
+      g_ff_h = g_ff_he = 1.0;
+      if (nelements > 1)
 	{
-  	g_ff_h = g_ff_he = 1.0;
-	if (nelements > 1)
-    		{
-      		x =
-		BREMS_CONSTANT * xplasma->ne * (xplasma->density[1] * g_ff_h +
-					4. * xplasma->density[4] * g_ff_he) /
-		H_OVER_K;
-    		}
-  	else
-    		{
-      		x =
-		BREMS_CONSTANT * xplasma->ne * (xplasma->density[1] * g_ff_h) /
-		H_OVER_K;
-    		}
+	  x =
+	    BREMS_CONSTANT * xplasma->ne * (xplasma->density[1] * g_ff_h +
+					    4. * xplasma->density[4] *
+					    g_ff_he) / H_OVER_K;
 	}
-    else
+      else
 	{
-  	sum=0.0; /*NSH 120920 - zero the summation over all ions */
-	for (nion = 0; nion < nions; nion++)
-		{
-		gsqrd=(ion[nion].z*ion[nion].z*RYD2ERGS)/(BOLTZMANN*t_e);//
-		gaunt=gaunt_ff(gsqrd);
-		sum += xplasma->density[nion] * ion[nion].z * ion[nion].z * gaunt;
-		}
-      	x = BREMS_CONSTANT * xplasma->ne * (sum) /  H_OVER_K;
+	  x =
+	    BREMS_CONSTANT * xplasma->ne * (xplasma->density[1] * g_ff_h) /
+	    H_OVER_K;
 	}
+    }
+  else
+    {
+      sum = 0.0;		/*NSH 120920 - zero the summation over all ions */
+      for (nion = 0; nion < nions; nion++)
+	{
+	  gsqrd = (ion[nion].z * ion[nion].z * RYD2ERGS) / (BOLTZMANN * t_e);	//
+	  gaunt = gaunt_ff (gsqrd);
+	  sum += xplasma->density[nion] * ion[nion].z * ion[nion].z * gaunt;
+	}
+      x = BREMS_CONSTANT * xplasma->ne * (sum) / H_OVER_K;
+    }
 
   x *= sqrt (t_e) * one->vol;
   x *= (exp (-H_OVER_K * f1 / t_e) - exp (-H_OVER_K * f2 / t_e));
@@ -669,7 +668,7 @@ ff (one, t_e, freq)
      WindPtr one;
      double t_e, freq;
 {
-  double g_ff_h, g_ff_he; 
+  double g_ff_h, g_ff_he;
   double fnu;
   double gsqrd, gaunt, sum;
   int nplasma;
@@ -684,32 +683,33 @@ ff (one, t_e, freq)
     return (0.0);
 
 
-  
-    if (gaunt_n_gsqrd==0) //Maintain old behaviour
+
+  if (gaunt_n_gsqrd == 0)	//Maintain old behaviour
+    {
+      g_ff_h = g_ff_he = 1.0;
+      if (nelements > 1)
 	{
-  	g_ff_h = g_ff_he = 1.0;
-	if (nelements > 1)
-		{
- 		fnu =
-	BREMS_CONSTANT * xplasma->ne * (xplasma->density[1] * g_ff_h +
-					4. * xplasma->density[4] * g_ff_he);
-    		}
-  	else
-    		{
-      		fnu = BREMS_CONSTANT * xplasma->ne * (xplasma->density[1] * g_ff_h);
-    		}
+	  fnu =
+	    BREMS_CONSTANT * xplasma->ne * (xplasma->density[1] * g_ff_h +
+					    4. * xplasma->density[4] *
+					    g_ff_he);
 	}
-    else
+      else
 	{
-	sum=0.0;
-      	for (nion = 0; nion < nions; nion++)
-		{
-		gsqrd=(ion[nion].z*ion[nion].z*RYD2ERGS)/(BOLTZMANN*t_e);
-		gaunt=gaunt_ff(gsqrd);
-		sum += xplasma->density[nion] * ion[nion].z * ion[nion].z * gaunt;
-		}
-        fnu = BREMS_CONSTANT * xplasma->ne * (sum) /  H_OVER_K;
+	  fnu = BREMS_CONSTANT * xplasma->ne * (xplasma->density[1] * g_ff_h);
 	}
+    }
+  else
+    {
+      sum = 0.0;
+      for (nion = 0; nion < nions; nion++)
+	{
+	  gsqrd = (ion[nion].z * ion[nion].z * RYD2ERGS) / (BOLTZMANN * t_e);
+	  gaunt = gaunt_ff (gsqrd);
+	  sum += xplasma->density[nion] * ion[nion].z * ion[nion].z * gaunt;
+	}
+      fnu = BREMS_CONSTANT * xplasma->ne * (sum) / H_OVER_K;
+    }
 
 
   fnu *= exp (-H_OVER_K * freq / t_e) / sqrt (t_e) * one->vol;
@@ -830,28 +830,36 @@ double
 gaunt_ff (gsquared)
      double gsquared;		/* the gamma squared varaiable */
 {
-  int i,index;
+  int i, index;
   double gaunt;
   double log_g2;
-  double delta; //The log difference between our G2 and the one in the table
+  double delta;			//The log difference between our G2 and the one in the table
 
-log_g2=log10(gsquared); //The data is in log format
+  delta = 0.0;			/* NSH 130605 to remove o3 compile error */
+  index = 0;			/* NSH 130605 to remove o3 compile error */
 
-	if (log_g2<gaunt_total[0].log_gsqrd || log_g2>gaunt_total[gaunt_n_gsqrd-1].log_gsqrd)
-		{
-//		Error ("gaunt ff - request gsqrd outside range - returning gaunt factor =1\n"); /*Removed this as an error - it happens a lot, and is probably not important! */
-		return (1.0);
-		}
-	for (i=0;i<gaunt_n_gsqrd;i++) /*first find the pair of parameter arrays that bracket our temperature */
-		{
-		if (gaunt_total[i].log_gsqrd <= log_g2 && gaunt_total[i+1].log_gsqrd > log_g2)
-			{
-			index=i; /* the array to use */
-			delta=log_g2-gaunt_total[index].log_gsqrd;
-			}
-		}
+  log_g2 = log10 (gsquared);	//The data is in log format
 
-	gaunt=gaunt_total[index].gff+delta*(gaunt_total[index].s1+delta*(gaunt_total[index].s2+gaunt_total[index].s3));
+  if (log_g2 < gaunt_total[0].log_gsqrd
+      || log_g2 > gaunt_total[gaunt_n_gsqrd - 1].log_gsqrd)
+    {
+//              Error ("gaunt ff - request gsqrd outside range - returning gaunt factor =1\n"); /*Removed this as an error - it happens a lot, and is probably not important! */
+      return (1.0);
+    }
+  for (i = 0; i < gaunt_n_gsqrd; i++)	/*first find the pair of parameter arrays that bracket our temperature */
+    {
+      if (gaunt_total[i].log_gsqrd <= log_g2
+	  && gaunt_total[i + 1].log_gsqrd > log_g2)
+	{
+	  index = i;		/* the array to use */
+	  delta = log_g2 - gaunt_total[index].log_gsqrd;
+	}
+    }
+
+  gaunt =
+    gaunt_total[index].gff + delta * (gaunt_total[index].s1 +
+				      delta * (gaunt_total[index].s2 +
+					       gaunt_total[index].s3));
 
 
 
@@ -859,5 +867,3 @@ log_g2=log10(gsquared); //The data is in log format
 
   return (gaunt);
 }
-
-

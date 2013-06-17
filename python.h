@@ -1,6 +1,6 @@
 
 #define DEBUG 				0	/* 0 means do not debug */
-int verbosity;                   /* verbosity level. 0 low, 10 is high */
+int verbosity;			/* verbosity level. 0 low, 10 is high */
 
 #include "log.h"
 
@@ -10,7 +10,7 @@ within python */
 int ndim;			// Define the fundamental dimension of the grid
 int mdim;
 int NDIM, MDIM, NDIM2;
-int NPLASMA;                    //The number of cells with non-zero volume or the size of plasma structure
+int NPLASMA;			//The number of cells with non-zero volume or the size of plasma structure
 
 char basename[132];		// The root of the parameter file name being used by python
 
@@ -29,23 +29,23 @@ double DFUDGE;
 
 /* 57h -- Changed several defined variables to numbers to allow one to vary them 
 in the process of running the code */
-double SMAX_FRAC; 		/* In translate_in_wind, a limit is placed on the maximum distance a
-				photon can travel in one step.  It is a fraction SMAX_FRAC of the
-				distance of the photon from the origin.  This had been hardwired to
-				0.1 for up to 57h.  Changing it to 0.5 speeds up the current version
-				of the code by as much as a factor of 2 for small sized grids.  This
-				had been introduced as part of the attempt to assure ourselves that
-				line shapes were calculated as accurately as possilble. 
-				*/ 
-double DENSITY_PHOT_MIN; 		/* This constant is a minimum density for the purpose of calculating
- 				photoionization heating and recombination cooling.  It is important that heating and cooling
-				be calculated self-consistently.  Program speed is somewhat sensitive 
-				to this parameter, at the 10% level if raised from 1e-3 to 1.  There is a 
-				trade-off since lower minima may give better results, especially for macro atoms. */
+double SMAX_FRAC;		/* In translate_in_wind, a limit is placed on the maximum distance a
+				   photon can travel in one step.  It is a fraction SMAX_FRAC of the
+				   distance of the photon from the origin.  This had been hardwired to
+				   0.1 for up to 57h.  Changing it to 0.5 speeds up the current version
+				   of the code by as much as a factor of 2 for small sized grids.  This
+				   had been introduced as part of the attempt to assure ourselves that
+				   line shapes were calculated as accurately as possilble. 
+				 */
+double DENSITY_PHOT_MIN;	/* This constant is a minimum density for the purpose of calculating
+				   photoionization heating and recombination cooling.  It is important that heating and cooling
+				   be calculated self-consistently.  Program speed is somewhat sensitive 
+				   to this parameter, at the 10% level if raised from 1e-3 to 1.  There is a 
+				   trade-off since lower minima may give better results, especially for macro atoms. */
 
-//#define SMAX_FRAC	0.1  
-#define LDEN_MIN        1e-3   /* The minimum density required for a line to be conidered for scattering
-				  or emission in calculate_ds and lum_lines */
+//#define SMAX_FRAC     0.1  
+#define LDEN_MIN        1e-3	/* The minimum density required for a line to be conidered for scattering
+				   or emission in calculate_ds and lum_lines */
 
 
 /* End of "care factor" definition */
@@ -60,11 +60,11 @@ double DENSITY_PHOT_MIN; 		/* This constant is a minimum density for the purpose
 						   be superfluous */
 #define BETA  				1.0
 #define KAPPA_CONT 			4.
-#define EPSILON  			1.e-6  /* A general purpose fairly small number */
+#define EPSILON  			1.e-6	/* A general purpose fairly small number */
 #define NSTAT 				9
 #define VMAX                		1.e9
-#define TAU_MAX				20.   /* Sets an upper limit in extract on when
-			a photon can be assumed to be completely absorbed */
+#define TAU_MAX				20.	/* Sets an upper limit in extract on when
+						   a photon can be assumed to be completely absorbed */
 
 //#define SELECT_NEBULAR                1 /*non zero means to use the nebular approximation; 0 implies
 //                                                              use LTE populations based on t_rad*/
@@ -76,7 +76,7 @@ double DENSITY_PHOT_MIN; 		/* This constant is a minimum density for the purpose
 int NPHOT;			/* As of python_40, NPHOT must be defined in the main program using
 				   python.h */
 
-#define NWAVE  			       10000 //Increasing from 4000 to 10000 (SS June 04)
+#define NWAVE  			       10000	//Increasing from 4000 to 10000 (SS June 04)
 #define MAXSCAT 			50
 
 /* Define the structures */
@@ -106,7 +106,7 @@ int NPHOT;			/* As of python_40, NPHOT must be defined in the main program using
 #define SPECTYPE_BB      -1
 #define SPECTYPE_UNIFORM -2
 #define SPECTYPE_POW     -4
-#define SPECTYPE_CL_TAB  -5 
+#define SPECTYPE_CL_TAB  -5
 #define SPECTYPE_NONE	 -3
 
 /* Number of model_lists that one can have, should be the same as NCOMPS in models.h */
@@ -118,50 +118,50 @@ struct geometry
 /* 67 - ksl This section added to allow for restarting the program, and adds parameters used
  * in the calculation */
 
-	int wcycle, pcycle;      /* The number of completed ionization and spectrum cycles */
-	int wcycles, pcycles;	/* The number of ionization and spectrum cycles desired */
+  int wcycle, pcycle;		/* The number of completed ionization and spectrum cycles */
+  int wcycles, pcycles;		/* The number of ionization and spectrum cycles desired */
 
 /* Begin description of the actual geometery */
 
-  int coord_type, ndim,mdim;      /* The type of geometry and dimensionality of the wind array. 
-				0=1-d spherical, 1=cylindrical, 2 = spherical polar, 3=cylindrical
-				but the z coordinate changes with rho in an attempt to allow for
-				a vertically extended disk....
-				ndim is the dimensionality of the first dimension.  In the CV case
-				it is in the plane of the disk. Mdim is generally along the z axis
-				*/
-  int nplasma, nmacro;          /*The number of cells in the plasma and macro structures 08mar ksl*/
+  int coord_type, ndim, mdim;	/* The type of geometry and dimensionality of the wind array. 
+				   0=1-d spherical, 1=cylindrical, 2 = spherical polar, 3=cylindrical
+				   but the z coordinate changes with rho in an attempt to allow for
+				   a vertically extended disk....
+				   ndim is the dimensionality of the first dimension.  In the CV case
+				   it is in the plane of the disk. Mdim is generally along the z axis
+				 */
+  int nplasma, nmacro;		/*The number of cells in the plasma and macro structures 08mar ksl */
   double rmax, rmax_sq;		/* The maximum distance to which a photon should be followed */
   double mstar, rstar, rstar_sq, tstar, gstar;	/* Basic parameters for the WD */
   double twind;			/* temperature of wind */
   double tmax;			/*NSH 120817 the maximim temperature of any element of the model - used to help estimate things for an exponential representation of the spectrum in a cell */
-  int system_type;            /*0--> single star system
-				  1--> binary system
-				  2--> AGN
-				  */
+  int system_type;		/*0--> single star system
+				   1--> binary system
+				   2--> AGN
+				 */
   int disk_type;		/*0 --> no disk, 
-				  1 --> a standard disk in xy plane, 
-				  2 --> a vertically extended disk 
-				  Note that this definition is new to Python52 */
-  int disk_illum;        	/*Treatment of effects of illumination on the disk. 
-				  0--> Disk simply absorbs the radiation and it is lost
-				  1--> Disk reradiates the radiation immediately via electron scattering
-				  2--> Disk radiation is absorbed and changes the temperature of the disk for
-				      future ionization cycles
-				  3--> Disk illumination is treated in terms of an analytic approximation
-				  04Aug ksl -- this parameter added for Python52
-				*/
+				   1 --> a standard disk in xy plane, 
+				   2 --> a vertically extended disk 
+				   Note that this definition is new to Python52 */
+  int disk_illum;		/*Treatment of effects of illumination on the disk. 
+				   0--> Disk simply absorbs the radiation and it is lost
+				   1--> Disk reradiates the radiation immediately via electron scattering
+				   2--> Disk radiation is absorbed and changes the temperature of the disk for
+				   future ionization cycles
+				   3--> Disk illumination is treated in terms of an analytic approximation
+				   04Aug ksl -- this parameter added for Python52
+				 */
   int disk_tprofile;
   double disk_mdot;		/* mdot of  DISK */
   double diskrad, diskrad_sq;
-  double disk_z0,disk_z1;	/* For vertically extended disk, z=disk_z0*(r/diskrad)**disk_z1 */
+  double disk_z0, disk_z1;	/* For vertically extended disk, z=disk_z0*(r/diskrad)**disk_z1 */
   int wind_type;		/*Basic prescription for wind(0=SV,1=speherical , 2 can imply old file */
   int log_linear;		/*0 -> the grid spacing will be logarithmic in x and z, 1-> linear */
   double xlog_scale, zlog_scale;	/* Scale factors for setting up a logarithmic grid, the [1,1] cell
 					   will be located at xlog_scale,zlog_scale */
   int star_radiation, disk_radiation;	/* 1 means consider radiation from star, disk,  bl, and/or wind */
   int bl_radiation, wind_radiation, agn_radiation;
-  int matom_radiation;          /* Added by SS Jun 2004: for use in macro atom computations of detailed spectra
+  int matom_radiation;		/* Added by SS Jun 2004: for use in macro atom computations of detailed spectra
 				   - 1 means use emissivities for BOTH macro atom levels and kpkts. 0 means don't
 				   (which is correct for the ionization cycles. */
   int ioniz_mode;		/* describes the type of ionization calculation which will
@@ -170,25 +170,25 @@ struct geometry
 				   based on the energy absorbed in the wind (mod_on_the_spot), 4
 				   is a test.  It is currently set to do the same as 3, except
 				   that ground state mulitpliciites are used instead of 
-				    a partition function */
-  int macro_ioniz_mode;         /* Added by SS Apr04 to control the use of macro atom populations and
+				   a partition function */
+  int macro_ioniz_mode;		/* Added by SS Apr04 to control the use of macro atom populations and
 				   ionization fractions. If it is set to 1 then macro atom populations
 				   computed from estimators are used. If set to 0 then the macro atom
 				   populations are computed as for minor ions. By default it is set to
 				   0 initially in python.c and then set to 1 the first time that
 				   Monte Carlo estimators are normalised. */
-  int ioniz_or_extract;           /* Set to 1 (true) during ionization cycles, set to 0 (false) during calculation of
-				  detailed spectrum.  Originally introduced by SS in July04 as he added
-				  macro atoms.  Name changed by ksl (57h) since this variable can be used more
-				  generally to speed up the extract portion of the calculation.
-				*/
-  int macro_simple;            /* Added by SS May04 for diagnostics. As default this is set to 0. A full
-				  Macro Atom calculation is performed in that case. If it is set to 1 it means
-				  that although Macro Atom data has been read in, all lines/continua are treated
-				  using the simplified two-level approximation. Such a calculation should reproduce
-				  the same results as pre-Macro Atom versions of the code. */
-  int partition_mode;            /* Diagnostic to force the partition function to be calculated in
-				a specific way. */
+  int ioniz_or_extract;		/* Set to 1 (true) during ionization cycles, set to 0 (false) during calculation of
+				   detailed spectrum.  Originally introduced by SS in July04 as he added
+				   macro atoms.  Name changed by ksl (57h) since this variable can be used more
+				   generally to speed up the extract portion of the calculation.
+				 */
+  int macro_simple;		/* Added by SS May04 for diagnostics. As default this is set to 0. A full
+				   Macro Atom calculation is performed in that case. If it is set to 1 it means
+				   that although Macro Atom data has been read in, all lines/continua are treated
+				   using the simplified two-level approximation. Such a calculation should reproduce
+				   the same results as pre-Macro Atom versions of the code. */
+  int partition_mode;		/* Diagnostic to force the partition function to be calculated in
+				   a specific way. */
   int line_mode;		/*0, the atomosphere is a completely absorbing and no photons
 				   will be scattered.  In this mode, assuming the wind is a source
 				   of emission, the emissivity will be the Einstein A coefficient
@@ -207,15 +207,15 @@ struct geometry
 				   2  thermally broadened anisotropic
 				 */
   int rt_mode;			/* radiative transfer mode (0=Sobolev,1=simple (used only by balance) */
-                                /* This IS now used by Python - set to 2 for Macro Atom method. Set to 1
-				   for non-Macro Atom methods (SS) */
+  /* This IS now used by Python - set to 2 for Macro Atom method. Set to 1
+     for non-Macro Atom methods (SS) */
 
   /* 71 - 111229  - ksl - These are the frequency bands used when caluclation parameters like a power law slope
    * in limited regions.  Moved inside geo becuase we need to know this information in py_wind
    */
-#define  NXBANDS 20             /* the maximum number of bands that can be defined */
-	int nxfreq;    			/* the number of bands actually used */
-	double xfreq[NXBANDS+1];	/* the band limits  */
+#define  NXBANDS 20		/* the maximum number of bands that can be defined */
+  int nxfreq;			/* the number of bands actually used */
+  double xfreq[NXBANDS + 1];	/* the band limits  */
 
   /* The spectral types are SPECTYPE_BB for bb, SPECTYPE_UNIFORM for a uniform spectral distribution, 
    * SPECTYPE_POW for a power law, 0 or more from a filelist.
@@ -231,15 +231,15 @@ struct geometry
   char model_list[NCOMPS][LINELENGTH];	/* The file which contains the model names and the associated values for the model */
 
   /* Generic parameters for the wind */
-  double wind_mdot, stellar_wind_mdot;		/* Mass loss rate in disk and stellar wind */
+  double wind_mdot, stellar_wind_mdot;	/* Mass loss rate in disk and stellar wind */
   double wind_rmin, wind_rmax;	/*Spherical extent of the wind */
   double wind_rho_min, wind_rho_max;	/*Min/Max rho for wind in disk plane */
   double wind_thetamin, wind_thetamax;	/*Angles defining inner and outer cones of wind, measured from disk plane */
   double mdot_norm;		/*A normalization factor used in SV wind, and Knigge wind */
-  int adiabatic;                 /*0-> Do not include adiabatic heating in calculating the cooling of the wind
-				  1-> Use adiabatic heating in calculating the cooling of the wind
-				  */
-  int auger_ionization;          /*0 -> Do not include innershell photoionization /Auger effects; 1-> include them*/
+  int adiabatic;		/*0-> Do not include adiabatic heating in calculating the cooling of the wind
+				   1-> Use adiabatic heating in calculating the cooling of the wind
+				 */
+  int auger_ionization;		/*0 -> Do not include innershell photoionization /Auger effects; 1-> include them */
   /* Parameters defining Shlossman & Vitello Wind */
   double sv_lambda;		/* power law exponent describing from  what portion of disk wind is radiated */
   double sv_rmin, sv_rmax, sv_thetamin, sv_thetamax, sv_gamma;	/* parameters defining the goemetry of the wind */
@@ -248,9 +248,9 @@ struct geometry
   double sv_v_infinity;		/* the factor by which the velocity at infinity exceeds the excape velocity */
 
   /* Paramater for the Elvis AGN wind - closely based on SV */
-  double elvis_offset;   /*This is a vertical offset for a region where the
-			   wind rises vertically from the disk*/
- 
+  double elvis_offset;		/*This is a vertical offset for a region where the
+				   wind rises vertically from the disk */
+
   /* Parameters defining Knigge Wind */
   double kn_dratio;		/* parameter describing collimation of wind */
   double kn_lambda;		/* power law exponent describing from  what portion of disk wind is radiated */
@@ -258,7 +258,7 @@ struct geometry
 //    double kn_v_zero;         /* velocity at base of wind */
   double kn_r_scale, kn_alpha;	/* the scale length and power law exponent for the velocity law */
   double kn_v_infinity;		/* the factor by which the velocity at infinity exceeds the excape velocity */
-  double kn_v_zero;          /* NSH 19/04/11 - Added in as the multiple of the sound speed to use as the initial velocity */
+  double kn_v_zero;		/* NSH 19/04/11 - Added in as the multiple of the sound speed to use as the initial velocity */
 
   /* Parameters describing Castor and Larmors spherical wind */
   double cl_v_zero, cl_v_infinity, cl_beta;	/* Power law exponent */
@@ -283,25 +283,25 @@ struct geometry
 
   double lum_tot, lum_star, lum_disk, lum_bl, lum_wind;	/* The total luminosities of the disk, star, bl, & wind 
 							   are actually not used in a fundamental way in the program */
-  double lum_agn;   /*The total luminosity of the AGN or point source at the center*/
+  double lum_agn;		/*The total luminosity of the AGN or point source at the center */
 
 /* The next four variables added by nsh Apr 2012 to allow broken power law to match the cloudy table command */
-  double agn_cltab_low; //break at which the low frequency power law ends
-  double agn_cltab_hi; //break at which the high frequency power law cuts in
-  double agn_cltab_low_alpha; //photon index for the low frequency end
-  double agn_cltab_hi_alpha; //photon index for the high frequency end
+  double agn_cltab_low;		//break at which the low frequency power law ends
+  double agn_cltab_hi;		//break at which the high frequency power law cuts in
+  double agn_cltab_low_alpha;	//photon index for the low frequency end
+  double agn_cltab_hi_alpha;	//photon index for the high frequency end
 
 
 
   double lum_ff, lum_fb, lum_lines;	/* The luminosity of the wind as a result of ff, fb, and line radiation */
-  double lum_comp; /*1108 NSH The luminosity of the wind as a result of compton cooling */
-  double lum_dr; /*1109 NSH The luminosity of the wind due to dielectronic recombination */
-  double lum_adiabatic; /*1209 NSH The cooling of the wind due to adiabatic expansion */
+  double lum_comp;		/*1108 NSH The luminosity of the wind as a result of compton cooling */
+  double lum_dr;		/*1109 NSH The luminosity of the wind due to dielectronic recombination */
+  double lum_adiabatic;		/*1209 NSH The cooling of the wind due to adiabatic expansion */
   double f_tot, f_star, f_disk, f_bl, f_agn, f_wind;	/* The integrated specific L between a freq min and max which are
-						   used to establish the fraction of photons of various types */
-  
-  double f_matom, f_kpkt; /*Added by SS Jun 2004 - to be used in computations of detailed spectra - the
-				energy emitted in the band via k-packets and macro atoms respectively. */
+							   used to establish the fraction of photons of various types */
+
+  double f_matom, f_kpkt;	/*Added by SS Jun 2004 - to be used in computations of detailed spectra - the
+				   energy emitted in the band via k-packets and macro atoms respectively. */
 
 // The next set of parameters relate to the secondary
   double m_sec, q;		/* Mass of the secondary, mass ratio of system */
@@ -315,29 +315,29 @@ struct geometry
 
 // The next set of parameters relate to the central source of an AGN
 
-  double alpha_agn;            /*The power law index of a BH at the center of an AGN.  Note that the luminosity
-				 of the agn is elsewhere in the structure
-				*/ 
-  double const_agn;             /*The constant for the Power law, there are lots of ways of defining the PL which is best? */
-  double r_agn;               /* radius of the "photosphere" of the BH in the AGN.  */
-  double d_agn;               /* the distance to the agn - only used in balance to calculate the ioinsation fraction*/
+  double alpha_agn;		/*The power law index of a BH at the center of an AGN.  Note that the luminosity
+				   of the agn is elsewhere in the structure
+				 */
+  double const_agn;		/*The constant for the Power law, there are lots of ways of defining the PL which is best? */
+  double r_agn;			/* radius of the "photosphere" of the BH in the AGN.  */
+  double d_agn;			/* the distance to the agn - only used in balance to calculate the ioinsation fraction */
 
 // 70b - ksl - 110809  The next set of sources relate to a compton torus that is initially at least just related to AGN
 
   int compton_torus;		/* 0 if there is no Compton torus; 1 otherwise */
   double compton_torus_rmin;	/* The minimum radius of the torus */
   double compton_torus_rmax;	/* The maximum radius of the torus */
-  double compton_torus_zheight; /* The height of the torus. */
-  double compton_torus_tau; 	/* The optical depth through the torus at the height. */
+  double compton_torus_zheight;	/* The height of the torus. */
+  double compton_torus_tau;	/* The optical depth through the torus at the height. */
   double compton_torus_te;	/* The initial temperature of the torus */
 
 //70i - nsh 111007 - put lum_ioniz and n_ioniz into the geo structure. This will allow a simple estimate of ionisation parameter to be computed;
 
-  double n_ioniz,lum_ioniz;
+  double n_ioniz, lum_ioniz;
 
 // The next set of parameters describe the input datafiles that are read
-  char atomic_filename[132];   /* 54e -- The masterfile for the atomic data*/
-  char fixed_con_file[132];    /* 54e -- For fixed concentrations, the file specifying concentrations */
+  char atomic_filename[132];	/* 54e -- The masterfile for the atomic data */
+  char fixed_con_file[132];	/* 54e -- For fixed concentrations, the file specifying concentrations */
 }
 geo;
 
@@ -364,14 +364,14 @@ plane_l1, plane_sec, plane_m2_far;	/* these all define planes which are perpendi
 
 typedef struct cone
 {
-  double z;                     /* The place where the cone intersects the z axis (used after 56d)*/
-  double dzdr;                  /* the slope (used after 56d) */
+  double z;			/* The place where the cone intersects the z axis (used after 56d) */
+  double dzdr;			/* the slope (used after 56d) */
 }
 cone_dummy, *ConePtr;
 
-ConePtr cones_rtheta;		/*A ptr to the cones that define the theta directions in rtheta coods*/
+ConePtr cones_rtheta;		/*A ptr to the cones that define the theta directions in rtheta coods */
 
-struct cone windcone[2];        /* The cones that define the boundary of winds like SV or kwd */
+struct cone windcone[2];	/* The cones that define the boundary of winds like SV or kwd */
 
 
 
@@ -389,21 +389,21 @@ struct xdisk
   double heat[NRINGS];		/* The total energy flux of photons hitting each annulus */
   double ave_freq[NRINGS];	/* The flux weighted average of frequency of photons hiiting each annulus */
   double w[NRINGS];		/* The radiative weight of the photons that hit the disk */
-  double t_hit[NRINGS];		/* The effective T of photons hitting the disk*/
+  double t_hit[NRINGS];		/* The effective T of photons hitting the disk */
   int nphot[NRINGS];		/*The number of photons created in each annulus */
   int nhit[NRINGS];		/*The number of photons which hit each annulus */
 }
 disk, qdisk;			/* disk defines zones in the disk which in a specified frequency band emit equal amounts
 				   of radiation. qdisk stores the amount of heating of the disk as a result of
-				  illumination by the star or wind */
+				   illumination by the star or wind */
 
 #define NBLMODEL 100
 
 struct blmodel
 {
-   int n_blpts;
-   float r[NBLMODEL];
-   float t[NBLMODEL];
+  int n_blpts;
+  float r[NBLMODEL];
+  float t[NBLMODEL];
 }
 blmod;
 
@@ -430,8 +430,8 @@ done to make it easier to control the size of the entire structure   06jul-ksl
 				   and recombinations */
 #define LPDF   3		/*The number of bins into which the line luminosity is divided in the course pdf
 				   created by total_line_emission 
-				Reduced from 10 to 3 by SS for testing data with few lines.*/
-                            
+				   Reduced from 10 to 3 by SS for testing data with few lines. */
+
 
 /* 061104 -- 58b -- ksl -- Added definitions to characterize whether a cell is in the wind. */
 /* 110810 -- ksl - these are assigned to w->inwind, and are used to help determine how photons 
@@ -450,23 +450,23 @@ and PART in whatever, as n and n+1
 #define W_ALL_INTORUS  2	//Entire grid cell is in the torus
 #define W_PART_INWIND  1	//Part of gridcell is in the wind
 #define W_ALL_INWIND   0	//Entire grid cell is in the wind
-#define W_NOT_INWIND  -1        //None of gridcell is in the wind
+#define W_NOT_INWIND  -1	//None of gridcell is in the wind
 #define W_IGNORE      -2	//Even though the wind may occupy a small part of this cell, assume
 				//photons simply pass through the cell.  This is new in 58b
 
 typedef struct wind
 {
-  int nwind;                   /*A self-reference to this cell in the wind structure*/
-  int nplasma;                 /*A cross refrence to the corresponding cell in the plasma structure */
+  int nwind;			/*A self-reference to this cell in the wind structure */
+  int nplasma;			/*A cross refrence to the corresponding cell in the plasma structure */
   double x[3];			/*position of inner vertex of cell */
-  double xcen[3];		/*position of the "center" of a cell (Added by ksl for 52a--04Aug)*/
+  double xcen[3];		/*position of the "center" of a cell (Added by ksl for 52a--04Aug) */
   double r, rcen;		/*radial location of cell (Used for spherical, spherical polar
-				  coordinates. (Added by ksl for 52a --04Aug)*/
-  double theta,thetacen;	/*Angle of coordinate from z axis (Added by ksl for 52a -- 04Aug)*/
-  struct cone wcone;                   /*56d -- cone structure that defines the bottom edge of the cell in 
-				  CYLVAR coordinates*/
+				   coordinates. (Added by ksl for 52a --04Aug) */
+  double theta, thetacen;	/*Angle of coordinate from z axis (Added by ksl for 52a -- 04Aug) */
+  struct cone wcone;		/*56d -- cone structure that defines the bottom edge of the cell in 
+				   CYLVAR coordinates */
   double v[3];			/*velocity at inner vertex of cell.  For 2d coordinate systems this
- 				  is defined in the xz plane */
+				   is defined in the xz plane */
   double v_grad[3][3];		/*velocity gradient tensor  at the inner vertex of the cell NEW */
   double div_v;			/*Divergence of v at center of cell */
   double dvds_ave;		/* Average value of dvds */
@@ -474,7 +474,7 @@ typedef struct wind
   double vol;			/* valid volume of this cell (more specifically the volume of one of the
 				   two annular regions that this cell represents). */
   int inwind;			/* 061104 -- 58b -- ksl -- Moved definitions of for whether a cell is or is not
-				inwind to #define statements above */
+				   inwind to #define statements above */
 
 }
 wind_dummy, *WindPtr;
@@ -497,14 +497,15 @@ plasma in regions of the geometry that are actually included n the wind
 
 //71 - 111229 - Moved into the geo structure so that it would be possible to get this information into py_wind more easily
 //OLD71 #define  NXBANDS 10             /* the maximum number of bands that can be defined */
-//OLD71 int nxfreq;    			/* the number of bands actually used */
-//OLD71 double xfreq[NXBANDS+1];	/* the band limits  */
+//OLD71 int nxfreq;                     /* the number of bands actually used */
+//OLD71 double xfreq[NXBANDS+1];        /* the band limits  */
 
 //OLD - ksl - this shold not be an external variable int nx4power;  //The band to use for the power law ionization calculations
 
-typedef struct plasma {
-  int nwind;                   /*A cross reference to the corresponding cell in the  wind structure*/
-  int nplasma;                 /*A self reference to this  in the plasma structure */
+typedef struct plasma
+{
+  int nwind;			/*A cross reference to the corresponding cell in the  wind structure */
+  int nplasma;			/*A self reference to this  in the plasma structure */
   double ne;			/* electron density in the shell */
   double rho;			/*density at the center of the cell */
   double vol;			/* valid volume of this cell (more specifically the volume of one of the
@@ -514,18 +515,18 @@ typedef struct plasma {
   double partition[NIONS];	/*The partition function for each  ion */
   double levden[NLTE_LEVELS];	/*The number density (occupation number?) of a specific level */
 
-  double PWdenom[NIONS];      /*The denominator in the pairwise ionization solver. Sicne this is computed at a temperature 
-				chosen from basic ioinzation proerties to be good for this ion, it should not change
-				very much from cycle to cycle - hence we shold be able to speed up the code by storing 
-				it and refering to it if the temperature has not changed much */
-  double PWdtemp[NIONS];      /*The temperature at which the pairwise denominator was calculated last */
+  double PWdenom[NIONS];	/*The denominator in the pairwise ionization solver. Sicne this is computed at a temperature 
+				   chosen from basic ioinzation proerties to be good for this ion, it should not change
+				   very much from cycle to cycle - hence we shold be able to speed up the code by storing 
+				   it and refering to it if the temperature has not changed much */
+  double PWdtemp[NIONS];	/*The temperature at which the pairwise denominator was calculated last */
   double PWnumer[NIONS];	/* The numberator in the pairwise approach. When we are chasing the true density
-				by carying n_e - this value will not change, so we canspeed things up a lot
-				by not recomputing it!*/
+				   by carying n_e - this value will not change, so we canspeed things up a lot
+				   by not recomputing it! */
   double PWntemp[NIONS];	/* The temperature at which the stored pairwise numerator was last computed at. This
-				is used in the BB version of the pairwise correction factor */
+				   is used in the BB version of the pairwise correction factor */
 
-  double kappa_ff_factor;      /* Multiplicative factor for calculating the FF heating for 					a photon. */
+  double kappa_ff_factor;	/* Multiplicative factor for calculating the FF heating for                                      a photon. */
 
   /* Two new objects in the structure to hol the number of line resonant scatters and the number of electron scatters */
 
@@ -534,77 +535,77 @@ typedef struct plasma {
 
 
 
-  double recomb_simple[NTOP_PHOT]; /* "alpha_e - alpha" (in Leon's notation) for b-f processes in simple atoms. */
+  double recomb_simple[NTOP_PHOT];	/* "alpha_e - alpha" (in Leon's notation) for b-f processes in simple atoms. */
 
 /* Begining of macro information */
-  double kpkt_emiss;              /*This is the specific emissivity due to the conversion k-packet -> r-packet in the cell
-				    in the frequency range that is required for the final spectral synthesis. (SS) */
+  double kpkt_emiss;		/*This is the specific emissivity due to the conversion k-packet -> r-packet in the cell
+				   in the frequency range that is required for the final spectral synthesis. (SS) */
 
-  double kpkt_abs;                   /* k-packet equivalent of matom_abs. (SS) */
+  double kpkt_abs;		/* k-packet equivalent of matom_abs. (SS) */
 
-  int kbf_use[NTOP_PHOT];            /* List of the indices of the photoionization processes to be used for kappa_bf. (SS) */
-  int kbf_nuse;                      /* Total number of photoionization processes to be used for kappa_bf. (SS) */
+  int kbf_use[NTOP_PHOT];	/* List of the indices of the photoionization processes to be used for kappa_bf. (SS) */
+  int kbf_nuse;			/* Total number of photoionization processes to be used for kappa_bf. (SS) */
 
 /* End of macro information */
 
 
-  double t_r, t_r_old;			/*radiation temperature of cell */
-  double t_e, t_e_old;			/*electron temperature of cell */
-  double dt_e, dt_e_old;		/*How much t_e changed in the previous iteration */
+  double t_r, t_r_old;		/*radiation temperature of cell */
+  double t_e, t_e_old;		/*electron temperature of cell */
+  double dt_e, dt_e_old;	/*How much t_e changed in the previous iteration */
   double heat_tot, heat_tot_old;	/* heating from all sources */
   double heat_lines, heat_ff;
-  double heat_comp;   			/* 1108 NSH The compton heating for the cell */
+  double heat_comp;		/* 1108 NSH The compton heating for the cell */
   double heat_ind_comp;		/* 1205 NSH The induced compton heatingfor the cell */
-  double heat_lines_macro, heat_photo_macro; /* bb and bf heating due to macro atoms. Subset of heat_lines 
-						and heat_photo. SS June 04. */
-  double heat_photo, heat_z;		/*photoionization heating total and of metals */
-  double w;				/*The dilution factor of the wind */
-  int ntot;                     	/*Total number of photon passages */
+  double heat_lines_macro, heat_photo_macro;	/* bb and bf heating due to macro atoms. Subset of heat_lines 
+						   and heat_photo. SS June 04. */
+  double heat_photo, heat_z;	/*photoionization heating total and of metals */
+  double w;			/*The dilution factor of the wind */
+  int ntot;			/*Total number of photon passages */
 
 
 #define PTYPE_STAR	    0
 #define PTYPE_BL	    1
 #define PTYPE_DISK          2
 #define PTYPE_WIND	    3
-#define PTYPE_AGN           4 
+#define PTYPE_AGN           4
 
 #define SPEC_MOD_PL         1
 #define SPEC_MOD_EXP	    2
 
- /* NSH 15/4/11 - added some counters to give a rough idea of where photons from various sources are ending up */
- /* NSH 111005  - changed counters to real variables, that allows us to take account of differening weights of photons */
+  /* NSH 15/4/11 - added some counters to give a rough idea of where photons from various sources are ending up */
+  /* NSH 111005  - changed counters to real variables, that allows us to take account of differening weights of photons */
   /* ksl - ???? The reason these are doubles if that what Nick did was to truly count the photons, but it is
    * not clera why that is a good idea.  I have converted them back to mean the number of packets in radiation.c.  It
    * would be simpler if this was an array rather than individual
    * variables
    */
   int ntot_star;
-  int ntot_bl;			
-  int ntot_disk;                /* NSH 15/4/11 Added to count number of photons from the disk in the cell */
+  int ntot_bl;
+  int ntot_disk;		/* NSH 15/4/11 Added to count number of photons from the disk in the cell */
   int ntot_wind;
-  int ntot_agn;                  /* NSH 15/4/11 Added to count number of photons from the AGN in the cell */
+  int ntot_agn;			/* NSH 15/4/11 Added to count number of photons from the AGN in the cell */
   double mean_ds;		/* NSH 6/9/12 Added to allow a check that a thin shell is really optcially thin */
   int n_ds;			/* NSH 6/9/12 Added to allow the mean dsto be computed */
-  int nrad;				/* Total number of photons radiated within the cell */
-  int nioniz;				/* Total number of photons capable of ionizing H */
+  int nrad;			/* Total number of photons radiated within the cell */
+  int nioniz;			/* Total number of photons capable of ionizing H */
   double ioniz[NIONS], recomb[NIONS];	/* Number of ionizations and recombinations for each ion.
 					   The sense is ionization from ion[n], and recombinations 
 					   to each ion[n] */
-  int scatters[NIONS];			/* 68b - The number of scatters in this cell for each ion.*/
-  double xscatters[NIONS];		/* 68b - Diagnostic measure of energy scattered out of beam on extract */
-  double heat_ion[NIONS];       	/* The amount of energy being transferred to the electron pool
-				   	by this ion via photoionization*/
-  double lum_ion[NIONS];       		/* The amount of energy being released from the electron pool
-					   by this ion via recombination*/
-  double j, ave_freq, lum;		/*Respectively mean intensity, intensity_averaged frequency, 
-				   	luminosity and absorbed luminosity of shell */
-  double xj[NXBANDS], xave_freq[NXBANDS];   /* 1108 NSH frequency limited versions of j and ave_freq */
-  double xsd_freq[NXBANDS];		/*1208 NSH the standard deviation of the frequency in the band */
-  int nxtot[NXBANDS];  			/* 1108 NSH the total number of photon passages in frequency bands */
-  double max_freq;				/*1208 NSH The maximum frequency photon seen in this cell */
+  int scatters[NIONS];		/* 68b - The number of scatters in this cell for each ion. */
+  double xscatters[NIONS];	/* 68b - Diagnostic measure of energy scattered out of beam on extract */
+  double heat_ion[NIONS];	/* The amount of energy being transferred to the electron pool
+				   by this ion via photoionization */
+  double lum_ion[NIONS];	/* The amount of energy being released from the electron pool
+				   by this ion via recombination */
+  double j, ave_freq, lum;	/*Respectively mean intensity, intensity_averaged frequency, 
+				   luminosity and absorbed luminosity of shell */
+  double xj[NXBANDS], xave_freq[NXBANDS];	/* 1108 NSH frequency limited versions of j and ave_freq */
+  double xsd_freq[NXBANDS];	/*1208 NSH the standard deviation of the frequency in the band */
+  int nxtot[NXBANDS];		/* 1108 NSH the total number of photon passages in frequency bands */
+  double max_freq;		/*1208 NSH The maximum frequency photon seen in this cell */
   double lum_lines, lum_ff, lum_adiabatic;
-  double lum_comp ; 			/* 1108 NSH The compton luminosity of the cell */
-  double lum_dr;  			/* 1109 NSH The dielectronic recombination luminosity of the cell */
+  double lum_comp;		/* 1108 NSH The compton luminosity of the cell */
+  double lum_dr;		/* 1109 NSH The dielectronic recombination luminosity of the cell */
   double lum_fb, lum_z;		/*fb luminosity & fb of metals metals */
   double lum_rad, lum_rad_old;	/* The specfic radiative luminosity in frequencies defined by freqmin
 				   and freqmax.  This will depend on the last call to total_emission */
@@ -614,28 +615,28 @@ typedef struct plasma {
   double pdf_y[LPDF];		/* Where the pdf is stored -- values between 0 and 1 */
   double gain;			/* The gain being used in interations of the structure */
   double converge_t_r, converge_t_e, converge_hc;	/* Three measures of whether the program believes the grid is converged.
- 				The first wo  are the fraction changes in t_r, t_e between this and the last cycle. The third
-			        number is the fraction between heating and cooling divided by the sum of the 2	*/
-  int trcheck,techeck,hccheck; /* NSH the individual convergence checks used to calculate converge_whole.  Each of these values
- 				is 0 if the fractional change or in the case of the last check error is less than a value, currently
-			       set to 0.05.  ksl 111126	*/ 
+							   The first wo  are the fraction changes in t_r, t_e between this and the last cycle. The third
+							   number is the fraction between heating and cooling divided by the sum of the 2       */
+  int trcheck, techeck, hccheck;	/* NSH the individual convergence checks used to calculate converge_whole.  Each of these values
+					   is 0 if the fractional change or in the case of the last check error is less than a value, currently
+					   set to 0.05.  ksl 111126      */
   int converge_whole, converging;	/* converge_whole is the sum of the indvidual convergence checks.  It is 0 if all of the
 					   convergence checks indicated convergence.subroutine convergence feels point is converged, converging is an
-				   indicator of whether the program thought the cell is on the way to convergence 0 implies converging */
+					   indicator of whether the program thought the cell is on the way to convergence 0 implies converging */
 
 
-  double gamma_inshl[NAUGER]; /*MC estimator that will record the inner shell ionization rate - very similar to macro atom-style estimators */
+  double gamma_inshl[NAUGER];	/*MC estimator that will record the inner shell ionization rate - very similar to macro atom-style estimators */
   /* 1108 Increase sim estimators to cover all of the bands */
-  /* 1208 Add parameters for an exponential representation, and a switch to say which we prefer.*/
-  int spec_mod_type[NXBANDS]; /* NSH 120817 A switch to say which type of representation we are using for this band in this cell. Negative means we have no useful representation, 0 means power law, 1 means exponential */ 
-  double pl_alpha[NXBANDS]; /*Computed spectral index for a power law spectrum representing this cell NSH 120817 - changed name from sim_alpha to PL_alpha*/
-  double pl_w[NXBANDS]; /*This is the computed weight of a PL spectrum in this cell - not the same as the dilution factor NSH 120817 - changed name from sim_w to pl_w*/
-  double exp_temp[NXBANDS]; /*NSH 120817 - The effective temperature of an exponential representation of the radiation field in a cell*/
-  double exp_w[NXBANDS]; /*NSH 120817 - The prefector of an exponential representation of the radiation field in a cell*/
+  /* 1208 Add parameters for an exponential representation, and a switch to say which we prefer. */
+  int spec_mod_type[NXBANDS];	/* NSH 120817 A switch to say which type of representation we are using for this band in this cell. Negative means we have no useful representation, 0 means power law, 1 means exponential */
+  double pl_alpha[NXBANDS];	/*Computed spectral index for a power law spectrum representing this cell NSH 120817 - changed name from sim_alpha to PL_alpha */
+  double pl_w[NXBANDS];		/*This is the computed weight of a PL spectrum in this cell - not the same as the dilution factor NSH 120817 - changed name from sim_w to pl_w */
+  double exp_temp[NXBANDS];	/*NSH 120817 - The effective temperature of an exponential representation of the radiation field in a cell */
+  double exp_w[NXBANDS];	/*NSH 120817 - The prefector of an exponential representation of the radiation field in a cell */
 //OLD  double sim_e1,sim_e2; /*Sim estimators used to compute alpha and w for a power law spectrum for the cell */
-  double sim_ip; /*Ionisation parameter for the cell as defined in Sim etal 2010 */
-  double ferland_ip; /* IP calculaterd from equation 5.4 in hazy1 - assuming allphotons come from 0,0,0 and the wind is transparent */
-  double ip; /*NSH 111004 Ionization parameter calculated as number of photons over the lyman limit entering a cell, divided by the number density of hydrogen for the cell */
+  double sim_ip;		/*Ionisation parameter for the cell as defined in Sim etal 2010 */
+  double ferland_ip;		/* IP calculaterd from equation 5.4 in hazy1 - assuming allphotons come from 0,0,0 and the wind is transparent */
+  double ip;			/*NSH 111004 Ionization parameter calculated as number of photons over the lyman limit entering a cell, divided by the number density of hydrogen for the cell */
   //int kpkt_rates_known;
   //COOLSTR kpkt_rates;
 } plasma_dummy, *PlasmaPtr;
@@ -648,13 +649,14 @@ of a particular type once one has the cdf,  This appears to be case for f fb pho
 the same procedure could be used for line photons */
 
 #define NSTORE 10
-typedef struct photon_store {
-  int n;  			/* This is the photon number that was last used */
+typedef struct photon_store
+{
+  int n;			/* This is the photon number that was last used */
   double t, f1, f2, freq[NSTORE];
 
 } photon_store_dummy, *PhotStorePtr;
 
-PhotStorePtr photstoremain; 
+PhotStorePtr photstoremain;
 
 /* 
 060616 -- ksl -- 57g -- Modified the plamsa structure to add a new macro stucture that is only needed for macro
@@ -676,26 +678,27 @@ jbar are allcoated in calloc_esimators.
 */
 
 
-typedef struct macro {
+typedef struct macro
+{
   double *jbar;
   //[NLEVELS_MACRO][NBBJUMPS]; 
   /* This will store the Sobolev mean intensity in transitions which is needed 
-				       for Macro Atom jumping probabilities. The indexing is by configuration (the 
-				       NLTE_LEVELS) and then by the upward bound-bound jumps from that level 
-				       (the NBBJUMPS) (SS)*/
+     for Macro Atom jumping probabilities. The indexing is by configuration (the 
+     NLTE_LEVELS) and then by the upward bound-bound jumps from that level 
+     (the NBBJUMPS) (SS) */
   double *jbar_old;
   //[NLEVELS_MACRO][NBBJUMPS];
 
   double *gamma;
   //[NLEVELS_MACRO][NBFJUMPS]; 
   /* This is similar to the jbar but for bound-free transitions. It records the 
-					 appropriate photoionisation rate co-efficient. (SS)*/
+     appropriate photoionisation rate co-efficient. (SS) */
   double *gamma_old;
   //[NLEVELS_MACRO][NBFJUMPS];
   double *gamma_e;
   //[NLEVELS_MACRO][NBFJUMPS]; 
   /* This is Leon's gamma_e: very similar to gamma but energy weighted. Needed
-					   for division of photoionisation energy into excitation and k-packets. (SS)*/
+     for division of photoionisation energy into excitation and k-packets. (SS) */
   double *gamma_e_old;
   //[NLEVELS_MACRO][NBFJUMPS];
 
@@ -705,7 +708,7 @@ typedef struct macro {
   //[NLEVELS_MACRO][NBFJUMPS];
   double *alpha_st_e;
   //[NLEVELS_MACRO][NBFJUMPS]; 
-  /* Same as gamma_e but for stimulated recombination rather than photoionisation. (SS)*/
+  /* Same as gamma_e but for stimulated recombination rather than photoionisation. (SS) */
   double *alpha_st_e_old;
   //[NLEVELS_MACRO][NBFJUMPS];
 
@@ -719,25 +722,25 @@ typedef struct macro {
   double *matom_emiss;
   //[NLEVELS_MACRO]; 
   /* This is the specific emissivity due to the de-activation of macro atoms in the cell
-					in the frequency range that is required for the final spectral synthesis. (SS) */
+     in the frequency range that is required for the final spectral synthesis. (SS) */
   double *matom_abs;
   //[NLEVELS_MACRO];  
   /* This is the energy absorbed by the macro atom levels - recorded during the ionization 
-					cycles and used to get matom_emiss (SS) */
+     cycles and used to get matom_emiss (SS) */
 
 // The portion of the macroy structure  is not written out by windsave
   int kpkt_rates_known;
   // COOLSTR kpkt_rates;
 
-double *cooling_bf;
+  double *cooling_bf;
 //  double cooling_bf[NTOP_PHOT];
- double *cooling_bf_col;
+  double *cooling_bf_col;
 // double cooling_bf_col[NTOP_PHOT];
-double *cooling_bb;
+  double *cooling_bb;
 // double cooling_bb[NLINES];
- double cooling_normalisation;
- double cooling_bbtot, cooling_bftot, cooling_bf_coltot;
-   double cooling_ff;
+  double cooling_normalisation;
+  double cooling_bbtot, cooling_bftot, cooling_bf_coltot;
+  double cooling_ff;
 
 } macro_dummy, *MacroPtr;
 
@@ -745,14 +748,14 @@ MacroPtr macromain;
 
 int xxxpdfwind;			// When 1, line luminosity calculates pdf
 
-int size_Jbar_est,  size_gamma_est, size_alpha_est;
+int size_Jbar_est, size_gamma_est, size_alpha_est;
 
 // These definitions define a photon type, generally it's origin
 #define PTYPE_STAR	    0
 #define PTYPE_BL	    1
 #define PTYPE_DISK          2
 #define PTYPE_WIND	    3
-#define PTYPE_AGN           4 
+#define PTYPE_AGN           4
 
 /* These definitions define the current or final state of a photon.  They are used by
 phot.istat below */
@@ -778,48 +781,48 @@ phot.istat below */
 
 //These constants are used in the various routines which compute ionization state
 #define SAHA 4.82907e15		/* 2* (2.*PI*MELEC*k)**1.5 / h**3  (Calculated in constants) */
-#define MAXITERATIONS	200 //The number of loops to do to try to converge in ne
-#define FRACTIONAL_ERROR 0.03  //The change in n_e which causes a break out of the loop for ne
-#define THETAMAX	 1e4 //Used in initial calculation of n_e
-#define MIN_TEMP	100. //  ??? this is another minimum temperature - it is used as the minimum tempersture in 
+#define MAXITERATIONS	200	//The number of loops to do to try to converge in ne
+#define FRACTIONAL_ERROR 0.03	//The change in n_e which causes a break out of the loop for ne
+#define THETAMAX	 1e4	//Used in initial calculation of n_e
+#define MIN_TEMP	100.	//  ??? this is another minimum temperature - it is used as the minimum tempersture in
 
 
 #define NDIM_MAX 500
-double wind_x[NDIM_MAX], wind_z[NDIM_MAX]; /* These define the edges of the cells in the x and z directions */
+double wind_x[NDIM_MAX], wind_z[NDIM_MAX];	/* These define the edges of the cells in the x and z directions */
 double wind_midx[NDIM_MAX], wind_midz[NDIM_MAX];	/* These define the midpoints of the cells in the x and z directions */
 
 /* Next two lines are for cyl_var coordinates.  They are used in locating the appropriate 
  * locating the appropriate cell, for example by cylvar_where_in_grid
  */
 
-double wind_z_var[NDIM_MAX][NDIM_MAX];     
+double wind_z_var[NDIM_MAX][NDIM_MAX];
 double wind_midz_var[NDIM_MAX][NDIM_MAX];
 
 typedef struct photon
 {
-  double x[3];		/* Vector containing position of packet */
-  double lmn[3];	/*direction cosines of this packet */
+  double x[3];			/* Vector containing position of packet */
+  double lmn[3];		/*direction cosines of this packet */
   double freq;
-  double w;		/*weight of this packet */
+  double w;			/*weight of this packet */
   double tau;
-  int istat;		/*status of photon.  See definitions P_INWIND, etc above */
-  int nscat;		/*number of scatterings */
-  int nres;		/*The line number in lin_ptr of last scatter or wind line creation */
-  int nnscat;           /* Used for the thermal trapping model of
-			   anisotropic scattering to carry the number of
-			   scattering to "extract" when needed for wind
-			   generated photons SS05. */
-  int nrscat;		/* number of resonance scatterings */
-  int grid;		/*grid position of the photon in the wind, if
-			   the photon is in the wind.  If the photon is not
-			   in the wind, then -1 implies inside the wind cone and  
-			   -2 implies outside the wind */
-  int origin;		/* Where this photon originated.  If the photon has
-			scattered it's "origin" may be changed to "wind".  The
-			definitions should be according to PTYPE ... above. 
-			 */
-  int np;             /*NSH 13/4/11 - an internal pointer to the photon number so 
-                         so we can write out details of where the photon goes */
+  int istat;			/*status of photon.  See definitions P_INWIND, etc above */
+  int nscat;			/*number of scatterings */
+  int nres;			/*The line number in lin_ptr of last scatter or wind line creation */
+  int nnscat;			/* Used for the thermal trapping model of
+				   anisotropic scattering to carry the number of
+				   scattering to "extract" when needed for wind
+				   generated photons SS05. */
+  int nrscat;			/* number of resonance scatterings */
+  int grid;			/*grid position of the photon in the wind, if
+				   the photon is in the wind.  If the photon is not
+				   in the wind, then -1 implies inside the wind cone and  
+				   -2 implies outside the wind */
+  int origin;			/* Where this photon originated.  If the photon has
+				   scattered it's "origin" may be changed to "wind".  The
+				   definitions should be according to PTYPE ... above. 
+				 */
+  int np;			/*NSH 13/4/11 - an internal pointer to the photon number so 
+				   so we can write out details of where the photon goes */
 
 }
 p_dummy, *PhotPtr;
@@ -832,8 +835,8 @@ p_dummy, *PhotPtr;
  */
 
 #define MAX_PHOT_HIST	1000
-int n_phot_hist, phot_hist_on,phot_history_spectrum;
-struct photon  xphot_hist[MAX_PHOT_HIST];
+int n_phot_hist, phot_hist_on, phot_history_spectrum;
+struct photon xphot_hist[MAX_PHOT_HIST];
 
 struct basis
 {
@@ -853,7 +856,7 @@ basis_cartesian;
 
 
 /* NSPEC has been removed from python.h because it was not really needed */
-//0ld68c #define NSPEC 				14
+//0ld68c #define NSPEC                          14
 
 #define MSPEC                            6
 int nspectra;			/* After create_spectrum, the number of elements allocated for s, or 
@@ -868,7 +871,7 @@ typedef struct spectrum
 {
   char name[40];
   float freqmin, freqmax, dfreq;
-  float lfreqmin, lfreqmax, ldfreq; /* NSH 1302 - values for logarithmic spectra */
+  float lfreqmin, lfreqmax, ldfreq;	/* NSH 1302 - values for logarithmic spectra */
   double lmn[3];
   double mmax, mmin;		/* Used only in live or die situations, mmax=cos(angle-DANG_LIVE_OR_DIE)
 				   and mmim=cos(angle+DANG_LIVE_OR_DIE).   In actually defining this
@@ -885,10 +888,10 @@ typedef struct spectrum
   int top_bot;			/* 0 ->select photons regardless of location 
 				   >0     -> select only photons whose "last" position is above the disk
 				   <0    -> select only photons whose last position is below the disk */
-  double x[3],r;               /* The position and radius of a special region from which to extract spectra  */
+  double x[3], r;		/* The position and radius of a special region from which to extract spectra  */
   double f[NWAVE];
-  double lf[NWAVE];            /* a second array to hole the extracted spectrum in log units */
-  double lfreq[NWAVE];         /* We need to hold what freqeuncy intervals our logarithmic spectrum has been taken over */
+  double lf[NWAVE];		/* a second array to hole the extracted spectrum in log units */
+  double lfreq[NWAVE];		/* We need to hold what freqeuncy intervals our logarithmic spectrum has been taken over */
 }
 spectrum_dummy, *SpecPtr;
 
@@ -906,8 +909,8 @@ SpecPtr s;
  * 			1 -> project onto a yz plane.
  */
 
-int py_wind_min, py_wind_max, py_wind_delta,py_wind_project;
-double *aaa;  // A pointer to an array used by py_wind
+int py_wind_min, py_wind_max, py_wind_delta, py_wind_project;
+double *aaa;			// A pointer to an array used by py_wind
 
 /* This is the structure needed for a cumulative distribution function. The CDFs are
 generated from a function which is usually only proportional to the probability density
@@ -919,14 +922,14 @@ properly create the CDF, this was added for python_43.2  */
 typedef struct Pdf
 {
   double x[NPDF + 1];		/* Positions for which the probability density
-				is calculated */
+				   is calculated */
   double y[NPDF + 1];		/* The value of the CDF at x */
   double d[NPDF + 1];		/* 57i -- the rate of change of the probability
-				density at x */
-  double limit1, limit2; /* Limits (running from 0 to 1) that define a portion
-			of the CDF to sample */
-  double x1,x2;           /* limits if they exist on what is returned */
-  double norm;           //The scaling factor which would renormalize the pdf
+				   density at x */
+  double limit1, limit2;	/* Limits (running from 0 to 1) that define a portion
+				   of the CDF to sample */
+  double x1, x2;		/* limits if they exist on what is returned */
+  double norm;			//The scaling factor which would renormalize the pdf
 }
  *PdfPtr, pdf_dummy;
 
@@ -942,16 +945,16 @@ char hubeny_list[132];		//Location of listing of files representing hubeny atmos
 
 // Allow for a diagnostic file 
 
-FILE *epltptr;     //TEST
-int diag_on_off;  // on is non-zero  //TEST
+FILE *epltptr;			//TEST
+int diag_on_off;		// on is non-zero  //TEST
 
 
 /* These variables are stored or used by the routines for anisotropic scattering */
 /* Allow for the transfer of tau info to scattering routine */
 double tau_x_dvds;		//tau_x_dvds/dvds is the actual tau
-//double tau_scatter_min;		//Set in subroutine scatter for use by extract
+//double tau_scatter_min;               //Set in subroutine scatter for use by extract
 struct Pdf pdf_randwind_store[100];
-PdfPtr    pdf_randwind;
+PdfPtr pdf_randwind;
 struct photon phot_randwind;
 
 /* N.B. pdf_randwind and phot_randwind are used in the routine anisowind for 
@@ -972,16 +975,16 @@ generation and for calculating heating and cooling */
 #define NBANDS 20
 struct xbands
 {
-  double f1[NBANDS],f2[NBANDS];
+  double f1[NBANDS], f2[NBANDS];
   double alpha[NBANDS];
   double pl_const[NBANDS];
   double min_fraction[NBANDS];
-  double nat_fraction[NBANDS];		// The fraction of the accepted luminosity in this band
+  double nat_fraction[NBANDS];	// The fraction of the accepted luminosity in this band
   double used_fraction[NBANDS];
-  double flux[NBANDS];			//The "luminosity" within a band
+  double flux[NBANDS];		//The "luminosity" within a band
   double weight[NBANDS];
   int nphot[NBANDS];
-  int nbands;		// Actual number of bands in use
+  int nbands;			// Actual number of bands in use
 }
 xband;
 
@@ -991,7 +994,7 @@ xband;
  * assuming the array has been initialized, which can take a few minutes
 */
 
-#define NTEMPS	30 		// The number of temperatures which are stored in each fbstruct
+#define NTEMPS	30		// The number of temperatures which are stored in each fbstruct
 #define NFB	10		// The maximum number of frequency intervals for which the fb emission is calculated
 
 struct fbstruc
@@ -1012,12 +1015,12 @@ int nfb;			// Actual number of freqency intervals calculated
 //synthesis part of the code (SS June04).
 struct emiss_range
 {
-  double fmin, fmax; // min and max frequency required in the final spectrum
+  double fmin, fmax;		// min and max frequency required in the final spectrum
 }
 em_rnge;
 
 
-#include "version.h"                /*54f -- Added so that version can be read directly */
+#include "version.h"		/*54f -- Added so that version can be read directly */
 #include "templates.h"
 #include "recipes.h"
 
@@ -1028,9 +1031,8 @@ double kap_bf[NLEVELS];
 
 // 12jun nsh - some commands to enable photon logging in given cells. There is also a pointer in the geo
 
-FILE *pstatptr;   //NSH 120601 - pointer to a diagnostic file that will contain photon data for given cells
-int cell_phot_stats; //1=do  it, 0=dont do it
-#define  NCSTAT 10 //The maximum number of cells we are going to log
-int ncstat; // the actual number we are going to log
-int ncell_stats[NCSTAT]; //the numbers of the cells we are going to log
-
+FILE *pstatptr;			//NSH 120601 - pointer to a diagnostic file that will contain photon data for given cells
+int cell_phot_stats;		//1=do  it, 0=dont do it
+#define  NCSTAT 10		//The maximum number of cells we are going to log
+int ncstat;			// the actual number we are going to log
+int ncell_stats[NCSTAT];	//the numbers of the cells we are going to log

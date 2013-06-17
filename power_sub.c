@@ -56,14 +56,14 @@ double xsim_w;			//Storage variable for the sim W factor (either computed from p
 
 // 120127 NSH changed the dimension of following arrays from 300 to NIONS to prevent overflow
 double fudge_store[NIONS];	//this is a store so we can see how the sim fudge factor varies
-double num_store[NIONS];		// store for the numbnerator of the sim factor (PL)
+double num_store[NIONS];	// store for the numbnerator of the sim factor (PL)
 double denom_store[NIONS];	// store for the denominator of the sim factor (BB)
 double ion_store[NIONS];
 
-//#define SAHA 4.82907e15		/* 2* (2.*PI*MELEC*k)**1.5 / h**3  (Calculated in constants) */
-//#define MAXITERATIONS	200
+//#define SAHA 4.82907e15               /* 2* (2.*PI*MELEC*k)**1.5 / h**3  (Calculated in constants) */
+//#define MAXITERATIONS 200
 //#define FRACTIONAL_ERROR 0.03
-//#define THETAMAX	 1e4
+//#define THETAMAX       1e4
 //#define MIN_TEMP         100.  Put into python.h 
 
 #define MIN_FUDGE  1.e-10
@@ -498,7 +498,7 @@ Mode 1 is just recomb to gs by the old method. Mode 2 is recomb to gs plus DR co
 
  ************************************************************************/
 
-int xinteg_sim_err=0;
+int xinteg_sim_err = 0;
 
 double
 xinteg_sim (t, f1, f2, nion, max_ratio, current_ratio)
@@ -649,7 +649,7 @@ frequency for the band is greater than the maximum frequency, we dont need to do
 /* This completes the calculation of those levels for which we have Topbase x-sections. Now proces ions that use Verner data */
 
   else if (ion[nvmin].phot_info == 0)
-    {			
+    {
       n = nvmin;		//just the ground state ioinzation fraction.
       sim_xver = &xphot[ion[n].nxphot];
       fthresh = sim_xver->freq_t;
@@ -726,18 +726,21 @@ frequency for the band is greater than the maximum frequency, we dont need to do
     }
   else
     {
-	    xinteg_sim_err++;
-	    /* 71 - 111229 - ksl - Suppress this error after 100 instances so program does not bomb */
-	    if (xinteg_sim_err<100){
-      Error
-	("xinteg_sim: No photoionization xsections for ion %d (element %d, ion state %d),setting sim_frac to 1\n",
-	 nion,ion[nion].z,ion[nion].istate);
-	    }
-	    else if (xinteg_sim_err==100){
-		    Error("xinteg_sim: Suppressing photoionization xsection error, but more photo xsections are needed in atomic data\n");
-	    }
+      xinteg_sim_err++;
+      /* 71 - 111229 - ksl - Suppress this error after 100 instances so program does not bomb */
+      if (xinteg_sim_err < 100)
+	{
+	  Error
+	    ("xinteg_sim: No photoionization xsections for ion %d (element %d, ion state %d),setting sim_frac to 1\n",
+	     nion, ion[nion].z, ion[nion].istate);
+	}
+      else if (xinteg_sim_err == 100)
+	{
+	  Error
+	    ("xinteg_sim: Suppressing photoionization xsection error, but more photo xsections are needed in atomic data\n");
+	}
 
-	   
+
       sim_frac = 1.;
       return (sim_frac);
     }
@@ -1022,8 +1025,3 @@ sim_alphasolve (ratans, numin, numax)
 // If we get here, we must have converged.
   return (alphamid);
 }
-
-
-
-
-

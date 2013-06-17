@@ -1119,15 +1119,16 @@ scatter (p, nres, nnscat)
   n = where_in_grid (pold.x);	// Find out where we are
 
   //71 - 1112 Check added to test out spherical wind models 
-  if (n<0) {
-	  Error("scatter: Trying to scatter a photon in grid cell %d\n",n);
-	  return(-1);
-  }
+  if (n < 0)
+    {
+      Error ("scatter: Trying to scatter a photon in grid cell %d\n", n);
+      return (-1);
+    }
 
   one = &wmain[p->grid];
   xplasma = &plasmamain[one->nplasma];
   //OLD - did not trap a problem if (xplasma==NULL){
-  //OLD - did not trap a problem 	  Error("Houston, we have a null pointer at %d %d",p->grid,one->nplasma);
+  //OLD - did not trap a problem          Error("Houston, we have a null pointer at %d %d",p->grid,one->nplasma);
   //OLD - did not trap a problem }
 
   /* On entering this subroutine we know that a photon packet has been 
@@ -1144,22 +1145,23 @@ scatter (p, nres, nnscat)
   if (geo.rt_mode == 2)		//check if macro atom method in use
     {
 
-  /* 1112 - 71 - ksl - Moved to avoid trying to reference mplasma if there are no 
-     macro atoms.  This was to fix a segmentation fault that appeared
-     when compiling with a new version of gcc.   It's possible that the error below
-     could occur if we were in a macro atom approach but had no macro atoms.  Need
-     to fix all this up with a thorough review of macro atoms. !!!
-   */
+      /* 1112 - 71 - ksl - Moved to avoid trying to reference mplasma if there are no 
+         macro atoms.  This was to fix a segmentation fault that appeared
+         when compiling with a new version of gcc.   It's possible that the error below
+         could occur if we were in a macro atom approach but had no macro atoms.  Need
+         to fix all this up with a thorough review of macro atoms. !!!
+       */
 
-  if (geo.nmacro > 0)
-    {
-      mplasma = &macromain[xplasma->nplasma];
-    }
-  else
-    {
-      mplasma = NULL;
-      Error("Resonate: In macro atom section, but no macro atoms.  Seems very odd\n");
-    }
+      if (geo.nmacro > 0)
+	{
+	  mplasma = &macromain[xplasma->nplasma];
+	}
+      else
+	{
+	  mplasma = NULL;
+	  Error
+	    ("Resonate: In macro atom section, but no macro atoms.  Seems very odd\n");
+	}
 
       /* Electron scattering is the simplest to deal with. The co-moving 
          frequency is unchanged so it's just a randomisation of the direction.

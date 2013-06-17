@@ -42,16 +42,16 @@ History:
 int
 get_shell_wind_params ()
 {
-	double vtemp[3];
-	double rhotemp[200];
-	double rmin,dr,r[200];
-	double postemp[3];
-	double speedtemp;
-	double cdensity;
-	double shell_vmin,shell_vmax; //Local variables to define shellwind
-	double shell_rmin,shell_rmax; //Local variables to define shellwind
-	double factor;
-	int	i;
+  double vtemp[3];
+  double rhotemp[200];
+  double rmin, dr, r[200];
+  double postemp[3];
+  double speedtemp;
+  double cdensity;
+  double shell_vmin, shell_vmax;	//Local variables to define shellwind
+  double shell_rmin, shell_rmax;	//Local variables to define shellwind
+  double factor;
+  int i;
 
 
   Log ("Creating wind with a single shell for testing purposes\n");
@@ -60,20 +60,22 @@ get_shell_wind_params ()
 /* In order to make life simple, we are first going to check that we are in spherical coordinates, if not change!! */
 
   if (geo.coord_type != SPHERICAL)
-      {
-	Error("For the shell type wind, we should be in spherical coordinates - changing....\n");
-	geo.coord_type = 0;
-      }
+    {
+      Error
+	("For the shell type wind, we should be in spherical coordinates - changing....\n");
+      geo.coord_type = 0;
+    }
 
 /* This may not be important, but we sould make sure that NDIM is 4... */
 
   if (geo.ndim != 4)
-     {
-       Error("For the shell type wind, we take control of the grid, and need NDIM to be the minimum - 4 - changing\n");
-       geo.ndim=4;
-       geo.mdim=1;
-     }
-	
+    {
+      Error
+	("For the shell type wind, we take control of the grid, and need NDIM to be the minimum - 4 - changing\n");
+      geo.ndim = 4;
+      geo.mdim = 1;
+    }
+
 
   geo.stellar_wind_mdot = 1.e-6;
   geo.wind_rmin = geo.rstar;
@@ -103,13 +105,14 @@ get_shell_wind_params ()
   rddoub ("shell.wind.v_at_rmax(cm)", &shell_vmax);	/* Final speed of wind in units of escape velocity */
 
 /*120130 NSH This line stays as it is */
-  rddoub ("shell.wind.acceleration_exponent", &geo.cl_beta);	/* Accleration scale exponent for a CL wind*/
-  printf ("Geo rmax = %f\n",geo.rmax);
+  rddoub ("shell.wind.acceleration_exponent", &geo.cl_beta);	/* Accleration scale exponent for a CL wind */
+  printf ("Geo rmax = %f\n", geo.rmax);
   shell_rmax = geo.wind_rmax = geo.rmax;
 /*120130 NSH These next lines invert the cl velocity equation to get the cl factors from the local shell factors */
   geo.cl_v_zero = shell_vmin;
-  factor = pow((1-(geo.wind_rmin/geo.wind_rmax)),geo.cl_beta);
-  geo.cl_v_infinity = (shell_vmax-shell_vmin+shell_vmin*factor)/factor;
+  factor = pow ((1 - (geo.wind_rmin / geo.wind_rmax)), geo.cl_beta);
+  geo.cl_v_infinity =
+    (shell_vmax - shell_vmin + shell_vmin * factor) / factor;
 
 
 
@@ -130,29 +133,30 @@ get_shell_wind_params ()
 
 
 /* Since this is a diagnostic routine, we will write out some information to check it is doing what we think) */
-	printf ("shell rmin=%f shell rmax=%f\n",shell_rmin,shell_rmax);
-	dr=(shell_rmax-shell_rmin)/100.0000;
-	printf("dr= %e, root2= %10.30e\n",dr,pow(2.0,0.5));
-	rmin=shell_rmin-(dr);
-	
-	for (i=0;i<103;i++)
-		{
-		r[i]=rmin+i*dr;
-	
-		postemp[0]=postemp[2]=r[i]/pow(2.0,0.5);
-		postemp[1]=0.0;
-		speedtemp=stellar_velocity(postemp,vtemp);
-		rhotemp[i]=stellar_rho(postemp)*rho2nh;
-//		dvtemp[i]=shell_dv(postemp);
-		printf("ring=%i,x=%e,r=%10.30e,speed=%10.20e,density=%10.20e\n",i,r[i]/pow(2.0,0.5),r[i],speedtemp,rhotemp[i]);
-		}
+  printf ("shell rmin=%f shell rmax=%f\n", shell_rmin, shell_rmax);
+  dr = (shell_rmax - shell_rmin) / 100.0000;
+  printf ("dr= %e, root2= %10.30e\n", dr, pow (2.0, 0.5));
+  rmin = shell_rmin - (dr);
 
-	cdensity=0.0;
-	for (i=1;i<100;i++)
-		{
-		cdensity+=((rhotemp[i]+rhotemp[i+1])/2.)*dr;
-		}
-	printf("Column density of hydrogen=%e\n",cdensity);
+  for (i = 0; i < 103; i++)
+    {
+      r[i] = rmin + i * dr;
+
+      postemp[0] = postemp[2] = r[i] / pow (2.0, 0.5);
+      postemp[1] = 0.0;
+      speedtemp = stellar_velocity (postemp, vtemp);
+      rhotemp[i] = stellar_rho (postemp) * rho2nh;
+//              dvtemp[i]=shell_dv(postemp);
+      printf ("ring=%i,x=%e,r=%10.30e,speed=%10.20e,density=%10.20e\n", i,
+	      r[i] / pow (2.0, 0.5), r[i], speedtemp, rhotemp[i]);
+    }
+
+  cdensity = 0.0;
+  for (i = 1; i < 100; i++)
+    {
+      cdensity += ((rhotemp[i] + rhotemp[i + 1]) / 2.) * dr;
+    }
+  printf ("Column density of hydrogen=%e\n", cdensity);
 
 
   return (0);

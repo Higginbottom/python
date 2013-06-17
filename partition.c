@@ -94,13 +94,13 @@ partition_functions (xplasma, mode)
       t = xplasma->t_r;
       weight = xplasma->w;
     }
-  else if (mode == 3)  /*NSH 120912 This mode is more or less defunct. When the last vestigies of the mode 3 ionizetion scheme (the original sim PL correction) is removed, this can go too */
+  else if (mode == 3)		/*NSH 120912 This mode is more or less defunct. When the last vestigies of the mode 3 ionizetion scheme (the original sim PL correction) is removed, this can go too */
     {
-     //Non LTE calculation with non BB radiation field. Use T_e to get partition functions, same as mode 1- 
+      //Non LTE calculation with non BB radiation field. Use T_e to get partition functions, same as mode 1- 
       t = xplasma->t_e;
       weight = 1;
     }
-  else if (mode == 4)  /*NSH 120912 This is a test mode, used to set partition functions to ground state only. This is achieved by setting W to 0. At this point, the temperature is a moot point, so lest go with t_e, since this is only going to be called if we are doing a power law calculation */
+  else if (mode == 4)		/*NSH 120912 This is a test mode, used to set partition functions to ground state only. This is achieved by setting W to 0. At this point, the temperature is a moot point, so lest go with t_e, since this is only going to be called if we are doing a power law calculation */
     {
       t = xplasma->t_e;
       weight = 0;
@@ -219,7 +219,7 @@ History:
 int
 partition_functions_2 (xplasma, xnion, temp, weight)
      PlasmaPtr xplasma;
-     int xnion;	
+     int xnion;
      double temp;
      double weight;
 {
@@ -227,14 +227,14 @@ partition_functions_2 (xplasma, xnion, temp, weight)
   double partition ();
 
   int n, m;
-  int m_ground;			
+  int m_ground;
   double z, kt;
 
- 
-  /* Calculate the partition function for each ion in turn */
-  kt = BOLTZMANN * temp;   
 
-  for (nion = xnion-1; nion < xnion+1; nion++)
+  /* Calculate the partition function for each ion in turn */
+  kt = BOLTZMANN * temp;
+
+  for (nion = xnion - 1; nion < xnion + 1; nion++)
     {
 
       if (ion[nion].nlevels > 0)
@@ -288,8 +288,3 @@ partition_functions_2 (xplasma, xnion, temp, weight)
 
   return (0);
 }
-
-
-
-
-

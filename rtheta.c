@@ -297,7 +297,7 @@ rtheta_wind_complete (w)
 
 
 int
-rtheta_volumes (w,icomp)
+rtheta_volumes (w, icomp)
      WindPtr w;
      int icomp;
 {
@@ -315,79 +315,79 @@ rtheta_volumes (w,icomp)
       for (j = 0; j < MDIM; j++)
 	{
 	  wind_ij_to_n (i, j, &n);
-	   if (w[n].inwind == W_NOT_INWIND)
-		               {
-
-	  rmin = wind_x[i];
-	  rmax = wind_x[i + 1];
-	  thetamin = wind_z[j] / RADIAN;
-	  thetamax = wind_z[j + 1] / RADIAN;
-
-	  //leading factor of 2 added to allow for volume above and below plane (SSMay04)
-	  w[n].vol =
-	    2. * 2. / 3. * PI * (rmax * rmax * rmax -
-				 rmin * rmin * rmin) * (cos (thetamin) -
-							cos (thetamax));
-
-	  n_inwind=rtheta_is_cell_in_wind (n,icomp);
-	  if (n_inwind == W_NOT_INWIND)
+	  if (w[n].inwind == W_NOT_INWIND)
 	    {
-	      fraction = 0.0;	/* Force outside edge volues to zero */
-	      jj = 0;
-	      kk = RESOLUTION * RESOLUTION;
-	    }
-	  else if (n_inwind == W_ALL_INWIND)
-	    {
-	      fraction = 1.0;	/* Force outside edge volues to zero */
-	      jj = kk = RESOLUTION * RESOLUTION;
-	    }
 
+	      rmin = wind_x[i];
+	      rmax = wind_x[i + 1];
+	      thetamin = wind_z[j] / RADIAN;
+	      thetamax = wind_z[j + 1] / RADIAN;
 
-	  else
-	    {			/* The grid cell is PARTIALLY in the wind */
-	      num = denom = 0;
-	      jj = kk = 0;
-	      dr = (rmax - rmin) / RESOLUTION;
-	      dtheta = (thetamax - thetamin) / RESOLUTION;
-	      for (r = rmin + dr / 2; r < rmax; r += dr)
+	      //leading factor of 2 added to allow for volume above and below plane (SSMay04)
+	      w[n].vol =
+		2. * 2. / 3. * PI * (rmax * rmax * rmax -
+				     rmin * rmin * rmin) * (cos (thetamin) -
+							    cos (thetamax));
+
+	      n_inwind = rtheta_is_cell_in_wind (n, icomp);
+	      if (n_inwind == W_NOT_INWIND)
 		{
-		  for (theta = thetamin + dtheta / 2; theta < thetamax;
-		       theta += dtheta)
+		  fraction = 0.0;	/* Force outside edge volues to zero */
+		  jj = 0;
+		  kk = RESOLUTION * RESOLUTION;
+		}
+	      else if (n_inwind == W_ALL_INWIND)
+		{
+		  fraction = 1.0;	/* Force outside edge volues to zero */
+		  jj = kk = RESOLUTION * RESOLUTION;
+		}
+
+
+	      else
+		{		/* The grid cell is PARTIALLY in the wind */
+		  num = denom = 0;
+		  jj = kk = 0;
+		  dr = (rmax - rmin) / RESOLUTION;
+		  dtheta = (thetamax - thetamin) / RESOLUTION;
+		  for (r = rmin + dr / 2; r < rmax; r += dr)
 		    {
-		      denom += r * r * sin (theta);;
-		      kk++;
-		      x[0] = r * sin (theta);
-		      x[1] = 0;
-		      x[2] = r * cos (theta);;
-		      if (where_in_wind (x) == icomp)
+		      for (theta = thetamin + dtheta / 2; theta < thetamax;
+			   theta += dtheta)
 			{
-			  num += r * r * sin (theta);	/* 0 implies in wind */
-			  jj++;
+			  denom += r * r * sin (theta);;
+			  kk++;
+			  x[0] = r * sin (theta);
+			  x[1] = 0;
+			  x[2] = r * cos (theta);;
+			  if (where_in_wind (x) == icomp)
+			    {
+			      num += r * r * sin (theta);	/* 0 implies in wind */
+			      jj++;
+			    }
 			}
 		    }
+		  fraction = num / denom;
 		}
-	      fraction = num / denom;
+
+	      /* OK now assign inwind value and final volumes */
+
+	      if (jj == 0)
+		{
+		  w[n].inwind = W_NOT_INWIND;	// The cell is not in the wind
+		  w[n].vol = 0.0;
+		}
+	      else if (jj == kk)
+		//OLD 70b w[n].inwind = W_ALL_INWIND;       // The cell is completely in the wind
+		w[n].inwind = icomp;	// The cell is completely in the wind
+	      else
+		{
+		  //OLD 70b w[n].inwind = W_PART_INWIND;    //The cell is partially in the wind
+		  w[n].inwind = icomp + 1;	//The cell is partially in the wind
+		  w[n].vol *= fraction;
+		}
+
+
 	    }
-
-	  /* OK now assign inwind value and final volumes */
-
-	  if (jj == 0)
-	    {
-	      w[n].inwind = W_NOT_INWIND;	// The cell is not in the wind
-	      w[n].vol = 0.0;
-	    }
-	  else if (jj == kk)
-	    //OLD 70b w[n].inwind = W_ALL_INWIND;	// The cell is completely in the wind
-	    w[n].inwind = icomp;	// The cell is completely in the wind
-	  else
-	    {
-	      //OLD 70b w[n].inwind = W_PART_INWIND;	//The cell is partially in the wind
-	      w[n].inwind = icomp+1;	//The cell is partially in the wind
-	      w[n].vol *= fraction;
-	    }
-
-
-			       }
 
 
 	}
@@ -488,7 +488,7 @@ rtheta_where_in_grid (x)
 **************************************************************/
 
 int
-rtheta_get_random_location (n, icomp,x)
+rtheta_get_random_location (n, icomp, x)
      int n;			// Cell in which to create position
      int icomp;			// The component in which to create position
      double x[];		// Returned position
@@ -507,7 +507,7 @@ rtheta_get_random_location (n, icomp,x)
 
   /* Generate a position which is both in the cell and in the wind */
   inwind = -1;
-  while (inwind!=icomp)
+  while (inwind != icomp)
     {
       r =
 	sqrt (rmin * rmin +
@@ -630,14 +630,14 @@ of these are in the wind
 */
 
 int
-rtheta_is_cell_in_wind (n,icomp)
+rtheta_is_cell_in_wind (n, icomp)
      int n;
      int icomp;
 {
   int i, j;
   double r, theta;
-  double rmin,rmax,thetamin,thetamax;
-  double dr,dtheta;
+  double rmin, rmax, thetamin, thetamax;
+  double dr, dtheta;
   double x[3];
 
 
@@ -652,7 +652,7 @@ rtheta_is_cell_in_wind (n,icomp)
   /* Assume that if all four corners are in the wind that the
    * entire cell is in the wind */
 
-  if (check_corners_inwind (n,icomp) == 4)
+  if (check_corners_inwind (n, icomp) == 4)
     {
       //OLD 70B return (W_ALL_INWIND);
       return (icomp);
@@ -681,7 +681,7 @@ rtheta_is_cell_in_wind (n,icomp)
       if (where_in_wind (x) == icomp)
 	{
 	  //OLD 70B return (W_PART_INWIND);
-	  return (icomp+1);
+	  return (icomp + 1);
 	}
 
       x[0] = rmax * sin (theta);
@@ -689,7 +689,7 @@ rtheta_is_cell_in_wind (n,icomp)
       if (where_in_wind (x) == icomp)
 	{
 	  //OLD 70B return (W_PART_INWIND);
-	  return (icomp+1);
+	  return (icomp + 1);
 	}
 
     }
@@ -703,7 +703,7 @@ rtheta_is_cell_in_wind (n,icomp)
       if (where_in_wind (x) == icomp)
 	{
 	  //OLD 70B return (W_PART_INWIND);
-	  return (icomp+1);
+	  return (icomp + 1);
 	}
 
       x[0] = r * sin (thetamax);
@@ -711,7 +711,7 @@ rtheta_is_cell_in_wind (n,icomp)
       if (where_in_wind (x) == icomp)
 	{
 	  //Old 70b return (W_PART_INWIND);
-	  return (icomp+1);
+	  return (icomp + 1);
 	}
 
     }

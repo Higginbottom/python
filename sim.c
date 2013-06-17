@@ -9,11 +9,11 @@
 
 int
 sim_pl (xplasma)
-     PlasmaPtr xplasma; 			
+     PlasmaPtr xplasma;
 {
 /*	PhotoionizationPtr x_ptr; 	*/
 /*	int first,last; */
-	double freq1,freq2,weight,t_e;
+  double freq1, freq2, weight, t_e;
 /*	double integ_vkpl(); */
 /*	for (nion = 0; nion < nions; nion++)
 		{
@@ -21,10 +21,10 @@ sim_pl (xplasma)
 		frac_ion[nion] = 0;
 	    	} 
 */
-freq1=1e14;
-freq2=1e16;	
-      t_e = xplasma->t_e;
-      weight = xplasma->w;
+  freq1 = 1e14;
+  freq2 = 1e16;
+  t_e = xplasma->t_e;
+  weight = xplasma->w;
 
 /*printf("We have %i elements",nelements);
 
@@ -34,15 +34,11 @@ freq2=1e16;
 	printf("the integral is %e",pow_integ);
     }
 */
-	printf ("weight = %e",weight);
-	printf ("t_e=%e",t_e);	
-	printf ("We got to the new code OK - nothing here tho\n");
+  printf ("weight = %e", weight);
+  printf ("t_e=%e", t_e);
+  printf ("We got to the new code OK - nothing here tho\n");
 
 
 
-return(0);
+  return (0);
 }
-
-
-
-

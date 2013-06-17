@@ -94,32 +94,35 @@ incorporate a correction factor for dielectronic recombination.
 double
 compute_zeta (temp, nion, mode)
      double temp;
-     int  mode, nion;
+     int mode, nion;
 {
   double zeta, interpfrac, dummy;
-  int ihi,ilow;
+  int ihi, ilow;
 
 #define MIN_FUDGE  1.e-10
 #define MAX_FUDGE  10.
 //#define MIN_TEMP         100. //Put into python.h
 
-      /* now get the right place in the ground_frac tables  CK */
-      dummy = temp / TMIN - 1.;
-      ilow = dummy;		/* have now truncated to integer below */
-      ihi = ilow + 1;		/*these are the indeces bracketing the true value */
-      interpfrac = (dummy - ilow);	/*this is the interpolation fraction */
-      if (ilow < 0)
-	{
-	  ilow = 0;
-	  ihi = 0;
-	  interpfrac = 1.;
-	}
-      if (ihi > 19)
-	{
-	  ilow = 19;
-	  ihi = 19;
-	  interpfrac = 1.;
-	}
+  zeta = 0.0;			/* NSH 130605 to remove o3 compile error */
+
+
+  /* now get the right place in the ground_frac tables  CK */
+  dummy = temp / TMIN - 1.;
+  ilow = dummy;			/* have now truncated to integer below */
+  ihi = ilow + 1;		/*these are the indeces bracketing the true value */
+  interpfrac = (dummy - ilow);	/*this is the interpolation fraction */
+  if (ilow < 0)
+    {
+      ilow = 0;
+      ihi = 0;
+      interpfrac = 1.;
+    }
+  if (ihi > 19)
+    {
+      ilow = 19;
+      ihi = 19;
+      interpfrac = 1.;
+    }
 
 
   if (mode == 1)
@@ -133,57 +136,74 @@ compute_zeta (temp, nion, mode)
 	ground_frac[nion].frac[ilow] +
 	interpfrac * (ground_frac[nion].frac[ihi] -
 		      ground_frac[nion].frac[ilow]);
-//	printf ("for t_e=%f, ilow=%i, ihi=%i, interpfrac=%f, zeta=%f\n",temp,ilow,ihi,interpfrac,zeta);
+//      printf ("for t_e=%f, ilow=%i, ihi=%i, interpfrac=%f, zeta=%f\n",temp,ilow,ihi,interpfrac,zeta);
     }
-  else if (mode == 2) //Best try at full blown zeta including DR, if we have the data, else default to the old way of doing things....
+  else if (mode == 2)		//Best try at full blown zeta including DR, if we have the data, else default to the old way of doing things....
     {
-	if (ion[nion].istate==ion[nion].z) //We call this with the lower ion in a pair, so if that ion has only one electron, (ie. Carbon 6) then we cannot have DR into this ion, so there will be no DR rate associated with it.
+      if (ion[nion].istate == ion[nion].z)	//We call this with the lower ion in a pair, so if that ion has only one electron, (ie. Carbon 6) then we cannot have DR into this ion, so there will be no DR rate associated with it.
+	{
+	  if (ion[nion].total_rrflag == 1)	//We have total RR data
+	    {
+	      if (ion[nion].bad_gs_rr_t_flag == 1 && ion[nion].bad_gs_rr_r_flag == 1)	//We have tabulated gs data
 		{
-		if (ion[nion].total_rrflag==1) //We have total RR data
-			{
-			if (ion[nion].bad_gs_rr_t_flag==1 && ion[nion].bad_gs_rr_r_flag==1) //We have tabulated gs data
-				{
-				zeta= badnell_gs_rr (nion,temp)/total_rrate (nion,temp);
-//				printf ("We have the data, and zeta=%f\n",zeta);
-				}
-			else //We are going to have to integrate
-				{
-				printf ("We do not have tabulated GS data for state %i of element %i\n",ion[nion].istate,ion[nion].z);
-				zeta= milne_gs_rr (nion,temp)/total_rrate (nion,temp);
-				}
-			}
-		else
-			{
-			zeta =ground_frac[nion].frac[ilow] +interpfrac * (ground_frac[nion].frac[ihi] -ground_frac[nion].frac[ilow]);
-//			printf ("We dont have the data and zeta=%f\n",zeta);
-			}
+		  zeta =
+		    badnell_gs_rr (nion, temp) / total_rrate (nion, temp);
+//                              printf ("We have the data, and zeta=%f\n",zeta);
 		}
-	else
+	      else		//We are going to have to integrate
 		{
-		if (ion[nion].drflag>0 && ion[nion].total_rrflag==1) //We have the two tabulated rates
-			{
-			compute_dr_coeffs (temp);
-			if  (ion[nion].bad_gs_rr_t_flag==1 && ion[nion].bad_gs_rr_r_flag==1) //We also have tabulated GS data
-				{
-				zeta= badnell_gs_rr (nion,temp)/(total_rrate (nion,temp)+dr_coeffs[nion]);
-				}
-			else //We are going to have to integrate
-				{
-				zeta=milne_gs_rr (nion,temp)/(total_rrate (nion,temp)+dr_coeffs[nion]);
-				}
-			}
-		else
-			{
-			zeta =ground_frac[nion].frac[ilow] +interpfrac * (ground_frac[nion].frac[ihi] -ground_frac[nion].frac[ilow]);
-//			printf ("We dont have the data and zeta=%f\n",zeta);
-			}
+		  printf
+		    ("We do not have tabulated GS data for state %i of element %i\n",
+		     ion[nion].istate, ion[nion].z);
+		  zeta = milne_gs_rr (nion, temp) / total_rrate (nion, temp);
 		}
+	    }
+	  else
+	    {
+	      zeta =
+		ground_frac[nion].frac[ilow] +
+		interpfrac * (ground_frac[nion].frac[ihi] -
+			      ground_frac[nion].frac[ilow]);
+//                      printf ("We dont have the data and zeta=%f\n",zeta);
+	    }
+	}
+      else
+	{
+	  if (ion[nion].drflag > 0 && ion[nion].total_rrflag == 1)	//We have the two tabulated rates
+	    {
+	      compute_dr_coeffs (temp);
+	      if (ion[nion].bad_gs_rr_t_flag == 1 && ion[nion].bad_gs_rr_r_flag == 1)	//We also have tabulated GS data
+		{
+		  zeta =
+		    badnell_gs_rr (nion,
+				   temp) / (total_rrate (nion,
+							 temp) +
+					    dr_coeffs[nion]);
+		}
+	      else		//We are going to have to integrate
+		{
+		  zeta =
+		    milne_gs_rr (nion,
+				 temp) / (total_rrate (nion,
+						       temp) +
+					  dr_coeffs[nion]);
+		}
+	    }
+	  else
+	    {
+	      zeta =
+		ground_frac[nion].frac[ilow] +
+		interpfrac * (ground_frac[nion].frac[ihi] -
+			      ground_frac[nion].frac[ilow]);
+//                      printf ("We dont have the data and zeta=%f\n",zeta);
+	    }
+	}
 
 
     }
   else
     {
-	Error ("Compute zeta: Unkown mode %i \n",mode);
+      Error ("Compute zeta: Unkown mode %i \n", mode);
     }
   return (zeta);
 }

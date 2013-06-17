@@ -342,11 +342,11 @@ pdf_gen_from_func (pdf, func, xmin, xmax, njumps, jump)
 
   pdf->x[NPDF] = xmax;
   pdf->y[NPDF] = 1.0;
-  pdf->norm=1.;                 /* pdf_gen_from array produces a properly nomalized cdf and so the
+  pdf->norm = 1.;		/* pdf_gen_from array produces a properly nomalized cdf and so the
 				   normalization is 1.  110629 ksl
-				*/
-//OLD  pdf->norm = xstep;		/* The normalizing factor that would convert the function we
-//OLD				   have been given into a proper probability density function */
+				 */
+//OLD  pdf->norm = xstep;               /* The normalizing factor that would convert the function we
+//OLD                              have been given into a proper probability density function */
 
 /* Calculate the gradients */
   recalc_pdf_from_cdf (pdf);	// 57ib 
@@ -993,9 +993,11 @@ pdf_to_file (pdf, filename)
 
   fptr = fopen (filename, "w");
 
-  fprintf(fptr,"# limits (portion.to.sample)   %10.4g %10.4g\n",pdf->limit1,pdf->limit2);
-  fprintf(fptr,"# x1 x2  Range(to.be.returned) %10.4g %10.4g\n",pdf->x1,pdf->x2);
-  fprintf(fptr,"# norm   Scale.factor          %10.4g \n",pdf->norm);
+  fprintf (fptr, "# limits (portion.to.sample)   %10.4g %10.4g\n",
+	   pdf->limit1, pdf->limit2);
+  fprintf (fptr, "# x1 x2  Range(to.be.returned) %10.4g %10.4g\n", pdf->x1,
+	   pdf->x2);
+  fprintf (fptr, "# norm   Scale.factor          %10.4g \n", pdf->norm);
 
   fprintf (fptr, "#x y  1-y d\n");
   for (n = 0; n <= NPDF; n++)

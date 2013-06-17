@@ -113,8 +113,8 @@ get_proga_wind_params ()
   geo.wind_rho_min = 0;
   geo.wind_rho_max = geo.rmax;
   geo.wind_thetamin = 0.0;
-  geo.wind_thetamax = 90. / RADIAN; 
- 
+  geo.wind_thetamax = 90. / RADIAN;
+
 
 //      geo.wind_rho_min=4*8.7e8;
   //      geo.wind_rho_max=12.*8.7e8;
@@ -174,7 +174,7 @@ get_proga ()
 
   if (proga_ptr == NULL)
     {
-      printf
+      Error
 	("There is a problem in allocating memory for the proga structure\n");
       exit (0);
     }
@@ -182,60 +182,62 @@ get_proga ()
   rdstr ("Proga_radii_file", rfile);
   if ((fptr = fopen (rfile, "r")) == NULL)
     {
-      printf ("Could not open %s\n", rfile);
+      Error ("Could not open %s\n", rfile);
       exit (0);
     }
 
   iproga_r = 0;
   while (fgets (aline, LINE, fptr) != NULL)
     {
-      sscanf (aline, "%d %*d %lf", &i, &r); /*NSH 130322 - minor mod here - it is actually the second value which is the centre of the cell, where the data is defined so we ignore the first*/
+      sscanf (aline, "%d %*d %lf", &i, &r);	/*NSH 130322 - minor mod here - it is actually the second value which is the centre of the cell, where the data is defined so we ignore the first */
       proga_r[i] = r;
- //     printf ("PROGA read in radius=%e\n",r);
       if (i > iproga_r)
 	iproga_r = i;
     }
 
   iproga_r = i;
-  printf ("Read %d values from grid_r.dat\n", i);
+  Log ("Read %d values from grid_r.dat\n", i);
   fclose (fptr);
 
   rdstr ("Proga_theta_file", thetafile);
   if ((fptr = fopen (thetafile, "r")) == NULL)
     {
-      printf ("Could not open %s\n", thetafile);
+      Error ("Could not open %s\n", thetafile);
       exit (0);
     }
 
 /* NSH 130327 - Added a parameter to define the angle at which the disk is defined
 This allows one to disregard theta cells which contain thdisk in Daniels model */
 
-     rddoub ("Proga_theta_disk", &theta_disk);
- 
+  rddoub ("Proga_theta_disk", &theta_disk);
+
 
 
   i = 0;
+  j_theta_disk = 0;		/* NSH 130605 to remove o3 compile error */
   while (fgets (aline, LINE, fptr) != NULL)
     {
-      sscanf (aline, "%d %*d %lf", &i, &theta); /*NSH 130322 - minor mod here - it is actually the second value which is the centre of the cell, where the data is defined so we ignore the first */
+      sscanf (aline, "%d %*d %lf", &i, &theta);	/*NSH 130322 - minor mod here - it is actually the second value which is the centre of the cell, where the data is defined so we ignore the first */
       proga_theta[i] = theta;
-      if (proga_theta[i] > theta_disk && proga_theta[i-1] < theta_disk)
-		{
-		j_theta_disk=i-1;
-		printf ("current theta - %f > theta_disk - %f so setting j_theta_disk=%i\n",theta,theta_disk,j_theta_disk);
-      i++;
-		}
+      if (proga_theta[i] > theta_disk && proga_theta[i - 1] < theta_disk)
+	{
+	  j_theta_disk = i - 1;
+	  Log
+	    ("current theta - %f > theta_disk - %f so setting j_theta_disk=%i\n",
+	     theta, theta_disk, j_theta_disk);
+	  i++;
+	}
     }
 
   iproga_theta = i;
-  printf ("Read %d values from %s\n", i, thetafile);
+  Log ("Read %d values from %s\n", i, thetafile);
   fclose (fptr);
 
 
   rdstr ("Proga_data_file", datafile);
   if ((fptr = fopen (datafile, "r")) == NULL)
     {
-      printf ("Could not open %s\n", datafile);
+      Error ("Could not open %s\n", datafile);
       exit (0);
     }
 
@@ -245,23 +247,24 @@ This allows one to disregard theta cells which contain thdisk in Daniels model *
     {
       if (aline[0] != '#')
 	{
-	  sscanf (aline, "%d %d %lf %lf %lf %lf %lf", &i, &j, &rho, &vr, &vtheta,
-		  &vphi, &energy);
+	  sscanf (aline, "%d %d %lf %lf %lf %lf %lf", &i, &j, &rho, &vr,
+		  &vtheta, &vphi, &energy);
 /* NSH 130327 - for the time being, if theta is in the disk, replace with the last
  density above the disk */
-	  proga_ptr[i * MAXPROGA + j].temp = ((2.0/3.0)*energy)/((rho/MPROT)*BOLTZMANN); //Work out the temperature from the internal energy
+	  proga_ptr[i * MAXPROGA + j].temp = ((2.0 / 3.0) * energy) / ((rho / MPROT) * BOLTZMANN);	//Work out the temperature from the internal energy
 /*	 if (rho > 1e-12)		//Cap on density - we have more RT stuff than Zeus, so the density can be too high ???
 		{ 
 		rho=1e-12;
-		}*/     //This mod was used during NSHs trip in 2013 to generate some of the data then. 
+	  		}*///This mod was used during NSHs trip in 2013 to generate some of the data then. 
 	  if (proga_theta[j] < theta_disk)
-		{
-	  	proga_ptr[i * MAXPROGA + j].rho = rho;
-		}
+	    {
+	      proga_ptr[i * MAXPROGA + j].rho = rho;
+	    }
 	  else
-		{
-		proga_ptr[i * MAXPROGA + j].rho = proga_ptr[i * MAXPROGA + j_theta_disk].rho;
-		}
+	    {
+	      proga_ptr[i * MAXPROGA + j].rho =
+		proga_ptr[i * MAXPROGA + j_theta_disk].rho;
+	    }
 	  proga_ptr[i * MAXPROGA + j].v[0] = vr;
 	  proga_ptr[i * MAXPROGA + j].v[1] = vtheta;
 	  proga_ptr[i * MAXPROGA + j].v[2] = vphi;
@@ -269,10 +272,10 @@ This allows one to disregard theta cells which contain thdisk in Daniels model *
 	}
     }
 
-  printf ("Read %d values from model %s\n", k, datafile);
+  Log ("Read %d values from model %s\n", k, datafile);
   k = 82 * MAXPROGA + 19;
 
-	
+
 //printf("debug rho %e v %e %e %e\n",
 //        proga_ptr[k].rho,
 //        proga_ptr[k].v[0],
@@ -333,11 +336,11 @@ proga_velocity (x, v)
     theta = asin (xxx);
 
 //  printf ("Proga_theta x %.2g %.2g %.2g  -> r= %.2g theta = %.5g\n", x[0], x[1], x[2], r,
-//	  theta);
+//        theta);
   im = jm = ii = jj = 0;
-  while (proga_r[ii] < r && ii < iproga_r) //Search through radius array, until array value is greater than your value of r
+  while (proga_r[ii] < r && ii < iproga_r)	//Search through radius array, until array value is greater than your value of r
     ii++;
-  while (proga_theta[jj] < theta && jj < iproga_theta) //Search thruogh theta array until value is greater than your value of theta
+  while (proga_theta[jj] < theta && jj < iproga_theta)	//Search thruogh theta array until value is greater than your value of theta
     jj++;
 
 
@@ -345,19 +348,19 @@ proga_velocity (x, v)
   if (ii > 0 && ii < iproga_r)
     {				//r is in the normal range
 
-      f1 = (r - proga_r[ii - 1]) / (proga_r[ii] - proga_r[ii - 1]); //Work out fractional position in the ii-1th radial bin where you want to be
-      im = ii - 1; //This is the radial bin below your value of r
+      f1 = (r - proga_r[ii - 1]) / (proga_r[ii] - proga_r[ii - 1]);	//Work out fractional position in the ii-1th radial bin where you want to be
+      im = ii - 1;		//This is the radial bin below your value of r
     }
   else if (ii == iproga_r)
     {				// r is greater than anything in Proga's model
 
-      f1 = 1;   //If we are outside the model set fractional position to 1
-      im = ii - 1;  //And the bin to the outermost
+      f1 = 1;			//If we are outside the model set fractional position to 1
+      im = ii - 1;		//And the bin to the outermost
     }
   else
     {
-      f1 = 1;  //Otherwise, we must be inide the innermost bin, so again, set fration to 1
-      im = 0; // And the bin to the innermost. Lines below to the same for theta.
+      f1 = 1;			//Otherwise, we must be inide the innermost bin, so again, set fration to 1
+      im = 0;			// And the bin to the innermost. Lines below to the same for theta.
     }
 
   if (jj > 0 && jj < iproga_theta)
@@ -389,15 +392,15 @@ proga_velocity (x, v)
 									    *
 									    MAXPROGA
 									    +
-									    jm].
-								  v[0] +
+									    jm].v
+								  [0] +
 								  f2 *
 								  proga_ptr[ii
 									    *
 									    MAXPROGA
 									    +
-									    jj].
-								  v[0]);
+									    jj].v
+								  [0]);
 
   vtheta =
     (1. - f1) * ((1. - f2) * proga_ptr[im * MAXPROGA + jm].v[1] +
@@ -407,15 +410,15 @@ proga_velocity (x, v)
 									    *
 									    MAXPROGA
 									    +
-									    jm].
-								  v[1] +
+									    jm].v
+								  [1] +
 								  f2 *
 								  proga_ptr[ii
 									    *
 									    MAXPROGA
 									    +
-									    jj].
-								  v[1]);
+									    jj].v
+								  [1]);
 
   vphi =
     (1. - f1) * ((1. - f2) * proga_ptr[im * MAXPROGA + jm].v[2] +
@@ -425,15 +428,15 @@ proga_velocity (x, v)
 									    *
 									    MAXPROGA
 									    +
-									    jm].
-								  v[2] +
+									    jm].v
+								  [2] +
 								  f2 *
 								  proga_ptr[ii
 									    *
 									    MAXPROGA
 									    +
-									    jj].
-								  v[2]);
+									    jj].v
+								  [2]);
 
 
 
@@ -463,8 +466,8 @@ proga_rho (x)
   double f1, f2;
   r = length (x);
   theta = asin (sqrt (x[0] * x[0] + x[1] * x[1]) / r);
- // printf ("x %.2g %.2g %.2g  -> r= %.2g theta = %.2g\n", x[0], x[1], x[2], r,
-//	  theta);
+  // printf ("x %.2g %.2g %.2g  -> r= %.2g theta = %.2g\n", x[0], x[1], x[2], r,
+//        theta);
 
   if (r > proga_r[iproga_r])
     {
@@ -508,20 +511,19 @@ proga_rho (x)
 									   *
 									   MAXPROGA
 									   +
-									   jm].
-								 rho +
+									   jm].rho
+								 +
 								 f2 *
 								 proga_ptr[ii
 									   *
 									   MAXPROGA
 									   +
-									   jj].
-								 rho);
+									   jj].rho);
 
   if (rrho < 1e-23)
     rrho = 1e-23;
 
- // printf ("Grid point %d %d rho %e\n", ii, jj, rrho);
+  // printf ("Grid point %d %d rho %e\n", ii, jj, rrho);
 
   return (rrho);
 }
@@ -559,8 +561,8 @@ proga_temp (x)
   double f1, f2;
   r = length (x);
   theta = asin (sqrt (x[0] * x[0] + x[1] * x[1]) / r);
- // printf ("x %.2g %.2g %.2g  -> r= %.2g theta = %.2g\n", x[0], x[1], x[2], r,
-//	  theta);
+  // printf ("x %.2g %.2g %.2g  -> r= %.2g theta = %.2g\n", x[0], x[1], x[2], r,
+//        theta);
 
   if (r > proga_r[iproga_r])
     {
@@ -599,28 +601,24 @@ proga_temp (x)
   temp =
     (1. - f1) * ((1. - f2) * proga_ptr[im * MAXPROGA + jm].temp +
 		 f2 * proga_ptr[im * MAXPROGA + jj].temp) + f1 * ((1. -
-								  f2) *
-								 proga_ptr[ii
-									   *
-									   MAXPROGA
-									   +
-									   jm].
-								 temp +
-								 f2 *
-								 proga_ptr[ii
-									   *
-									   MAXPROGA
-									   +
-									   jj].
-								 temp);
+								   f2) *
+								  proga_ptr[ii
+									    *
+									    MAXPROGA
+									    +
+									    jm].temp
+								  +
+								  f2 *
+								  proga_ptr[ii
+									    *
+									    MAXPROGA
+									    +
+									    jj].temp);
 
-  if (temp < 1e4)  //Set a lower limit.
+  if (temp < 1e4)		//Set a lower limit.
     temp = 1e4;
 
 
 
   return (temp);
 }
-
-
-

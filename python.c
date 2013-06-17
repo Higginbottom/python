@@ -201,7 +201,7 @@ main (argc, argv)
 
   int i, wcycles, pcycles;
   double freqmin, freqmax;
-  double swavemin, swavemax, renorm; 
+  double swavemin, swavemax, renorm;
   long nphot_to_define;
   int n, nangles, photons_per_cycle, subcycles;
   int iwind;
@@ -474,9 +474,9 @@ should allocate the space for the spectra to avoid all this nonsense.  02feb ksl
  * to use in calculating the power law model.  This is routine is called near bands_init  below, because that puts these two
  * things together in one place
  */
- 
+
 //OLD71 /* At present set up a single energy band for 2 - 10 keV */
-//OLD71   nxfreq = 7;			//NSH 70g - bands set up to match the bands we are currently using in the.pf files. This should probably end up tied together in the long run!
+//OLD71   nxfreq = 7;                   //NSH 70g - bands set up to match the bands we are currently using in the.pf files. This should probably end up tied together in the long run!
 //OLD71   xfreq[0] = 1.0 / HEV;
 //OLD71   xfreq[1] = 13.6 / HEV;
 //OLD71   xfreq[2] = 54.42 / HEV;
@@ -518,10 +518,11 @@ should allocate the space for the spectra to avoid all this nonsense.  02feb ksl
 
 	  Log
 	    ("Starting a new run from scratch starting with previous windfile");
-	  if (wind_read (old_windsavefile)<0){
-		  Error ("python: Unable to open %s\n", old_windsavefile);	//program will exit if unable to read the file
-		  exit(0);
-	  }
+	  if (wind_read (old_windsavefile) < 0)
+	    {
+	      Error ("python: Unable to open %s\n", old_windsavefile);	//program will exit if unable to read the file
+	      exit (0);
+	    }
 	  geo.wind_type = 2;	// after wind_read one will have a different wind_type otherwise
 	  w = wmain;
 
@@ -546,10 +547,11 @@ should allocate the space for the spectra to avoid all this nonsense.  02feb ksl
       Log ("Continuing a previous run of %s \n", root);
       strcpy (old_windsavefile, root);
       strcat (old_windsavefile, ".wind_save");
-      if(wind_read (old_windsavefile)<0){
-		  Error ("python: Unable to open %s\n", old_windsavefile);	//program will exit if unable to read the file
-		  exit(0);
-      }
+      if (wind_read (old_windsavefile) < 0)
+	{
+	  Error ("python: Unable to open %s\n", old_windsavefile);	//program will exit if unable to read the file
+	  exit (0);
+	}
       w = wmain;
       geo.wind_type = 2;	// We read the data from a file
       xsignal (root, "%-20s Read %s\n", "COMMENT", old_windsavefile);
@@ -622,10 +624,13 @@ should allocate the space for the spectra to avoid all this nonsense.  02feb ksl
 
 /* 130405 ksl - Check that NDIM_MAX is greater than NDIM and MDIM.  */
 
-  if ((geo.ndim>NDIM_MAX) || (geo.mdim>NDIM_MAX)) {
-	  Error("NDIM_MAX %d is less than NDIM %d or MDIM %d. Fix in python.h and recompile\n",NDIM_MAX,geo.ndim,geo.mdim);
-	  exit(0);
-  }
+  if ((geo.ndim > NDIM_MAX) || (geo.mdim > NDIM_MAX))
+    {
+      Error
+	("NDIM_MAX %d is less than NDIM %d or MDIM %d. Fix in python.h and recompile\n",
+	 NDIM_MAX, geo.ndim, geo.mdim);
+      exit (0);
+    }
 
 
 //080808 - 62 - Ionization section has been cleaned up -- ksl
@@ -639,7 +644,7 @@ should allocate the space for the spectra to avoid all this nonsense.  02feb ksl
     {
       rdstr ("Fixed.concentrations.filename", &geo.fixed_con_file[0]);
     }
-  if (geo.ioniz_mode == 4 || geo.ioniz_mode > 8) /*NSH CLOUDY test - remove once done*/
+  if (geo.ioniz_mode == 4 || geo.ioniz_mode > 8)	/*NSH CLOUDY test - remove once done */
     {
       Log ("The allowed ionization modes are 0, 1, 2, 3, 5\n");
       Error ("Unknown ionization mode %d\n", geo.ioniz_mode);
@@ -781,7 +786,6 @@ It also seems likely that we have mixed usage of some things, e.g ge.rt_mode and
 		"Rad_type_for_bl(0=bb,1=models)_to_make_wind",
 		&geo.bl_ion_spectype);
 
-  geo.agn_ion_spectype = SPECTYPE_POW;
   get_spectype (geo.agn_radiation,
 		"Rad_type_for_agn(0=bb,1=models,3=power_law,4=cloudy_table)_to_make_wind",
 		&geo.agn_ion_spectype);
@@ -808,7 +812,7 @@ It also seems likely that we have mixed usage of some things, e.g ge.rt_mode and
 
       if (geo.system_type == 2)
 	{
-	  geo.rstar = 6. * G * geo.mstar / (C * C); //correction - ISCO is 6x Rg NSH 121025
+	  geo.rstar = 6. * G * geo.mstar / (C * C);	//correction - ISCO is 6x Rg NSH 121025
 	}
 
       rddoub ("rstar(cm)", &geo.rstar);
@@ -936,38 +940,38 @@ It also seems likely that we have mixed usage of some things, e.g ge.rt_mode and
 
       if (geo.agn_radiation)
 	{
-		xbl = geo.lum_agn = 0.5 * G * geo.mstar * geo.disk_mdot / geo.r_agn;
+	  xbl = geo.lum_agn = 0.5 * G * geo.mstar * geo.disk_mdot / geo.r_agn;
 
-		// At present we have set geo.r_agn = geo.rstar, and encouraged the user
-		// set the default for the radius of the BH to be 6 R_Schwartschild.
-	  	// rddoub("R_agn(cm)",&geo.r_agn);
+	  // At present we have set geo.r_agn = geo.rstar, and encouraged the user
+	  // set the default for the radius of the BH to be 6 R_Schwartschild.
+	  // rddoub("R_agn(cm)",&geo.r_agn);
 
-	  	rddoub ("lum_agn(ergs/s)", &geo.lum_agn);
-	  	Log ("OK, the agn lum will be about %.2e the disk lum\n",
-	       	geo.lum_agn / xbl);
-	  	geo.alpha_agn = (-1.5);
-	  	rddoub ("agn_power_law_index", &geo.alpha_agn);
-  
+	  rddoub ("lum_agn(ergs/s)", &geo.lum_agn);
+	  Log ("OK, the agn lum will be about %.2e the disk lum\n",
+	       geo.lum_agn / xbl);
+	  geo.alpha_agn = (-1.5);
+	  rddoub ("agn_power_law_index", &geo.alpha_agn);
+
 /* Computes the constant for the power law spectrum from the input alpha and 2-10 luminosity. 
 * This is only used in the sim correction factor for the first time through. 
 * Afterwards, the photons are used to compute the sim parameters. */
 
-	  	geo.const_agn =
-	    	geo.lum_agn /
-	    	(((pow (2.42e18, geo.alpha_agn + 1.)) -
-	      	pow (4.84e17, geo.alpha_agn + 1.0)) / (geo.alpha_agn + 1.0));
-	  	Log ("AGN Input parameters give a power law constant of %e\n",
- 	       	geo.const_agn);
-     		
-	   if (geo.agn_ion_spectype==SPECTYPE_CL_TAB) /*NSH 0412 - option added to allow direct comparison with cloudy power law table option */
-		{
-		geo.agn_cltab_low=1.0;
-		geo.agn_cltab_hi=10000;
-		rddoub ("low_energy_break(ev)", &geo.agn_cltab_low); /*lo frequency break - in ev */
-		rddoub ("high_energy_break(ev)", &geo.agn_cltab_hi);
-  		geo.agn_cltab_low_alpha=2.5; //this is the default value in cloudy
-  		geo.agn_cltab_hi_alpha=-2.0; //this is the default value in cloudy
-		}
+	  geo.const_agn =
+	    geo.lum_agn /
+	    (((pow (2.42e18, geo.alpha_agn + 1.)) -
+	      pow (4.84e17, geo.alpha_agn + 1.0)) / (geo.alpha_agn + 1.0));
+	  Log ("AGN Input parameters give a power law constant of %e\n",
+	       geo.const_agn);
+
+	  if (geo.agn_ion_spectype == SPECTYPE_CL_TAB)	/*NSH 0412 - option added to allow direct comparison with cloudy power law table option */
+	    {
+	      geo.agn_cltab_low = 1.0;
+	      geo.agn_cltab_hi = 10000;
+	      rddoub ("low_energy_break(ev)", &geo.agn_cltab_low);	/*lo frequency break - in ev */
+	      rddoub ("high_energy_break(ev)", &geo.agn_cltab_hi);
+	      geo.agn_cltab_low_alpha = 2.5;	//this is the default value in cloudy
+	      geo.agn_cltab_hi_alpha = -2.0;	//this is the default value in cloudy
+	    }
 	}
       else
 	{
@@ -1094,27 +1098,27 @@ given the scale of the wind. Up till py74b2 it was set to be fixed at
 will keep the old dfudge, and hopefully look the same. We also need to
 set defudge slightly differently for the shell wind.*/
 
-  if (geo.wind_type==9)
-	{
-	dfudge = (geo.wind_rmax - geo.wind_rmin) / 1000.0;
-	}
+  if (geo.wind_type == 9)
+    {
+      dfudge = (geo.wind_rmax - geo.wind_rmin) / 1000.0;
+    }
   else
+    {
+      if (geo.rmax / 1.e10 < 1e5)
 	{
-	if (geo.rmax / 1.e10 < 1e5)
-		{
-		dfudge=1e5;
-		Log ("DFUDGE set to minimum value of %e\n",DFUDGE);
-		}
-	else
-		{
-		dfudge=geo.rmax/1.e10;
-		Log ("DFUDGE set to %e based on geo.rmax\n",DFUDGE);
-		}
+	  dfudge = 1e5;
+	  Log ("DFUDGE set to minimum value of %e\n", dfudge);
 	}
+      else
+	{
+	  dfudge = geo.rmax / 1.e10;
+	  Log ("DFUDGE set to %e based on geo.rmax\n", dfudge);
+	}
+    }
 
-	DFUDGE=dfudge; //NSH Unsure why exactly this is done this way.
-	
-	
+  DFUDGE = dfudge;		//NSH Unsure why exactly this is done this way.
+
+
 
 
 
@@ -1248,7 +1252,7 @@ set defudge slightly differently for the shell wind.*/
 
       geo.agn_spectype = SPECTYPE_POW;
       get_spectype (geo.agn_radiation,
-		    "Rad_type_for_agn(0=bb,1=models,3=power_law,4=cloudy_table)_in_final_spectrum",
+		    "Rad_type_for_agn(3=power_law,4=cloudy_table)_in_final_spectrum",
 		    &geo.agn_spectype);
 
 
@@ -1385,7 +1389,7 @@ run -- 07jul -- ksl
 /* Determine the frequency range which will be used to establish the ionization balance of the wind */
 
 //OLD71  // 59 - Increased to 20,000 A so could go further into NIR 
-//OLD71  freqmin = C / 12000e-8;	/*20000 A */
+//OLD71  freqmin = C / 12000e-8;        /*20000 A */
 
 //OLD71  tmax = TSTAR;
 //OLD71  if (geo.twind > tmax)
@@ -1408,8 +1412,8 @@ run -- 07jul -- ksl
   // Note that bands_init asks .pf file or user what kind of banding is desired 
 
 //Old71  bands_init (0.0, freqmin, freqmax, -1, &xband);
-//OLD71	bands_init (tmax, freqmin, freqmax, -1, &xband);
-	bands_init (-1, &xband);
+//OLD71 bands_init (tmax, freqmin, freqmax, -1, &xband);
+  bands_init (-1, &xband);
 
 /*if we have changed min and max in bands_init, we need to make sure this is reflected in the frequency bounds*/
   freqmin = xband.f1[0];
@@ -1418,7 +1422,7 @@ run -- 07jul -- ksl
 /* 1112 - 71 - ksl Next routine sets up the frequencies that are used for charactizing the spectrum in a cell
  * These need to be coordinated with the bands that are set up for spectral gneration
  */
-	freqs_init(freqmin,freqmax);
+  freqs_init (freqmin, freqmax);
 
 
 
@@ -1488,7 +1492,7 @@ run -- 07jul -- ksl
  *
  * */
 
-printf ("NSH GOING TO DISK_INIT\n");
+
   disk_init (geo.rstar, geo.diskrad, geo.mstar, geo.disk_mdot, freqmin,
 	     freqmax, 0, &geo.f_disk);
 
@@ -1508,6 +1512,7 @@ printf ("NSH GOING TO DISK_INIT\n");
   xsignal (root, "%-20s Finished initialization for %s\n", "NOK", root);
   check_time (root);
 
+
 /* XXXX - THE CALCULATION OF THE IONIZATION OF THE WIND */
 
   geo.ioniz_or_extract = 1;	//SS July 04 - want to compute MC estimators during ionization cycles
@@ -1519,7 +1524,7 @@ printf ("NSH GOING TO DISK_INIT\n");
 /* XXXX - BEGINNING OF CYCLE TO CALCULATE THE IONIZATION OF THE WIND */
 
   if (geo.wcycle == wcycles)
-    xsignal (root, "%-20s No ionization needed: wcycle(%d)==wcycles(%d)\n",
+    xsignal (root, "%-20s No ionization needed: wcycles(%d)==wcyeles(%d)\n",
 	     "COMMENT", geo.wcycle, geo.wcycles);
   else
     {
@@ -1539,7 +1544,7 @@ printf ("NSH GOING TO DISK_INIT\n");
 
       Log ("!!Python: Begining cycle %d of %d for defining wind\n",
 	   geo.wcycle, wcycles);
-
+      Log_flush ();		/*NSH June 13 Added call to flush logfile */
 
       /* Initialize all of the arrays, etc, that need initialization for each cycle
        */
@@ -1601,7 +1606,7 @@ printf ("NSH GOING TO DISK_INIT\n");
 	   * spectrum cyecle, which can exceed this
 	   */
 
-          nphot_to_define=(long) photons_per_cycle;
+	  nphot_to_define = (long) photons_per_cycle;
 
 	  define_phot (p, freqmin, freqmax, nphot_to_define, 0, iwind, 1);
 
@@ -1621,7 +1626,7 @@ printf ("NSH GOING TO DISK_INIT\n");
 	  Log
 	    ("!!python: Total photon luminosity before transphot %18.12e\n",
 	     zz);
-
+	  Log_flush ();		/*NSH June 13 Added call to flush logfile */
 	  ztot += zz;		/* Total luminosity in all subcycles, used for calculating disk heating */
 
 	  /* kbf_need determines how many & which bf processes one needs to considere.  It was introduced
@@ -1631,10 +1636,10 @@ printf ("NSH GOING TO DISK_INIT\n");
 
 	  kbf_need (freqmin, freqmax);
 
-          /* NSH 22/10/12  This next call populates the prefactor for free free heating for each cell in the plasma array */
+	  /* NSH 22/10/12  This next call populates the prefactor for free free heating for each cell in the plasma array */
 	  /* NSH 4/12/12  Changed so it is only called if we have read in gsqrd data */
-	if (gaunt_n_gsqrd>0)
-	    pop_kappa_ff_array ();       
+	  if (gaunt_n_gsqrd > 0)
+	    pop_kappa_ff_array ();
 
 	  /* Transport the photons through the wind */
 	  trans_phot (w, p, 0);
@@ -1710,19 +1715,23 @@ printf ("NSH GOING TO DISK_INIT\n");
 					   by the disk */
 
       /* Save everything after each cycle and prepare for the next cycle 
-	 JM1304: moved geo.wcycle++ after xsignal to record cycles correctly. First cycle is cycle 0. */
+         JM1304: moved geo.wcycle++ after xsignal to record cycles correctly. First cycle is cycle 0. */
+      /* NSH1306 - moved geo.wcycle++ back, but moved the log and xsignal statements */
 
-      wind_save (windsavefile);
       Log ("Saved wind structure in %s after cycle %d\n", windsavefile,
 	   geo.wcycle);
 
       xsignal (root, "%-20s Finished %d of %d ionization cycle \n", "OK",
 	       geo.wcycle, wcycles);
-      
-      geo.wcycle++;	//Increment ionisation cycles
-      
-      check_time (root);
+      geo.wcycle++;		//Increment ionisation cycles
 
+      wind_save (windsavefile);
+
+
+
+
+      check_time (root);
+      Log_flush ();		/*NSH June 13 Added call to flush logfile */
 
     }				// End of Cycle loop
 
@@ -1810,7 +1819,7 @@ printf ("NSH GOING TO DISK_INIT\n");
 
       Log ("!!Cycle %d of %d to calculate a detailed spectrum\n", geo.pcycle,
 	   pcycles);
-
+      Log_flush ();		/*NSH June 13 Added call to flush logfile */
       if (!geo.wind_radiation)
 	iwind = -1;		/* Do not generate photons from wind */
       else if (geo.pcycle == 0)
@@ -1823,11 +1832,11 @@ printf ("NSH GOING TO DISK_INIT\n");
          For the detailed spectra, NPHOT*pcycles is the number of photon bundles which will equal the luminosity, 
          1 implies that detailed spectra, as opposed to the ionization of the wind is being calculated
 
- 	 JM 130306 must convert NPHOT and pcycles to double precision variable nphot_to_define
+         JM 130306 must convert NPHOT and pcycles to double precision variable nphot_to_define
 
        */
 
-      nphot_to_define= (long) NPHOT * (long) pcycles; 
+      nphot_to_define = (long) NPHOT *(long) pcycles;
       define_phot (p, freqmin, freqmax, nphot_to_define, 1, iwind, 0);
 
       for (icheck = 0; icheck < NPHOT; icheck++)
@@ -1858,9 +1867,9 @@ printf ("NSH GOING TO DISK_INIT\n");
       Log ("Completed spectrum cycle %3d :  The elapsed TIME was %f\n",
 	   geo.pcycle, timer ());
 
-      wind_save (windsavefile);		// This is only needed to update pcycle
+      wind_save (windsavefile);	// This is only needed to update pcycle
       spec_save (specsavefile);
-	
+
       /* JM1304: moved geo.pcycle++ after xsignal to record cycles correctly. First cycle is cycle 0. */
 
       xsignal (root, "%-20s Finished %3d of %3d spectrum cycles \n", "OK",
@@ -2004,6 +2013,7 @@ init_geo ()
   geo.star_ion_spectype = geo.star_spectype
     = geo.disk_ion_spectype = geo.disk_spectype
     = geo.bl_ion_spectype = geo.bl_spectype = SPECTYPE_BB;
+  geo.agn_ion_spectype = SPECTYPE_POW;	// 130605 - nsh - moved from python.c
 
   geo.log_linear = 0;		/* Set intervals to be logarithmic */
 
@@ -2070,8 +2080,8 @@ photon_checks (p, freqmin, freqmax, comment)
 //  int n_ioniz;
   int nlabel;
 
-  geo.n_ioniz=0;
-  geo.lum_ioniz=0.0;
+  geo.n_ioniz = 0;
+  geo.lum_ioniz = 0.0;
   nnn = 0;
   nlabel = 0;
 
@@ -2132,7 +2142,7 @@ photon_checks (p, freqmin, freqmax, comment)
 	  exit (0);
 	}
     }
-	printf ("NSH Geo.n_ioniz=%e\n",geo.n_ioniz);
+  printf ("NSH Geo.n_ioniz=%e\n", geo.n_ioniz);
 #if DEBUG
   if (nnn == 0)
     Log ("photon_checks: All photons passed checks successfully\n");
@@ -2216,7 +2226,7 @@ get_spectype (yesno, question, spectype)
       else if (stype == 3)
 	*spectype = SPECTYPE_POW;	// power law
       else if (stype == 4)
-        *spectype = SPECTYPE_CL_TAB;
+	*spectype = SPECTYPE_CL_TAB;
       else
 	{
 	  if (geo.wind_type == 2)
@@ -2247,7 +2257,7 @@ get_spectype (yesno, question, spectype)
                                        Space Telescope Science Institute
 
  Synopsis:
-	The next couple od routines are for recording information about photons/energy impinging
+	The next couple of routines are for recording information about photons/energy impinging
 	on the disk, which is stored in a disk structure called qdisk.
 
 	qdisk_init() just initializes the structure (once the disk structue has been initialized.

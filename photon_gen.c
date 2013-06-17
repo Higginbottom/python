@@ -110,7 +110,7 @@ define_phot (p, f1, f2, nphot_tot, ioniz_or_final, iwind, freq_sampling)
     {				/* Use banding, create photons with different weithst in different wavelength
 				   bands.  this is used for the for ionization calculation where one wants to assure
 				   that you have "enough" photons at high energy */
-	 ftot = populate_bands (f1, f2, ioniz_or_final, iwind, &xband);
+      ftot = populate_bands (f1, f2, ioniz_or_final, iwind, &xband);
 
 // Now generate the photons
       iphot_start = 0;
@@ -120,8 +120,7 @@ define_phot (p, f1, f2, nphot_tot, ioniz_or_final, iwind, freq_sampling)
 	  if (xband.nphot[n] > 0)
 	    {
 /*Reinitialization is required here always because we are changing the frequencies around all the time */
-	      xdefine_phot (xband.f1[n], xband.f2[n], ioniz_or_final,
-			    iwind);
+	      xdefine_phot (xband.f1[n], xband.f2[n], ioniz_or_final, iwind);
 	      /* The weight of each photon is designed so that all of the photons add up to the
 	         luminosity of the photosphere.  This implies that photons must be generated in such
 	         a way that it mimics the energy distribution of the star. */
@@ -241,12 +240,12 @@ Arguments:
 
 Returns:
 
-The results are stored in the geo structure (see below).  
+The rosults are stored in the goe structure (see below).  
  
  
 Description:	
 
-This is an routine that initializes things.  It does not generate photons itself.
+This is an routine that initilizes things.  It does not generate photons itself.
 
 		
 Notes:
@@ -302,9 +301,10 @@ calculates the boundaries of the various disk annulae depending on f1 and f2 */
       bl_init (geo.lum_bl, geo.t_bl, f1, f2, ioniz_or_final, &geo.f_bl);
     }
   if (geo.agn_radiation)
-  {
-      agn_init(geo.r_agn,geo.lum_agn,geo.alpha_agn, f1, f2, ioniz_or_final,&geo.f_agn);
-  }
+    {
+      agn_init (geo.r_agn, geo.lum_agn, geo.alpha_agn, f1, f2, ioniz_or_final,
+		&geo.f_agn);
+    }
 
 /* The choices associated with iwind are
 iwind = -1 	Don't generate any wind photons at all
@@ -363,6 +363,7 @@ iwind = -1 	Don't generate any wind photons at all
   }
 
 
+
 //Store the 3 variables that have to remain the same to avoid reinitialization 
   f1_old = f1;
   f2_old = f2;
@@ -405,8 +406,7 @@ History:
 
 
 int
-xmake_phot (p, f1, f2, ioniz_or_final, iwind, weight, iphot_start,
-	    nphotons)
+xmake_phot (p, f1, f2, ioniz_or_final, iwind, weight, iphot_start, nphotons)
      PhotPtr p;
      double f1, f2;
      int ioniz_or_final;
@@ -424,7 +424,7 @@ Error ?? -- This is a kluge.  It is intended to preserve what was done with vers
 python 40 but it is not really what one wants.
 */
   nstar = nbl = nwind = ndisk = 0;
-  nagn=nkpkt = nmatom = 0;
+  nagn = nkpkt = nmatom = 0;
 
   if (geo.star_radiation)
     {
@@ -460,7 +460,7 @@ python 40 but it is not really what one wants.
    * are desired.  Why isn't this a problem.  Error - ksl 101029
    */
   if (nphot < nphotons)
-    {			
+    {
       if (ndisk > 0)
 	ndisk += (nphotons - nphot);
       else if (nwind > 0)
@@ -474,7 +474,9 @@ python 40 but it is not really what one wants.
     }
 
 
-  Log("photon_gen: weight %6.2e nphotons %d ndisk %d nwind %d nstar %d nagn %d \n",weight,nphotons,ndisk,nwind,nstar,nagn);
+  Log
+    ("photon_gen: weight %6.2e nphotons %d ndisk %d nwind %d nstar %d nagn %d \n",
+     weight, nphotons, ndisk, nwind, nstar, nagn);
 
   /* Generate photons from the star, the bl, the wind and then from the disk */
   /* Now adding generation from kpkts and macro atoms too (SS June 04) */
@@ -552,11 +554,11 @@ stellar photons */
       if (nphot > 0)
 	{
 	  if (ioniz_or_final == 1)
-	    photo_gen_agn (p,geo.r_agn,geo.alpha_agn,weight, f1, f2, geo.agn_spectype,
-			    iphot_start, nphot);
+	    photo_gen_agn (p, geo.r_agn, geo.alpha_agn, weight, f1, f2,
+			   geo.agn_spectype, iphot_start, nphot);
 	  else
-	    photo_gen_agn (p, geo.r_agn,geo.alpha_agn, weight, f1, f2, geo.agn_ion_spectype,
-			    iphot_start, nphot);
+	    photo_gen_agn (p, geo.r_agn, geo.alpha_agn, weight, f1, f2,
+			   geo.agn_ion_spectype, iphot_start, nphot);
 	}
       iphot_start += nphot;
     }
@@ -717,8 +719,8 @@ photo_gen_star (p, r, t, weight, f1, f2, spectype, istart, nphot)
 	("photo_gen_star: Cannot generate photons if freqmax %g < freqmin %g\n",
 	 f2, f1);
     }
-  Log_silent ("photo_gen_star creates nphot %5d photons from %5d to %5d \n", nphot,
-       istart, iend);
+  Log_silent ("photo_gen_star creates nphot %5d photons from %5d to %5d \n",
+	      nphot, istart, iend);
   freqmin = f1;
   freqmax = f2;
   dfreq = (freqmax - freqmin) / MAXRAND;
@@ -1177,13 +1179,13 @@ photo_gen_disk (p, weight, f1, f2, spectype, istart, nphot)
          to moving frame */
       vdisk (p[i].x, v);
       p[i].freq /= (1. - dot (v, p[i].lmn) / C);
-  /*    if (p[i].freq < freqmin || freqmax < p[i].freq)
-	{
-	  Error_silent
-	    ("photo_gen_disk (after dopler) : phot no. %d freq %g out of range %g %g\n",
-	     i, p[i].freq, freqmin, freqmax);
-	}
-*/
+      /*    if (p[i].freq < freqmin || freqmax < p[i].freq)
+         {
+         Error_silent
+         ("photo_gen_disk (after dopler) : phot no. %d freq %g out of range %g %g\n",
+         i, p[i].freq, freqmin, freqmax);
+         }
+       */
     }
   return (0);
 }

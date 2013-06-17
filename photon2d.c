@@ -110,9 +110,10 @@ translate_in_space (pp)
   ds = ds_to_wind (pp);
 
   /* Check whether the photon hit the torus first */
-  if (geo.compton_torus && (x=ds_to_torus(pp))<ds) {
-	  ds=x;
-  }
+  if (geo.compton_torus && (x = ds_to_torus (pp)) < ds)
+    {
+      ds = x;
+    }
 
 /* ?? The way in which a photon is identified as hitting the star seems
 a bit convoluted.  Despite the fact that it is already identified here
@@ -229,8 +230,8 @@ ds_to_wind (pp)
     ds = x;
   if ((x = ds_to_cone (&windcone[1], &ptest)) < ds)
     ds = x;
-  if (geo.wind_type== 8)
-	  x=ds_to_pillbox(&ptest,geo.sv_rmin,geo.sv_rmax,geo.elvis_offset);
+  if (geo.wind_type == 8)
+    x = ds_to_pillbox (&ptest, geo.sv_rmin, geo.sv_rmax, geo.elvis_offset);
 
   return (ds);
 }
@@ -290,7 +291,7 @@ History:
  * volume
  */
 
-int neglible_vol_count=0;
+int neglible_vol_count = 0;
 
 int
 translate_in_wind (w, p, tau_scat, tau, nres)
@@ -325,7 +326,7 @@ return and record an error */
   one = &wmain[n];		/* one is the grid cell where the photon is */
   nplasma = one->nplasma;
   xplasma = &plasmamain[nplasma];
-  
+
 
 
 
@@ -366,20 +367,21 @@ return and record an error */
     }
   // 110930 - ksl - Next section added to accommodate the torus 
   if (geo.compton_torus && one->inwind == W_PART_INTORUS)
-  {
+    {
       s = ds_to_torus (p);	//smax is set to be the distance to edge of the wind
       if (s < smax)
 	smax = s;
       s = ds_to_disk (p, 0);	// ds_to_disk can return a negative distance
       if (s > 0 && s < smax)
 	smax = s;
-  }
+    }
   else if (one->inwind == W_IGNORE)
     {
-      if ((neglible_vol_count % 100)==0) Error
-	("translate_in_wind: Photon is in cell %d with negligible volume, moving photon %.2e  Occurrences %d\n",
-	 n, smax,neglible_vol_count+1);
-      
+      if ((neglible_vol_count % 100) == 0)
+	Error
+	  ("translate_in_wind: Photon is in cell %d with negligible volume, moving photon %.2e  Occurrences %d\n",
+	   n, smax, neglible_vol_count + 1);
+
       neglible_vol_count++;
       move_phot (p, smax);
       return (p->istat);
@@ -439,8 +441,10 @@ radiation, which is the single largest contributer to execution time.*/
 
   ds_current = calculate_ds (w, p, tau_scat, tau, nres, smax, &istat);
 
-  if (p->nres < 0)  xplasma->nscat_es++;
-  if (p->nres > 0)  xplasma->nscat_res++;
+  if (p->nres < 0)
+    xplasma->nscat_es++;
+  if (p->nres > 0)
+    xplasma->nscat_res++;
 
 
 /* OK now we increment the radiation field in the cell, translate the photon and wrap 
@@ -467,7 +471,7 @@ for consistency.  Delete comment when satisfied OK */
 
       if (geo.ioniz_or_extract == 1)	//don't need to record estimators if this is set to 0 (spectrum cycle)
 	{
-	  bf_estimators_increment (xplasma, p, ds_current);
+	  bf_estimators_increment (one, p, ds_current);
 /*photon weight times distance in the shell is proportional to the mean intensity */
 	  xplasma->j += p->w * ds_current;
 

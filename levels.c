@@ -85,12 +85,12 @@ levels (xplasma, mode)
       t = xplasma->t_r;
       weight = xplasma->w;
     }
-  else if (mode == 3)           /* non_LTE with SS modification NSH 120912 - This mode is more or less defunct. It can be romoved once all the viestiges of the original PL ioinzation scheme are removed */
+  else if (mode == 3)		/* non_LTE with SS modification NSH 120912 - This mode is more or less defunct. It can be romoved once all the viestiges of the original PL ioinzation scheme are removed */
     {
       t = xplasma->t_e;
       weight = 1;
     }
-  else if (mode == 4)           /* A test mode - this is to allow all levels to be set to GS, in the event we dont have a good idea of what the radiation field shoulb be. */
+  else if (mode == 4)		/* A test mode - this is to allow all levels to be set to GS, in the event we dont have a good idea of what the radiation field shoulb be. */
     {
       t = xplasma->t_e;
       weight = 0;

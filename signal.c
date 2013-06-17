@@ -103,7 +103,7 @@ xsignal (char *root, char *format, ...)
 
 
   va_start (ap, format);
-  va_copy(ap2,ap);  /* Added because vfprintf can change ap */
+  va_copy (ap2, ap);		/* Added because vfprintf can change ap */
   result = vfprintf (sptr, format, ap);
   va_end (ap);
 
@@ -136,7 +136,7 @@ xsignal_rm (char *root)
   strcat (command, filename);
   system (command);
 
-  return(0);
+  return (0);
 
 }
 

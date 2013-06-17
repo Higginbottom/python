@@ -186,7 +186,7 @@ double bb_set[] = {
   0.05, 0.1, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45,
   10.3, 11.3, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0,
   19., 20., 21., 22., 23., 24., 25., 26., 27., 28., 29.
-}; 
+};
 
 
 int error_bb_hi = 0;
@@ -278,7 +278,7 @@ reset.  A careful review of them is warranted.
 	}
 
     }
- /* End of section redefining limits */
+  /* End of section redefining limits */
 
 
   y = rand () / (MAXRAND);
@@ -411,26 +411,28 @@ get_rand_exp (alpha_min, alpha_max)
   double r;
   //Old ksl 12nov double x1, x2;
   double x;
-  double a,aa;
+  double a, aa;
   double delta_alpha;
 
   r = rand () / MAXRAND;
 
-  x= exp (alpha_min-alpha_max);
+  x = exp (alpha_min - alpha_max);
 
   //OLD 12nov ksl x1 = exp (-alpha_min);
   //OLD 12nov ksl x2 = exp (-alpha_max);
 
   //OLD 12nov ksl aa = (1. - r) * x1 + r * x2;
 
-  aa=(1.-r)+r*x;
-  delta_alpha= -(log (aa));
+  aa = (1. - r) + r * x;
+  delta_alpha = -(log (aa));
 
-  a=alpha_min+delta_alpha;
+  a = alpha_min + delta_alpha;
 
-  if (sane_check(a)){
-	  Error("get_rand_exp:sane_check %e %e %e %e %e\n",a,aa,delta_alpha,x,r);
-  }
+  if (sane_check (a))
+    {
+      Error ("get_rand_exp:sane_check %e %e %e %e %e\n", a, aa, delta_alpha,
+	     x, r);
+    }
   //OLD 12 nov ksl return (-a);
   return (a);
 }
@@ -544,7 +546,7 @@ init_integ_planck_d ()
   double planck_d (), qromb ();
   int n;
   //OLD74b5 integ_planck[0] = 0;   JM130319: this should be set to ALPHAMIN- done in the for loop for simplicity (n=0).
-  for (n = 0; n <= NMAX+1; n++)
+  for (n = 0; n <= NMAX + 1; n++)
     {
       x = ALPHAMIN + n * (ALPHAMAX - ALPHAMIN) / NMAX;
 // 1e-7 is the fractional accuracy in my modified version of qromb -- ksl
@@ -603,25 +605,26 @@ emittance_bb (freqmin, freqmax, t)
 
   alphamin = H * freqmin / (BOLTZMANN * t);
   alphamax = H * freqmax / (BOLTZMANN * t);
-	if (alphamin > ALPHAMIN && alphamax < ALPHAMAX)
-	{
-  return (q1 * t * t * t * t * integ_planck_d (alphamin, alphamax));
-	}
-	else if (alphamax < ALPHAMIN)
-	{
-  return (q1 * t * t * t * t * qromb(planck_d,alphamin,alphamax,1e-7));
-	}
-	else
-	{
-//	printf ("BB_emit is requesting a value outside tabulated results\n");
-  return (q1 * t * t * t * t * integ_planck_d (alphamin, alphamax));
-	}
-; /*NSH 120813 73e - changed so we simply integrate the dimensionless blackbody function here */
- // if (alphamax > ALPHAMAX) alphamax=ALPHAMAX;
- // if (alphamin > ALPHAMAX) return(0.0);
+  if (alphamin > ALPHAMIN && alphamax < ALPHAMAX)
+    {
+      return (q1 * t * t * t * t * integ_planck_d (alphamin, alphamax));
+    }
+  else if (alphamax < ALPHAMIN)
+    {
+      return (q1 * t * t * t * t *
+	      qromb (planck_d, alphamin, alphamax, 1e-7));
+    }
+  else
+    {
+//      printf ("BB_emit is requesting a value outside tabulated results\n");
+      return (q1 * t * t * t * t * integ_planck_d (alphamin, alphamax));
+    }
+  ;				/*NSH 120813 73e - changed so we simply integrate the dimensionless blackbody function here */
+  // if (alphamax > ALPHAMAX) alphamax=ALPHAMAX;
+  // if (alphamin > ALPHAMAX) return(0.0);
 //x=q1 * t * t * t * t * qromb(planck_d,alphamin,alphamax,1e-7);
 //printf ("We are in emittance_bb going from %e to %e at temp %e ans=%e\n",freqmin,freqmax,t,x);
- // return (x);
+  // return (x);
 
 }
 
@@ -652,18 +655,18 @@ History:
 
 
 double
-check_fmax (fmin,fmax,temp)
-     double fmin,fmax,temp;
-{     
-     double bblim;
+check_fmax (fmin, fmax, temp)
+     double fmin, fmax, temp;
+{
+  double bblim;
 
-     bblim=ALPHABIG*(temp/H_OVER_K); /*This is the frequency at which the exponent in the 
-				       planck law will be -100. This will give a *very* small b(nu). */
-      if (bblim < fmax)
-	{
-	fmax=bblim;
-	}
- 
+  bblim = ALPHABIG * (temp / H_OVER_K);	/*This is the frequency at which the exponent in the 
+					   planck law will be -100. This will give a *very* small b(nu). */
+  if (bblim < fmax)
+    {
+      fmax = bblim;
+    }
+
   return (fmax);
 
 }

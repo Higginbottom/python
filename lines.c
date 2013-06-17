@@ -197,7 +197,7 @@ pdf_x[m]-1
 
 
 
-#define ECS_CONSTANT 4.773691e16 	//(8*PI)/(sqrt(3) *nu_1Rydberg
+#define ECS_CONSTANT 4.773691e16	//(8*PI)/(sqrt(3) *nu_1Rydberg
 
 /* 
 
@@ -236,14 +236,14 @@ q21 (line_ptr, t)
 
 /*NSH 121024 - the followinglines implement the approximate gaunt factor as described in eq 4.21 in hazy 2*/
 /* NSH 121026 commented out in py74a - not certain that this approximate gaunt factor actually inmproves anything */
- /*     if (line_ptr->istate == 1) //Neutral
-	{
-	gaunt = ((BOLTZMANN*t)/(H*line_ptr->freq))/10.0;
-	}
-      else
-	{
-	gaunt = 0.2;
-	}*/
+      /*     if (line_ptr->istate == 1) //Neutral
+         {
+         gaunt = ((BOLTZMANN*t)/(H*line_ptr->freq))/10.0;
+         }
+         else
+         {
+         gaunt = 0.2;
+         } */
 
 
 
@@ -384,7 +384,7 @@ two_level_atom (line_ptr, xplasma, d1, d2)
   dd = xplasma->density[nion];
 
   /* Calculate the number density of the lower level for the transition using the partition function */
-    ;
+  ;
   if (ion[nion].nlevels > 0)
     {
       dd *= config[ion[nion].firstlevel].g / xplasma->partition[nion];
@@ -665,7 +665,7 @@ p_escape (line_ptr, xplasma)
 
       tau = (d1 - line_ptr->gl / line_ptr->gu * d2);
       tau *= PI_E2_OVER_M * line_ptr->f / line_ptr->freq / dvds;
-//	printf ("LINE ESCAPE dvds=%e tau=%e\n",dvds,tau);
+//      printf ("LINE ESCAPE dvds=%e tau=%e\n",dvds,tau);
       if (tau < 1e-6)
 	escape = 1.;
       else if (tau < 10.0)

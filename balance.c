@@ -66,8 +66,8 @@ main (argc, argv)
   WindPtr w;
   PlasmaPtr wplasma;
   PhotPtr p;
-  double t_r, t_e; 
-  double alpha_agn,lum_agn,r_agn,d_agn;
+  double t_r, t_e;
+  double alpha_agn, lum_agn, r_agn, d_agn;
   double nh, heat;
   double weight, vol, vmax;
   char choice;
@@ -77,13 +77,13 @@ main (argc, argv)
   int check_field ();
   int do_detail ();
   int cmode;
-  int radmode;       /* 1=blackbody, 2=powerlaw from agn */
+  int radmode;			/* 1=blackbody, 2=powerlaw from agn */
   int i;
-  int nelement,nele,z,nn,first,last,m;
-  double tot,agn_ip;
+  int nelement, nele, z, nn, first, last, m;
+  double tot, agn_ip;
   NPHOT = 100000;
-  DENSITY_PHOT_MIN = 1.0e-10; //This turns on photoionization calculations during heating and cooling.
-  geo.ioniz_or_extract=1; // Set the overall pointer to tell the code we are in an ionization cycle.
+  DENSITY_PHOT_MIN = 1.0e-10;	//This turns on photoionization calculations during heating and cooling.
+  geo.ioniz_or_extract = 1;	// Set the overall pointer to tell the code we are in an ionization cycle.
 
 /* These next lines define the grid size and give the push through distance */
 
@@ -108,7 +108,7 @@ main (argc, argv)
 /* Create the wind structure */
   wmain = w = (WindPtr) calloc (sizeof (wind_dummy), NDIM2);
   plasmamain = wplasma = (PlasmaPtr) calloc (sizeof (plasma_dummy), NPLASMA);
-//	printf ("The first random number is %i",rand());
+//      printf ("The first random number is %i",rand());
   for (i = 0; i < NDIM2; i++)
     {
       w[i].nplasma = wplasma[i].nwind = i;
@@ -147,10 +147,10 @@ main (argc, argv)
   geo.pl_w = weight = 1;
   geo.pl_vol = vol = 1.0;
   geo.pl_vmax = vmax = 1e6;
-  geo.lum_agn=lum_agn=1e43;
-  geo.alpha_agn=alpha_agn=-1.5;
-  geo.r_agn=r_agn=1e14;
-  geo.d_agn=d_agn=1e16;
+  geo.lum_agn = lum_agn = 1e43;
+  geo.alpha_agn = alpha_agn = -1.5;
+  geo.r_agn = r_agn = 1e14;
+  geo.d_agn = d_agn = 1e16;
   freq_sampling = 1;
   radmode = 1;
 
@@ -176,7 +176,7 @@ main (argc, argv)
 
 /* Completed the initialization */
 
-a:  /* This is the return point.  One could replace all this whith some kind of while statement */
+a:				/* This is the return point.  One could replace all this whith some kind of while statement */
 
   /* Print out the current values of various variables */
 
@@ -187,30 +187,43 @@ a:  /* This is the return point.  One could replace all this whith some kind of 
 
   /* Print out the choices that the user can make to change various variables or to cause a calculation to be made */
 
-  Log ("h=Nh, r=t_r, e=t_e, w=weight, v=vol, s=vmax, p=line_mode, k=rad_trans_mode\n");
+  Log
+    ("h=Nh, r=t_r, e=t_e, w=weight, v=vol, s=vmax, p=line_mode, k=rad_trans_mode\n");
   Log ("i=ionization mode, j=calculate heating/cooling and abundances\n");
   Log ("l=lte(force t_e=t_r w=1),  a=absolute_lte(ions+levels), A=levels\n");
-  Log ("b=frequency sampling d=dumb, f=find_te, ,g=go  H=Set heating, D -- modify to detailed rates\n");
+  Log
+    ("b=frequency sampling d=dumb, f=find_te, ,g=go  H=Set heating, D -- modify to detailed rates\n");
   Log ("B=blackbody spectrum(default), P=powerlaw spectrum\n");
-  Log ("Other: a: Force t_r=t_e and LTE level populations, and calculate saha abundances\n");
-  Log ("Other: A: Calculate levels with various options.  Just sets lmode and recaclates partition func and levels\n");
+  Log
+    ("Other: a: Force t_r=t_e and LTE level populations, and calculate saha abundances\n");
+  Log
+    ("Other: A: Calculate levels with various options.  Just sets lmode and recaclates partition func and levels\n");
   Log ("Other  b: Set freqqence sampling frequency_sampling(0=uniform)\n");
   Log ("Other: B: Setting radiation mode to blackbody");
-  Log("Other:  d: Increment t_e up or down to attempt to match the current value of the heating.\n");
-  Log("Other:  D: Modify the current abundances to produce detail balance, and then recalculate the heating and cooling without modifying the abundances\n");
-  Log("Other:  f: Adjust t_e to balance heating and cooling without changing the abundances\n");
-  Log("Other   g: Adjust t_e and abundances using python's one_shot routine.\n");  
-  Log("Other   G: Calculate ionization fractions as a function of T and W. Remake figure in LK02\n"); 
-  Log("Other   H: Set the total heating\n");
-  Log("Other   I: Run multi_concen\n");
-  Log("Other   j: Calculate abundances and then heating and cooling with current ionization mode, etc. Do not update afterwards\n");
-  Log("Other   l:Force Saha ion abundances and t_e=t_r and weight to 1 and then calculate heating and cooling. (uses python routines)\n");
-  Log("Other   o:  output the ion fractions of a particular element for offline investigation\n");
-  Log("Other   p: Set the line transfer mode mode\n");
-  Log("Other  P: get the parameters for a power law spectrum \n");
-  Log("Other  S:Carry out one calculation of the sim parameter and apply to current densities\n");
-  Log("Other  T: This is just for testing of routines\n");
-        
+  Log
+    ("Other:  d: Increment t_e up or down to attempt to match the current value of the heating.\n");
+  Log
+    ("Other:  D: Modify the current abundances to produce detail balance, and then recalculate the heating and cooling without modifying the abundances\n");
+  Log
+    ("Other:  f: Adjust t_e to balance heating and cooling without changing the abundances\n");
+  Log
+    ("Other   g: Adjust t_e and abundances using python's one_shot routine.\n");
+  Log
+    ("Other   G: Calculate ionization fractions as a function of T and W. Remake figure in LK02\n");
+  Log ("Other   H: Set the total heating\n");
+  Log ("Other   I: Run multi_concen\n");
+  Log
+    ("Other   j: Calculate abundances and then heating and cooling with current ionization mode, etc. Do not update afterwards\n");
+  Log
+    ("Other   l:Force Saha ion abundances and t_e=t_r and weight to 1 and then calculate heating and cooling. (uses python routines)\n");
+  Log
+    ("Other   o:  output the ion fractions of a particular element for offline investigation\n");
+  Log ("Other   p: Set the line transfer mode mode\n");
+  Log ("Other  P: get the parameters for a power law spectrum \n");
+  Log
+    ("Other  S:Carry out one calculation of the sim parameter and apply to current densities\n");
+  Log ("Other  T: This is just for testing of routines\n");
+
 
 
 
@@ -277,12 +290,12 @@ a:  /* This is the return point.  One could replace all this whith some kind of 
 	  Log
 	    ("OK-- setting energy bands to assure substantial photons above ionization edges\n");
 	}
-    break;
+      break;
 
     case 'B':
-	Log("Setting radiation mode to blackbody");
-	radmode=1;
-	
+      Log ("Setting radiation mode to blackbody");
+      radmode = 1;
+
       break;
 
 
@@ -308,7 +321,7 @@ the heating and cooling without modifying the abundances
       Log_silent ("t_e %8.2g\n", t_e);
       break;
 
-    case 'f':			
+    case 'f':
 
 /*Adjust t_e to balance heating and cooling without changing the abundances */
 
@@ -330,9 +343,10 @@ Note that the ionization mode is not changed by this routine.  */
       if (geo.ioniz_mode == 4)
 	cmode = 4;
       if (geo.ioniz_mode == 5)
-        cmode = 5;
-	printf ("wplasma[0].t_r=%f tr=%f\n",wplasma[0].t_r,t_r);
-      cycle (&wplasma[0], p, nh, t_r, t_e, weight, cmode, freq_sampling, radmode);
+	cmode = 5;
+      printf ("wplasma[0].t_r=%f tr=%f\n", wplasma[0].t_r, t_r);
+      cycle (&wplasma[0], p, nh, t_r, t_e, weight, cmode, freq_sampling,
+	     radmode);
       t_e = wplasma[0].t_e;
       break;
 
@@ -347,15 +361,15 @@ Long and Knigge 2002
       if (geo.ioniz_mode == 0)
 	cmode = 3;
       if (geo.ioniz_mode == 3)
-	cmode = 3; /*NSH 120823 - fixed an oddity that if you *told* balance to run in mode 3, it broke! */
+	cmode = 3;		/*NSH 120823 - fixed an oddity that if you *told* balance to run in mode 3, it broke! */
       if (geo.ioniz_mode == 4)
 	cmode = 4;
       if (geo.ioniz_mode == 5)
-        cmode = 5;
+	cmode = 5;
       if (geo.ioniz_mode == 6)
-        cmode = 6;
+	cmode = 6;
       if (geo.ioniz_mode == 7)
-        cmode = 7;
+	cmode = 7;
       multicycle (&wplasma[0], p, cmode, freq_sampling, radmode);
       break;
 
@@ -377,13 +391,13 @@ Long and Knigge 2002
 	("0=on_the_spot,1=saha,2=fix to std vals, 3=_on_the_spot (with one t update), 4=detailed, 10=same as 3, but ground mult.\n");
       rdint ("ioniz_mode", &geo.ioniz_mode);
       geo.partition_mode = -1;
-	
+
       if (geo.ioniz_mode == 10)	// Use recalc but only ground state multiplicities
 	{
 	  geo.ioniz_mode = 3;
 	  geo.partition_mode = 0;
 	}
-     printf ("Ionization mode %d", geo.ioniz_mode);
+      printf ("Ionization mode %d", geo.ioniz_mode);
       Log_silent ("Ionization mode %d", geo.ioniz_mode);
       break;
 
@@ -443,7 +457,7 @@ answers, except for statistical changes */
 	 geo.rt_mode);
       break;
 
-    case 'l':		
+    case 'l':
 
 /* Force Saha ion abundances and t_e=t_r and weight to 1 and then calculate heating and cooling.
 In this option, the levels are calculated with the same routines as in python.  The results should be identical
@@ -473,61 +487,61 @@ to case a unless there is an error somewhere */
       xsaha (&w[0], p, nh, t_e, t_e, weight, 1, freq_sampling);
       break;
 
-    case 'o':       /* output the ion fractions of a particular element for offline investigation */
-	
-	rdint ("Element atomic number?", &nele);  // what element are we interested in
-	z=nele;               
-	nelement=999;    //set nelement to crazy value to check if we have an element in the database
-	for (nn=0; nn < nelements; nn++)    //loop to see if we know about this element
-		{
-		if (ele[nn].z == z)   // does the atomic number of element nn in out database match what we are looking for?
-			nelement=nn;  // if so, set nelement to nn
-		}
-	if (nelement==999)    //if. after loop nelement has not been reset, we dont have data for the requested element
-		{
-		printf ("Your element is not in the database"); //console user with caring words
-		break;  // give up
-		}
-	first = ele[nelement].firstion;  //link into array for first ion of this element
-	last = first + ele[nelement].nions;  //last array element will be first plus 
-	printf ("%-5s ", ele[nelement].name);
-	for (m = first; m < last; m++)
-		tot += wplasma[0].density[m];
-	for (m = first; m < last; m++)
-		{
-		printf ("%8.2e ", (wplasma[0].density[m]));
-		}
-	printf ("\n");
-	    		
+    case 'o':			/* output the ion fractions of a particular element for offline investigation */
 
-    break;
+      rdint ("Element atomic number?", &nele);	// what element are we interested in
+      z = nele;
+      nelement = 999;		//set nelement to crazy value to check if we have an element in the database
+      for (nn = 0; nn < nelements; nn++)	//loop to see if we know about this element
+	{
+	  if (ele[nn].z == z)	// does the atomic number of element nn in out database match what we are looking for?
+	    nelement = nn;	// if so, set nelement to nn
+	}
+      if (nelement == 999)	//if. after loop nelement has not been reset, we dont have data for the requested element
+	{
+	  printf ("Your element is not in the database");	//console user with caring words
+	  break;		// give up
+	}
+      first = ele[nelement].firstion;	//link into array for first ion of this element
+      last = first + ele[nelement].nions;	//last array element will be first plus 
+      printf ("%-5s ", ele[nelement].name);
+      for (m = first; m < last; m++)
+	tot += wplasma[0].density[m];
+      for (m = first; m < last; m++)
+	{
+	  printf ("%8.2e ", (wplasma[0].density[m]));
+	}
+      printf ("\n");
+
+
+      break;
 
     case 'O':
-	fptr = fopen ("bal_summary.out", "w");
-	fprintf (fptr, "Mod   %.1f %.0f %.3f %8.0f \n", log10 (nh),
-		  t_r, agn_ip, t_e);
+      fptr = fopen ("bal_summary.out", "w");
+      fprintf (fptr, "Mod   %.1f %.0f %.3f %8.0f \n", log10 (nh),
+	       t_r, agn_ip, t_e);
 
-	for (nn = 0; nn < nelements; nn++)
-		{
-      		first = ele[nn].firstion;
-      		last = first + ele[nn].nions;
-      		fprintf (fptr, "%-5s ", ele[nn].name);
-      		Log ("%-5s ", ele[nn].name);
-      		tot = 0;
-      		for (m = first; m < last; m++)
-			tot += wplasma[0].density[m];
-      		for (m = first; m < last; m++)
-			{
-	  		fprintf (fptr, " %8.2e", wplasma[0].density[m]);
-	  		Log (" %8.2e", wplasma[0].density[m]);
-			}
-      		fprintf (fptr, "\n");
-      		Log ("\n");
-    		}
-	fclose(fptr);
+      for (nn = 0; nn < nelements; nn++)
+	{
+	  first = ele[nn].firstion;
+	  last = first + ele[nn].nions;
+	  fprintf (fptr, "%-5s ", ele[nn].name);
+	  Log ("%-5s ", ele[nn].name);
+	  tot = 0;
+	  for (m = first; m < last; m++)
+	    tot += wplasma[0].density[m];
+	  for (m = first; m < last; m++)
+	    {
+	      fprintf (fptr, " %8.2e", wplasma[0].density[m]);
+	      Log (" %8.2e", wplasma[0].density[m]);
+	    }
+	  fprintf (fptr, "\n");
+	  Log ("\n");
+	}
+      fclose (fptr);
 
 
-    break;
+      break;
 
 
 
@@ -537,41 +551,56 @@ to case a unless there is an error somewhere */
       Log_silent ("line_mode %d\n", geo.line_mode);
       break;
 
-    case 'P':                   /* get the parameters for a power law spectrum */
-	rddoub ("Power law luminosity between 2 and 10 KeV (ergs/s)", &lum_agn);
-	rddoub ("Power law alpha - if you want negative, put in negative", &alpha_agn);
-	geo.lum_agn=lum_agn;
-	geo.alpha_agn=alpha_agn;
-	geo.const_agn = 
-    geo.lum_agn / (((pow (2.42e18, geo.alpha_agn + 1.)) - pow (4.84e17, geo.alpha_agn + 1.0)) /
-	   (geo.alpha_agn + 1.0));
-	Log("Input parameters give a power law constant of %e\n",geo.const_agn);
-	rddoub ("Radius of power law region - used to calculate the geometric dilution factor", &r_agn);
-	rddoub ("Distance from cell to power law region", &d_agn);
-	geo.lum_agn=lum_agn;
-	geo.alpha_agn=alpha_agn;
-	geo.r_agn=r_agn;
-        geo.d_agn=d_agn;
+    case 'P':			/* get the parameters for a power law spectrum */
+      rddoub ("Power law luminosity between 2 and 10 KeV (ergs/s)", &lum_agn);
+      rddoub ("Power law alpha - if you want negative, put in negative",
+	      &alpha_agn);
+      geo.lum_agn = lum_agn;
+      geo.alpha_agn = alpha_agn;
+      geo.const_agn =
+	geo.lum_agn /
+	(((pow (2.42e18, geo.alpha_agn + 1.)) -
+	  pow (4.84e17, geo.alpha_agn + 1.0)) / (geo.alpha_agn + 1.0));
+      Log ("Input parameters give a power law constant of %e\n",
+	   geo.const_agn);
+      rddoub
+	("Radius of power law region - used to calculate the geometric dilution factor",
+	 &r_agn);
+      rddoub ("Distance from cell to power law region", &d_agn);
+      geo.lum_agn = lum_agn;
+      geo.alpha_agn = alpha_agn;
+      geo.r_agn = r_agn;
+      geo.d_agn = d_agn;
 
 
 
-	wplasma[0].w = weight= 0.5*(1-sqrt(1-((geo.r_agn*geo.r_agn)/(geo.d_agn*geo.d_agn)))); 
-	for(i=0;i<NXBANDS;i++){
-		wplasma[0].pl_alpha[i]=alpha_agn;       //Set the alpha for this cell, in this case it is just the global version
-		wplasma[0].pl_w[i]=geo.const_agn/((4.*PI)*(4.*PI*geo.r_agn*geo.r_agn));   //Set the pl w factor for this cell alone. 
-		i=i+1;
+      wplasma[0].w = weight =
+	0.5 * (1 -
+	       sqrt (1 -
+		     ((geo.r_agn * geo.r_agn) / (geo.d_agn * geo.d_agn))));
+      for (i = 0; i < NXBANDS; i++)
+	{
+	  wplasma[0].pl_alpha[i] = alpha_agn;	//Set the alpha for this cell, in this case it is just the global version
+	  wplasma[0].pl_w[i] = geo.const_agn / ((4. * PI) * (4. * PI * geo.r_agn * geo.r_agn));	//Set the pl w factor for this cell alone. 
+	  i = i + 1;
 	}
-	Log("Input parameters give a BB weight of %e and a SIM weight of %e\n",wplasma[0].w,wplasma[0].pl_w );
-	agn_ip=geo.const_agn*(((pow (50000/HEV, geo.alpha_agn + 1.0)) - pow (100/HEV,geo.alpha_agn + 1.0)) /  (geo.alpha_agn + 1.0));
-	agn_ip /= (d_agn*d_agn);
-	agn_ip /= nh;
-	Log("Input parameters give an Ionisation Parameter of %e\n",agn_ip);
-	radmode=2;      /* set the mode to use power law radiation*/
-	geo.ioniz_mode=5; //if we are here we can assume that we probably are interested in power laws, lets help out the user...
-        rdint ("What ionization mode should we use? 1=LTE, 3=Modified OTS(Lucy), 5=Modified LTE(Sim)",&geo.ioniz_mode);
+      Log ("Input parameters give a BB weight of %e and a SIM weight of %e\n",
+	   wplasma[0].w, wplasma[0].pl_w);
+      agn_ip =
+	geo.const_agn *
+	(((pow (50000 / HEV, geo.alpha_agn + 1.0)) -
+	  pow (100 / HEV, geo.alpha_agn + 1.0)) / (geo.alpha_agn + 1.0));
+      agn_ip /= (d_agn * d_agn);
+      agn_ip /= nh;
+      Log ("Input parameters give an Ionisation Parameter of %e\n", agn_ip);
+      radmode = 2;		/* set the mode to use power law radiation */
+      geo.ioniz_mode = 5;	//if we are here we can assume that we probably are interested in power laws, lets help out the user...
+      rdint
+	("What ionization mode should we use? 1=LTE, 3=Modified OTS(Lucy), 5=Modified LTE(Sim)",
+	 &geo.ioniz_mode);
 
 
-       break;
+      break;
 
     case 'r':			/* Set the radiation temperature */
 
@@ -593,15 +622,16 @@ to case a unless there is an error somewhere */
       break;
 
 
-    case 'S':    /* Carry out one calculation of the sim parameter and apply to current densities */ 
-      Log("Calling sim correction with T_e=%e, r=%e, alpha=%e, and C=%e\n",wplasma[0].t_e,wplasma[0].w,geo.alpha_agn,geo.const_agn);
-	sim_driver(&wplasma[0]);
+    case 'S':			/* Carry out one calculation of the sim parameter and apply to current densities */
+      Log ("Calling sim correction with T_e=%e, r=%e, alpha=%e, and C=%e\n",
+	   wplasma[0].t_e, wplasma[0].w, geo.alpha_agn, geo.const_agn);
+      sim_driver (&wplasma[0]);
 
       break;
 
 
     case 'T':			//This is just for testing of routines
-        
+
       //OLD init_bands (t_e, 0.0, 1e50, 1, &xband);
       //Old 120626 bands_init (t_e, 0.0, 1e50, 1, &xband);
       bands_init (t_e, &xband);
@@ -631,11 +661,11 @@ to case a unless there is an error somewhere */
       break;
 
 
-    case 'q':   /* Wrap up and quit */
+    case 'q':			/* Wrap up and quit */
       goto b;
       break;
 
-    default:  /* Oops this was not a choice that did anything */
+    default:			/* Oops this was not a choice that did anything */
       goto a;
       break;
 
@@ -682,239 +712,252 @@ multicycle (www, p, mode, freq_sampling, radmode)
      PlasmaPtr www;
      PhotPtr p;
      int mode;
-     int freq_sampling; 
+     int freq_sampling;
      int radmode;
 
 {
-  FILE *fopen (), *fptr ,*fudgefile,*numfile,*denomfile,*heatcoolfile;
+  FILE *fopen (), *fptr, *fudgefile, *numfile, *denomfile, *heatcoolfile;
   double nh;
   double t_r;
   double t_e;
   double weight;
   double tot;
-  double agn_ip,lum_agn_50,logip;
+  double agn_ip, lum_agn_50, logip;
 
   double t_rmin, t_rmax, t_rdelt;
-  double lt_rmin,lt_rmax,lt_rdelt;
+  double lt_rmin, lt_rmax, lt_rdelt;
   double t_rtemp;
   double ww, w_min, w_max, w_delt;
 
   int n, m, first, last, nn;
   int i;
 
-      printf ("Ionization mode in multicycle %d", mode);
+  printf ("Ionization mode in multicycle %d", mode);
 
   /* cycle in AGN  we vary lum_agn to replicate the ionisation parameters in Sim (2010) */
-  
+
 
 
   /* Finished with inputs */
 
   fptr = fopen ("bal_summary.out", "w");
-		fudgefile  = fopen ("fudge_summary.out", "w+");
-		numfile  = fopen ("num_summary.out", "w+");
-		denomfile  = fopen ("denom_summary.out", "w+");
-		heatcoolfile  = fopen ("heat_cool.out", "w+");
-  if (radmode==1)
+  fudgefile = fopen ("fudge_summary.out", "w+");
+  numfile = fopen ("num_summary.out", "w+");
+  denomfile = fopen ("denom_summary.out", "w+");
+  heatcoolfile = fopen ("heat_cool.out", "w+");
+  if (radmode == 1)
+    {
+      /* Set hardcoded limits */
+      nh = 1e12;
+      t_r = 30000;
+      t_e = 20000;
+      weight = 0.1;
+
+      t_rmin = 2000;
+      t_rmax = 100000;
+      t_rdelt = 2000;
+
+      lt_rmin = log10 (1000.0) * 100;
+      lt_rmax = log10 (10000000.0) * 100;
+      lt_rdelt = 1;
+
+
+
+      w_max = -2;
+      w_min = -2;
+      w_delt = 0.25;
+      for (ww = w_max; ww >= w_min; ww -= w_delt)	// Note w starts at 1
 	{
-  	/* Set hardcoded limits */
-  	nh = 1e12;
-  	t_r = 30000;
-  	t_e = 20000;
-  	weight = 0.1;
-
-  	t_rmin = 2000;
-  	t_rmax = 100000;
-  	t_rdelt = 2000;
-
-	lt_rmin = log10(1000.0)*100;
-	lt_rmax = log10(10000000.0)*100;
-	lt_rdelt = 1;
+	  weight = pow (10, ww);
+//                      for (t_r = t_rmin; t_r <= t_rmax; t_r += t_rdelt)
+	  for (t_rtemp = lt_rmin; t_rtemp <= lt_rmax; t_rtemp += lt_rdelt)
+	    {
+	      t_r = pow (10, t_rtemp / 100.0);
+	      www->gain = 0.5;
+	      www->dt_e_old = 0.0;
+	      www->dt_e = 0.0;
+	      www->t_e = www->t_e_old = 0.9 * t_r;	//lucy guess
 
 
-
-  	w_max =-2; 
-  	w_min = -2; 
-  	w_delt = 0.25;
-  	for (ww = w_max; ww >= w_min; ww -= w_delt)	// Note w starts at 1
-   		{
-      		weight = pow (10, ww);
-//      		for (t_r = t_rmin; t_r <= t_rmax; t_r += t_rdelt)
-			for (t_rtemp = lt_rmin; t_rtemp <= lt_rmax; t_rtemp += lt_rdelt)
-			{
-			t_r=pow(10,t_rtemp/100.0);
-	  		www->gain = 0.5;
-	  		www->dt_e_old = 0.0;
-	  		www->dt_e = 0.0;
-			www->t_e = www->t_e_old = 0.9 * t_r;   //lucy guess
-
-	
-  			www->w = weight;
-  			www->t_r = t_r;
-			printf ("NSH We are going into cycle, t_r=%f\n",www->t_r);
-  			t_e = www->t_e ;
+	      www->w = weight;
+	      www->t_r = t_r;
+	      printf ("NSH We are going into cycle, t_r=%f\n", www->t_r);
+	      t_e = www->t_e;
 
 
-	  		/* Find the ionization fractions and electron temperature */
-	  		for (n = 0; n <20; n++)
-	    			{
-	      			Log ("multicycle %d\n", n);
-	      			www->rho = nh / rho2nh;
-//				printf ("wplasma[0].tr=%f tr=%f\n",www->t_r,t_r);
-//				printf ("wplasma[0].w=%f w=%f\n",www->w,weight);
-	      			cycle (www, p, nh, t_r, t_e, weight, mode, freq_sampling,radmode);
-	      			t_e = www->t_e;
-	      			Log ("Mo  %2d %.1f %.0f %.1f %8.0f %5.2g\n", n, log10 (nh),
-		   		t_r, (ww), t_e, www->heat_tot / www->lum_rad);
-	    			}
-
-	  		/* Write out the results */
-	  		fprintf (fptr, "Mod   %.1f %.0f %.1f %8.0f %5.2f \n", log10 (nh),
-		   		t_r, (ww), t_e, www->heat_tot / www->lum_rad);
-	  		Log ("Mod    %.1f %.0f %.1f %8.0f %5.2g\n", log10 (nh), t_r, (ww),
-	       		t_e, www->heat_tot / www->lum_rad);
-	  		for (nn = 0; nn < nelements; nn++)
-	    			{
-	      			first = ele[nn].firstion;
-	      			last = first + ele[nn].nions;
-	      			fprintf (fptr, "%-5s ", ele[nn].name);
-	      			Log ("%-5s ", ele[nn].name);
-	      			tot = 0;
-	      			for (m = first; m < last; m++)
-					tot += www->density[m];
-	      			for (m = first; m < last; m++)
-					{
-		  			fprintf (fptr, " %8.2e", log10 (www->density[m] / tot));
-		  			Log (" %8.2e", log10 (www->density[m] / tot));
-					}
-	      			fprintf (fptr, "\n");
-	      			Log ("\n");
-	    			}
-			}
-    		}
-  	fclose (fptr);
-	return (0);
-  	}
-  else if (radmode==2)
-	{
-	nh=geo.pl_nh;
-	printf ("Starting multicycle, nh=%e\n",nh);
-	/* first we need to set the agn parameters up to get the right range of ionisation parameter 100-10,000 */
-//	agn_ip=1.0;     /* this will be our first value of ionisation parameter */
-//	lum_agn_50=agn_ip*nh;    /*we will need to set the luminosity over 2-10KeV to implies a 2-10keV luminosity of, and agive the right value 0.1-50KeV */
-//	geo.d_agn=1e15;    /* Set some reasonable distance - we have chosen to vary L */
-	
-
-
-
-
-//	lum_agn_50=lum_agn_50*geo.d_agn*geo.d_agn; /* we now know what the required luminosity is */
-//	lum_agn_std=emittance_pow (0.1/HEV, 50/HEV,1.0,geo.alpha_agn); /* this is what a luminosity of 1 gives us */
-//	lum_agn_scale=lum_agn_50/lum_agn_std;
-//	agn_ip=emittance_pow (0.1/HEV, 50/HEV,lum_agn_scale*100.,geo.alpha_agn);
-//	printf ("agn_lum goes from %e giving IP %e ",lum_agn_scale,agn_ip/(nh*geo.d_agn*geo.d_agn));
-//	agn_ip=emittance_pow (0.1/HEV, 50/HEV,lum_agn_scale*10000.,geo.alpha_agn);
-//	printf ("to %e giving IP %e \n",lum_agn_scale*100,agn_ip/(nh*geo.d_agn*geo.d_agn));
-	/* we now know lum_agn_scale, the luminosity required to give an ionisation parameter of 1, we will go between 100 and 10000 */
-		t_r = 30000.;
-	for (logip=5 ; logip<=5.01 ; logip+=0.1)
+	      /* Find the ionization fractions and electron temperature */
+	      for (n = 0; n < 20; n++)
 		{
-		fudgefile=fopen ("fudge_summary.out", "a");
-		numfile  = fopen ("num_summary.out", "a");
-		denomfile  = fopen ("denom_summary.out", "a");
-		heatcoolfile  = fopen ("heat_cool.out", "a");
+		  Log ("multicycle %d\n", n);
+		  www->rho = nh / rho2nh;
+//                              printf ("wplasma[0].tr=%f tr=%f\n",www->t_r,t_r);
+//                              printf ("wplasma[0].w=%f w=%f\n",www->w,weight);
+		  cycle (www, p, nh, t_r, t_e, weight, mode, freq_sampling,
+			 radmode);
+		  t_e = www->t_e;
+		  Log ("Mo  %2d %.1f %.0f %.1f %8.0f %5.2g\n", n, log10 (nh),
+		       t_r, (ww), t_e, www->heat_tot / www->lum_rad);
+		}
 
-		fprintf (fudgefile, "Logip=%e \n", logip);
-		fprintf (numfile, "Logip=%e \n", logip);
-		fprintf (denomfile, "Logip=%e \n", logip);
-		fprintf (heatcoolfile, "Logip=%e \n", logip);
+	      /* Write out the results */
+	      fprintf (fptr, "Mod   %.1f %.0f %.1f %8.0f %5.2f \n",
+		       log10 (nh), t_r, (ww), t_e,
+		       www->heat_tot / www->lum_rad);
+	      Log ("Mod    %.1f %.0f %.1f %8.0f %5.2g\n", log10 (nh), t_r,
+		   (ww), t_e, www->heat_tot / www->lum_rad);
+	      for (nn = 0; nn < nelements; nn++)
+		{
+		  first = ele[nn].firstion;
+		  last = first + ele[nn].nions;
+		  fprintf (fptr, "%-5s ", ele[nn].name);
+		  Log ("%-5s ", ele[nn].name);
+		  tot = 0;
+		  for (m = first; m < last; m++)
+		    tot += www->density[m];
+		  for (m = first; m < last; m++)
+		    {
+		      fprintf (fptr, " %8.2e", log10 (www->density[m] / tot));
+		      Log (" %8.2e", log10 (www->density[m] / tot));
+		    }
+		  fprintf (fptr, "\n");
+		  Log ("\n");
+		}
+	    }
+	}
+      fclose (fptr);
+      return (0);
+    }
+  else if (radmode == 2)
+    {
+      nh = geo.pl_nh;
+      printf ("Starting multicycle, nh=%e\n", nh);
+      /* first we need to set the agn parameters up to get the right range of ionisation parameter 100-10,000 */
+//      agn_ip=1.0;     /* this will be our first value of ionisation parameter */
+//      lum_agn_50=agn_ip*nh;    /*we will need to set the luminosity over 2-10KeV to implies a 2-10keV luminosity of, and agive the right value 0.1-50KeV */
+//      geo.d_agn=1e15;    /* Set some reasonable distance - we have chosen to vary L */
 
-		fclose (fudgefile);
-		fclose (numfile);
-		fclose (denomfile);
-		fclose (heatcoolfile);
 
-		agn_ip=pow(10,logip);
+
+
+
+//      lum_agn_50=lum_agn_50*geo.d_agn*geo.d_agn; /* we now know what the required luminosity is */
+//      lum_agn_std=emittance_pow (0.1/HEV, 50/HEV,1.0,geo.alpha_agn); /* this is what a luminosity of 1 gives us */
+//      lum_agn_scale=lum_agn_50/lum_agn_std;
+//      agn_ip=emittance_pow (0.1/HEV, 50/HEV,lum_agn_scale*100.,geo.alpha_agn);
+//      printf ("agn_lum goes from %e giving IP %e ",lum_agn_scale,agn_ip/(nh*geo.d_agn*geo.d_agn));
+//      agn_ip=emittance_pow (0.1/HEV, 50/HEV,lum_agn_scale*10000.,geo.alpha_agn);
+//      printf ("to %e giving IP %e \n",lum_agn_scale*100,agn_ip/(nh*geo.d_agn*geo.d_agn));
+      /* we now know lum_agn_scale, the luminosity required to give an ionisation parameter of 1, we will go between 100 and 10000 */
+      t_r = 30000.;
+      for (logip = 5; logip <= 5.01; logip += 0.1)
+	{
+	  fudgefile = fopen ("fudge_summary.out", "a");
+	  numfile = fopen ("num_summary.out", "a");
+	  denomfile = fopen ("denom_summary.out", "a");
+	  heatcoolfile = fopen ("heat_cool.out", "a");
+
+	  fprintf (fudgefile, "Logip=%e \n", logip);
+	  fprintf (numfile, "Logip=%e \n", logip);
+	  fprintf (denomfile, "Logip=%e \n", logip);
+	  fprintf (heatcoolfile, "Logip=%e \n", logip);
+
+	  fclose (fudgefile);
+	  fclose (numfile);
+	  fclose (denomfile);
+	  fclose (heatcoolfile);
+
+	  agn_ip = pow (10, logip);
 
 /* Next line calculates the luminosity over the range 0.1 to 50 KeV, this will allow us to calculate a constant for the power law */
-		lum_agn_50=agn_ip*nh*geo.d_agn*geo.d_agn;
-		
+	  lum_agn_50 = agn_ip * nh * geo.d_agn * geo.d_agn;
+
 /* Now we have the luminosity, calculate the constant assuming L(0.1 to 50) = const x integral of nu^alpha from 0.1 to 50 */
-		geo.const_agn = 
-    		lum_agn_50 / (((pow (50000/HEV, geo.alpha_agn + 1.0)) - pow (100/HEV, 				geo.alpha_agn + 1.0)) /  (geo.alpha_agn + 1.0));
+	  geo.const_agn =
+	    lum_agn_50 /
+	    (((pow (50000 / HEV, geo.alpha_agn + 1.0)) -
+	      pow (100 / HEV, geo.alpha_agn + 1.0)) / (geo.alpha_agn + 1.0));
 
 /* The next line calculates the luminosity between 2 and 10KeV. This number is needed to compute the photon weight later on. This is because we are going to use the python code to do this, and when this was written, we decided to standardise our AGN luminosity to the luminosity over that range */
-		geo.lum_agn=geo.const_agn*((pow (10000/HEV, geo.alpha_agn + 1.0)) - pow (2000/HEV, geo.alpha_agn + 1.0)) /  (geo.alpha_agn + 1.0);
-		printf("Multicycle - an IP of %e, power law coefficient of %e, which gives a 2-10keV luminosity of %e\n",agn_ip,geo.const_agn,geo.lum_agn);
-		printf("The power law coefficient =%e\n",geo.const_agn);
+	  geo.lum_agn =
+	    geo.const_agn * ((pow (10000 / HEV, geo.alpha_agn + 1.0)) -
+			     pow (2000 / HEV,
+				  geo.alpha_agn + 1.0)) / (geo.alpha_agn +
+							   1.0);
+	  printf
+	    ("Multicycle - an IP of %e, power law coefficient of %e, which gives a 2-10keV luminosity of %e\n",
+	     agn_ip, geo.const_agn, geo.lum_agn);
+	  printf ("The power law coefficient =%e\n", geo.const_agn);
 
 
-//		printf("logip=%f agn_ip=%e, luminosity=%e\n",logip,agn_ip,lum_agn_scale*agn_ip);
-//		geo.lum_agn=lum_agn_scale*agn_ip;
-//		printf ("We are setting the AGN luminosity to %e",geo.lum_agn);
-		www->w = weight= 0.5*(1-sqrt(1-((geo.r_agn*geo.r_agn)/(geo.d_agn*geo.d_agn))));     /* set the weight for BB type calculations */
+//              printf("logip=%f agn_ip=%e, luminosity=%e\n",logip,agn_ip,lum_agn_scale*agn_ip);
+//              geo.lum_agn=lum_agn_scale*agn_ip;
+//              printf ("We are setting the AGN luminosity to %e",geo.lum_agn);
+	  www->w = weight = 0.5 * (1 - sqrt (1 - ((geo.r_agn * geo.r_agn) / (geo.d_agn * geo.d_agn))));	/* set the weight for BB type calculations */
 
-		/* 120626 -- Added loop for new plasma structure */
-		for (i=0;i<NXBANDS;i++){
-			www->pl_w[i] = (geo.const_agn)/((4*PI)*(4.0*PI*geo.d_agn*geo.d_agn)); /* Set the sim_w parameter - added 7/2/11 as part of the effort to get the sim code into python - it needs the ability to have a different weight for each cell */
-			www->pl_alpha[i] = geo.alpha_agn;   /* Set the pl_alpha parameter - added 7/2/11 as part of the effort to get the sim code into python - needs the ability to very alpha for each cell */
+	  /* 120626 -- Added loop for new plasma structure */
+	  for (i = 0; i < NXBANDS; i++)
+	    {
+	      www->pl_w[i] = (geo.const_agn) / ((4 * PI) * (4.0 * PI * geo.d_agn * geo.d_agn));	/* Set the sim_w parameter - added 7/2/11 as part of the effort to get the sim code into python - it needs the ability to have a different weight for each cell */
+	      www->pl_alpha[i] = geo.alpha_agn;	/* Set the pl_alpha parameter - added 7/2/11 as part of the effort to get the sim code into python - needs the ability to very alpha for each cell */
+	    }
+
+	  t_r = t_r + 1.;	//makes no difference, but sparks a new whole cycle, so stops using the same old densities from last loop When multicycle was first written, either w or tr would be changed in the loop.
+	  www->gain = 0.5;
+	  www->dt_e_old = 0.0;
+	  www->dt_e = 0.0;
+	  www->t_e = www->t_e_old = 1.0e6;	//Set electron temperature to sim guess
+	  www->t_r = t_r;
+	  t_e = www->t_e;
+
+
+	  /* Find the ionization fractions and electron temperature */
+	  for (n = 0; n < 20; n++)
+	    {
+	      Log ("multicycle %d IP= %f current t_e= %f current t_r= %f\n",
+		   n, logip, www->t_e, www->t_r);
+	      www->rho = nh / rho2nh;
+	      printf ("wplasma[0].tr=%f tr=%f\n", www->t_r, t_r);
+	      printf ("wplasma[0].w=%f w=%f\n", www->w, weight);
+	      printf ("just going into cycle, nh=%e\n", nh);
+	      cycle (www, p, nh, t_r, t_e, weight, mode, freq_sampling,
+		     radmode);
+	      t_e = www->t_e;
+	      Log ("Mo  %2d %.1f %.0f %.1f %8.0f %5.2g\n", n, log10 (nh),
+		   t_r, (ww), t_e, www->heat_tot / www->lum_rad);
+	    }
+
+	  /* Write out the results */
+	  fprintf (fptr, "Mod   %.1f %.0f %.3f %8.0f %5.2f \n", log10 (nh),
+		   t_r, logip, t_e, www->heat_tot / www->lum_rad);
+	  Log ("Mod    %.1f %.0f %.1f %8.0f %5.2g\n", log10 (nh), t_r, (ww),
+	       t_e, www->heat_tot / www->lum_rad);
+	  for (nn = 0; nn < nelements; nn++)
+	    {
+	      first = ele[nn].firstion;
+	      last = first + ele[nn].nions;
+	      fprintf (fptr, "%-5s ", ele[nn].name);
+	      Log ("%-5s ", ele[nn].name);
+	      tot = 0;
+	      for (m = first; m < last; m++)
+		tot += www->density[m];
+	      for (m = first; m < last; m++)
+		{
+		  fprintf (fptr, " %8.2e", www->density[m] / tot);
+		  Log (" %8.2e", www->density[m] / tot);
 		}
-
-		t_r = t_r+1.;  //makes no difference, but sparks a new whole cycle, so stops using the same old densities from last loop When multicycle was first written, either w or tr would be changed in the loop.
-	  	www->gain = 0.5;
-	  	www->dt_e_old = 0.0;
-	  	www->dt_e = 0.0;
-	  	www->t_e = www->t_e_old = 1.0e6;   //Set electron temperature to sim guess
-  		www->t_r = t_r;
-  		t_e = www->t_e ;
+	      fprintf (fptr, "\n");
+	      Log ("\n");
+	    }
 
 
-	  	/* Find the ionization fractions and electron temperature */
-		for (n = 0; n < 20; n++)
-	    		{
-	      		Log ("multicycle %d IP= %f current t_e= %f current t_r= %f\n", n,logip,www->t_e,www->t_r);
-	      		www->rho = nh / rho2nh;
-			printf ("wplasma[0].tr=%f tr=%f\n",www->t_r,t_r);
-			printf ("wplasma[0].w=%f w=%f\n",www->w,weight);
-			printf ("just going into cycle, nh=%e\n",nh);
-	      		cycle (www, p, nh, t_r, t_e, weight, mode, freq_sampling,radmode);
-	      		t_e = www->t_e;
-	      		Log ("Mo  %2d %.1f %.0f %.1f %8.0f %5.2g\n", n, log10 (nh),
-		   	t_r, (ww), t_e, www->heat_tot / www->lum_rad);
-	    		}
-
-	  	/* Write out the results */
-	  	fprintf (fptr, "Mod   %.1f %.0f %.3f %8.0f %5.2f \n", log10 (nh),
-		  	t_r, logip, t_e, www->heat_tot / www->lum_rad);
-	  	Log ("Mod    %.1f %.0f %.1f %8.0f %5.2g\n", log10 (nh), t_r, (ww),
-	       	t_e, www->heat_tot / www->lum_rad);
-	  	for (nn = 0; nn < nelements; nn++)
-	    		{
-	      		first = ele[nn].firstion;
-	      		last = first + ele[nn].nions;
-	      		fprintf (fptr, "%-5s ", ele[nn].name);
-	      		Log ("%-5s ", ele[nn].name);
-	      		tot = 0;
-	      		for (m = first; m < last; m++)
-				tot += www->density[m];
-	      		for (m = first; m < last; m++)
-				{
-		  		fprintf (fptr, " %8.2e", www->density[m]/tot);
-		  		Log (" %8.2e", www->density[m]/tot);
-				}
-	      		fprintf (fptr, "\n");
-	      		Log ("\n");
-	    		}
-		
-
-		}
-	return (0);
 	}
-  else 
-	{
-	printf("something has gone badly wrong - radmode is not 1 or 2");
-	return (0);
-	}
+      return (0);
+    }
+  else
+    {
+      printf ("something has gone badly wrong - radmode is not 1 or 2");
+      return (0);
+    }
 }
 
 int

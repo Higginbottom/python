@@ -3,21 +3,12 @@ README
 ***
 =========
 
-THIS IS JM'S BRANCH
+#Python 75e
 
-HE IS TESTING GIT!
+This is the README file for Python75e. 
 
-
-#Python 74b4
-
-This is the README file for Python74b4. 
-
-* Precursor is python_74b1 
-* this papers over the bug NSH121214_2 by increasing DFUDGE to a larger value for large models.
-changes this version
-* python.c - dfudge now set to 1e5cm or rmax/1e10, whichever is larger.
-
-Note that the proper GitHub site will contain versions 68-74b1 of python as well- but this is just a test version for the moment.
+* Precursor is python_75d 
+* This version should be identical to 75e except that GNU indent has been run on it
 
 ***
 ==========

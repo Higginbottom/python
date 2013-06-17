@@ -61,46 +61,54 @@ History:
 
 
 int
-create_maps(ichoice)
-	int             ichoice;
+create_maps (ichoice)
+     int ichoice;
 {
-	int             i, j;
-	j = 0;
-	if (ichoice) {
-		//map to reduce space
-			for (i = 0; i < NDIM2; i++) {
-			wmain[i].nwind = i;
-			if (wmain[i].vol > 0) {
-				wmain[i].nplasma = j;
-				plasmamain[j].nplasma = j;
-				plasmamain[j].nwind = i;
-				j++;
-			} else {
-				wmain[i].nplasma = NPLASMA;
-			}
-		}
-		if (j != NPLASMA) {
-			Error
-				("create_maps: Problems with matching cells -- Expected %d Got %d\n",
-				 NPLASMA, j);
-			exit(0);
-		}
-	} else
-		//one plama cell for each wind cell
-		{
-			for (i = 0; i < NDIM2; i++) {
-				wmain[i].nwind = i;
-				wmain[i].nplasma = i;
-				plasmamain[i].nplasma = i;
-				plasmamain[i].nwind = i;
+  int i, j;
+  j = 0;
+  if (ichoice)
+    {
+      //map to reduce space
+      for (i = 0; i < NDIM2; i++)
+	{
+	  wmain[i].nwind = i;
+	  if (wmain[i].vol > 0)
+	    {
+	      wmain[i].nplasma = j;
+	      plasmamain[j].nplasma = j;
+	      plasmamain[j].nwind = i;
+	      j++;
+	    }
+	  else
+	    {
+	      wmain[i].nplasma = NPLASMA;
+	    }
+	}
+      if (j != NPLASMA)
+	{
+	  Error
+	    ("create_maps: Problems with matching cells -- Expected %d Got %d\n",
+	     NPLASMA, j);
+	  exit (0);
+	}
+    }
+  else
+    //one plama cell for each wind cell
+    {
+      for (i = 0; i < NDIM2; i++)
+	{
+	  wmain[i].nwind = i;
+	  wmain[i].nplasma = i;
+	  plasmamain[i].nplasma = i;
+	  plasmamain[i].nwind = i;
 
-			}
+	}
 
-		}
+    }
 
-	plasmamain[NPLASMA].nplasma = NPLASMA;
-	plasmamain[NPLASMA].nwind = -1;
-	return (0);
+  plasmamain[NPLASMA].nplasma = NPLASMA;
+  plasmamain[NPLASMA].nwind = -1;
+  return (0);
 }
 
 
@@ -129,27 +137,31 @@ create_maps(ichoice)
 
 
 int
-calloc_wind(nelem)
-	int             nelem;
+calloc_wind (nelem)
+     int nelem;
 {
 
-	if (wmain!=NULL) {
-		free(wmain);
-	}
+  if (wmain != NULL)
+    {
+      free (wmain);
+    }
 
-	wmain = (WindPtr) calloc(sizeof(wind_dummy), nelem + 1);
+  wmain = (WindPtr) calloc (sizeof (wind_dummy), nelem + 1);
 
-	if (wmain == NULL) {
-		Error
-			("There is a problem in allocating memory for the wind structure\n");
-		exit(0);
-	} else {
-		Log_silent
-			("Allocated %10d bytes for each of %5d elements of             totaling %10.1f Mb\n",
-			 sizeof(wind_dummy), nelem, 1.e-6 * nelem * sizeof(wind_dummy));
-	}
+  if (wmain == NULL)
+    {
+      Error
+	("There is a problem in allocating memory for the wind structure\n");
+      exit (0);
+    }
+  else
+    {
+      Log_silent
+	("Allocated %10d bytes for each of %5d elements of             totaling %10.1f Mb\n",
+	 sizeof (wind_dummy), nelem, 1.e-6 * nelem * sizeof (wind_dummy));
+    }
 
-	return (0);
+  return (0);
 }
 
 
@@ -180,63 +192,73 @@ History:
 
 
 int
-calloc_plasma(nelem)
-	int             nelem;
+calloc_plasma (nelem)
+     int nelem;
 {
 
-	if (plasmamain!=NULL){
-			free(plasmamain);
-			}
-			
-	//Allocate one extra element to store data where there is no volume
+  if (plasmamain != NULL)
+    {
+      free (plasmamain);
+    }
 
-		plasmamain = (PlasmaPtr) calloc(sizeof(plasma_dummy), (nelem + 1));
-	geo.nplasma = nelem;
+  //Allocate one extra element to store data where there is no volume
 
-	if (plasmamain == NULL) {
-		Error
-			("There is a problem in allocating memory for the plasma structure\n");
-		exit(0);
-	} else {
-		Log_silent
-			("Allocated %10d bytes for each of %5d elements of      plasma totaling %10.1f Mb \n",
-			 sizeof(plasma_dummy), (nelem + 1),
-			 1.e-6 * (nelem + 1) * sizeof(plasma_dummy));
-	}
+  plasmamain = (PlasmaPtr) calloc (sizeof (plasma_dummy), (nelem + 1));
+  geo.nplasma = nelem;
 
-	/* Now allocate space for storing photon frequencies -- 57h */
-	if(photstoremain!=NULL){
-		free(photstoremain);
-	}
-	photstoremain =
-		(PhotStorePtr) calloc(sizeof(photon_store_dummy), (nelem + 1));
+  if (plasmamain == NULL)
+    {
+      Error
+	("There is a problem in allocating memory for the plasma structure\n");
+      exit (0);
+    }
+  else
+    {
+      Log_silent
+	("Allocated %10d bytes for each of %5d elements of      plasma totaling %10.1f Mb \n",
+	 sizeof (plasma_dummy), (nelem + 1),
+	 1.e-6 * (nelem + 1) * sizeof (plasma_dummy));
+    }
 
-	if (photstoremain == NULL) {
-		Error
-			("There is a problem in allocating memory for the photonstore structure\n");
-		exit(0);
-	} else {
-		Log_silent
-			("Allocated %10d bytes for each of %5d elements of photonstore totaling %10.1f Mb \n",
-			 sizeof(photon_store_dummy), (nelem + 1),
-			 1.e-6 * (nelem + 1) * sizeof(photon_store_dummy));
-	}
+  /* Now allocate space for storing photon frequencies -- 57h */
+  if (photstoremain != NULL)
+    {
+      free (photstoremain);
+    }
+  photstoremain =
+    (PhotStorePtr) calloc (sizeof (photon_store_dummy), (nelem + 1));
 
-	return (0);
+  if (photstoremain == NULL)
+    {
+      Error
+	("There is a problem in allocating memory for the photonstore structure\n");
+      exit (0);
+    }
+  else
+    {
+      Log_silent
+	("Allocated %10d bytes for each of %5d elements of photonstore totaling %10.1f Mb \n",
+	 sizeof (photon_store_dummy), (nelem + 1),
+	 1.e-6 * (nelem + 1) * sizeof (photon_store_dummy));
+    }
+
+  return (0);
 }
 
 
 int
-check_plasma(xplasma, message)
-	PlasmaPtr       xplasma;
-	char            message[];
+check_plasma (xplasma, message)
+     PlasmaPtr xplasma;
+     char message[];
 {
-	if (xplasma->nplasma == NPLASMA) {
-		Error("check_plasma -- %s \n", message);
-		return (1);
-		//true
-	} else
-		return (0);
+  if (xplasma->nplasma == NPLASMA)
+    {
+      Error ("check_plasma -- %s \n", message);
+      return (1);
+      //true
+    }
+  else
+    return (0);
 }
 
 
@@ -338,39 +360,47 @@ History:
 
 
 int
-calloc_macro(nelem)
-	int             nelem;
+calloc_macro (nelem)
+     int nelem;
 {
 
 
-	if (nlevels_macro == 0 && geo.nmacro == 0) {
-		//OLD71 - line is redundnat geo.nmacro = 0;
-		Log
-			("calloc_macro: Allocated no space for macro since nlevels_macro==0 and geo.nmacro==0\n");
-		return (0);
-	}
-	if (macromain!=NULL){
-			free(macromain);
-			}
-	//Allocate one extra element to store data where there is no volume
+  if (nlevels_macro == 0 && geo.nmacro == 0)
+    {
+      //OLD71 - line is redundnat geo.nmacro = 0;
+      Log
+	("calloc_macro: Allocated no space for macro since nlevels_macro==0 and geo.nmacro==0\n");
+      return (0);
+    }
+  if (macromain != NULL)
+    {
+      free (macromain);
+    }
+  //Allocate one extra element to store data where there is no volume
 
-		macromain = (MacroPtr) calloc(sizeof(macro_dummy), (nelem + 1));
-	geo.nmacro = nelem;
+  macromain = (MacroPtr) calloc (sizeof (macro_dummy), (nelem + 1));
+  geo.nmacro = nelem;
 
-	if (macromain == NULL) {
-		Error
-			("calloc_macro: There is a problem in allocating memory for the macro structure\n");
-		exit(0);
-	} else if (nlevels_macro > 0 || geo.nmacro > 0) {
-		Log
-			("Allocated %10d bytes for each of %5d elements of       macro totaling %10.1f Mb \n",
-			 sizeof(macro_dummy), (nelem + 1),
-			 1.e-6 * (nelem + 1) * sizeof(macro_dummy));
-	} else {
-		Log("calloc_macro: Allocated no space for macro since nlevels_macro==0\n");
-	}
+  if (macromain == NULL)
+    {
+      Error
+	("calloc_macro: There is a problem in allocating memory for the macro structure\n");
+      exit (0);
+    }
+  else if (nlevels_macro > 0 || geo.nmacro > 0)
+    {
+      Log
+	("Allocated %10d bytes for each of %5d elements of       macro totaling %10.1f Mb \n",
+	 sizeof (macro_dummy), (nelem + 1),
+	 1.e-6 * (nelem + 1) * sizeof (macro_dummy));
+    }
+  else
+    {
+      Log
+	("calloc_macro: Allocated no space for macro since nlevels_macro==0\n");
+    }
 
-	return (0);
+  return (0);
 }
 
 
@@ -393,190 +423,271 @@ the number of elements
 
 
 int
-calloc_estimators(nelem)
-	int             nelem;
+calloc_estimators (nelem)
+     int nelem;
 {
-	int             n;
+  int n;
 
-	if (nlevels_macro == 0 && geo.nmacro == 0) {
-		geo.nmacro = 0;
-		Log_silent
-			("Allocated no space for MA estimators since nlevels_macro==0 and geo.nmacro==0\n");
-		return (0);
+  if (nlevels_macro == 0 && geo.nmacro == 0)
+    {
+      geo.nmacro = 0;
+      Log_silent
+	("Allocated no space for MA estimators since nlevels_macro==0 and geo.nmacro==0\n");
+      return (0);
+    }
+  //Allocate one extra element to store data where there is no volume
+
+
+
+
+  // printf("nlevels_macro %d\n", nlevels_macro);
+  size_Jbar_est = 0;
+  size_gamma_est = 0;
+  size_alpha_est = 0;
+  for (n = 0; n < nlevels_macro; n++)
+    {
+      Log
+	("calloc_estimators: level %d has n_bbu_jump %d  n_bbd_jump %d n_bfu_jump %d n_bfd_jump %d\n",
+	 n, config[n].n_bbu_jump, config[n].n_bbd_jump, config[n].n_bfu_jump,
+	 config[n].n_bfd_jump);
+      config[n].bbu_indx_first = size_Jbar_est;
+      size_Jbar_est += config[n].n_bbu_jump;
+      config[n].bfu_indx_first = size_gamma_est;
+      size_gamma_est += config[n].n_bfu_jump;
+      config[n].bfd_indx_first = size_alpha_est;
+      size_alpha_est += config[n].n_bfd_jump;
+    }
+
+
+
+
+  Log
+    ("calloc_estimators: size_Jbar_est %d size_gamma_est %d size_alpha_est %d\n",
+     size_Jbar_est, size_gamma_est, size_alpha_est);
+
+
+  for (n = 0; n < nelem; n++)
+    {
+      if (macromain[n].jbar != NULL)
+	{
+	  free (macromain[n].jbar);
 	}
-	//Allocate one extra element to store data where there is no volume
-
-
-
-
-		// printf("nlevels_macro %d\n", nlevels_macro);
-	size_Jbar_est = 0;
-	size_gamma_est = 0;
-	size_alpha_est = 0;
-	for (n = 0; n < nlevels_macro; n++) {
-		Log("calloc_estimators: level %d has n_bbu_jump %d  n_bbd_jump %d n_bfu_jump %d n_bfd_jump %d\n", n, config[n].n_bbu_jump, config[n].n_bbd_jump, config[n].n_bfu_jump, config[n].n_bfd_jump);
-		config[n].bbu_indx_first = size_Jbar_est;
-		size_Jbar_est += config[n].n_bbu_jump;
-		config[n].bfu_indx_first = size_gamma_est;
-		size_gamma_est += config[n].n_bfu_jump;
-		config[n].bfd_indx_first = size_alpha_est;
-		size_alpha_est += config[n].n_bfd_jump;
-	}
-
-
-
-
-	Log("calloc_estimators: size_Jbar_est %d size_gamma_est %d size_alpha_est %d\n", size_Jbar_est, size_gamma_est, size_alpha_est);
-
-
-	for (n = 0; n < nelem; n++) {
-		if(macromain[n].jbar!=NULL){
-			free(macromain[n].jbar);
-		}
-		if ((macromain[n].jbar = calloc(sizeof(double), size_Jbar_est)) == NULL) {
-			Error("calloc_estimators: Error in allocating memory for MA estimators\n");
-			exit(0);
-		}
-
-		if(macromain[n].jbar_old!=NULL){
-			free(macromain[n].jbar_old);
-					}
-		if ((macromain[n].jbar_old = calloc(sizeof(double), size_Jbar_est)) == NULL) {
-			Error("calloc_estimators: Error in allocating memory for MA estimators\n");
-			exit(0);
-		}
-
-		if(macromain[n].gamma !=NULL){
-			free(macromain[n].gamma);
-		}
-		if ((macromain[n].gamma = calloc(sizeof(double), size_gamma_est)) == NULL) {
-			Error("calloc_estimators: Error in allocating memory for MA estimators\n");
-			exit(0);
-		}
-
-		if(macromain[n].gamma_old != NULL){
-			free(macromain[n].gamma_old);
-		}
-		if ((macromain[n].gamma_old = calloc(sizeof(double), size_gamma_est)) == NULL) {
-			Error("calloc_estimators: Error in allocating memory for MA estimators\n");
-			exit(0);
-		}
-
-		if (macromain[n].gamma_e != NULL){
-			free(macromain[n].gamma_e);
-		}
-		if ((macromain[n].gamma_e = calloc(sizeof(double), size_gamma_est)) == NULL) {
-			Error("calloc_estimators: Error in allocating memory for MA estimators\n");
-			exit(0);
-		}
-
-		if (macromain[n].gamma_e_old != NULL){
-			free(macromain[n].gamma_e_old);
-		}
-		if ((macromain[n].gamma_e_old = calloc(sizeof(double), size_gamma_est)) == NULL) {
-			Error("calloc_estimators: Error in allocating memory for MA estimators\n");
-			exit(0);
-		}
-
-		if (macromain[n].alpha_st != NULL){
-			free(macromain[n].alpha_st);
-		}
-		if ((macromain[n].alpha_st = calloc(sizeof(double), size_gamma_est)) == NULL) {
-			Error("calloc_estimators: Error in allocating memory for MA estimators\n");
-			exit(0);
-		}
-
-		if (macromain[n].alpha_st_old!=NULL){
-			free(macromain[n].alpha_st_old);
-		}
-		if ((macromain[n].alpha_st_old = calloc(sizeof(double), size_gamma_est)) == NULL) {
-			Error("calloc_estimators: Error in allocating memory for MA estimators\n");
-			exit(0);
-		}
-
-		if (macromain[n].alpha_st_e != NULL){
-			free(macromain[n].alpha_st_e);
-		}
-		if ((macromain[n].alpha_st_e = calloc(sizeof(double), size_gamma_est)) == NULL) {
-			Error("calloc_estimators: Error in allocating memory for MA estimators\n");
-			exit(0);
-		}
-
-		if (macromain[n].alpha_st_e_old){
-			free(macromain[n].alpha_st_e_old);
-		}
-		if ((macromain[n].alpha_st_e_old = calloc(sizeof(double), size_gamma_est)) == NULL) {
-			Error("calloc_estimators: Error in allocating memory for MA estimators\n");
-			exit(0);
-		}
-
-		if (macromain[n].recomb_sp!=NULL){
-			free(macromain[n].recomb_sp);
-		}
-		if ((macromain[n].recomb_sp = calloc(sizeof(double), size_alpha_est)) == NULL) {
-			Error("calloc_estimators: Error in allocating memory for MA estimators\n");
-			exit(0);
-		}
-
-		if (macromain[n].recomb_sp_e != NULL){
-			free(macromain[n].recomb_sp_e);
-		}
-		if ((macromain[n].recomb_sp_e = calloc(sizeof(double), size_alpha_est)) == NULL) {
-			Error("calloc_estimators: Error in allocating memory for MA estimators\n");
-			exit(0);
-		}
-
-		if (macromain[n].matom_emiss!=NULL){
-			free(macromain[n].matom_emiss);
-		}
-		if ((macromain[n].matom_emiss = calloc(sizeof(double), nlevels_macro)) == NULL) {
-			Error("calloc_estimators: Error in allocating memory for MA estimators\n");
-			exit(0);
-		}
-
-		if (macromain[n].matom_abs != NULL){
-			free(macromain[n].matom_abs);
-		}
-		if ((macromain[n].matom_abs = calloc(sizeof(double), nlevels_macro)) == NULL) {
-			Error("calloc_estimators: Error in allocating memory for MA estimators\n");
-			exit(0);
-		}
-
-		/* Added ksl 091103 59e */
-		if (macromain[n].cooling_bf != NULL){
-			free(macromain[n].cooling_bf);
-		}
-		if ((macromain[n].cooling_bf = calloc(sizeof(double), ntop_phot)) == NULL) {
-			Error("calloc_estimators: Error in allocating memory for MA estimators\n");
-			exit(0);
-		}
-
-		if (macromain[n].cooling_bf_col != NULL){
-			free(macromain[n].cooling_bf_col);
-		}
-		if ((macromain[n].cooling_bf_col = calloc(sizeof(double), ntop_phot)) == NULL) {
-			Error("calloc_estimators: Error in allocating memory for MA estimators\n");
-			exit(0);
-		}
-
-		if (macromain[n].cooling_bb != NULL){
-			free(macromain[n].cooling_bb);
-		}
-		if ((macromain[n].cooling_bb = calloc(sizeof(double), nlines)) == NULL) {
-			Error("calloc_estimators: Error in allocating memory for MA estimators\n");
-			exit(0);
-		}
+      if ((macromain[n].jbar =
+	   calloc (sizeof (double), size_Jbar_est)) == NULL)
+	{
+	  Error
+	    ("calloc_estimators: Error in allocating memory for MA estimators\n");
+	  exit (0);
 	}
 
-
-
-	if (nlevels_macro > 0 || geo.nmacro > 0) {
-		Log_silent
-			("Allocated %10.1f Mb for MA estimators \n",
-			 1.e-6 * (nelem + 1) * (2. * nlevels_macro + 2. * size_alpha_est + 8. * size_gamma_est + 2. * size_Jbar_est) * sizeof(double));
-	} else {
-		Log_silent("Allocated no space for macro since nlevels_macro==0\n");
+      if (macromain[n].jbar_old != NULL)
+	{
+	  free (macromain[n].jbar_old);
+	}
+      if ((macromain[n].jbar_old =
+	   calloc (sizeof (double), size_Jbar_est)) == NULL)
+	{
+	  Error
+	    ("calloc_estimators: Error in allocating memory for MA estimators\n");
+	  exit (0);
 	}
 
-	return (0);
+      if (macromain[n].gamma != NULL)
+	{
+	  free (macromain[n].gamma);
+	}
+      if ((macromain[n].gamma =
+	   calloc (sizeof (double), size_gamma_est)) == NULL)
+	{
+	  Error
+	    ("calloc_estimators: Error in allocating memory for MA estimators\n");
+	  exit (0);
+	}
+
+      if (macromain[n].gamma_old != NULL)
+	{
+	  free (macromain[n].gamma_old);
+	}
+      if ((macromain[n].gamma_old =
+	   calloc (sizeof (double), size_gamma_est)) == NULL)
+	{
+	  Error
+	    ("calloc_estimators: Error in allocating memory for MA estimators\n");
+	  exit (0);
+	}
+
+      if (macromain[n].gamma_e != NULL)
+	{
+	  free (macromain[n].gamma_e);
+	}
+      if ((macromain[n].gamma_e =
+	   calloc (sizeof (double), size_gamma_est)) == NULL)
+	{
+	  Error
+	    ("calloc_estimators: Error in allocating memory for MA estimators\n");
+	  exit (0);
+	}
+
+      if (macromain[n].gamma_e_old != NULL)
+	{
+	  free (macromain[n].gamma_e_old);
+	}
+      if ((macromain[n].gamma_e_old =
+	   calloc (sizeof (double), size_gamma_est)) == NULL)
+	{
+	  Error
+	    ("calloc_estimators: Error in allocating memory for MA estimators\n");
+	  exit (0);
+	}
+
+      if (macromain[n].alpha_st != NULL)
+	{
+	  free (macromain[n].alpha_st);
+	}
+      if ((macromain[n].alpha_st =
+	   calloc (sizeof (double), size_gamma_est)) == NULL)
+	{
+	  Error
+	    ("calloc_estimators: Error in allocating memory for MA estimators\n");
+	  exit (0);
+	}
+
+      if (macromain[n].alpha_st_old != NULL)
+	{
+	  free (macromain[n].alpha_st_old);
+	}
+      if ((macromain[n].alpha_st_old =
+	   calloc (sizeof (double), size_gamma_est)) == NULL)
+	{
+	  Error
+	    ("calloc_estimators: Error in allocating memory for MA estimators\n");
+	  exit (0);
+	}
+
+      if (macromain[n].alpha_st_e != NULL)
+	{
+	  free (macromain[n].alpha_st_e);
+	}
+      if ((macromain[n].alpha_st_e =
+	   calloc (sizeof (double), size_gamma_est)) == NULL)
+	{
+	  Error
+	    ("calloc_estimators: Error in allocating memory for MA estimators\n");
+	  exit (0);
+	}
+
+      if (macromain[n].alpha_st_e_old)
+	{
+	  free (macromain[n].alpha_st_e_old);
+	}
+      if ((macromain[n].alpha_st_e_old =
+	   calloc (sizeof (double), size_gamma_est)) == NULL)
+	{
+	  Error
+	    ("calloc_estimators: Error in allocating memory for MA estimators\n");
+	  exit (0);
+	}
+
+      if (macromain[n].recomb_sp != NULL)
+	{
+	  free (macromain[n].recomb_sp);
+	}
+      if ((macromain[n].recomb_sp =
+	   calloc (sizeof (double), size_alpha_est)) == NULL)
+	{
+	  Error
+	    ("calloc_estimators: Error in allocating memory for MA estimators\n");
+	  exit (0);
+	}
+
+      if (macromain[n].recomb_sp_e != NULL)
+	{
+	  free (macromain[n].recomb_sp_e);
+	}
+      if ((macromain[n].recomb_sp_e =
+	   calloc (sizeof (double), size_alpha_est)) == NULL)
+	{
+	  Error
+	    ("calloc_estimators: Error in allocating memory for MA estimators\n");
+	  exit (0);
+	}
+
+      if (macromain[n].matom_emiss != NULL)
+	{
+	  free (macromain[n].matom_emiss);
+	}
+      if ((macromain[n].matom_emiss =
+	   calloc (sizeof (double), nlevels_macro)) == NULL)
+	{
+	  Error
+	    ("calloc_estimators: Error in allocating memory for MA estimators\n");
+	  exit (0);
+	}
+
+      if (macromain[n].matom_abs != NULL)
+	{
+	  free (macromain[n].matom_abs);
+	}
+      if ((macromain[n].matom_abs =
+	   calloc (sizeof (double), nlevels_macro)) == NULL)
+	{
+	  Error
+	    ("calloc_estimators: Error in allocating memory for MA estimators\n");
+	  exit (0);
+	}
+
+      /* Added ksl 091103 59e */
+      if (macromain[n].cooling_bf != NULL)
+	{
+	  free (macromain[n].cooling_bf);
+	}
+      if ((macromain[n].cooling_bf =
+	   calloc (sizeof (double), ntop_phot)) == NULL)
+	{
+	  Error
+	    ("calloc_estimators: Error in allocating memory for MA estimators\n");
+	  exit (0);
+	}
+
+      if (macromain[n].cooling_bf_col != NULL)
+	{
+	  free (macromain[n].cooling_bf_col);
+	}
+      if ((macromain[n].cooling_bf_col =
+	   calloc (sizeof (double), ntop_phot)) == NULL)
+	{
+	  Error
+	    ("calloc_estimators: Error in allocating memory for MA estimators\n");
+	  exit (0);
+	}
+
+      if (macromain[n].cooling_bb != NULL)
+	{
+	  free (macromain[n].cooling_bb);
+	}
+      if ((macromain[n].cooling_bb =
+	   calloc (sizeof (double), nlines)) == NULL)
+	{
+	  Error
+	    ("calloc_estimators: Error in allocating memory for MA estimators\n");
+	  exit (0);
+	}
+    }
+
+
+
+  if (nlevels_macro > 0 || geo.nmacro > 0)
+    {
+      Log_silent
+	("Allocated %10.1f Mb for MA estimators \n",
+	 1.e-6 * (nelem + 1) * (2. * nlevels_macro + 2. * size_alpha_est +
+				8. * size_gamma_est +
+				2. * size_Jbar_est) * sizeof (double));
+    }
+  else
+    {
+      Log_silent ("Allocated no space for macro since nlevels_macro==0\n");
+    }
+
+  return (0);
 }

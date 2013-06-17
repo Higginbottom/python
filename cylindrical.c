@@ -533,7 +533,7 @@ cylind_get_random_location (n, icomp, x)
 
  Synopsis:
  	cylind_extend_density  extends the density to
-	regions just outside the wind regions so that
+	regions just outside the wind regiions so that
 	extrapolations of density can be made there
 
  Arguments:		

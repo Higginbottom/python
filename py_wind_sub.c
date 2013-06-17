@@ -1536,8 +1536,8 @@ J_summary (w, rootname, ochoice)
 	}
     }
   display ("J in cell");
-	printf ("i=%i",i);
-	sprintf(number,"%i",i);
+  printf ("i=%i", i);
+  sprintf (number, "%i", i);
   if (ochoice)
     {
       strcpy (filename, rootname);
@@ -1746,7 +1746,8 @@ convergence_summary (w, rootname, ochoice)
 	  aaa[n] = plasmamain[nplasma].converge_whole;
 	}
     }
-  display ("Convergence (0=converged.  Higher numbers indicate one or more convergence tests failed)");
+  display
+    ("Convergence (0=converged.  Higher numbers indicate one or more convergence tests failed)");
 
   if (ochoice)
     {
@@ -1909,5 +1910,261 @@ convergence_all (w, rootname, ochoice)
 	}
     }
 
+  return (0);
+}
+
+
+
+/* A summary of adiabatic cooling */
+int
+heatcool_summary (w, rootname, ochoice)
+     WindPtr w;
+     char rootname[];
+     int ochoice;
+{
+  int n;
+  int nplasma;
+  char filename[LINELENGTH];
+
+
+
+  for (n = 0; n < NDIM2; n++)
+    {
+      aaa[n] = 0;
+      if (w[n].vol > 0.0)
+	{
+	  nplasma = w[n].nplasma;
+	  aaa[n] = plasmamain[nplasma].heat_tot;
+	}
+    }
+  display ("Total heating");
+
+  if (ochoice)
+    {
+      strcpy (filename, rootname);
+      strcat (filename, ".heat_tot");
+      write_array (filename, ochoice);
+    }
+
+  for (n = 0; n < NDIM2; n++)
+    {
+      aaa[n] = 0;
+      if (w[n].vol > 0.0)
+	{
+	  nplasma = w[n].nplasma;
+	  aaa[n] = plasmamain[nplasma].heat_lines;
+	}
+    }
+  display ("Line heating");
+
+  if (ochoice)
+    {
+      strcpy (filename, rootname);
+      strcat (filename, ".heat_lines");
+      write_array (filename, ochoice);
+    }
+
+  for (n = 0; n < NDIM2; n++)
+    {
+      aaa[n] = 0;
+      if (w[n].vol > 0.0)
+	{
+	  nplasma = w[n].nplasma;
+	  aaa[n] = plasmamain[nplasma].heat_ff;
+	}
+    }
+  display ("FF heating");
+
+  if (ochoice)
+    {
+      strcpy (filename, rootname);
+      strcat (filename, ".heat_ff");
+      write_array (filename, ochoice);
+    }
+
+  for (n = 0; n < NDIM2; n++)
+    {
+      aaa[n] = 0;
+      if (w[n].vol > 0.0)
+	{
+	  nplasma = w[n].nplasma;
+	  aaa[n] = plasmamain[nplasma].heat_comp;
+	}
+    }
+  display ("Compton heating");
+
+  if (ochoice)
+    {
+      strcpy (filename, rootname);
+      strcat (filename, ".heat_comp");
+      write_array (filename, ochoice);
+    }
+
+  for (n = 0; n < NDIM2; n++)
+    {
+      aaa[n] = 0;
+      if (w[n].vol > 0.0)
+	{
+	  nplasma = w[n].nplasma;
+	  aaa[n] = plasmamain[nplasma].heat_ind_comp;
+	}
+    }
+  display ("Induced Compton heating");
+
+  if (ochoice)
+    {
+      strcpy (filename, rootname);
+      strcat (filename, ".heat_ind_comp");
+      write_array (filename, ochoice);
+    }
+
+  for (n = 0; n < NDIM2; n++)
+    {
+      aaa[n] = 0;
+      if (w[n].vol > 0.0)
+	{
+	  nplasma = w[n].nplasma;
+	  aaa[n] = plasmamain[nplasma].heat_photo;
+	}
+    }
+  display ("Photo heating");
+
+  if (ochoice)
+    {
+      strcpy (filename, rootname);
+      strcat (filename, ".heat_photo");
+      write_array (filename, ochoice);
+    }
+
+  for (n = 0; n < NDIM2; n++)
+    {
+      aaa[n] = 0;
+      if (w[n].vol > 0.0)
+	{
+	  nplasma = w[n].nplasma;
+	  aaa[n] = plasmamain[nplasma].lum_lines;
+	}
+    }
+  display ("Line Luminosity");
+
+  if (ochoice)
+    {
+      strcpy (filename, rootname);
+      strcat (filename, ".lum_lines");
+      write_array (filename, ochoice);
+    }
+
+
+
+  for (n = 0; n < NDIM2; n++)
+    {
+      aaa[n] = 0;
+      if (w[n].vol > 0.0)
+	{
+	  nplasma = w[n].nplasma;
+	  aaa[n] = plasmamain[nplasma].lum_adiabatic;
+	}
+    }
+  display ("Adiabatic Luminosity");
+
+  if (ochoice)
+    {
+      strcpy (filename, rootname);
+      strcat (filename, ".lum_adiabatic");
+      write_array (filename, ochoice);
+    }
+
+  for (n = 0; n < NDIM2; n++)
+    {
+      aaa[n] = 0;
+      if (w[n].vol > 0.0)
+	{
+	  nplasma = w[n].nplasma;
+	  aaa[n] = plasmamain[nplasma].lum_ff;
+	}
+    }
+  display ("Free Free Luminosity");
+
+  if (ochoice)
+    {
+      strcpy (filename, rootname);
+      strcat (filename, ".lum_ff");
+      write_array (filename, ochoice);
+    }
+
+  for (n = 0; n < NDIM2; n++)
+    {
+      aaa[n] = 0;
+      if (w[n].vol > 0.0)
+	{
+	  nplasma = w[n].nplasma;
+	  aaa[n] = plasmamain[nplasma].lum_comp;
+	}
+    }
+  display ("Compton Luminosity");
+
+  if (ochoice)
+    {
+      strcpy (filename, rootname);
+      strcat (filename, ".lum_comp");
+      write_array (filename, ochoice);
+    }
+
+  for (n = 0; n < NDIM2; n++)
+    {
+      aaa[n] = 0;
+      if (w[n].vol > 0.0)
+	{
+	  nplasma = w[n].nplasma;
+	  aaa[n] = plasmamain[nplasma].lum_dr;
+	}
+    }
+  display ("DR Luminosity");
+
+  if (ochoice)
+    {
+      strcpy (filename, rootname);
+      strcat (filename, ".lum_dr");
+      write_array (filename, ochoice);
+    }
+
+  for (n = 0; n < NDIM2; n++)
+    {
+      aaa[n] = 0;
+      if (w[n].vol > 0.0)
+	{
+	  nplasma = w[n].nplasma;
+	  aaa[n] = plasmamain[nplasma].lum_fb;
+	}
+    }
+  display ("FB Luminosity");
+
+  if (ochoice)
+    {
+      strcpy (filename, rootname);
+      strcat (filename, ".lum_fb");
+      write_array (filename, ochoice);
+    }
+
+  for (n = 0; n < NDIM2; n++)
+    {
+      aaa[n] = 0;
+      if (w[n].vol > 0.0)
+	{
+	  nplasma = w[n].nplasma;
+	  aaa[n] =
+	    plasmamain[nplasma].lum_fb + plasmamain[nplasma].lum_dr +
+	    plasmamain[nplasma].lum_comp + plasmamain[nplasma].lum_ff +
+	    plasmamain[nplasma].lum_adiabatic + plasmamain[nplasma].lum_lines;
+	}
+    }
+  display ("Total Luminosity");
+
+  if (ochoice)
+    {
+      strcpy (filename, rootname);
+      strcat (filename, ".lum_total");
+      write_array (filename, ochoice);
+    }
   return (0);
 }

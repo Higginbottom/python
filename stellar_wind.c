@@ -91,7 +91,7 @@ get_stellar_wind_params ()
 
 /* Assign the generic parameters for the wind the generic parameters of the wind */
 //OLD71  geo.wind_rmin = geo.rstar;
-  geo.wind_rmin = geo.wind_rmin;  //71 ksl - Not modified this so that we did not waste cells
+  geo.wind_rmin = geo.wind_rmin;	//71 ksl - Not modified this so that we did not waste cells
   geo.wind_rmax = geo.rmax;
   geo.wind_thetamin = 0.0;
   geo.wind_thetamax = 90. / RADIAN;

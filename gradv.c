@@ -221,17 +221,17 @@ dvds_ave ()
 	   */
 
 	  if (dvds > dvds_max)
-	    {		
+	    {
 	      dvds_max = dvds;
 	      renorm (delta, 1.0);
 	      stuff_v (delta, lmn);
 	    }
 	  if (dvds < dvds_min)
-	    {			          
-	      dvds_min = dvds;	
-	      renorm (delta, 1.0);	
-	      stuff_v (delta, lmn_min);	
-	    }		
+	    {
+	      dvds_min = dvds;
+	      renorm (delta, 1.0);
+	      stuff_v (delta, lmn_min);
+	    }
 
 	  sum += dvds;
 

@@ -82,7 +82,7 @@ define_wind ()
   double mdotbase, mdotwind, rr;
   int ierr;
   int n_vol, n_inwind, n_part;
-  int n_comp,n_comp_part;
+  int n_comp, n_comp_part;
 
   int nwind;
   int nplasma;
@@ -103,18 +103,20 @@ define_wind ()
 
   /* initialize inwind to a known state */
 
-  for (n=0; n<NDIM2; n++){
-	  w[n].inwind= W_NOT_INWIND;
-  }
-
-
-
-    if (geo.wind_type == 9)    //This is the mode where we want the wind and the grid carefulluy conrolled to allow a very thin shell. We ensure that the coordinate type is spherical. 
+  for (n = 0; n < NDIM2; n++)
     {
-      Log ("We are making a thin shell type grid to match a thin shell wind. This is totally aphysical and should only be used for testing purposes\n");
+      w[n].inwind = W_NOT_INWIND;
+    }
+
+
+
+  if (geo.wind_type == 9)	//This is the mode where we want the wind and the grid carefulluy conrolled to allow a very thin shell. We ensure that the coordinate type is spherical. 
+    {
+      Log
+	("We are making a thin shell type grid to match a thin shell wind. This is totally aphysical and should only be used for testing purposes\n");
       shell_make_grid (w);
     }
-   else if (geo.coord_type == SPHERICAL)
+  else if (geo.coord_type == SPHERICAL)
     {
       spherical_make_grid (w);
     }
@@ -170,7 +172,7 @@ recreated when a windfile is read into the program
 
   if (geo.coord_type == SPHERICAL)
     {
-      spherical_volumes (w,W_ALL_INWIND);
+      spherical_volumes (w, W_ALL_INWIND);
     }
   else if (geo.coord_type == CYLIND)
     {
@@ -178,11 +180,11 @@ recreated when a windfile is read into the program
     }
   else if (geo.coord_type == RTHETA)
     {
-      rtheta_volumes (w,W_ALL_INWIND);
+      rtheta_volumes (w, W_ALL_INWIND);
     }
   else if (geo.coord_type == CYLVAR)
     {
-      cylvar_volumes (w,W_ALL_INWIND);
+      cylvar_volumes (w, W_ALL_INWIND);
     }
   else
     {
@@ -193,32 +195,33 @@ recreated when a windfile is read into the program
 
 /* Now check if there is a second component and if so get the volumes for these cells as well */
 
-  if (geo.compton_torus) {
+  if (geo.compton_torus)
+    {
 
-  if (geo.coord_type == SPHERICAL)
-    {
-      spherical_volumes (w,W_ALL_INTORUS);
-    }
-  else if (geo.coord_type == CYLIND)
-    {
-      cylind_volumes (w, W_ALL_INTORUS);
-    }
-  else if (geo.coord_type == RTHETA)
-    {
-      rtheta_volumes (w,W_ALL_INTORUS);
-    }
-  else if (geo.coord_type == CYLVAR)
-    {
-      cylvar_volumes (w,W_ALL_INTORUS);
-    }
-  else
-    {
-      Error
-	("wind2d.c: Don't know how to make volumes for coordinate type %d\n",
-	 geo.coord_type);
-    }
+      if (geo.coord_type == SPHERICAL)
+	{
+	  spherical_volumes (w, W_ALL_INTORUS);
+	}
+      else if (geo.coord_type == CYLIND)
+	{
+	  cylind_volumes (w, W_ALL_INTORUS);
+	}
+      else if (geo.coord_type == RTHETA)
+	{
+	  rtheta_volumes (w, W_ALL_INTORUS);
+	}
+      else if (geo.coord_type == CYLVAR)
+	{
+	  cylvar_volumes (w, W_ALL_INTORUS);
+	}
+      else
+	{
+	  Error
+	    ("wind2d.c: Don't know how to make volumes for coordinate type %d\n",
+	     geo.coord_type);
+	}
 
-  }
+    }
 
 /* The routines above have established the volumes of the cells that are in the wind
  * and also assigned the variables w[].inwind at least insofar as the wind is concerned.
@@ -227,7 +230,7 @@ recreated when a windfile is read into the program
 
 
   n_vol = n_inwind = n_part = 0;
-  n_comp=n_comp_part=0;
+  n_comp = n_comp_part = 0;
   for (n = 0; n < NDIM2; n++)
     {
       if (w[n].vol > 0.0)
@@ -246,9 +249,12 @@ recreated when a windfile is read into the program
     ("wind2d: %3d cells of which %d are in inwind, %d partially in_wind, & %d with pos. vol\n",
      NDIM2, n_inwind, n_part, n_vol);
 
-  if (geo.compton_torus) {
-	  Log("wind2d: cells of which %d are in in the torus , %d partially ini the torus\n",n_comp,n_comp_part);
-  }
+  if (geo.compton_torus)
+    {
+      Log
+	("wind2d: cells of which %d are in in the torus , %d partially ini the torus\n",
+	 n_comp, n_comp_part);
+    }
 
 /* 56d --Now check the volume calculations for 2d wind models 
    58b --If corners are in the wind, but there is zero_volume then ignore.
@@ -257,7 +263,7 @@ recreated when a windfile is read into the program
     {
       for (n = 0; n < NDIM2; n++)
 	{
-	  n_inwind = check_corners_inwind (n,0);
+	  n_inwind = check_corners_inwind (n, 0);
 	  if (w[n].vol == 0 && n_inwind > 0)
 	    {
 	      wind_n_to_ij (n, &i, &j);
@@ -312,36 +318,38 @@ be optional which variables beyond here are moved to structures othere than Wind
       plasmamain[n].rho = model_rho (x);
       plasmamain[n].vol = w[nwind].vol;	// Copy volumes
 /* NSH 120817 This is where we initialise the spectral models for the wind. The pl stuff is old, I've put new things in here to initialise the exponential models */
-      for (nn=0;nn<NXBANDS;nn++){
-	plasmamain[n].spec_mod_type[nn]=-1; /*NSH 120817 - setting this to a negative numebr means that at the outset, we assume we do not have a suitable model for the cell */
-	plasmamain[n].exp_temp[nn]=geo.tmax; /*NSH 120817 - as an initial guess, set this number to the hottest part of the model - this should define where any exponential dropoff becomes important */
-        plasmamain[n].exp_w[nn]=0.0; /* 120817 Who knows what this should be! */ 
-      	plasmamain[n].pl_alpha[nn] = geo.alpha_agn; //As an initial guess we assume the whole wind is optically thin and so the spectral index for a PL illumination will be the same everywhere.
- /*     plasmamain[n].pl_w[nn] = geo.const_agn / (4.0*PI*(x[0] * x[0] + x[1] * x[1] + x[2] * x[2]));  // constant / area of a sphere
-      plasmamain[n].pl_w[nn] /= 4.*PI;   // take account of solid angle NSH 120817 removed - if PL not suitable, it will be set to zero anyway, so safe to keep it at zero from the outset!*/
-	plasmamain[n].pl_w[nn]=0.0; 
-      }
+      for (nn = 0; nn < NXBANDS; nn++)
+	{
+	  plasmamain[n].spec_mod_type[nn] = -1;	/*NSH 120817 - setting this to a negative numebr means that at the outset, we assume we do not have a suitable model for the cell */
+	  plasmamain[n].exp_temp[nn] = geo.tmax;	/*NSH 120817 - as an initial guess, set this number to the hottest part of the model - this should define where any exponential dropoff becomes important */
+	  plasmamain[n].exp_w[nn] = 0.0;	/* 120817 Who knows what this should be! */
+	  plasmamain[n].pl_alpha[nn] = geo.alpha_agn;	//As an initial guess we assume the whole wind is optically thin and so the spectral index for a PL illumination will be the same everywhere.
+	  /*     plasmamain[n].pl_w[nn] = geo.const_agn / (4.0*PI*(x[0] * x[0] + x[1] * x[1] + x[2] * x[2]));  // constant / area of a sphere
+	     plasmamain[n].pl_w[nn] /= 4.*PI;   // take account of solid angle NSH 120817 removed - if PL not suitable, it will be set to zero anyway, so safe to keep it at zero from the outset! */
+	  plasmamain[n].pl_w[nn] = 0.0;
+	}
 
       nh = plasmamain[n].rho * rho2nh;
 
 /* NSH 130530 Next few lines allow the use of the temperature which can be computed from Zeus models to be used as an initial guess for the wind temperature */
       if (geo.wind_type == 3)
 	{
-	plasmamain[n].t_r = proga_temp(x);
+	  plasmamain[n].t_r = proga_temp (x);
 	}
       else
-	{   
-	     plasmamain[n].t_r = geo.twind;
+	{
+	  plasmamain[n].t_r = geo.twind;
 	}
 
 
 
-      plasmamain[n].t_r = geo.twind;
 
       /* 70b - Initialize the temperature in the torus to a different value */
-      if (w[nwind].inwind==W_ALL_INTORUS || w[nwind].inwind==W_PART_INTORUS){
-	      plasmamain[n].t_r = geo.compton_torus_te;
-      }
+      if (w[nwind].inwind == W_ALL_INTORUS
+	  || w[nwind].inwind == W_PART_INTORUS)
+	{
+	  plasmamain[n].t_r = geo.compton_torus_te;
+	}
 
 /* Initialize variables having to do with converence in initial stages */
       plasmamain[n].gain = 0.5;
@@ -360,14 +368,14 @@ be optional which variables beyond here are moved to structures othere than Wind
 	{
 	  plasmamain[n].w = 0.5 * (1 - sqrt (rrstar));
 	}
-      else	
+      else
 	plasmamain[n].w = 0.5;	//Modification to allow for possibility that grid point is inside star
 
       /* Determine the initial ionizations, either LTE or  fixed_concentrations */
       if (geo.ioniz_mode != 2)
 	{			/* Carry out an LTE determination of the ionization */
 	  ierr = ion_abundances (&plasmamain[n], 1);
-        }
+	}
       else
 	{			/* Set the concentrations to specified values */
 	  ierr = ion_abundances (&plasmamain[n], 2);
@@ -387,7 +395,7 @@ be optional which variables beyond here are moved to structures othere than Wind
 	{
 	  plasmamain[n].PWdenom[j] = 0.0;
 	  plasmamain[n].PWnumer[j] = 0.0;
-          plasmamain[n].PWdtemp[j] = 0.0;
+	  plasmamain[n].PWdtemp[j] = 0.0;
 	  plasmamain[n].PWntemp[j] = 0.0;
 	  plasmamain[n].scatters[j] = 0;
 	  plasmamain[n].xscatters[j] = 0;
@@ -451,8 +459,8 @@ be optional which variables beyond here are moved to structures othere than Wind
 	  rr =
 	    w[n + MDIM].x[0] * w[n + MDIM].x[0] + w[n +
 						    MDIM].x[1] * w[n +
-								   MDIM].
-	    x[1] - (w[n].x[0] * w[n].x[0] + w[n].x[1] * w[n].x[1]);
+								   MDIM].x[1]
+	    - (w[n].x[0] * w[n].x[0] + w[n].x[1] * w[n].x[1]);
 	  if (w[i * MDIM].inwind == W_ALL_INWIND)
 	    {
 	      nplasma = w[i * MDIM].nplasma;
@@ -777,8 +785,8 @@ wind_div_v (w)
     {
       /* Find the center of the cell */
 
-  /*   stuff_v (w->xcen, x_zero); OLD NSH 130322 - this line seems to assume w is a cell, rather than the whole wind structure */
-      stuff_v (w[icell].xcen, x_zero); /*NEW NSH 130322 - now gets the centre of the current cell in the loop */
+      /*   stuff_v (w->xcen, x_zero); OLD NSH 130322 - this line seems to assume w is a cell, rather than the whole wind structure */
+      stuff_v (w[icell].xcen, x_zero);	/*NEW NSH 130322 - now gets the centre of the current cell in the loop */
 
       delta = 0.01 * x_zero[2];	//new 04mar ksl
 
@@ -801,11 +809,9 @@ wind_div_v (w)
       vwind_xyz (&ppp, v);
       div += xxx[2] = (v[2] - v_zero[2]) / delta;
       w[icell].div_v = div;
-      if (div < 0 && (wind_div_err < 0 || w[icell].inwind == W_ALL_INWIND)) /*NSH 130322 another fix needed here the inwind check was w->inwind and was returning the wrong value */
+      if (div < 0 && (wind_div_err < 0 || w[icell].inwind == W_ALL_INWIND))	/*NSH 130322 another fix needed here the inwind check was w->inwind and was returning the wrong value */
 	{
-	  Error
-	    ("wind_div_v: div v %e is negative in cell %d. Major problem if inwind (%d) == 0\n",
-	     div, icell, w[icell].inwind); /*NSH 130222 - last fix */
+	  Error ("wind_div_v: div v %e is negative in cell %d. Major problem if inwind (%d) == 0\n", div, icell, w[icell].inwind);	/*NSH 130222 - last fix */
 	  wind_div_err++;
 	}
     }
@@ -966,19 +972,19 @@ get_random_location (n, icomp, x)
 
   if (geo.coord_type == CYLIND)
     {
-      cylind_get_random_location (n, icomp,x);
+      cylind_get_random_location (n, icomp, x);
     }
   else if (geo.coord_type == RTHETA)
     {
-      rtheta_get_random_location (n, icomp,x);
+      rtheta_get_random_location (n, icomp, x);
     }
   else if (geo.coord_type == SPHERICAL)
     {
-      spherical_get_random_location (n, icomp,x);
+      spherical_get_random_location (n, icomp, x);
     }
   else if (geo.coord_type == CYLVAR)
     {
-      cylvar_get_random_location (n, icomp,x);
+      cylvar_get_random_location (n, icomp, x);
     }
   else
     {
@@ -1039,9 +1045,9 @@ History
  */
 
 int
-check_corners_inwind (n,icomp)
+check_corners_inwind (n, icomp)
      int n;
-     int icomp;  // check corners for this component
+     int icomp;			// check corners for this component
 {
   int n_inwind;
   int i, j;
@@ -1063,4 +1069,3 @@ check_corners_inwind (n,icomp)
 
   return (n_inwind);
 }
-

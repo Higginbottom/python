@@ -50,6 +50,10 @@ teff (t, x)
   int kkk;
   int n;
 
+
+  q = 0.0;			/* NSH 130605 to remove o3 compile error */
+
+
   if (x < 1)
     {
       Error ("teff: x %f less than 1.0\n", x);

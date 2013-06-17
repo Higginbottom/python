@@ -46,7 +46,8 @@ absolute_saha (www, p, nh, t_r, t_e, weight, freq_sampling)
 
 
   //OLD init_bands (t_r, 0.0, 1e50, 0, &xband);
-  Error("absolute_saha: Next line is likely an error in for inputs to bands_init\n");
+  Error
+    ("absolute_saha: Next line is likely an error in for inputs to bands_init\n");
   //OLD0620 bands_init (t_r, 0.0, 1e50, 0, &xband);
   bands_init (1, &xband);
   xbb (p, t_r, weight, xband.f1[0], xband.f2[0], freq_sampling);

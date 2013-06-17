@@ -133,12 +133,12 @@ spherical_make_grid (w)
 	    w[n].r = geo.rstar * pow (10., dlogr * (n - 1));
 	    w[n].rcen = 0.5 * geo.rstar * (pow (10., dlogr * (n)) +
 					   pow (10., dlogr * (n - 1)));
-	printf("OLD W.r = %e, w.rcen = %e\n",w[n].r,w[n].rcen);
+	    printf ("OLD W.r = %e, w.rcen = %e\n", w[n].r, w[n].rcen);
 	    dlogr = (log10 (geo.rmax / geo.wind_rmin)) / (NDIM - 3);
 	    w[n].r = geo.wind_rmin * pow (10., dlogr * (n - 1));
 	    w[n].rcen = 0.5 * geo.wind_rmin * (pow (10., dlogr * (n)) +
-					   pow (10., dlogr * (n - 1)));
-	printf("New W.r = %e, w.rcen = %e\n",w[n].r,w[n].rcen);
+					       pow (10., dlogr * (n - 1)));
+	    printf ("New W.r = %e, w.rcen = %e\n", w[n].r, w[n].rcen);
 	  }
 
 	/* Now calculate the positions of these points in the xz plane.
@@ -254,7 +254,7 @@ spherical_wind_complete (w)
 
 
 int
-spherical_volumes (w,icomp)
+spherical_volumes (w, icomp)
      WindPtr w;
      int icomp;
 {
@@ -322,12 +322,12 @@ spherical_volumes (w,icomp)
 	    w[n].vol = 0.0;
 	  }
 	else if (jj == kk)
-	  //OLD 70b w[n].inwind = W_ALL_INWIND;	// The cell is completely in the wind
+	  //OLD 70b w[n].inwind = W_ALL_INWIND; // The cell is completely in the wind
 	  w[n].inwind = icomp;	// The cell is completely in the wind
 	else
 	  {
-	    //OLD 70b w[n].inwind = W_PART_INWIND;	//The cell is partially in the wind
-	    w[n].inwind = icomp+1;	//The cell is partially in the wind
+	    //OLD 70b w[n].inwind = W_PART_INWIND;      //The cell is partially in the wind
+	    w[n].inwind = icomp + 1;	//The cell is partially in the wind
 	    w[n].vol *= fraction;
 	  }
 
@@ -423,7 +423,7 @@ spherical_where_in_grid (x)
 **************************************************************/
 
 int
-spherical_get_random_location (n, icomp,x)
+spherical_get_random_location (n, icomp, x)
      int n;			// Cell in which to create position
      int icomp;			// Component in which to create position
      double x[];		// Returned position
@@ -439,7 +439,7 @@ spherical_get_random_location (n, icomp,x)
 
   /* Generate a position which is both in the cell and in the wind */
   inwind = -1;
-  while (inwind!=icomp)
+  while (inwind != icomp)
     {
       r = (rmin * rmin * rmin) +
 	(rmax * rmax * rmax -
@@ -507,9 +507,9 @@ spherical_extend_density (w)
 
   int j, n, m;
   /* 
-  Now we need to updated the densities immediately outside the wind so that the density interpolation in resonate will work.
-  In this case all we have done is to copy the densities from the cell which is just in the wind (as one goes outward) to the
-  cell that is just inside (or outside) the wind. 
+     Now we need to updated the densities immediately outside the wind so that the density interpolation in resonate will work.
+     In this case all we have done is to copy the densities from the cell which is just in the wind (as one goes outward) to the
+     cell that is just inside (or outside) the wind. 
    */
 
   for (j = 0; j < NDIM2 - 1; j++)
@@ -572,44 +572,44 @@ int
 shell_make_grid (w)
      WindPtr w;
 {
-int n;
+  int n;
 
 
-        w[0].r=geo.wind_rmin-(geo.wind_rmax-geo.wind_rmin);
-        w[1].r=geo.wind_rmin;
-	w[2].r=geo.wind_rmax;
-	w[3].r=geo.wind_rmax+(geo.wind_rmax-geo.wind_rmin);
-
-
-
-	w[0].rcen=(w[0].r+w[1].r)/2;
-	w[1].rcen=(w[1].r+w[2].r)/2;
-	w[2].rcen=(w[2].r+w[3].r)/2;
-	w[3].rcen=w[2].rcen+(geo.wind_rmax-geo.wind_rmin);
+  w[0].r = geo.wind_rmin - (geo.wind_rmax - geo.wind_rmin);
+  w[1].r = geo.wind_rmin;
+  w[2].r = geo.wind_rmax;
+  w[3].r = geo.wind_rmax + (geo.wind_rmax - geo.wind_rmin);
 
 
 
+  w[0].rcen = (w[0].r + w[1].r) / 2;
+  w[1].rcen = (w[1].r + w[2].r) / 2;
+  w[2].rcen = (w[2].r + w[3].r) / 2;
+  w[3].rcen = w[2].rcen + (geo.wind_rmax - geo.wind_rmin);
 
-	/* Now calculate the positions of these points in the xz plane.
-	   There is a choice about how one does this.   I have elected
-	   to assume that we want to calculate this at a 45 degree angle.
-	   in the hopes this will be a reasonable portion of the wind in
-	   a biconical flow.
-	 */
+
+
+
+  /* Now calculate the positions of these points in the xz plane.
+     There is a choice about how one does this.   I have elected
+     to assume that we want to calculate this at a 45 degree angle.
+     in the hopes this will be a reasonable portion of the wind in
+     a biconical flow.
+   */
   for (n = 0; n < NDIM; n++)
-	{
-	Log("Cell %i:  inner edge = %2.20e, centre = %2.20e\n",n,w[n].r,w[n].rcen);
-	w[n].x[1] = w[n].xcen[1] = 0.0;
+    {
+      Log ("Cell %i:  inner edge = %2.20e, centre = %2.20e\n", n, w[n].r,
+	   w[n].rcen);
+      w[n].x[1] = w[n].xcen[1] = 0.0;
 
- //NSH Slight change here, using 1/root2 give more accurate results than sin45.
+      //NSH Slight change here, using 1/root2 give more accurate results than sin45.
 
 
-	w[n].x[0] = w[n].x[2] = w[n].r / pow(2.0,0.5);
-	w[n].xcen[0] = w[n].xcen[2] = w[n].rcen /pow(2.0,0.5);
-	}
-    
+      w[n].x[0] = w[n].x[2] = w[n].r / pow (2.0, 0.5);
+      w[n].xcen[0] = w[n].xcen[2] = w[n].rcen / pow (2.0, 0.5);
+    }
+
 
   return (0);
 
 }
-

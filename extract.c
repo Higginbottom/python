@@ -84,7 +84,7 @@ extract (w, p, itype)
 
 
   /* 68b -09021 - ksl - The next line selects the middle inclination angle for recording the absorbed enery */
-  phot_history_spectrum=0.5*(MSPEC+nspectra);
+  phot_history_spectrum = 0.5 * (MSPEC + nspectra);
 
   for (n = MSPEC; n < nspectra; n++)
     {
@@ -170,17 +170,18 @@ one is odd. We do frequency here but weighting is carried out in  extract */
 /* 68b - 0902 - ksl - turn phot_history on for the middle spectrum.  Note that we have to wait
  * to actually initialize phot_hist because the photon bundle is reweighted in extract_one */
 
-	  if (phot_history_spectrum==n){
-		  phot_hist_on=1;  // Start recording the history of the photon
-	  }
+	  if (phot_history_spectrum == n)
+	    {
+	      phot_hist_on = 1;	// Start recording the history of the photon
+	    }
 
 	  /* Now extract the photon */
 
 	  extract_one (w, &pp, itype, n);
 
-	 /* Make sure phot_hist is on, for just one extraction */
-	  
-	  phot_hist_on=0;
+	  /* Make sure phot_hist is on, for just one extraction */
+
+	  phot_hist_on = 0;
 
 	}
 
@@ -325,17 +326,18 @@ the same resonance again */
 
   if (tau > TAU_MAX)
     istat = P_ABSORB;		/* Check to see if tau already too large */
-  else if (geo.system_type==1)  /* Changed 69 to allow for additional system types */
+  else if (geo.system_type == 1)	/* Changed 69 to allow for additional system types */
     istat = hit_secondary (pp);	/* Check to see if it hit secondary */
 
- 
+
 /* 68b - 0902 - ksl If we are trying to track the history of this photon, we need to initialize the
  * phot_hist.  We had to do this here, because we have just reweighted the photon
  */
 
-	  if (phot_hist_on){
-		  phot_hist(pp,0); // Initialize the photon history
-	  }
+  if (phot_hist_on)
+    {
+      phot_hist (pp, 0);	// Initialize the photon history
+    }
 
 /* Now we can actually extract the reweighted photon */
 
@@ -404,10 +406,11 @@ the same resonance again */
  * The reason this is here is that we only summarizes the history if the photon actually got to the observer
  */
 
-	  if(phot_hist_on){
-		  phot_history_summarize();
-		  phot_hist_on=0;
-	  }
+	  if (phot_hist_on)
+	    {
+	      phot_history_summarize ();
+	      phot_hist_on = 0;
+	    }
 
 
 	}

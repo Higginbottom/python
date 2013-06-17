@@ -157,11 +157,11 @@ get_atomic_data (masterfile)
 
   char word[LINELENGTH];
   int n, m, i, j;
-  int n1,n2;  //081115 nsh two new counters for DR - use new pointers to avoid any clashes!
-  int nparam; //081115 nsh temperary holder for number of DR parameters
-  double drp[MAX_DR_PARAMS]; //081115 nsh array to hold DR parameters prior to putting into structure
-  double btrr[T_RR_PARAMS]; //0712 nsh array to hole badnell total RR params before putting into structure
-  int ne,w;  //081115 nsh new variables for DR variables
+  int n1, n2;			//081115 nsh two new counters for DR - use new pointers to avoid any clashes!
+  int nparam;			//081115 nsh temperary holder for number of DR parameters
+  double drp[MAX_DR_PARAMS];	//081115 nsh array to hold DR parameters prior to putting into structure
+  double btrr[T_RR_PARAMS];	//0712 nsh array to hole badnell total RR params before putting into structure
+  int ne, w;			//081115 nsh new variables for DR variables
   int mstart, mstop;
   int nelem;
   double gl, gu;
@@ -197,24 +197,26 @@ get_atomic_data (masterfile)
   int ntop_phot_simple, ntop_phot_macro;
   int bb_max, bf_max;
   int lev_type;
-  int nn, nl, dumnn, dumnl, dumz, dumistate, n_verner, ion_index, target_index;
+  int nn, nl, dumnn, dumnl, dumz, dumistate, n_verner, ion_index,
+    target_index;
   double yield, dumE_th, dumE_0, dumya, dumyw, dumSigma, dumP, arad, etarad;
   double adi, t0di, bdi, t1di;
-  double part_eps; //Temporary storage for partition function epsilon data
-  int J,part_G,part_m; //Temporary storage for partiton function J, G and m data
-  double gstemp[BAD_GS_RR_PARAMS]; //Temporary storage for badnell resolved GS RR rates
-  char gsflag,drflag; //Flags to say what part of data is being read in for DR and RR
-  double gstmin,gstmax; //The range of temperatures for which all ions have GS RR rates
-  double gsqrdtemp,gfftemp,s1temp,s2temp,s3temp; //Temporary storage for gaunt factors
+  double part_eps;		//Temporary storage for partition function epsilon data
+  int J, part_G, part_m;	//Temporary storage for partiton function J, G and m data
+  double gstemp[BAD_GS_RR_PARAMS];	//Temporary storage for badnell resolved GS RR rates
+  char gsflag, drflag;		//Flags to say what part of data is being read in for DR and RR
+  double gstmin, gstmax;	//The range of temperatures for which all ions have GS RR rates
+  double gsqrdtemp, gfftemp, s1temp, s2temp, s3temp;	//Temporary storage for gaunt factors
 
   /* define which files to read as data files */
 
 
 /* Allocate structures for storage of data */
 
-  if (ele!=NULL){
-	  free(ele);
-  }
+  if (ele != NULL)
+    {
+      free (ele);
+    }
   ele = (ElemPtr) calloc (sizeof (ele_dummy), NELEMENTS);
 
   if (ele == NULL)
@@ -232,9 +234,10 @@ get_atomic_data (masterfile)
     }
 
 
-  if (ion != NULL){
-	  free(ion);
-  }
+  if (ion != NULL)
+    {
+      free (ion);
+    }
   ion = (IonPtr) calloc (sizeof (ion_dummy), NIONS);
 
   if (ion == NULL)
@@ -252,9 +255,10 @@ get_atomic_data (masterfile)
 
 
 
-  if (config!=NULL){
-	  free(config);
-  }
+  if (config != NULL)
+    {
+      free (config);
+    }
   config = (ConfigPtr) calloc (sizeof (config_dummy), NLEVELS);
 
   if (config == NULL)
@@ -274,9 +278,10 @@ get_atomic_data (masterfile)
 
 
 
-  if (line!=NULL){
-	  free(line);
-  }
+  if (line != NULL)
+    {
+      free (line);
+    }
   line = (LinePtr) calloc (sizeof (line_dummy), NLINES);
 
   if (line == NULL)
@@ -323,21 +328,21 @@ get_atomic_data (masterfile)
       ion[n].phot_info = (-1);
       ion[n].macro_info = (-1);	//Initialise - don't know if using Macro Atoms or not: set to -1 (SS)
       ion[n].ntop_first = 0;	// The fact that ntop_first and ntop  are initialized to 0 and not -1 is important 
-      ion[n].ntop_ground = 0;  //NSH 0312 initialize the new pointer for GS cross sections
+      ion[n].ntop_ground = 0;	//NSH 0312 initialize the new pointer for GS cross sections
       ion[n].ntop = 0;
       ion[n].nxphot = (-1);
       ion[n].lev_type = (-1);	// Initialise to indicate we don't know what types of configurations will be read
-      ion[n].drflag = 0;     //Initialise to indicate as far as we know, there are no dielectronic recombination parameters associated with this ion.
-      ion[n].cpartflag = 0; //Initialise to indicate this ion has cardona partition function data
+      ion[n].drflag = 0;	//Initialise to indicate as far as we know, there are no dielectronic recombination parameters associated with this ion.
+      ion[n].cpartflag = 0;	//Initialise to indicate this ion has cardona partition function data
       ion[n].nxcpart = -1;
-      ion[n].total_rrflag = 0; //Initialise to say this ion has no Badnell total recombination data 
-      ion[n].nxtotalrr = -1; //Initialise the pointer into the bad_t_rr structure. 
-      ion[n].bad_gs_rr_t_flag = 0; //Initialise to say this ion has no Badnell ground state recombination data 
-      ion[n].bad_gs_rr_r_flag = 0; //Initialise to say this ion has no Badnell ground state recombination data       
-      ion[n].nxbadgsrr = -1; //Initialise the pointer into the bad_gs_rr structure.
+      ion[n].total_rrflag = 0;	//Initialise to say this ion has no Badnell total recombination data 
+      ion[n].nxtotalrr = -1;	//Initialise the pointer into the bad_t_rr structure. 
+      ion[n].bad_gs_rr_t_flag = 0;	//Initialise to say this ion has no Badnell ground state recombination data 
+      ion[n].bad_gs_rr_r_flag = 0;	//Initialise to say this ion has no Badnell ground state recombination data       
+      ion[n].nxbadgsrr = -1;	//Initialise the pointer into the bad_gs_rr structure.
     }
 
-  nlevels = nxphot = ntop_phot = nauger = ndrecomb = ncpart = 0;  //Added counter for DR//
+  nlevels = nxphot = ntop_phot = nauger = ndrecomb = ncpart = 0;	//Added counter for DR//
 
   for (i = 0; i < NIONS; i++)
     {
@@ -384,62 +389,62 @@ get_atomic_data (masterfile)
     }
 
 /* 081115 nsh The following lines initialise the dielectronic recombination structure */
-   for (n = 0; n < NIONS; n++)
+  for (n = 0; n < NIONS; n++)
     {
-       drecomb[n].nion = -1;       
-       drecomb[n].nparam = -1;	  //the number of parameters - it varies from ion to ion
-       for (n1 = 0; n1 < MAX_DR_PARAMS; n1++)
-	  {
-	  drecomb[n].c[n1] = 0.0;  
-	  drecomb[n].e[n1] = 0.0; 
-          }
-     }
+      drecomb[n].nion = -1;
+      drecomb[n].nparam = -1;	//the number of parameters - it varies from ion to ion
+      for (n1 = 0; n1 < MAX_DR_PARAMS; n1++)
+	{
+	  drecomb[n].c[n1] = 0.0;
+	  drecomb[n].e[n1] = 0.0;
+	}
+    }
 
 /* 0612 nsh The following lines initialise the cardona partition function  structure */
-   for (n = 0; n < NIONS; n++)
+  for (n = 0; n < NIONS; n++)
     {
-       cpart[n].nion = -1;       
-       cpart[n].part_eps = -1.0;	//Mean energy term
-	cpart[n].part_G = -1;		//Mean multiplicity term
-	cpart[n].part_m= -1;
-     }
+      cpart[n].nion = -1;
+      cpart[n].part_eps = -1.0;	//Mean energy term
+      cpart[n].part_G = -1;	//Mean multiplicity term
+      cpart[n].part_m = -1;
+    }
 
 /* 0712 nsh The following lines initialise the badnell total radiative recombination rate structure */
-   for (n = 0; n < NIONS; n++)
-       	{
-       	total_rr[n].nion = -1;  
-	for (n1 = 0; n1< T_RR_PARAMS; n1++)
-		{
-     		total_rr[n].params[n1]=0.0;
-		}
+  for (n = 0; n < NIONS; n++)
+    {
+      total_rr[n].nion = -1;
+      for (n1 = 0; n1 < T_RR_PARAMS; n1++)
+	{
+	  total_rr[n].params[n1] = 0.0;
+	}
 
-     	}
+    }
 
 
 /* 0712 nsh The following lines initialise the badnell total radiative recombination rate structure */
-   for (n = 0; n < NIONS; n++)
-       	{
-       	bad_gs_rr[n].nion = -1;  
-	for (n1 = 0; n1< BAD_GS_RR_PARAMS; n1++)
-		{
-     		bad_gs_rr[n].temps[n1]=0.0;
-     		bad_gs_rr[n].rates[n1]=0.0;
-		}
+  for (n = 0; n < NIONS; n++)
+    {
+      bad_gs_rr[n].nion = -1;
+      for (n1 = 0; n1 < BAD_GS_RR_PARAMS; n1++)
+	{
+	  bad_gs_rr[n].temps[n1] = 0.0;
+	  bad_gs_rr[n].rates[n1] = 0.0;
+	}
 
-     	}
-	gstmin=0.0;
-	gstmax=1e99;
+    }
+  gstmin = 0.0;
+  gstmax = 1e99;
 
 /* 0912 nsh the following lines initialise the sutherland gaunt factors */
-   gaunt_n_gsqrd = 0; //The number of sets of scaled temperatures we have data for
-   for (n=0; n < MAX_GAUNT_N_GSQRD; n++)
-	{	
-	gaunt_total[n].log_gsqrd=0.0;
-	gaunt_total[n].gff=0.0;
-	gaunt_total[n].s1=0.0;
-	gaunt_total[n].s2=0.0;
-	gaunt_total[n].s3=0.0;
-	}
+  gaunt_n_gsqrd = 0;		//The number of sets of scaled temperatures we have data for
+  for (n = 0; n < MAX_GAUNT_N_GSQRD; n++)
+    {
+      gaunt_total[n].log_gsqrd = 0.0;
+      gaunt_total[n].gff = 0.0;
+      gaunt_total[n].s1 = 0.0;
+      gaunt_total[n].s2 = 0.0;
+      gaunt_total[n].s3 = 0.0;
+    }
 
 
 
@@ -499,7 +504,8 @@ structure does not have this property! */
 	    }
 	  else
 	    {
-	      Log_silent ("Get_atomic_data: Now reading data from %s\n", file);
+	      Log_silent ("Get_atomic_data: Now reading data from %s\n",
+			  file);
 	      lineno = 1;
 	    }
 
@@ -538,23 +544,23 @@ structure does not have this property! */
 		choice = 'f';	/*ground state fractions */
 	      else if (strncmp (word, "Xcol", 4) == 0)
 		choice = 'x';	/*It's a collision strength line */
- 	      else if (strncmp (word, "InPhot", 6) == 0)
- 		choice = 'A';	/*It's an inner shell ionization for Auger effect */
-	      else if (strncmp (word, "DR_BADNL", 8) == 0)   /* It's a badnell type dielectronic recombination file */
+	      else if (strncmp (word, "InPhot", 6) == 0)
+		choice = 'A';	/*It's an inner shell ionization for Auger effect */
+	      else if (strncmp (word, "DR_BADNL", 8) == 0)	/* It's a badnell type dielectronic recombination file */
 		choice = 'D';
-	      else if (strncmp (word, "DR_SHULL", 8) == 0)  /*its a schull type dielectronic recombination*/
+	      else if (strncmp (word, "DR_SHULL", 8) == 0)	/*its a schull type dielectronic recombination */
 		choice = 'S';
-	      else if (strncmp (word, "CPART", 5) == 0)   /* It's a cardona partition function file */
+	      else if (strncmp (word, "CPART", 5) == 0)	/* It's a cardona partition function file */
 		choice = 'P';
-	      else if (strncmp (word, "RR_BADNL",8) == 0) /*Its a badnell type line in the total RR file */
-                choice = 'T' ;
+	      else if (strncmp (word, "RR_BADNL", 8) == 0)	/*Its a badnell type line in the total RR file */
+		choice = 'T';
 
-	      else if (strncmp (word, "RR_SHULL",8) == 0) /*Its a shull type line in the total RR file */
-                choice = 's' ;
-	      else if (strncmp (word, "BAD_GS_RR",9) == 0) /*Its a badnell resolved ground state RR file */
-                choice = 'G' ;
-     	      else if (strncmp (word, "FF_GAUNT",8) == 0) /*Its a data file giving the temperature averaged gaunt factors from Sutherland (1997)*/
-	        choice = 'g' ;
+	      else if (strncmp (word, "RR_SHULL", 8) == 0)	/*Its a shull type line in the total RR file */
+		choice = 's';
+	      else if (strncmp (word, "BAD_GS_RR", 9) == 0)	/*Its a badnell resolved ground state RR file */
+		choice = 'G';
+	      else if (strncmp (word, "FF_GAUNT", 8) == 0)	/*Its a data file giving the temperature averaged gaunt factors from Sutherland (1997) */
+		choice = 'g';
 	      else if (strncmp (word, "*", 1) == 0);	/* It's a continuation so record type remains same */
 
 	      else
@@ -983,13 +989,13 @@ a level type has not been established
 			}
 		      else
 			{
-//		printf("Not tracking level %i coz we have more than %i NLTE levels\n",nlevels,ion[n].n_lte_max);
+//              printf("Not tracking level %i coz we have more than %i NLTE levels\n",nlevels,ion[n].n_lte_max);
 			  config[nlevels].nden = -1;
 			}
 		    }
 		  else
 		    {
-//			printf("Not tracking level %i coz no nlte levels wanted\n",nlevels);
+//                      printf("Not tracking level %i coz no nlte levels wanted\n",nlevels);
 		      config[nlevels].nden = -1;
 		    }
 
@@ -1397,9 +1403,14 @@ for the ionstate.
 			      phot_top[ntop_phot].nlast = -1;
 			      phot_top[ntop_phot].macro_info = 0;
 /*NSH 0312 - next line sees if the topbase level just read in is the ground state - if it is, the ion structure element ntop_ground is set to that topbase level number */
-			      if (islp==config[ion[config[n].nion].first_nlte_level].isp && 					ilv==config[ion[config[n].nion].first_nlte_level].ilv)
+			      if (islp ==
+				  config[ion[config[n].nion].
+					 first_nlte_level].isp
+				  && ilv ==
+				  config[ion[config[n].nion].
+					 first_nlte_level].ilv)
 				{
-				ion[config[n].nion].ntop_ground=ntop_phot;
+				  ion[config[n].nion].ntop_ground = ntop_phot;
 				}
 
 
@@ -1517,99 +1528,120 @@ for the ionstate.
 		    }
 
 		  /*Input data for innershell ionization followed by
-		    Auger effect */
+		     Auger effect */
 
- 		case 'A':
- 		  if (sscanf (aline,
- 			  "%*s %d %d %d %d %le %le %le %le %le %le %le", &z,
- 			      &istate, &nn, &nl, &yield, &arad, &etarad, &adi, &t0di, &bdi, &t1di) != 11)
- 		    {
- 		      Error("Auger input incorrectly formatted\n");
- 		      Error("Get_atomic_data: %s\n", aline);
- 		      exit(0);
- 		    }
- 		  //		  printf("%d %d %d %d %le %le %le\n",z,istate,nn,nl,yield, arad, etarad);
- 		  if (nauger < NAUGER)
- 		    {
- 		      if ((vptr = fopen ("atomic/photo_verner.data", "r")) == NULL)
- 			{
- 			  Error ("get_atomic data:  Could not open photo_verner.data\n");
- 			  exit (0);
- 			} 
- 		      ion_index = -2;
- 		      target_index = -1;
- 		      for (n_verner=0; n_verner<1696; n_verner++)
- 			{
- 			  fscanf (vptr, "%d %d %d %d %le %le %le %le %le %le\n", &dumz, &dumistate, &dumnn, &dumnl,
- 				  &dumE_th, &dumE_0, &dumSigma, &dumya, &dumP, &dumyw);
- 			  if ((dumz == z) && (dumistate == (dumz - istate + 1)) && (dumnn == nn) && (dumnl == nl))
- 			    {
- 			      /* Now need to check that this ion is really in the data set and find which it is */
- 			      ion_index = -1;
- 			      for (n = 0; n < nions; n++)
- 				{
- 				  if (ion[n].z == z && ion[n].istate == istate)
- 				    {
- 				      ion_index = n; 
- 				      augerion[nauger].nion = n;
- 				      augerion[nauger].yield = yield;
- 				      augerion[nauger].arad = arad;
- 				      augerion[nauger].etarad = etarad;
- 				      augerion[nauger].adi = adi;
- 				      augerion[nauger].t0di = t0di;
- 				      augerion[nauger].bdi = bdi;
- 				      augerion[nauger].t1di = t1di;
- 				      
- 				      augerion[nauger].z = z;
- 				      augerion[nauger].istate = istate;
- 				      augerion[nauger].n = nn;
- 				      augerion[nauger].l = nl;
- 				      augerion[nauger].freq_t = dumE_th/HEV;
- 				      augerion[nauger].E_0 = dumE_0;
- 				      augerion[nauger].Sigma = dumSigma * 1.e-18; //input
-										  //in megabarns
- 				      augerion[nauger].ya = dumya;
- 				      augerion[nauger].yw = dumyw;
- 				      augerion[nauger].P = dumP;
- 				      nauger++;
- 				    }
- 
- 				  /*We also want the index for the
- 				    targe ion (i.e. the one that is
- 				    two ionization stages up from the
- 				    one found above */
- 				  if (ion[n].z == z && ion[n].istate == istate + 2)
- 				    {
- 				      target_index = n;
- 				    }
- 				  
- 				}
- 			      if (ion_index == -1)
- 				{
- 				  Error("Get_atomic_data: Failed to find ion to match Auger input data. Ignoring.  %d %d %d %d\n", dumz, dumistate, dumnn, dumnl);
- 				}
- 			      else
- 				{
- 				  augerion[nauger-1].nion_target = target_index;
- 				}
- 			    }
- 			}
- 		      fclose(vptr);
- 		      if (ion_index == -2)
- 			{
- 			  Error("Get_atomic_data: Failed to find source data to match Auger input data. Ignoring. %d %d %d %d\n", z, istate, nn, nl);
- 			}
+		case 'A':
+		  if (sscanf (aline,
+			      "%*s %d %d %d %d %le %le %le %le %le %le %le",
+			      &z, &istate, &nn, &nl, &yield, &arad, &etarad,
+			      &adi, &t0di, &bdi, &t1di) != 11)
+		    {
+		      Error ("Auger input incorrectly formatted\n");
+		      Error ("Get_atomic_data: %s\n", aline);
+		      exit (0);
+		    }
+		  //              printf("%d %d %d %d %le %le %le\n",z,istate,nn,nl,yield, arad, etarad);
+		  if (nauger < NAUGER)
+		    {
+		      if ((vptr =
+			   fopen ("atomic/photo_verner.data", "r")) == NULL)
+			{
+			  Error
+			    ("get_atomic data:  Could not open photo_verner.data\n");
+			  exit (0);
+			}
+		      ion_index = -2;
+		      target_index = -1;
+		      for (n_verner = 0; n_verner < 1696; n_verner++)
+			{
+			  fscanf (vptr,
+				  "%d %d %d %d %le %le %le %le %le %le\n",
+				  &dumz, &dumistate, &dumnn, &dumnl, &dumE_th,
+				  &dumE_0, &dumSigma, &dumya, &dumP, &dumyw);
+			  if ((dumz == z)
+			      && (dumistate == (dumz - istate + 1))
+			      && (dumnn == nn) && (dumnl == nl))
+			    {
+			      /* Now need to check that this ion is really in the data set and find which it is */
+			      ion_index = -1;
+			      for (n = 0; n < nions; n++)
+				{
+				  if (ion[n].z == z
+				      && ion[n].istate == istate)
+				    {
+				      ion_index = n;
+				      augerion[nauger].nion = n;
+				      augerion[nauger].yield = yield;
+				      augerion[nauger].arad = arad;
+				      augerion[nauger].etarad = etarad;
+				      augerion[nauger].adi = adi;
+				      augerion[nauger].t0di = t0di;
+				      augerion[nauger].bdi = bdi;
+				      augerion[nauger].t1di = t1di;
+
+				      augerion[nauger].z = z;
+				      augerion[nauger].istate = istate;
+				      augerion[nauger].n = nn;
+				      augerion[nauger].l = nl;
+				      augerion[nauger].freq_t = dumE_th / HEV;
+				      augerion[nauger].E_0 = dumE_0;
+				      augerion[nauger].Sigma = dumSigma * 1.e-18;	//input
+				      //in megabarns
+				      augerion[nauger].ya = dumya;
+				      augerion[nauger].yw = dumyw;
+				      augerion[nauger].P = dumP;
+				      nauger++;
+				    }
+
+				  /*We also want the index for the
+				     targe ion (i.e. the one that is
+				     two ionization stages up from the
+				     one found above */
+				  if (ion[n].z == z
+				      && ion[n].istate == istate + 2)
+				    {
+				      target_index = n;
+				    }
+
+				}
+			      if (ion_index == -1)
+				{
+				  Error
+				    ("Get_atomic_data: Failed to find ion to match Auger input data. Ignoring.  %d %d %d %d\n",
+				     dumz, dumistate, dumnn, dumnl);
+				}
+			      else
+				{
+				  augerion[nauger - 1].nion_target =
+				    target_index;
+				}
+			    }
+			}
+		      fclose (vptr);
+		      if (ion_index == -2)
+			{
+			  Error
+			    ("Get_atomic_data: Failed to find source data to match Auger input data. Ignoring. %d %d %d %d\n",
+			     z, istate, nn, nl);
+			}
 		      else
 			{
-			  Log("Matched Auger ionization input to Z %d istate %d going to Z %d istate %d.\n", ion[augerion[nauger-1].nion].z,ion[augerion[nauger-1].nion].istate,ion[augerion[nauger-1].nion_target].z,ion[augerion[nauger-1].nion_target].istate);
+			  Log
+			    ("Matched Auger ionization input to Z %d istate %d going to Z %d istate %d.\n",
+			     ion[augerion[nauger - 1].nion].z,
+			     ion[augerion[nauger - 1].nion].istate,
+			     ion[augerion[nauger - 1].nion_target].z,
+			     ion[augerion[nauger - 1].nion_target].istate);
 			}
- 		    }
- 		  else
- 		    {
- 		      Error("Get_atomic_data: NAUGER is filled up! Ignoring input data %d.\n", nauger);
- 		    }
- 		  break;
- 		  
+		    }
+		  else
+		    {
+		      Error
+			("Get_atomic_data: NAUGER is filled up! Ignoring input data %d.\n",
+			 nauger);
+		    }
+		  break;
+
 
 
 // Lines
@@ -1939,106 +1971,108 @@ would like to have simple lines for macro-ions */
 
 
 
-		case 'D':      /* Dielectronic recombination data read in. */
-    			nparam=sscanf(aline,"%*s %s %d %d %le %le %le %le %le %le %le %le %le",&drflag,&z,&ne,&drp[0],&drp[1],&drp[2],&drp[3],&drp[4],&drp[5],&drp[6],&drp[7],&drp[8]);  //split and assign the line
-    		nparam-=3  ;       //take 4 off the nparam to give the number of actual parameters
-    		if (nparam >9 || nparam<1)        //     trap errors - not as robust as usual because there are a varaible number of parameters...
-        		{	  
-			Error ("Something wrong with dielectronic recombination data\n",
+		case 'D':	/* Dielectronic recombination data read in. */
+		  nparam = sscanf (aline, "%*s %s %d %d %le %le %le %le %le %le %le %le %le", &drflag, &z, &ne, &drp[0], &drp[1], &drp[2], &drp[3], &drp[4], &drp[5], &drp[6], &drp[7], &drp[8]);	//split and assign the line
+		  nparam -= 3;	//take 4 off the nparam to give the number of actual parameters
+		  if (nparam > 9 || nparam < 1)	//     trap errors - not as robust as usual because there are a varaible number of parameters...
+		    {
+		      Error
+			("Something wrong with dielectronic recombination data\n",
 			 file, lineno);
-		        Error ("Get_atomic_data: %s\n", aline);
-		        exit (0);
-			}
-		  
-		  istate=ne;   //         get the ionisation state we are recombining from
-		  istate--;      //    we will associate the rate with the ion we are recombining to
-		
-		  for (n=0;n<nions;n++)   //Loop over ions to find the correct place to put the data
-                    {   
-                    if (ion[n].z == z && ion[n].istate==istate)     // this works out which ion we are dealing with
-                         {
-//			printf ("We have a match, z=%i, istate=%i %c %i\n",z,istate,drflag,nparam);
-			if (ion[n].drflag==0) //This is the first time we have dealt with this ion
-			      {
-//				printf ("Setting some data\n");
-                              drecomb[ndrecomb].nion=n;    //put the ion number into the DR structure
-                              drecomb[ndrecomb].nparam=nparam;   //Put the number of parameters we ware going to read in, into the DR structure so we know what to iterate over later
-			      ion[n].nxdrecomb=ndrecomb;   //put the number of the DR into the ion			      
-			      drecomb[ndrecomb].type=DRTYPE_BADNELL; //define the type of data
-  			      ndrecomb++ ;        //increment the counter of number of dielectronic recombination parameter sets
-                              ion[n].drflag++;    //increment the flag by 1. We will do this rather than simply setting it to 1 so we will get errors if we do this more than once....
+		      Error ("Get_atomic_data: %s\n", aline);
+		      exit (0);
+		    }
 
-			      }
-                         if (drflag=='E')       // this ion has no parameters, so it must be the first time through        
-                              {
+		  istate = ne;	//         get the ionisation state we are recombining from
+		  istate--;	//    we will associate the rate with the ion we are recombining to
 
-                              n1=ion[n].nxdrecomb;    //     Get the pointer to the correct bit of the recombination coefficient array. This should already be set from the first time through
-				// printf ("E parameter %i\n",n1);
-                              for (n2=0;n2<nparam;n2++)
-                                    {
-                                    drecomb[n1].e[n2]=drp[n2];     //we are getting e parameters
-                                    }
+		  for (n = 0; n < nions; n++)	//Loop over ions to find the correct place to put the data
+		    {
+		      if (ion[n].z == z && ion[n].istate == istate)	// this works out which ion we are dealing with
+			{
+//                      printf ("We have a match, z=%i, istate=%i %c %i\n",z,istate,drflag,nparam);
+			  if (ion[n].drflag == 0)	//This is the first time we have dealt with this ion
+			    {
+//                              printf ("Setting some data\n");
+			      drecomb[ndrecomb].nion = n;	//put the ion number into the DR structure
+			      drecomb[ndrecomb].nparam = nparam;	//Put the number of parameters we ware going to read in, into the DR structure so we know what to iterate over later
+			      ion[n].nxdrecomb = ndrecomb;	//put the number of the DR into the ion                            
+			      drecomb[ndrecomb].type = DRTYPE_BADNELL;	//define the type of data
+			      ndrecomb++;	//increment the counter of number of dielectronic recombination parameter sets
+			      ion[n].drflag++;	//increment the flag by 1. We will do this rather than simply setting it to 1 so we will get errors if we do this more than once....
 
-                            
-                              }
-                         else if (drflag=='C')      //                  must be the second time though, so no need to read in all the other things
-                              {
-                              n1=ion[n].nxdrecomb;    //     Get the pointer to the correct bit of the recombination coefficient array. This should already be set from the first time through
-		//		printf ("C parameter %i\n",n1);
-			      for (n2=0;n2<nparam;n2++)
-                                    {
-                                    drecomb[n1].c[n2]=drp[n2];   //           we are getting e parameters
-                                    }
-			      }
+			    }
+			  if (drflag == 'E')	// this ion has no parameters, so it must be the first time through        
+			    {
 
-                         }    //close if statement that selects appropriate ion to add data to
-                    }   //close loop over ions
+			      n1 = ion[n].nxdrecomb;	//     Get the pointer to the correct bit of the recombination coefficient array. This should already be set from the first time through
+			      // printf ("E parameter %i\n",n1);
+			      for (n2 = 0; n2 < nparam; n2++)
+				{
+				  drecomb[n1].e[n2] = drp[n2];	//we are getting e parameters
+				}
 
-		  
+
+			    }
+			  else if (drflag == 'C')	//                  must be the second time though, so no need to read in all the other things
+			    {
+			      n1 = ion[n].nxdrecomb;	//     Get the pointer to the correct bit of the recombination coefficient array. This should already be set from the first time through
+			      //              printf ("C parameter %i\n",n1);
+			      for (n2 = 0; n2 < nparam; n2++)
+				{
+				  drecomb[n1].c[n2] = drp[n2];	//           we are getting e parameters
+				}
+			    }
+
+			}	//close if statement that selects appropriate ion to add data to
+		    }		//close loop over ions
+
+
 		  break;
 
-	       case 'S':
-   			nparam=sscanf(aline,"%*s %d %d %le %le %le %le ",&z,&ne,&drp[0],&drp[1],&drp[2],&drp[3]);  //split and assign the line
-    		nparam-=2  ;       //take 4 off the nparam to give the number of actual parameters
-    		if (nparam >4 || nparam<1)        //     trap errors - not as robust as usual because there are a varaible number of parameters...
-        		{	  
-			Error ("Something wrong with dielectronic recombination data\n",
+		case 'S':
+		  nparam = sscanf (aline, "%*s %d %d %le %le %le %le ", &z, &ne, &drp[0], &drp[1], &drp[2], &drp[3]);	//split and assign the line
+		  nparam -= 2;	//take 4 off the nparam to give the number of actual parameters
+		  if (nparam > 4 || nparam < 1)	//     trap errors - not as robust as usual because there are a varaible number of parameters...
+		    {
+		      Error
+			("Something wrong with dielectronic recombination data\n",
 			 file, lineno);
-		        Error ("Get_atomic_data: %s\n", aline);
-		        exit (0);
+		      Error ("Get_atomic_data: %s\n", aline);
+		      exit (0);
+		    }
+
+		  istate = ne;	//         get the ionisation state we are recombining from
+		  istate--;	//    we will associate the rate with the ion we are recombining to
+
+		  for (n = 0; n < nions; n++)	//Loop over ions to find the correct place to put the data
+		    {
+		      if (ion[n].z == z && ion[n].istate == istate)	// this works out which ion we are dealing with
+			{
+//                      printf ("We have a match, z=%i, istate=%i %c %i\n",z,istate,drflag,nparam);
+			  if (ion[n].drflag == 0)	//This is the first time we have dealt with this ion
+			    {
+//                              printf ("Setting some data\n");
+			      drecomb[ndrecomb].nion = n;	//put the ion number into the DR structure
+			      drecomb[ndrecomb].nparam = nparam;	//Put the number of parameters we ware going to read in, into the DR structure so we know what to iterate over later
+			      ion[n].nxdrecomb = ndrecomb;	//put the number of the DR into the ion                            
+			      drecomb[ndrecomb].type = DRTYPE_SHULL;	//define the type of data
+			      ndrecomb++;	//increment the counter of number of dielectronic recombination parameter sets
+			      ion[n].drflag++;	//increment the flag by 1. We will do this rather than simply setting it to 1 so we will get errors if we do this more than once....
+
+			    }
+			  n1 = ion[n].nxdrecomb;	//     Get the pointer to the correct bit of the recombination coefficient array. This should already be set from the first time through
+//                              printf ("Shull parameter %i\n",n1);
+			  for (n2 = 0; n2 < nparam; n2++)
+			    {
+			      drecomb[n1].shull[n2] = drp[n2];	//we are getting e parameters
+			    }
 			}
-		  
-		  istate=ne;   //         get the ionisation state we are recombining from
-		  istate--;      //    we will associate the rate with the ion we are recombining to
-		
-		  for (n=0;n<nions;n++)   //Loop over ions to find the correct place to put the data
-                    {   
-                    if (ion[n].z == z && ion[n].istate==istate)     // this works out which ion we are dealing with
-                         {
-//			printf ("We have a match, z=%i, istate=%i %c %i\n",z,istate,drflag,nparam);
-			if (ion[n].drflag==0) //This is the first time we have dealt with this ion
-			      {
-//				printf ("Setting some data\n");
-                              drecomb[ndrecomb].nion=n;    //put the ion number into the DR structure
-                              drecomb[ndrecomb].nparam=nparam;   //Put the number of parameters we ware going to read in, into the DR structure so we know what to iterate over later
-			      ion[n].nxdrecomb=ndrecomb;   //put the number of the DR into the ion			      
-			      drecomb[ndrecomb].type=DRTYPE_SHULL; //define the type of data
-  			      ndrecomb++ ;        //increment the counter of number of dielectronic recombination parameter sets
-                              ion[n].drflag++;    //increment the flag by 1. We will do this rather than simply setting it to 1 so we will get errors if we do this more than once....
-
-			      }
-                         n1=ion[n].nxdrecomb;    //     Get the pointer to the correct bit of the recombination coefficient array. This should already be set from the first time through
-//				printf ("Shull parameter %i\n",n1);
-                              for (n2=0;n2<nparam;n2++)
-                                    {
-                                    drecomb[n1].shull[n2]=drp[n2];     //we are getting e parameters
-                                    }
-}
-}
-		break;
+		    }
+		  break;
 
 
-	
+
 /* Parametrised partition function data read in. At the moment, the data we are using comes from Cardona et al (2010). The file currently used(paert_cardona.dat) is saved from the internet, with a couple of changes. The word CPART is prepended to each line of data, and any comment lines are prepended with an #. This is the general format:
 
 CPART   1       0       150991.49       278     2
@@ -2053,30 +2087,31 @@ CPART   4       1       183127.29       250     2
 the first number is the element number, then the ion, then the three parameters */
 
 
-		case 'P':      /* Partition function data */
-		  if (sscanf (aline,"%*s %d %d %le %d %d ",&z,&J ,&part_eps,&part_G,&part_m) != 5)
-			{	  
-			Error ("Something wrong with cardona partition function data\n",
-			 file, lineno); /*Standard error state*/
-		        Error ("Get_atomic_data: %s\n", aline);
-		        exit (0);
-			}
-		istate=J+1;   //
+		case 'P':	/* Partition function data */
+		  if (sscanf
+		      (aline, "%*s %d %d %le %d %d ", &z, &J, &part_eps,
+		       &part_G, &part_m) != 5)
+		    {
+		      Error ("Something wrong with cardona partition function data\n", file, lineno);	/*Standard error state */
+		      Error ("Get_atomic_data: %s\n", aline);
+		      exit (0);
+		    }
+		  istate = J + 1;	//
 		  for (n = 0; n < nions; n++)
 		    {
 		      if (ion[n].z == z && ion[n].istate == istate)
 			{	/* Then there is a match */
-			cpart[ncpart].nion=n;
-			cpart[ncpart].part_eps=part_eps;	//Mean energy term
-			cpart[ncpart].part_G=part_G;		//Mean multiplicity term
-			cpart[ncpart].part_m=part_m;
-			ion[n].cpartflag=1;	            //Set the flag to say we have data for this ion
-			ion[n].nxcpart=ncpart;        //Set the pointer
-			ncpart++;		//increment the pointer
+			  cpart[ncpart].nion = n;
+			  cpart[ncpart].part_eps = part_eps;	//Mean energy term
+			  cpart[ncpart].part_G = part_G;	//Mean multiplicity term
+			  cpart[ncpart].part_m = part_m;
+			  ion[n].cpartflag = 1;	//Set the flag to say we have data for this ion
+			  ion[n].nxcpart = ncpart;	//Set the pointer
+			  ncpart++;	//increment the pointer
 
 			}
 		    }
-		break;
+		  break;
 
 /*!RR RATE COEFFICIENT FITS (C)20110412 N. R. BADNELL, DEPARTMENT OF PHYSICS, UNIVERSITY OF STRATHCLYDE, GLASGOW G4 0NG, UK.
 !This is total radiative rate into all possible states or the recombined ion.
@@ -2091,215 +2126,227 @@ BAD_T_RR  3  0  1  1  2.867E-10  0.7493  2.108E+01  6.268E+06
 BAD_T_RR  4  0  1  1  3.375E-10  0.7475  4.628E+01  1.121E+07
 BAD_T_RR  5  0  1  1  4.647E-10  0.7484  6.142E+01  1.753E+07*/
 
-		case 'T':  /*Badnell type total raditive rate coefficients read in */
+		case 'T':	/*Badnell type total raditive rate coefficients read in */
 
-   			nparam=sscanf(aline,"%*s %d %d %d %le %le %le %le %le %le",&z,&ne,&w,&btrr[0],&btrr[1],&btrr[2],&btrr[3],&btrr[4],&btrr[5]);  //split and assign the line
-//		printf ("We have %i parameters\n",nparam);
-    		nparam-=3 ;       //take 4 off the nparam to give the number of actual parameters
-//		printf("We have a badnell type RR with %i parameters\n",nparam);
-    		if (nparam >6 || nparam<1)        //     trap errors - not as robust as usual because there are a varaible number of parameters...
-        		{	  
-			Error ("Something wrong with badnell total RR data\n",
-			 file, lineno);
-		        Error ("Get_atomic_data: %s\n", aline);
-		        exit (0);
-			}
-    		
-		  istate=ne;   //         get the traditional ionisation state
-		  istate--;      //    we will associate the rate with the ion we are recombining to
-		  for (n=0;n<nions;n++)   //Loop over ions to find the correct place to put the data
-                    {   
-                    if (ion[n].z == z && ion[n].istate==istate)     // this works out which ion we are dealing with
-                         {
-                         if (ion[n].total_rrflag==0)       // this ion has no parameters, so it must be the first time through        
-                              {
-                              total_rr[n_total_rr].nion=n;    //put the ion number into the bad_t_rr structure
-			      ion[n].nxtotalrr=n_total_rr;   /*put the number of the bad_t_rr into the ion
- structure so we can go either way.*/
-			      total_rr[n_total_rr].type=RRTYPE_BADNELL;
-                              for (n1=0;n1<nparam;n1++)
-                                    {
-                                    total_rr[n_total_rr].params[n1]=btrr[n1];     //we are getting  parameters
-				    }
-                              ion[n].total_rrflag++;    //increment the flag by 1. We will do this rather than simply setting it to 1 so we will get errors if we do this more than once....
-                              n_total_rr++ ;        //increment the counter of number of dielectronic recombination parameter sets
-                              }
-                         else if (ion[n].total_rrflag>0)      //       unexpected second line matching z and charge
-                              {
-                              Error ("More than one badnell total RR rate for ion %i\n",n);
-		        	Error ("Get_atomic_data: %s\n", aline);
-		        exit (0);
-			      }
-                         else    //if flag is not a positive number, we have a problem
-                               {
-                               Error ("Total radiative recombination flag giving odd results\n");
-			       exit(0);
-                               }
-                         }    //close if statement that selects appropriate ion to add data to
-                    }   //close loop over ions
+		  nparam = sscanf (aline, "%*s %d %d %d %le %le %le %le %le %le", &z, &ne, &w, &btrr[0], &btrr[1], &btrr[2], &btrr[3], &btrr[4], &btrr[5]);	//split and assign the line
+//              printf ("We have %i parameters\n",nparam);
+		  nparam -= 3;	//take 4 off the nparam to give the number of actual parameters
+//              printf("We have a badnell type RR with %i parameters\n",nparam);
+		  if (nparam > 6 || nparam < 1)	//     trap errors - not as robust as usual because there are a varaible number of parameters...
+		    {
+		      Error ("Something wrong with badnell total RR data\n",
+			     file, lineno);
+		      Error ("Get_atomic_data: %s\n", aline);
+		      exit (0);
+		    }
 
-		  
+		  istate = ne;	//         get the traditional ionisation state
+		  istate--;	//    we will associate the rate with the ion we are recombining to
+		  for (n = 0; n < nions; n++)	//Loop over ions to find the correct place to put the data
+		    {
+		      if (ion[n].z == z && ion[n].istate == istate)	// this works out which ion we are dealing with
+			{
+			  if (ion[n].total_rrflag == 0)	// this ion has no parameters, so it must be the first time through        
+			    {
+			      total_rr[n_total_rr].nion = n;	//put the ion number into the bad_t_rr structure
+			      ion[n].nxtotalrr = n_total_rr;	/*put the number of the bad_t_rr into the ion
+								   structure so we can go either way. */
+			      total_rr[n_total_rr].type = RRTYPE_BADNELL;
+			      for (n1 = 0; n1 < nparam; n1++)
+				{
+				  total_rr[n_total_rr].params[n1] = btrr[n1];	//we are getting  parameters
+				}
+			      ion[n].total_rrflag++;	//increment the flag by 1. We will do this rather than simply setting it to 1 so we will get errors if we do this more than once....
+			      n_total_rr++;	//increment the counter of number of dielectronic recombination parameter sets
+			    }
+			  else if (ion[n].total_rrflag > 0)	//       unexpected second line matching z and charge
+			    {
+			      Error
+				("More than one badnell total RR rate for ion %i\n",
+				 n);
+			      Error ("Get_atomic_data: %s\n", aline);
+			      exit (0);
+			    }
+			  else	//if flag is not a positive number, we have a problem
+			    {
+			      Error
+				("Total radiative recombination flag giving odd results\n");
+			      exit (0);
+			    }
+			}	//close if statement that selects appropriate ion to add data to
+		    }		//close loop over ions
+
+
 
 		  break;
 
 		case 's':
-   			nparam=sscanf(aline,"%*s %d %d %le %le ",&z,&ne,&btrr[0],&btrr[1]);  //split and assign the line
-//		printf ("We have %i parameters\n",nparam);
-    		nparam-=2 ;       //take 4 off the nparam to give the number of actual parameters
-//		printf("We have a shull type RR with %i parameters\n",nparam);
-    		if (nparam >6 || nparam<1)        //     trap errors - not as robust as usual because there are a varaible number of parameters...
-        		{	  
-			Error ("Something wrong with shull total RR data\n",
-			 file, lineno);
-		        Error ("Get_atomic_data: %s\n", aline);
-		        exit (0);
-			}
-    		
-		  istate=ne;   //         get the traditional ionisation state
-		  istate--;      //    we will associate the rate with the ion we are recombining to
-		  for (n=0;n<nions;n++)   //Loop over ions to find the correct place to put the data
-                    {   
-                    if (ion[n].z == z && ion[n].istate==istate)     // this works out which ion we are dealing with
-                         {
-                         if (ion[n].total_rrflag==0)       // this ion has no parameters, so it must be the first time through        
-                              {
-                              total_rr[n_total_rr].nion=n;    //put the ion number into the bad_t_rr structure
-			      ion[n].nxtotalrr=n_total_rr;   /*put the number of the bad_t_rr into the ion
- structure so we can go either way.*/
-			      total_rr[n_total_rr].type=RRTYPE_SHULL;
-                              for (n1=0;n1<nparam;n1++)
-                                    {
-                                    total_rr[n_total_rr].params[n1]=btrr[n1];     //we are getting  parameters
-				    }
-                              ion[n].total_rrflag++;    //increment the flag by 1. We will do this rather than simply setting it to 1 so we will get errors if we do this more than once....
-                              n_total_rr++ ;        //increment the counter of number of dielectronic recombination parameter sets
-                              }
-                         else if (ion[n].total_rrflag>0)      //       unexpected second line matching z and charge
-                              {
-                              Error ("More than one total RR rate for ion %i\n",n);
-		        	Error ("Get_atomic_data: %s\n", aline);
-		        exit (0);
-			      }
-                         else    //if flag is not a positive number, we have a problem
-                               {
-                               Error ("Total radiative recombination flag giving odd results\n");
-			       exit(0);
-                               }
-                         }    //close if statement that selects appropriate ion to add data to
-                    }   //close loop over ions
-		break;
+		  nparam = sscanf (aline, "%*s %d %d %le %le ", &z, &ne, &btrr[0], &btrr[1]);	//split and assign the line
+//              printf ("We have %i parameters\n",nparam);
+		  nparam -= 2;	//take 4 off the nparam to give the number of actual parameters
+//              printf("We have a shull type RR with %i parameters\n",nparam);
+		  if (nparam > 6 || nparam < 1)	//     trap errors - not as robust as usual because there are a varaible number of parameters...
+		    {
+		      Error ("Something wrong with shull total RR data\n",
+			     file, lineno);
+		      Error ("Get_atomic_data: %s\n", aline);
+		      exit (0);
+		    }
+
+		  istate = ne;	//         get the traditional ionisation state
+		  istate--;	//    we will associate the rate with the ion we are recombining to
+		  for (n = 0; n < nions; n++)	//Loop over ions to find the correct place to put the data
+		    {
+		      if (ion[n].z == z && ion[n].istate == istate)	// this works out which ion we are dealing with
+			{
+			  if (ion[n].total_rrflag == 0)	// this ion has no parameters, so it must be the first time through        
+			    {
+			      total_rr[n_total_rr].nion = n;	//put the ion number into the bad_t_rr structure
+			      ion[n].nxtotalrr = n_total_rr;	/*put the number of the bad_t_rr into the ion
+								   structure so we can go either way. */
+			      total_rr[n_total_rr].type = RRTYPE_SHULL;
+			      for (n1 = 0; n1 < nparam; n1++)
+				{
+				  total_rr[n_total_rr].params[n1] = btrr[n1];	//we are getting  parameters
+				}
+			      ion[n].total_rrflag++;	//increment the flag by 1. We will do this rather than simply setting it to 1 so we will get errors if we do this more than once....
+			      n_total_rr++;	//increment the counter of number of dielectronic recombination parameter sets
+			    }
+			  else if (ion[n].total_rrflag > 0)	//       unexpected second line matching z and charge
+			    {
+			      Error
+				("More than one total RR rate for ion %i\n",
+				 n);
+			      Error ("Get_atomic_data: %s\n", aline);
+			      exit (0);
+			    }
+			  else	//if flag is not a positive number, we have a problem
+			    {
+			      Error
+				("Total radiative recombination flag giving odd results\n");
+			      exit (0);
+			    }
+			}	//close if statement that selects appropriate ion to add data to
+		    }		//close loop over ions
+		  break;
 
 
 
 
 		case 'G':
-   			nparam=sscanf(aline,"%*s %s %d %d %le %le %le %le %le %le %le %le %le %le %le %le %le %le %le %le %le %le %le",&gsflag,&z,&ne,&gstemp[0],&gstemp[1],&gstemp[2],&gstemp[3],&gstemp[4],&gstemp[5],&gstemp[6],&gstemp[7],&gstemp[8],&gstemp[9],&gstemp[10],&gstemp[11],&gstemp[12],&gstemp[13],&gstemp[14],&gstemp[15],&gstemp[16],&gstemp[17],&gstemp[18]);  //split and assign the line
-    		nparam-=3 ;       //take 4 off the nparam to give the number of actual parameters
-    		if (nparam >19 || nparam<1)        //     trap errors - not as robust as usual because there are a varaible number of parameters...
-        		{	  
-			Error ("Something wrong with badnell GS RR data\n");
-		        Error ("Get_atomic_data: %s\n", aline);
-		        exit (0);
-			}
-		  istate=z-ne+1;   //         get the traditional ionisation state
-		  istate--;     //    we will associate the rate with the ion we are recombining to
-		for (n=0;n<nions;n++)   //Loop over ions to find the correct place to put the data
-                    	{ 
-                    	if (ion[n].z == z && ion[n].istate==istate)     // this works out which ion we are dealing with
+		  nparam = sscanf (aline, "%*s %s %d %d %le %le %le %le %le %le %le %le %le %le %le %le %le %le %le %le %le %le %le", &gsflag, &z, &ne, &gstemp[0], &gstemp[1], &gstemp[2], &gstemp[3], &gstemp[4], &gstemp[5], &gstemp[6], &gstemp[7], &gstemp[8], &gstemp[9], &gstemp[10], &gstemp[11], &gstemp[12], &gstemp[13], &gstemp[14], &gstemp[15], &gstemp[16], &gstemp[17], &gstemp[18]);	//split and assign the line
+		  nparam -= 3;	//take 4 off the nparam to give the number of actual parameters
+		  if (nparam > 19 || nparam < 1)	//     trap errors - not as robust as usual because there are a varaible number of parameters...
+		    {
+		      Error ("Something wrong with badnell GS RR data\n");
+		      Error ("Get_atomic_data: %s\n", aline);
+		      exit (0);
+		    }
+		  istate = z - ne + 1;	//         get the traditional ionisation state
+		  istate--;	//    we will associate the rate with the ion we are recombining to
+		  for (n = 0; n < nions; n++)	//Loop over ions to find the correct place to put the data
+		    {
+		      if (ion[n].z == z && ion[n].istate == istate)	// this works out which ion we are dealing with
+			{
+			  if (ion[n].bad_gs_rr_t_flag == 0 && ion[n].bad_gs_rr_r_flag == 0)	//This is first set of this type of data for this ion
+			    {
+			      bad_gs_rr[n_bad_gs_rr].nion = n;	//put the ion number into the bad_t_rr structure
+			      ion[n].nxbadgsrr = n_bad_gs_rr;	//put the number of the bad_t_rr into the ion structure so we can go either way.
+			      n_bad_gs_rr++;	//increment the counter of number of ground state RR
+			    }
+			  /*Now work out what type of line it is, and where it needs to go */
+			  if (gsflag == 'T')	//it is a temperature line
+			    {
+			      if (ion[n].bad_gs_rr_t_flag == 0)	//and we need a temp line for this ion
 				{
-				if (ion[n].bad_gs_rr_t_flag==0 && ion[n].bad_gs_rr_r_flag==0) //This is first set of this type of data for this ion
-					{
-					bad_gs_rr[n_bad_gs_rr].nion=n;    //put the ion number into the bad_t_rr structure
-			      		ion[n].nxbadgsrr=n_bad_gs_rr;   //put the number of the bad_t_rr into the ion structure so we can go either way.
-                              		n_bad_gs_rr++ ;        //increment the counter of number of ground state RR
-			        	}  
-				/*Now work out what type of line it is, and where it needs to go */
-				if (gsflag=='T') //it is a temperature line
-					{
-					if (ion[n].bad_gs_rr_t_flag==0) //and we need a temp line for this ion
-						{
-						if (gstemp[0]>gstmin)
-							gstmin=gstemp[0];
-		  				if (gstemp[18]<gstmax)
-							gstmax=gstemp[18];
-						ion[n].bad_gs_rr_t_flag=1; //set the flag
-						for (n1=0;n1<nparam;n1++)
-							{
-							bad_gs_rr[ion[n].nxbadgsrr].temps[n1]=gstemp[n1];
-							}					
-						}
-					else if (ion[n].bad_gs_rr_t_flag==1) //we already have a temp line for this ion
-						{
-						Error ("More than one temp line for badnell GS RR rate for ion %i\n",n);
-		        			Error ("Get_atomic_data: %s\n", aline);
-		        			exit (0);
-						}
-					else //some other odd thing had happened
-						{
-		        			Error ("Get_atomic_data: %s\n", aline);
-		        			exit (0);
-						}
-					}
-				else if (gsflag=='R') //it is a rate line
-					{
-					if (ion[n].bad_gs_rr_r_flag==0) //and we need a rate line for this ion
-						{
-						ion[n].bad_gs_rr_r_flag=1; //set the flag
-						for (n1=0;n1<nparam;n1++)
-							{
-							bad_gs_rr[ion[n].nxbadgsrr].rates[n1]=gstemp[n1];
-							}
-						}
-					else if (ion[n].bad_gs_rr_r_flag==1) //we already have a rate line for this ion
-						{
-						Error ("More than one rate line for badnell GS RR rate for ion %i\n",n);
-		        			Error ("Get_atomic_data: %s\n", aline);
-		        			exit (0);
-						}
-					else //some other odd thing had happened
-						{
-		        			Error ("Get_atomic_data: %s\n", aline);
-		        			exit (0);
-						}
-					}
-				else //We have some problem with this line
-					{
-		        		Error ("Get_atomic_data: %s\n", aline);
-		        		exit (0);
-					}
-				} //end of loop over dealing with data for a discovered ion
-		    	} //end of loop over ions
-			
-		break ;
+				  if (gstemp[0] > gstmin)
+				    gstmin = gstemp[0];
+				  if (gstemp[18] < gstmax)
+				    gstmax = gstemp[18];
+				  ion[n].bad_gs_rr_t_flag = 1;	//set the flag
+				  for (n1 = 0; n1 < nparam; n1++)
+				    {
+				      bad_gs_rr[ion[n].nxbadgsrr].temps[n1] =
+					gstemp[n1];
+				    }
+				}
+			      else if (ion[n].bad_gs_rr_t_flag == 1)	//we already have a temp line for this ion
+				{
+				  Error
+				    ("More than one temp line for badnell GS RR rate for ion %i\n",
+				     n);
+				  Error ("Get_atomic_data: %s\n", aline);
+				  exit (0);
+				}
+			      else	//some other odd thing had happened
+				{
+				  Error ("Get_atomic_data: %s\n", aline);
+				  exit (0);
+				}
+			    }
+			  else if (gsflag == 'R')	//it is a rate line
+			    {
+			      if (ion[n].bad_gs_rr_r_flag == 0)	//and we need a rate line for this ion
+				{
+				  ion[n].bad_gs_rr_r_flag = 1;	//set the flag
+				  for (n1 = 0; n1 < nparam; n1++)
+				    {
+				      bad_gs_rr[ion[n].nxbadgsrr].rates[n1] =
+					gstemp[n1];
+				    }
+				}
+			      else if (ion[n].bad_gs_rr_r_flag == 1)	//we already have a rate line for this ion
+				{
+				  Error
+				    ("More than one rate line for badnell GS RR rate for ion %i\n",
+				     n);
+				  Error ("Get_atomic_data: %s\n", aline);
+				  exit (0);
+				}
+			      else	//some other odd thing had happened
+				{
+				  Error ("Get_atomic_data: %s\n", aline);
+				  exit (0);
+				}
+			    }
+			  else	//We have some problem with this line
+			    {
+			      Error ("Get_atomic_data: %s\n", aline);
+			      exit (0);
+			    }
+			}	//end of loop over dealing with data for a discovered ion
+		    }		//end of loop over ions
+
+		  break;
 /* NSH 120921 The following are lines to read in temperature averaged gaunt factors from the data of Sutherland (1997). The atomic file is basically unchaned from the data on the website, just with the top few lines commented out, and a label prepended to each line */
 
 		case 'g':
-   			nparam=sscanf(aline,"%*s %le %le %le %le %le",&gsqrdtemp,&gfftemp,&s1temp,&s2temp,&s3temp);  //split and assign the line
-    		if (nparam >5 || nparam<1)        //     trap errors 
-        		{	  
-			Error ("Something wrong with sutherland gaunt data\n");
-		        Error ("Get_atomic_data: %s\n", aline);
-		        exit (0);
-			}
-		if (gaunt_n_gsqrd == 0 || gsqrdtemp > gaunt_total[gaunt_n_gsqrd-1].log_gsqrd) //We will use it if it's our first piece of data or is in order
-			{
-			gaunt_total[gaunt_n_gsqrd].log_gsqrd=gsqrdtemp; //The scaled electron temperature squared for this array
-	 		gaunt_total[gaunt_n_gsqrd].gff=gfftemp;	
-	 		gaunt_total[gaunt_n_gsqrd].s1=s1temp;
-			gaunt_total[gaunt_n_gsqrd].s2=s2temp;
-			gaunt_total[gaunt_n_gsqrd].s3=s3temp;
-			gaunt_n_gsqrd++;
-			}
-		else 
-			{
-			Error ("Something wrong with gaunt data\n");
-			Error ("Get_atomic_data %s\n", aline);
-			exit(0);
-			}
+		  nparam = sscanf (aline, "%*s %le %le %le %le %le", &gsqrdtemp, &gfftemp, &s1temp, &s2temp, &s3temp);	//split and assign the line
+		  if (nparam > 5 || nparam < 1)	//     trap errors 
+		    {
+		      Error ("Something wrong with sutherland gaunt data\n");
+		      Error ("Get_atomic_data: %s\n", aline);
+		      exit (0);
+		    }
+		  if (gaunt_n_gsqrd == 0 || gsqrdtemp > gaunt_total[gaunt_n_gsqrd - 1].log_gsqrd)	//We will use it if it's our first piece of data or is in order
+		    {
+		      gaunt_total[gaunt_n_gsqrd].log_gsqrd = gsqrdtemp;	//The scaled electron temperature squared for this array
+		      gaunt_total[gaunt_n_gsqrd].gff = gfftemp;
+		      gaunt_total[gaunt_n_gsqrd].s1 = s1temp;
+		      gaunt_total[gaunt_n_gsqrd].s2 = s2temp;
+		      gaunt_total[gaunt_n_gsqrd].s3 = s3temp;
+		      gaunt_n_gsqrd++;
+		    }
+		  else
+		    {
+		      Error ("Something wrong with gaunt data\n");
+		      Error ("Get_atomic_data %s\n", aline);
+		      exit (0);
+		    }
 
 
 
-		break;
+		  break;
 
 
 		case 'c':	/* It was a comment line so do nothing */
@@ -2328,13 +2375,13 @@ BAD_T_RR  5  0  1  1  4.647E-10  0.7484  6.142E+01  1.753E+07*/
 
 /* OK now summarize the data that has been read*/
 
-	
+
 
 
 
   Log
     ("Data of %3d elements, %3d ions, %5d levels, %5d lines, and %5d topbase records\n",
-     nelements, nions, nlevels, nlines,  ntop_phot);
+     nelements, nions, nlevels, nlines, ntop_phot);
   Log
     ("Macro   %3d elements, %3d ions, %5d levels, %5d lines, and %5d topbase records\n",
      nelements, nions_macro, nlevels_macro, nlines_macro, ntop_phot_macro);
@@ -2342,11 +2389,16 @@ BAD_T_RR  5  0  1  1  4.647E-10  0.7484  6.142E+01  1.753E+07*/
     ("Simple  %3d elements, %3d ions, %5d levels, %5d lines, and %5d topbase records\n",
      nelements, nions_simple, nlevels_simple, nlines_simple,
      ntop_phot_simple);
-  Log ("We have read in %3d Dielectronic recombination coefficients\n",ndrecomb);  //110818 nsh added a reporting line about dielectronic recombination coefficients
-  Log ("We have read in %3d Cardona partition functions coefficients\n",ncpart); 
-  Log ("We have read in %3d Badnell totl Radiative rate coefficients\n",n_total_rr); 
-  Log ("We have read in %3d Badnell GS   Radiative rate coefficients over the temp range %e to %e\n",n_bad_gs_rr,gstmin,gstmax); 
-  Log ("We have read in %3d Scaled electron temperature gaunt factor lines",gaunt_n_gsqrd);
+  Log ("We have read in %3d Dielectronic recombination coefficients\n", ndrecomb);	//110818 nsh added a reporting line about dielectronic recombination coefficients
+  Log ("We have read in %3d Cardona partition functions coefficients\n",
+       ncpart);
+  Log ("We have read in %3d Badnell totl Radiative rate coefficients\n",
+       n_total_rr);
+  Log
+    ("We have read in %3d Badnell GS   Radiative rate coefficients over the temp range %e to %e\n",
+     n_bad_gs_rr, gstmin, gstmax);
+  Log ("We have read in %3d Scaled electron temperature gaunt factor lines",
+       gaunt_n_gsqrd);
   Log ("The minimum frequency for photoionization is %8.2e\n", phot_freq_min);
 
 
@@ -2618,7 +2670,7 @@ or zero so that simple checks of true and false can be used for them */
   if (ntop_phot > 0)
     index_phot_top ();
 
- return (0);
+  return (0);
 
 }
 

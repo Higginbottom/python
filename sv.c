@@ -96,10 +96,11 @@ get_sv_wind_params ()
   geo.xlog_scale = geo.sv_rmin;
 
   /* !! 70b - This change is to accomodate the torus, but it is not obvious this is the
-   * best way to set the scales now. It might be better do do this in make_grid!!  */ 
-  if (geo.compton_torus && geo.compton_torus_rmin < geo.xlog_scale) {
-	  geo.xlog_scale=geo.compton_torus_rmin;
-  }
+   * best way to set the scales now. It might be better do do this in make_grid!!  */
+  if (geo.compton_torus && geo.compton_torus_rmin < geo.xlog_scale)
+    {
+      geo.xlog_scale = geo.compton_torus_rmin;
+    }
 
 /*70d - ksl - This change made to give one a chance of being able to do an 
    agn and a CV with the sv model.  The underlying assumption is that the
@@ -107,8 +108,12 @@ get_sv_wind_params ()
    An alternative would be to use sv_rmin.
  */
 
-//OLD70d  geo.zlog_scale = 1e7;
-geo.zlog_scale = 1.0e7;		//set to old value for macro testing
+   /* Added this if statement for macro atom mode */
+  if (geo.rt_mode==2)
+    geo.zlog_scale = 1e7;
+  else
+    geo.zlog_scale = geo.rstar;
+  //OLD70d  geo.zlog_scale = 1e7;
 
 /*Now calculate the normalization factor for the wind*/
 
@@ -168,20 +173,20 @@ sv_velocity (x, v)
   r = sqrt (x[0] * x[0] + x[1] * x[1]);
   ldist = sqrt ((r - rzero) * (r - rzero) + x[2] * x[2]);
 
-  /* Calculate the poloidal distance for a vertically extended disk ksl 111124*/
+  /* Calculate the poloidal distance for a vertically extended disk ksl 111124 */
   if (geo.disk_type == 2)
     {
-      xtest[0] = r;			// Define xtest in the +z plane
+      xtest[0] = r;		// Define xtest in the +z plane
       xtest[1] = 0;
       xtest[2] = fabs (x[2]);
-      ptest.x[0] = rzero;		// Define ptest to be the footpoint extended to xy plane
+      ptest.x[0] = rzero;	// Define ptest to be the footpoint extended to xy plane
       ptest.x[1] = 0.0;
       ptest.x[2] = EPSILON;
       ptest.lmn[0] = sin (theta);	// 56d -- ptest direction is along stream line
       ptest.lmn[1] = 0.0;
       ptest.lmn[2] = cos (theta);
       s = ds_to_disk (&ptest, 1);
-      move_phot (&ptest, s);		// Now move the test photon to  disk surface
+      move_phot (&ptest, s);	// Now move the test photon to  disk surface
       vsub (ptest.x, xtest, xtest);	// Poloidal distance is just the distance beteen these two points.
       ldist = length (x);
     }
@@ -290,7 +295,7 @@ sv_rho (x)
   r = sqrt (x[0] * x[0] + x[1] * x[1]);
   ldist = sqrt ((r - rzero) * (r - rzero) + x[2] * x[2]);
 
-  if (geo.disk_type == 2)  /* These are corrections for a vertically extended disk */
+  if (geo.disk_type == 2)	/* These are corrections for a vertically extended disk */
     {
       xtest[0] = r;		// Define xtest in the +z plane
       xtest[1] = 0;

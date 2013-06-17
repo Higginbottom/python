@@ -98,11 +98,12 @@ comp_phot (p1, p2)
 */
 
 int
-phot_hist (p,iswitch)
+phot_hist (p, iswitch)
      PhotPtr p;
      int iswitch;
 {
-	if (phot_hist_on == 0) return (0);
+  if (phot_hist_on == 0)
+    return (0);
 
   if (iswitch == 0)
     {
@@ -138,41 +139,46 @@ here, and so the energy absorbed is the current weight (exp(-tau_before) - exp (
 	0904	ksl	68c - Fixed problem concerning where energy was being stored
  */
 
-int phot_history_summarize()
+int
+phot_history_summarize ()
 {
-	int n;
-	PlasmaPtr xplasma;
-	PhotPtr p;
-	double x;
-	double tau,tau_old;
-	int nion;
+  int n;
+  PlasmaPtr xplasma;
+  PhotPtr p;
+  double x;
+  double tau, tau_old;
+  int nion;
 
-	p=&xphot_hist[0];
-	tau_old=p->tau;
+  p = &xphot_hist[0];
+  tau_old = p->tau;
 
-	for (n=1;n<n_phot_hist;n++){
-		p=&xphot_hist[n];
+  for (n = 1; n < n_phot_hist; n++)
+    {
+      p = &xphot_hist[n];
 
-		tau=p->tau; // tau is tau after the scatter
+      tau = p->tau;		// tau is tau after the scatter
 
-		nion=lin_ptr[p->nres]->nion; // ion that scattered
+      nion = lin_ptr[p->nres]->nion;	// ion that scattered
 
-		x=p->w * (exp(-tau_old)-exp(-tau)); // energy removed by scatter
+      x = p->w * (exp (-tau_old) - exp (-tau));	// energy removed by scatter
 
-		xplasma=&plasmamain[wmain[p->grid].nplasma]; // pointer to plasma cell where scattering occured
+      xplasma = &plasmamain[wmain[p->grid].nplasma];	// pointer to plasma cell where scattering occured
 
-		xplasma->xscatters[nion]+=(x);
+      xplasma->xscatters[nion] += (x);
 
-		tau_old=tau; 
+      tau_old = tau;
 
-		if(xplasma->xscatters[nion]<0.0) {
-			Error("phot_history_summarize:  n %d n_phot_hist %d phot_hist %d nplasma %d\n",n,n_phot_hist,p->grid,wmain[p->grid].nplasma );
-		}
+      if (xplasma->xscatters[nion] < 0.0)
+	{
+	  Error
+	    ("phot_history_summarize:  n %d n_phot_hist %d phot_hist %d nplasma %d\n",
+	     n, n_phot_hist, p->grid, wmain[p->grid].nplasma);
 	}
-		
+    }
 
 
-	return(0);
+
+  return (0);
 }
 
 

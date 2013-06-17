@@ -110,14 +110,14 @@ bands_init (imode, band)
   double t;			// A temperature which can be used to set absolute limits on the bands
   double f1, f2;		// frequency limits that can overide any other limits
   double fmax;
-  double bbfrac();
+  double bbfrac ();
 
 
   /* Imported from python.c */
 
   // 59 - Increased to 20,000 A so could go further into NIR 
-  freqmin = C / 400000e-8;	/*20000 A */
-  tmax = TSTAR; 
+  freqmin = C / 12000e-8;	/*20000 A */
+  tmax = TSTAR;
   if (geo.twind > tmax)
     tmax = geo.twind;
   if (geo.tstar > tmax)
@@ -134,7 +134,7 @@ bands_init (imode, band)
     }
   else
     Log ("Maximum frequency %8.2e determined by T %8.2e\n", freqmax, tmax);
-  geo.tmax=tmax; /*NSH 120817 NSH made this a global varaible so it is available to the code to make informed guesses as to the possible location of any BB driven exponential dropoff in the spectrum */
+  geo.tmax = tmax;		/*NSH 120817 NSH made this a global varaible so it is available to the code to make informed guesses as to the possible location of any BB driven exponential dropoff in the spectrum */
   t = tmax;
   f1 = freqmin;
   f2 = freqmax;
@@ -265,153 +265,171 @@ bands_init (imode, band)
 
 
     }
-  else if (mode ==5) /* Set up to compare with cloudy power law table command note that this also sets up the weight and photon index for the PL, to ensure a continuous distribution*/
-   {
+  else if (mode == 5)		/* Set up to compare with cloudy power law table command note that this also sets up the weight and photon index for the PL, to ensure a continuous distribution */
+    {
       rddoub ("Lowest_energy_to_be_considered(eV)", &xx);
 
-	if (xx>geo.agn_cltab_low)
-	   {
-	   xx=geo.agn_cltab_low/10.0;
-           Log ("Lowest  frequency reset to 1/10 of low frequency break\n");
-            }
-           f1 = xx / HEV;
+      if (xx > geo.agn_cltab_low)
+	{
+	  xx = geo.agn_cltab_low / 10.0;
+	  Log ("Lowest  frequency reset to 1/10 of low frequency break\n");
+	}
+      f1 = xx / HEV;
       rddoub ("Highest_energy_to_be_considered(eV)", &xx);
 
-	if (xx<geo.agn_cltab_hi)
-	  {
-	  xx=geo.agn_cltab_hi*10.0;
-           Log ("highest  frequency reset to 10x high frequency break\n");
-	    }
+      if (xx < geo.agn_cltab_hi)
+	{
+	  xx = geo.agn_cltab_hi * 10.0;
+	  Log ("highest  frequency reset to 10x high frequency break\n");
+	}
       f2 = xx / HEV;
       Log ("Lowest photon energy is ev (freq) is %f (%.2e)\n", f1 * HEV, f1);
       Log ("Highest photon energy is ev (freq) is %f (%.2e)\n", f2 * HEV, f2);
 
 
-      band->nbands=5;
-      
-      band->f1[0] = (geo.agn_cltab_low/HEV)/1000.0;
-      band->f2[0] = band->f1[1] = (geo.agn_cltab_low/HEV)/100.0;
-      band->f2[1] = band->f1[2] = (geo.agn_cltab_low/HEV)/10.0;
-      band->f2[2] = band->f1[3] = (geo.agn_cltab_low/HEV);
-      band->f2[3] = band->f1[4] = geo.agn_cltab_hi/HEV;
+      band->nbands = 5;
+
+      band->f1[0] = (geo.agn_cltab_low / HEV) / 1000.0;
+      band->f2[0] = band->f1[1] = (geo.agn_cltab_low / HEV) / 100.0;
+      band->f2[1] = band->f1[2] = (geo.agn_cltab_low / HEV) / 10.0;
+      band->f2[2] = band->f1[3] = (geo.agn_cltab_low / HEV);
+      band->f2[3] = band->f1[4] = geo.agn_cltab_hi / HEV;
       band->f2[4] = f2;
 
-	//Set number of photons in each band
+      //Set number of photons in each band
 
-      band->min_fraction[0]=0.1;
-      band->min_fraction[1]=0.1;
-      band->min_fraction[2]=0.1;
-      band->min_fraction[3]=0.6;
-      band->min_fraction[4]=0.1;
+      band->min_fraction[0] = 0.1;
+      band->min_fraction[1] = 0.1;
+      band->min_fraction[2] = 0.1;
+      band->min_fraction[3] = 0.6;
+      band->min_fraction[4] = 0.1;
 
 
 
-     //Set alpha for each band
+      //Set alpha for each band
 
-	band->alpha[0]=geo.agn_cltab_low_alpha;
-	band->alpha[1]=geo.agn_cltab_low_alpha;
-	band->alpha[2]=geo.agn_cltab_low_alpha;
-	band->alpha[3]=geo.alpha_agn;
-        band->alpha[4]=geo.agn_cltab_hi_alpha;
+      band->alpha[0] = geo.agn_cltab_low_alpha;
+      band->alpha[1] = geo.agn_cltab_low_alpha;
+      band->alpha[2] = geo.agn_cltab_low_alpha;
+      band->alpha[3] = geo.alpha_agn;
+      band->alpha[4] = geo.agn_cltab_hi_alpha;
 
-  //Set the constant for each band to ensure continuous distribution
-   
-  band->pl_const[0]=geo.const_agn*pow((band->f2[2]),geo.alpha_agn)/pow((band->f2[2]),band->alpha[0]);
-  band->pl_const[1]=geo.const_agn*pow((band->f2[2]),geo.alpha_agn)/pow((band->f2[2]),band->alpha[0]);
-  band->pl_const[2]=geo.const_agn*pow((band->f2[2]),geo.alpha_agn)/pow((band->f2[2]),band->alpha[0]);
-  band->pl_const[3]=geo.const_agn;
-  band->pl_const[4]=geo.const_agn*pow((band->f2[3]),geo.alpha_agn)/pow((band->f2[3]),band->alpha[4]);
- 
+      //Set the constant for each band to ensure continuous distribution
 
-for (nband=0;nband<band->nbands;nband++)
-	printf ("f1=%e,f2=%e,alpha=%e,const=%e,lum1=%e,lum2=%e\n",band->f1[nband],band->f2[nband],band->alpha[nband],band->pl_const[nband],band->pl_const[nband]*pow(band->f1[nband],band->alpha[nband]),band->pl_const[nband]*pow(band->f2[nband],band->alpha[nband]));
+      band->pl_const[0] =
+	geo.const_agn * pow ((band->f2[2]),
+			     geo.alpha_agn) / pow ((band->f2[2]),
+						   band->alpha[0]);
+      band->pl_const[1] =
+	geo.const_agn * pow ((band->f2[2]),
+			     geo.alpha_agn) / pow ((band->f2[2]),
+						   band->alpha[0]);
+      band->pl_const[2] =
+	geo.const_agn * pow ((band->f2[2]),
+			     geo.alpha_agn) / pow ((band->f2[2]),
+						   band->alpha[0]);
+      band->pl_const[3] = geo.const_agn;
+      band->pl_const[4] =
+	geo.const_agn * pow ((band->f2[3]),
+			     geo.alpha_agn) / pow ((band->f2[3]),
+						   band->alpha[4]);
+
+
+      for (nband = 0; nband < band->nbands; nband++)
+	printf ("f1=%e,f2=%e,alpha=%e,const=%e,lum1=%e,lum2=%e\n",
+		band->f1[nband], band->f2[nband], band->alpha[nband],
+		band->pl_const[nband],
+		band->pl_const[nband] * pow (band->f1[nband],
+					     band->alpha[nband]),
+		band->pl_const[nband] * pow (band->f2[nband],
+					     band->alpha[nband]));
 
 
 
 
     }
 
-  else if (mode ==6) //Test for balance to have a really wide frequency range
-	{
-    tmax = geo.tstar;
-	  fmax=tmax*WIEN; //Use wiens law to get peak frequency
-	printf ("We are in mode 6 - tmax=%e, fmax=%e\n",tmax,fmax);
- /*     band->nbands = 1;
-      band->f1[0] = 1e10; // BB spectrum had dropped to 5e-8 of peak value
-      band->f2[0] = 1e20; //100 fmax is roughly where the BB spectrum gets tiny
-      band->min_fraction[0] = 1.0;
-	printf ("In photon generation, tmax=%e, fmax=%e\n",tmax,fmax);*/
- 
-    band->nbands=17;
- 
+  else if (mode == 6)		//Test for balance to have a really wide frequency range
+    {
+      tmax = geo.tstar;
+      fmax = tmax * WIEN;	//Use wiens law to get peak frequency
+      printf ("We are in mode 6 - tmax=%e, fmax=%e\n", tmax, fmax);
+      /*     band->nbands = 1;
+         band->f1[0] = 1e10; // BB spectrum had dropped to 5e-8 of peak value
+         band->f2[0] = 1e20; //100 fmax is roughly where the BB spectrum gets tiny
+         band->min_fraction[0] = 1.0;
+         printf ("In photon generation, tmax=%e, fmax=%e\n",tmax,fmax); */
+
+      band->nbands = 17;
 
 
 
 
-	band->f1[0] = 1e10;
-	band->f2[0] = band->f1[1] = fmax*0.01;
-	band->f2[1] = band->f1[2] = fmax*0.1;
-	band->f2[2] = band->f1[3] = fmax;
-	band->f2[3] = band->f1[4] = fmax*1.5;	
-	band->f2[4] = band->f1[5] = fmax*2;
-	band->f2[5] = band->f1[6] = fmax*2.5;
-	band->f2[6] = band->f1[7] = fmax*3;
-	band->f2[7] = band->f1[8] = fmax*4;
-	band->f2[8] = band->f1[9] = fmax*6;
-	band->f2[9] = band->f1[10] = fmax*8;
-	band->f2[10] = band->f1[11] = fmax*10;
-	band->f2[11] = band->f1[12] = fmax*12;
-	band->f2[12] = band->f1[13] = fmax*14;
-	band->f2[13] = band->f1[14] = fmax*16;
-	band->f2[14] = band->f1[15] = fmax*18;
-	band->f2[15] = band->f1[16] = fmax*20;
-	band->f2[16]  =1e20;/*	
-	band->f2[6] = band->f1[7] = 3.162e16;
-	band->f2[7] = band->f1[8] = 5.623e16;
-	band->f2[8] = band->f1[9] = 1e17;
-	band->f2[9] = band->f1[10] = 1.778e17;	
-	band->f2[10] = band->f1[11] = 3.162e17;
-	band->f2[11] = band->f1[12] = 5.623e17;
-	band->f2[12] = band->f1[13] = 1e18;
-	band->f2[13] = band->f1[14] = 1.778e18;	
-	band->f2[14] = band->f1[15] = 3.162e18;
-	band->f2[15] = band->f1[16] = 5.623e18;
-	band->f2[16]  		    = 1e19;*/
+
+      band->f1[0] = 1e10;
+      band->f2[0] = band->f1[1] = fmax * 0.01;
+      band->f2[1] = band->f1[2] = fmax * 0.1;
+      band->f2[2] = band->f1[3] = fmax;
+      band->f2[3] = band->f1[4] = fmax * 1.5;
+      band->f2[4] = band->f1[5] = fmax * 2;
+      band->f2[5] = band->f1[6] = fmax * 2.5;
+      band->f2[6] = band->f1[7] = fmax * 3;
+      band->f2[7] = band->f1[8] = fmax * 4;
+      band->f2[8] = band->f1[9] = fmax * 6;
+      band->f2[9] = band->f1[10] = fmax * 8;
+      band->f2[10] = band->f1[11] = fmax * 10;
+      band->f2[11] = band->f1[12] = fmax * 12;
+      band->f2[12] = band->f1[13] = fmax * 14;
+      band->f2[13] = band->f1[14] = fmax * 16;
+      band->f2[14] = band->f1[15] = fmax * 18;
+      band->f2[15] = band->f1[16] = fmax * 20;
+      band->f2[16] = 1e20;	/*  
+				   band->f2[6] = band->f1[7] = 3.162e16;
+				   band->f2[7] = band->f1[8] = 5.623e16;
+				   band->f2[8] = band->f1[9] = 1e17;
+				   band->f2[9] = band->f1[10] = 1.778e17;   
+				   band->f2[10] = band->f1[11] = 3.162e17;
+				   band->f2[11] = band->f1[12] = 5.623e17;
+				   band->f2[12] = band->f1[13] = 1e18;
+				   band->f2[13] = band->f1[14] = 1.778e18;  
+				   band->f2[14] = band->f1[15] = 3.162e18;
+				   band->f2[15] = band->f1[16] = 5.623e18;
+				   band->f2[16]                 = 1e19; */
 
 
-      band->min_fraction[0]=0.1;
-      band->min_fraction[1]=0.1;
-      band->min_fraction[2]=0.1;
-      band->min_fraction[3]=0.05;
-      band->min_fraction[4]=0.05;
-      band->min_fraction[5]=0.05;
-      band->min_fraction[6]=0.05;
-      band->min_fraction[7]=0.05;
-      band->min_fraction[8]=0.05;
-      band->min_fraction[9]=0.05;
-      band->min_fraction[10]=0.05;
-      band->min_fraction[11]=0.05;
-      band->min_fraction[12]=0.05;
-      band->min_fraction[13]=0.05;
-      band->min_fraction[14]=0.05;
-      band->min_fraction[15]=0.05;
-      band->min_fraction[16]=0.05;
-  /*    band->min_fraction[6]=0.0625;
-      band->min_fraction[7]=0.0625;
-      band->min_fraction[8]=0.0625;
-      band->min_fraction[9]=0.0625;
-      band->min_fraction[10]=0.0625;
-      band->min_fraction[11]=0.0625;
-      band->min_fraction[12]=0.0625;
-      band->min_fraction[13]=0.0625;
-      band->min_fraction[14]=0.0625;
-      band->min_fraction[15]=0.0625;
-      band->min_fraction[16]=0.0625;
-	band->min_fraction[0]=1.0;*/
+      band->min_fraction[0] = 0.1;
+      band->min_fraction[1] = 0.1;
+      band->min_fraction[2] = 0.1;
+      band->min_fraction[3] = 0.05;
+      band->min_fraction[4] = 0.05;
+      band->min_fraction[5] = 0.05;
+      band->min_fraction[6] = 0.05;
+      band->min_fraction[7] = 0.05;
+      band->min_fraction[8] = 0.05;
+      band->min_fraction[9] = 0.05;
+      band->min_fraction[10] = 0.05;
+      band->min_fraction[11] = 0.05;
+      band->min_fraction[12] = 0.05;
+      band->min_fraction[13] = 0.05;
+      band->min_fraction[14] = 0.05;
+      band->min_fraction[15] = 0.05;
+      band->min_fraction[16] = 0.05;
+      /*    band->min_fraction[6]=0.0625;
+         band->min_fraction[7]=0.0625;
+         band->min_fraction[8]=0.0625;
+         band->min_fraction[9]=0.0625;
+         band->min_fraction[10]=0.0625;
+         band->min_fraction[11]=0.0625;
+         band->min_fraction[12]=0.0625;
+         band->min_fraction[13]=0.0625;
+         band->min_fraction[14]=0.0625;
+         band->min_fraction[15]=0.0625;
+         band->min_fraction[16]=0.0625;
+         band->min_fraction[0]=1.0; */
     }
 
-  else if (mode ==7) //Test for balance matching the bands we have been using for AGN runs
-	{
+  else if (mode == 7)		//Test for balance matching the bands we have been using for AGN runs
+    {
 /*      band->nbands = 7;
       band->f1[0] = 1/HEV;
       band->f2[0] = band->f1[1] = 13.6 / HEV;
@@ -455,7 +473,7 @@ for (nband=0;nband<band->nbands;nband++)
 
 
 
-  }
+    }
   else
     {
       Error ("bands_init: Unknown mode %d\n", mode);
@@ -472,7 +490,8 @@ for (nband=0;nband<band->nbands;nband++)
 	   band->f1[nband] * HEV, band->f2[nband] * HEV,
 	   band->min_fraction[nband]);
       Log ("bands_init: band %i, alpha1=%f, alpha2=%f, frac=%.2f\n", nband,
-	   band->f1[nband] * H/(BOLTZMANN*tmax), band->f2[nband] * H/(BOLTZMANN*tmax),
+	   band->f1[nband] * H / (BOLTZMANN * tmax),
+	   band->f2[nband] * H / (BOLTZMANN * tmax),
 	   band->min_fraction[nband]);
     }
 
@@ -521,12 +540,12 @@ freqs_init (freqmin, freqmax)
 {
   int i, n, ngood, good[NXBANDS];
   double xfreq[NXBANDS];
-  int nxfreq;  
+  int nxfreq;
 //  double nupeak; //Weins law preak frequency from tstar
 
 
   /* At present set up a single energy band for 2 - 10 keV */
-		/*NSH 70g - bands set up to match the bands we are currently using in the.pf files. This should probably end up tied together in the long run!*/
+  /*NSH 70g - bands set up to match the bands we are currently using in the.pf files. This should probably end up tied together in the long run! */
 /* nxfreq = 7;
   xfreq[0] = 1.0 / HEV;
  xfreq[1] = 13.6 / HEV;
@@ -549,28 +568,30 @@ xfreq[3]=100000000/HEV;*/
 /*nupeak=WIEN*geo.tstar;
 printf ("Tstar=%e, Nupeak=%e\n",geo.tstar,nupeak);*/
 
-nxfreq = 10;
-xfreq[0]=freqmin; //We need the whole range to be modelled for induced compton heating to work
-xfreq[1]=1e15;  //This should be below the lowest threshold frequency of any element in our model
-xfreq[2]=3.162e15;
-xfreq[3]=1e16;
-xfreq[4]=3.162e16;
-xfreq[5]=1e17;
-xfreq[6]=3.162e17;
-xfreq[7]=1e18;
-xfreq[8]=3.162e18;
-xfreq[9]=1.2e19; //This is the highest frequency defined in our ionization data
-xfreq[10]=freqmax;
+  nxfreq = 10;
+  xfreq[0] = freqmin;		//We need the whole range to be modelled for induced compton heating to work
+  xfreq[1] = 1e15;		//This should be below the lowest threshold frequency of any element in our model
+  xfreq[2] = 3.162e15;
+  xfreq[3] = 1e16;
+  xfreq[4] = 3.162e16;
+  xfreq[5] = 1e17;
+  xfreq[6] = 3.162e17;
+  xfreq[7] = 1e18;
+  xfreq[8] = 3.162e18;
+  xfreq[9] = 1.2e19;		//This is the highest frequency defined in our ionization data
+  xfreq[10] = freqmax;
 
 
 
 
-  Log("freqs_init: Photons will be generated between %8.2f (%8.2e) and %8.2f (%8.2e)\n",freqmin*HEV,freqmin,freqmax*HEV,freqmax);
+  Log
+    ("freqs_init: Photons will be generated between %8.2f (%8.2e) and %8.2f (%8.2e)\n",
+     freqmin * HEV, freqmin, freqmax * HEV, freqmax);
 
   ngood = 0;
   for (i = 0; i < nxfreq; i++)
     {
-	    Log("test: %10.2e %10.2e %10.2e\n",freqmin,freqmax,xfreq[i]);
+      Log ("test: %10.2e %10.2e %10.2e\n", freqmin, freqmax, xfreq[i]);
       if (freqmin < xfreq[i] && xfreq[i] < freqmax)
 	{
 	  good[i] = 1;
@@ -611,7 +632,7 @@ xfreq[10]=freqmax;
       geo.xfreq[0] = freqmin;
     }
 
-  Log("freqs_init: test %e %e\n",freqmax , geo.xfreq[geo.nxfreq]);
+  Log ("freqs_init: test %e %e\n", freqmax, geo.xfreq[geo.nxfreq]);
   if (freqmax < geo.xfreq[geo.nxfreq])
     {
       geo.xfreq[geo.nxfreq] = freqmax;

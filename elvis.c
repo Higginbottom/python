@@ -176,8 +176,7 @@ elvis_velocity (x, v)
       ldist =
 	geo.elvis_offset + sqrt ((r - rzero) * (r - rzero) +
 				 (x[2] - geo.elvis_offset) * (x[2] -
-							      geo.
-							      elvis_offset));
+							      geo.elvis_offset));
     }
   else
     {
@@ -255,8 +254,8 @@ elvis_velocity (x, v)
   speed = (sqrt (v[0] * v[0] + v[1] * v[1] + v[2] * v[2]));
   if (sane_check (speed))
     {
-      Error ("elvis_velocity:sane_check x %f %f %f v %f %f %f\n", x[0], x[1], x[2],
-	     v[0], v[1], v[2]);
+      Error ("elvis_velocity:sane_check x %f %f %f v %f %f %f\n", x[0], x[1],
+	     x[2], v[0], v[1], v[2]);
       Error
 	("elvis_velocity: rzero %f theta %f ldist %f zzz %f v_escape %f vl %f\n",
 	 rzero, theta, ldist, zzz, v_escape, vl);
@@ -334,8 +333,7 @@ elvis_rho (x)
       ldist =
 	geo.elvis_offset + sqrt ((r - rzero) * (r - rzero) +
 				 (x[2] - geo.elvis_offset) * (x[2] -
-							      geo.
-							      elvis_offset));
+							      geo.elvis_offset));
     }
   else
     {
@@ -657,104 +655,90 @@ History:
  
 **************************************************************/
 
-double ds_to_pillbox(pp,rmin,rmax,height)
-	PhotPtr pp;
-	double rmin,rmax,height;
+double
+ds_to_pillbox (pp, rmin, rmax, height)
+     PhotPtr pp;
+     double rmin, rmax, height;
 {
 
-	struct photon ptest;
-	double ds, ds_best, x;
-	struct plane xplane;
+  struct photon ptest;
+  double ds, ds_best, x;
+  struct plane xplane;
 
 
-	ds_best=VERY_BIG;
+  ds_best = VERY_BIG;
 
-	/* Make sure we don't mess with pp */
-	stuff_phot(pp,&ptest);
-	ds=ds_to_cylinder(rmin,&ptest);
+  /* Make sure we don't mess with pp */
+  stuff_phot (pp, &ptest);
+  ds = ds_to_cylinder (rmin, &ptest);
 
-	/* Calculate the distance to the innner cylinder */
-	if (ds < VERY_BIG)
+  /* Calculate the distance to the innner cylinder */
+  if (ds < VERY_BIG)
+    {
+      /* Check whether we encounted the
+       * part of the cylinder we are interested in
+       */
+      move_phot (&ptest, ds);
+      if (fabs (ptest.x[2]) < height)
 	{
-		/* Check whether we encounted the
-		 * part of the cylinder we are interested in
-		 */
-		move_phot(&ptest,ds);
-		if (fabs(ptest.x[2])<height)
-		{
-			ds_best=ds;
-		}
-		/* Now reinitialize ptest */
-		stuff_phot(pp,&ptest);
+	  ds_best = ds;
 	}
-	
-	/* Similarly calculate the distance to the outer
-	 * cylinder
-	 */
-	ds=ds_to_cylinder(rmax,&ptest);
-	if (ds < ds_best)
+      /* Now reinitialize ptest */
+      stuff_phot (pp, &ptest);
+    }
+
+  /* Similarly calculate the distance to the outer
+   * cylinder
+   */
+  ds = ds_to_cylinder (rmax, &ptest);
+  if (ds < ds_best)
+    {
+      move_phot (&ptest, ds);
+      if (fabs (ptest.x[2]) < height)
 	{
-		move_phot(&ptest,ds);
-		if (fabs(ptest.x[2])<height)
-		{
-			ds_best=ds;
-		}
-		stuff_phot(pp,&ptest);
+	  ds_best = ds;
 	}
-	
-	/* At this point we know whether the photon has interecepted
-	 * the wall of the cylinder, but we do not know if it intercepted
-	 * the top or bottom of the cylinder earlier
-	 */
+      stuff_phot (pp, &ptest);
+    }
 
-	xplane.x[0]=0;
-	xplane.x[1]=0;
-	xplane.x[2]=height;
-	xplane.lmn[0]=0.0;
-	xplane.lmn[1]=0.0;
-	xplane.lmn[2]=1.0;
+  /* At this point we know whether the photon has interecepted
+   * the wall of the cylinder, but we do not know if it intercepted
+   * the top or bottom of the cylinder earlier
+   */
 
-	ds=ds_to_plane(&xplane,&ptest);
-	// Note that ds to plane can return a negative number
-	if (ds>0 && ds < ds_best)
+  xplane.x[0] = 0;
+  xplane.x[1] = 0;
+  xplane.x[2] = height;
+  xplane.lmn[0] = 0.0;
+  xplane.lmn[1] = 0.0;
+  xplane.lmn[2] = 1.0;
+
+  ds = ds_to_plane (&xplane, &ptest);
+  // Note that ds to plane can return a negative number
+  if (ds > 0 && ds < ds_best)
+    {
+      move_phot (&ptest, ds);
+      x = fabs (ptest.x[0]);
+      if (rmin < x && x < rmax)
 	{
-		move_phot(&ptest,ds);
-		x=fabs(ptest.x[0]);
-		if (rmin<x  && x< rmax)
-		{
-			ds_best=ds;
-		}
-		stuff_phot(pp,&ptest);
+	  ds_best = ds;
 	}
+      stuff_phot (pp, &ptest);
+    }
 
-	xplane.x[2]=(-height);
+  xplane.x[2] = (-height);
 
-	ds=ds_to_plane(&xplane,&ptest);
-	if (ds>0 && ds < ds_best)
+  ds = ds_to_plane (&xplane, &ptest);
+  if (ds > 0 && ds < ds_best)
+    {
+      move_phot (&ptest, ds);
+      x = fabs (ptest.x[0]);
+      if (rmin < x && x < rmax)
 	{
-		move_phot(&ptest,ds);
-		x=fabs(ptest.x[0]);
-		if (rmin<x  && x< rmax)
-		{
-			ds_best=ds;
-		}
-		stuff_phot(pp,&ptest);
+	  ds_best = ds;
 	}
+      stuff_phot (pp, &ptest);
+    }
 
-	return(ds_best);
-}	
-
-
-
-
-
-
-	
-	
-
-
-
-
-
-
-
+  return (ds_best);
+}

@@ -55,12 +55,15 @@ xtemp_rad (w)
 
   /* py_wind_delta can be used to subsample the array */
   py_wind_delta = 1;
-  if (MDIM>30) py_wind_delta=1+MDIM/30; 
+  if (MDIM > 30)
+    py_wind_delta = 1 + MDIM / 30;
 
 
-  if (geo.coord_type != 1) {
-	  Log("Warning: Since coord type is not cylindrical, next print out may look odd\n");
-  }
+  if (geo.coord_type != 1)
+    {
+      Log
+	("Warning: Since coord type is not cylindrical, next print out may look odd\n");
+    }
 
   Log ("\n T rad\n");
 
@@ -104,37 +107,6 @@ xtemp_rad (w)
 	    {
 	      nplasma = w[n].nplasma;
 	      x = plasmamain[nplasma].t_e;
-	    }
-	  else
-	    x = 0.0;
-	  Log ("%8.2g ", x);
-	}
-      Log ("\n");
-    }
-
-
-
-  /*   JM 130613: Added this next block to print out extra diagnostics 
-   *
-   *
-   */
-  Log ("\n density[1] n h\n");
-
-  Log ("   z\\x   ");
-  for (i = py_wind_min; i < py_wind_max; i += py_wind_delta)
-    Log ("%8.2e ", w[i * MDIM].x[0]);
-  Log ("\n");
-
-  for (j = 0; j < MDIM; j++)
-    {
-      Log ("%8.2e ", w[j].x[2]);
-      for (i = py_wind_min; i < py_wind_max; i += py_wind_delta)
-	{
-	  n = i * MDIM + j;
-	  if (w[n].vol > 0.0)
-	    {
-	      nplasma = w[n].nplasma;
-	      x = plasmamain[nplasma].density[1];
 	    }
 	  else
 	    x = 0.0;

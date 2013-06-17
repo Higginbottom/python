@@ -62,6 +62,7 @@ History:
 */
 
 double zzz[] = { 0.0, 0.0, 1.0 };
+
 struct Pdf pdf_vcos;
 int init_vcos = 0;
 

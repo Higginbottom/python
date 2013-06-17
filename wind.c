@@ -104,14 +104,17 @@ where_in_wind (x)
     }
 
   /* 70b -ksl - Now check if the position is in the torus.  This check
-    precedes the check to see if the position is in the wind
-  */ 
+     precedes the check to see if the position is in the wind
+   */
 
-  if (geo.compton_torus){
-	  if (geo.compton_torus_rmin < rho && rho <geo.compton_torus_rmax && z< geo.compton_torus_zheight) {
-		  return (W_ALL_INTORUS);
-	  }
-  }
+  if (geo.compton_torus)
+    {
+      if (geo.compton_torus_rmin < rho && rho < geo.compton_torus_rmax
+	  && z < geo.compton_torus_zheight)
+	{
+	  return (W_ALL_INTORUS);
+	}
+    }
 
   /* Now for the elvis wind model, check to see if the position is
    * inside all of the wind or if it is in the vertical section of the wind
@@ -121,16 +124,18 @@ where_in_wind (x)
    * 111124 ksl
    */
 
-  if (geo.wind_type== 8)
-  {
-	  if (rho < geo.sv_rmin){
-		  return (-1);
-	  }
-	  if (rho < geo.sv_rmax && z < geo.elvis_offset) {
-		  return (W_ALL_INWIND);
-	  }
-  }
- 
+  if (geo.wind_type == 8)
+    {
+      if (rho < geo.sv_rmin)
+	{
+	  return (-1);
+	}
+      if (rho < geo.sv_rmax && z < geo.elvis_offset)
+	{
+	  return (W_ALL_INWIND);
+	}
+    }
+
 
 
   /* Check if one is inside the inner windcone */
@@ -141,15 +146,15 @@ where_in_wind (x)
 
   /* Finally check if positon is outside the outer windcone */
   /* NSH 130401 - The check below was taking a long time if geo.wind_thetamax was very close to pi/2.
-  	check inserted to simply return INWIND if geo.wind_thetamax is within machine precision of pi/2.*/
+     check inserted to simply return INWIND if geo.wind_thetamax is within machine precision of pi/2. */
 
-  else if (fabs(geo.wind_thetamax - PI/2.0) > 1e-6)  /* Only perform the next check if thetamax is not equal to pi/2*/
-	{	
-	if (rho > (rho_max = geo.wind_rho_max + z * tan (geo.wind_thetamax)))
-    		{
-      		ireturn = (-2);
-    		}
-	} /* If thetamax is equal to pi/2, then the photon must be in the wind if it has got to this point */
+  else if (fabs (geo.wind_thetamax - PI / 2.0) > 1e-6)	/* Only perform the next check if thetamax is not equal to pi/2 */
+    {
+      if (rho > (rho_max = geo.wind_rho_max + z * tan (geo.wind_thetamax)))
+	{
+	  ireturn = (-2);
+	}
+    }				/* If thetamax is equal to pi/2, then the photon must be in the wind if it has got to this point */
 
 
   return (ireturn);
@@ -191,7 +196,7 @@ wind_check (www, n)
      WindPtr www;
      int n;
 {
-	printf("Got to wind_check\n");
+  printf ("Got to wind_check\n");
   int i, j, k, istart, istop;
   if (n < 0)
     {
@@ -210,7 +215,8 @@ wind_check (www, n)
 	{
 	  if (sane_check (www[i].x[j]))
 	    {
-	      Error ("wind_check:sane_check www[%d].x[%d] %e\n", i, j, www[i].x[j]);
+	      Error ("wind_check:sane_check www[%d].x[%d] %e\n", i, j,
+		     www[i].x[j]);
 	    }
 	  if (sane_check (www[i].xcen[j]))
 	    {
@@ -219,7 +225,8 @@ wind_check (www, n)
 	    }
 	  if (sane_check (www[i].v[j]))
 	    {
-	      Error ("wind_check:sane_check www[%d].v[%d] %e\n", i, j, www[i].v[j]);
+	      Error ("wind_check:sane_check www[%d].v[%d] %e\n", i, j,
+		     www[i].v[j]);
 	    }
 	}
       for (j = 0; j < 3; j++)
@@ -228,8 +235,8 @@ wind_check (www, n)
 	    {
 	      if (sane_check (www[i].v_grad[j][k]))
 		{
-		  Error ("wind_check:sane_check www[%d].v_grad[%d][%d] %e\n", i, j, k,
-			 www[i].v_grad[j][k]);
+		  Error ("wind_check:sane_check www[%d].v_grad[%d][%d] %e\n",
+			 i, j, k, www[i].v_grad[j][k]);
 		}
 	    }
 
@@ -239,7 +246,7 @@ wind_check (www, n)
   Log
     ("Wind_check: Punchthrough distance DFUDGE %e www[1].x[2] %e\n",
      DFUDGE, www[1].x[2]);
-	printf ("Finished wind checl\n");
+  printf ("Finished wind checl\n");
   return (0);
 }
 
@@ -302,7 +309,7 @@ model_velocity (x, v)
     }
   else if (geo.wind_type == 9)
     {
-      speed = stellar_velocity (x,v);
+      speed = stellar_velocity (x, v);
     }
   else
     {
@@ -353,8 +360,8 @@ model_vgrad (x, v_grad)
 
       if (sane_check (v1[0]) || sane_check (v1[1]) || sane_check (v1[2]))
 	{
-	  Error ("model_vgrad:sane_check dx %f %f %f v0 %f %f %f\n", dx[0], dx[1],
-		 dx[2], v1[0], v1[1], v1[2]);
+	  Error ("model_vgrad:sane_check dx %f %f %f v0 %f %f %f\n", dx[0],
+		 dx[1], dx[2], v1[0], v1[1], v1[2]);
 	}
 
       vsub (v1, v0, dv);
@@ -415,9 +422,9 @@ model_rho (x)
       rho = elvis_rho (x);
     }
   else if (geo.wind_type == 9)
-   {
-     rho = stellar_rho (x);
-   }
+    {
+      rho = stellar_rho (x);
+    }
   else
     {
       Error ("wind2d: Unknown windtype %d\n", geo.wind_type);
@@ -426,9 +433,11 @@ model_rho (x)
 
   /* 70b - as this is written the torus simply overlays the wind */
 
-  if ((where_in_wind(x)==W_ALL_INTORUS) || (where_in_wind(x)==W_PART_INTORUS)){
-	  rho=torus_rho(x);
-  }
+  if ((where_in_wind (x) == W_ALL_INTORUS)
+      || (where_in_wind (x) == W_PART_INTORUS))
+    {
+      rho = torus_rho (x);
+    }
 
   return (rho);
 

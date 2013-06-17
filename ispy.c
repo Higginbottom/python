@@ -40,6 +40,7 @@ int ispy_start = 0;
 int ispy_cycle;
 FILE *ispy_ptr;
 int ispy_cell[] = { 91, 92, 93, 121, 122, 123 };
+
 int ispy_ncells = 6;
 
 int
