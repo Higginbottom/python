@@ -61,7 +61,7 @@ bf_estimators_increment (xplasma, p, ds)
   double x, ft;
   double y, yy;
   double exponential, heat_contribution;
-  int n, m, llvl, nn;
+  int n, m, llvl, nn, counter;
   double sigma_phot_topbase ();
   double density;
   double abs_cont;
@@ -72,7 +72,6 @@ bf_estimators_increment (xplasma, p, ds)
 
   nplasma = xplasma->nplasma;
   mplasma = &macromain[xplasma->nplasma];
-
 
   freq_av = p->freq;
   // the continuum neglect variation of frequency along path and

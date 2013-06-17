@@ -82,8 +82,8 @@ Synopsis:
 
 int matom_trap()
 {
-  Log("matom_trap!! EXITING...\n");
-  exit(0);
+  Log("matom_trap!! NOT EXITING...\n");
+  //exit(0);
   return (0);
 }
      

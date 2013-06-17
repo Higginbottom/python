@@ -480,8 +480,6 @@ for consistency.  Delete comment when satisfied OK */
     }
   else
     {
-      Log("about to call radiation- shouldnt be here in matom mode!\n");
-      matom_trap();
       radiation (p, ds_current);
     }
 
