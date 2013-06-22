@@ -281,8 +281,10 @@ adiabatic_cooling (one, t)
 
   cooling = 1.5 * xplasma->ne * BOLTZMANN * t * one->vol * one->div_v;
 
-  return (cooling);
-
+  if (geo.rt_mode==2)
+    return (0)
+  else
+    return (cooling);
 }
 
 
