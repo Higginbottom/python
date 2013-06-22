@@ -456,7 +456,8 @@ lum_summary (w, rootname, ochoice)
 
   display (name);
 
-  Log ("Luminosity total %8.3e\n", xtot * py_wind_delta);
+  //Log ("Luminosity total %8.3e\n", xtot * py_wind_delta);
+  Log ("Luminosity total %8.3e\n", xtot );  // removed py_wind_delta to compare macro atom runs
 
   if (ochoice)
     {
