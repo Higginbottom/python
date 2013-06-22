@@ -37,7 +37,7 @@ BIN = ../../bin
 LDFLAGS= -L$(LIB) -L$(LIB2)  -lm -lkpar -lcfitsio -lgsl -lgslcblas 
 
 #Note that version should be a single string without spaces. 
-VERSION = 75e
+VERSION = macro76
 CHOICE=1             // Compress plasma as much as possible
 # CHOICE=0           //  Keep relation between plasma and wind identical
 
@@ -86,7 +86,7 @@ prototypes:
 python: startup  python.o $(python_objects)
 	gcc  ${CFLAGS} python.o $(python_objects) $(LDFLAGS) -o python
 		cp $@ $(BIN)/py
-		mv $@ $(BIN)/pymacro$(VERSION)
+		mv $@ $(BIN)/py$(VERSION)
 
 
 py_wind_objects = py_wind.o get_atomicdata.o py_wind_sub.o windsave.o py_wind_ion.o \
@@ -105,7 +105,7 @@ py_wind_objects = py_wind.o get_atomicdata.o py_wind_sub.o windsave.o py_wind_io
 py_wind: startup $(py_wind_objects)
 	gcc $(CFLAGS) $(py_wind_objects) $(LDFLAGS) -o py_wind
 	cp $@ $(BIN)
-	mv $@ $(BIN)/py_windmacro$(VERSION)
+	mv $@ $(BIN)/py_wind$(VERSION)
 
 py_smooth: py_smooth.o 
 	$(CC) $(CFLAGS) py_smooth.o  $(LDFLAGS)  -o py_smooth
