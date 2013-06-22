@@ -75,6 +75,8 @@ History:
 			compton heating and cooling.
         12apr	nh	72: modifications makde to wind_update and wind_rad_init to incoprorate
 			induced copmton heating.
+        130621  jm      76: added lines to store luminosities from ionization cycles in geo and plasma
+			structure to solve windsave bug
 
 
 **************************************************************/
@@ -322,7 +324,39 @@ WindPtr (w);
       icsum += plasmamain[nplasma].heat_ind_comp;	//1205 NSH Increment the induced compton heating counter
 // Comment - ksl - Next line generated an inappopriate amount of output in the .diag file
 //OLD           Log ("OUTPUT logIP(cloudy_thoeretical)= %e logIP(cloudy_actual)=%e\n",log10(plasmamain[nplasma].ferland_ip),log10(plasmamain[nplasma].ip)); 
+      
+
+
+      /* JM130621- bugfix for windsave bug- needed so that we have the luminosities from ionization
+         cycles in the windsavefile even if the spectral cycles are run */
+      plasmamain[nplasma].lum_ioniz = plasmamain[nplasma].lum;
+      plasmamain[nplasma].lum_ff_ioniz = plasmamain[nplasma].lum_ff;
+      plasmamain[nplasma].lum_fb_ioniz = plasmamain[nplasma].lum_fb;
+      plasmamain[nplasma].lum_z_ioniz = plasmamain[nplasma].lum_z;
+      plasmamain[nplasma].lum_lines_ioniz = plasmamain[nplasma].lum_lines;
+      plasmamain[nplasma].lum_comp_ioniz = plasmamain[nplasma].lum_comp;
+      plasmamain[nplasma].lum_dr_ioniz = plasmamain[nplasma].lum_dr;
+      plasmamain[nplasma].lum_rad_ioniz = plasmamain[nplasma].lum_rad;
+      plasmamain[nplasma].lum_adiabatic_ioniz = plasmamain[nplasma].lum_adiabatic;
+
+
     }
+
+  /* JM130621- bugfix for windsave bug- needed so that we have the luminosities from ionization
+     cycles in the windsavefile even if the spectral cycles are run */
+  geo.lum_ff_ioniz = geo.lum_ff;
+  geo.lum_fb_ioniz = geo.lum_fb;
+  geo.lum_lines_ioniz = geo.lum_lines;
+  geo.lum_comp_ioniz = geo.lum_comp;
+  geo.lum_dr_ioniz = geo.lum_dr;
+  geo.lum_adiabatic_ioniz = geo.lum_adiabatic;
+  geo.lum_disk_ioniz = geo.lum_disk;
+  geo.lum_star_ioniz = geo.lum_star;
+  geo.lum_bl_ioniz = geo.lum_bl;
+  geo.lum_wind_ioniz = geo.lum_wind;
+  geo.lum_tot_ioniz = geo.lum_tot;
+
+
 
   asum = wind_luminosity (0.0, VERY_BIG);
   Log ("!!wind_update: Absorbed flux    %8.2e  (photo %8.2e ff %8.2e compton %8.2e induced_compton %8.2e lines %8.2e)\n", xsum, psum, fsum, csum, icsum, lsum);	//1108 NSH Added commands to report compton heating

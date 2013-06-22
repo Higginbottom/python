@@ -289,8 +289,7 @@ struct geometry
   double agn_cltab_low;		//break at which the low frequency power law ends
   double agn_cltab_hi;		//break at which the high frequency power law cuts in
   double agn_cltab_low_alpha;	//photon index for the low frequency end
-  double agn_cltab_hi_alpha;	//photon index for the high frequency end
-
+  double agn_cltab_hi_alpha;	//photon index for the high frequency end	
 
 
   double lum_ff, lum_fb, lum_lines;	/* The luminosity of the wind as a result of ff, fb, and line radiation */
@@ -299,6 +298,16 @@ struct geometry
   double lum_adiabatic;		/*1209 NSH The cooling of the wind due to adiabatic expansion */
   double f_tot, f_star, f_disk, f_bl, f_agn, f_wind;	/* The integrated specific L between a freq min and max which are
 							   used to establish the fraction of photons of various types */
+
+/* These variables are copies of the lum variables above, and are only calculated during ionization cycles
+   This is a bugfix for JM130621, windsave bug */
+  double lum_ff_ioniz, lum_fb_ioniz, lum_lines_ioniz;	
+  double lum_comp_ioniz;		
+  double lum_dr_ioniz;		
+  double lum_adiabatic_ioniz;	
+  double lum_wind_ioniz, lum_star_ioniz, lum_disk_ioniz, lum_bl_ioniz, lum_tot_ioniz;
+
+
 
   double f_matom, f_kpkt;	/*Added by SS Jun 2004 - to be used in computations of detailed spectra - the
 				   energy emitted in the band via k-packets and macro atoms respectively. */
@@ -609,6 +618,17 @@ typedef struct plasma
   double lum_fb, lum_z;		/*fb luminosity & fb of metals metals */
   double lum_rad, lum_rad_old;	/* The specfic radiative luminosity in frequencies defined by freqmin
 				   and freqmax.  This will depend on the last call to total_emission */
+
+
+  double lum_ioniz;
+  double lum_lines_ioniz, lum_ff_ioniz, lum_adiabatic_ioniz;
+  double lum_comp_ioniz;		/* 1108 NSH The compton luminosity of the cell */
+  double lum_dr_ioniz;		/* 1109 NSH The dielectronic recombination luminosity of the cell */
+  double lum_fb_ioniz, lum_z_ioniz;		/*fb luminosity & fb of metals metals */
+  double lum_rad_ioniz;	/* The specfic radiative luminosity in frequencies defined by freqmin
+				   and freqmax.  This will depend on the last call to total_emission */
+
+
   double dmo_dt[3];		/*Radiative force of wind */
   int npdf;			/* The number of points actually used in the luminosity pdf */
   int pdf_x[LPDF];		/* The line numbers of *line_ptr which form the boundaries the luminosity pdf */
