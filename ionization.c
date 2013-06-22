@@ -643,8 +643,8 @@ zero_emit (t)
    * are testing.  Adiabatic cooling is proportional to temperature
    */
 
-
-  xxxplasma->lum_adiabatic = adiabatic_cooling (&wmain[xxxplasma->nwind], t);
+  if (geo.adiabatic)
+    xxxplasma->lum_adiabatic = adiabatic_cooling (&wmain[xxxplasma->nwind], t);
 
 
   /* difference =
