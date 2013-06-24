@@ -461,6 +461,9 @@ double tb_pow1(double freq);
 double verner_pow1(double freq);
 double verner_exp1(double freq);
 double tb_exp1(double freq);
+/* matom_diag.c */
+int matom_emiss_report(void);
+int matom_trap(void);
 /* py_wind_sub.c */
 int zoom(int direction);
 int overview(WindPtr w, char rootname[]);

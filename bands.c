@@ -121,7 +121,10 @@ bands_init (imode, band)
   int ii;
 
   // 59 - Increased to 20,000 A so could go further into NIR 
-  freqmin = C / 12000e-8;	/*20000 A */
+  if (geo.rt_mode==2)
+    freqmin = C / 400000e-8;	/*4000000 A for macro atom testing */
+  else 
+    freqmin = C /12000e-8;
   tmax = TSTAR;
   if (geo.twind > tmax)
     tmax = geo.twind;
