@@ -315,12 +315,20 @@ matom (p, nres, escape)
 		  printf
 		    ("mplasma->gamma_old[uplvl][n] %g, (mplasma->alpha_st_old[uplvl][n] * xplasma->ne * den_config (xplasma, cont_ptr->uplev) / den_config (xplasma, cont_ptr->nlev)) %g\n",
 		     mplasma->gamma_old[config[uplvl].bfu_indx_first + n],
+<<<<<<< HEAD
 		     (mplasma->
 		      alpha_st_old[config[uplvl].bfu_indx_first +
 				   n] * xplasma->ne * den_config (xplasma,
 								  cont_ptr->
 								  uplev) /
 		      den_config (xplasma, cont_ptr->nlev)));
+=======
+		     (mplasma->alpha_st_old[config[uplvl].bfu_indx_first +
+					    n] * xplasma->ne *
+		      den_config (xplasma,
+				  cont_ptr->uplev) / den_config (xplasma,
+								 cont_ptr->nlev)));
+>>>>>>> dev
 		  jprbs_known[uplvl][m] = jprbs[m] = 0.0;
 
 		}
@@ -756,9 +764,14 @@ kpkt (p, nres, escape)
 	         stored values rather than recompue them. */
 	      cooling_bf[i] = mplasma->cooling_bf[i] =
 		upper_density * H * cont_ptr->freq[0] *
+<<<<<<< HEAD
 		(mplasma->
 		 recomb_sp_e[config[ulvl].bfd_indx_first +
 			     cont_ptr->down_index]);
+=======
+		(mplasma->recomb_sp_e[config[ulvl].bfd_indx_first +
+				      cont_ptr->down_index]);
+>>>>>>> dev
 	      // _sp_e is defined as the difference 
 	    }
 	  else

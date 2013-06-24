@@ -331,36 +331,24 @@ iwind = -1 	Don't generate any wind photons at all
       geo.f_matom = get_matom_f ();
       geo.f_kpkt = get_kpkt_f ();	//This returns the specific luminosity in the
       //spectral band of interest.
-
-      matom_emiss_report();       /* JM130609 function which reports on matom level emissivites */
     }
 
   Log_silent
-    ("xdefine_phot: lum_star %8.2e lum_disk %8.2e lum_bl %8.2e lum_agn %8.2e lum_wind %8.2e\n",geo.lum_star, geo.lum_disk, geo.lum_bl, geo.lum_agn,geo.lum_wind);
+    ("xdefine_phot: lum_star %8.2e lum_disk %8.2e lum_bl %8.2e lum_agn %8.2e lum_wind %8.2e\n",
+     geo.lum_star, geo.lum_disk, geo.lum_bl, geo.lum_agn, geo.lum_wind);
 
   Log_silent
-     ("xdefine_phot:     f_star %8.2e   f_disk %8.2e   f_bl %8.2e   f_agn %8.2e f_wind %8.2e   f_matom %8.2e   f_kpkt %8.2e \n",
-     geo.f_star, geo.f_disk, geo.f_bl, geo.f_agn, geo.f_wind, geo.f_matom, geo.f_kpkt);
+    ("xdefine_phot:     f_star %8.2e   f_disk %8.2e   f_bl %8.2e   f_agn %8.2e f_wind %8.2e   f_matom %8.2e   f_kpkt %8.2e \n",
+     geo.f_star, geo.f_disk, geo.f_bl, geo.f_agn, geo.f_wind, geo.f_matom,
+     geo.f_kpkt);
 
-  Log_silent ("xdefine_phot: wind  ff %8.2e       fb %8.2e   lines %8.2e  for freq %8.2e %8.2e\n",
-       geo.lum_ff, geo.lum_fb, geo.lum_lines,f1,f2);
+  Log_silent
+    ("xdefine_phot: wind  ff %8.2e       fb %8.2e   lines %8.2e  for freq %8.2e %8.2e\n",
+     geo.lum_ff, geo.lum_fb, geo.lum_lines, f1, f2);
 
   geo.f_tot =
     geo.f_star + geo.f_disk + geo.f_bl + geo.f_wind + geo.f_kpkt +
-    geo.f_matom+ geo.f_agn;
-
-
-  /* JM log lines for macro atom testing */
-  if (ioniz_or_final == 0)  {
-    Log("JM ionization cycles, define_phot: f_matom %le f_kpkt %le\n", geo.f_matom, geo.f_kpkt );
-    Log("JM ionization cycles, define_phot: wind  ff %8.2e fb %8.2e lines %8.2e \n",
-        geo.lum_ff, geo.lum_fb, geo.lum_lines); 
-  }
-  if (ioniz_or_final == 1)  {
-    Log("JM spectral cycles, define_phot: f_matom %le f_kpkt %le\n", geo.f_matom, geo.f_kpkt );
-    Log("JM spectral cycles, define_phot: wind  ff %8.2e fb %8.2e lines %8.2e \n",
-        geo.lum_ff, geo.lum_fb, geo.lum_lines); 
-  }
+    geo.f_matom + geo.f_agn;
 
 
 
@@ -475,7 +463,7 @@ python 40 but it is not really what one wants.
 
 
   Log
-    ("photon_gen: weight %6.2e nphotons %d ndisk %d nwind %d nstar %d nagn %d \n",
+    ("photon_gen: weight %6.2e nphotons %d ndisk %6d nwind %6d nstar %6d npow %d \n",
      weight, nphotons, ndisk, nwind, nstar, nagn);
 
   /* Generate photons from the star, the bl, the wind and then from the disk */

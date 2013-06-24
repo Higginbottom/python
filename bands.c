@@ -41,6 +41,13 @@ Arguments:
 		3	Bands tuned for yso
 		4	Query the user to specify an arbitrary
 			set of bands
+<<<<<<< HEAD
+=======
+		5      	Hardwired very wide bands for testing 
+		6 	Bands set up by nsh to test cloudy   
+		7	Bands hardwired for AGN paper1 by nsh
+		8       Define bands in logarithmic intervals
+>>>>>>> dev
 Returns:
 
 	The outputs are passed to other routines through the pointer
@@ -73,6 +80,11 @@ History:
 			to do with banding to this point.  Note
 			This breaks the calls that exist in balance
 	1208    nsh     73 - Several new bands
+<<<<<<< HEAD
+=======
+	1306	ksl	Minor modifications as tried to understand how
+			we should handle banding more generally
+>>>>>>> dev
 **************************************************************/
 
 
@@ -110,6 +122,7 @@ bands_init (imode, band)
   double t;			// A temperature which can be used to set absolute limits on the bands
   double f1, f2;		// frequency limits that can overide any other limits
   double fmax;
+<<<<<<< HEAD
   double bbfrac ();
 
 
@@ -120,6 +133,14 @@ bands_init (imode, band)
     freqmin = C / 400000e-8;	/*4000000 A for macro atom testing */
   else 
     freqmin = C /12000e-8;
+=======
+//  double bbfrac ();
+  double f1_log, f2_log, df;
+  int ii;
+
+  // 59 - Increased to 20,000 A so could go further into NIR 
+  freqmin = C / 12000e-8;	/*20000 A */
+>>>>>>> dev
   tmax = TSTAR;
   if (geo.twind > tmax)
     tmax = geo.twind;
@@ -142,14 +163,21 @@ bands_init (imode, band)
   f1 = freqmin;
   f2 = freqmax;
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> dev
   /* end of import */
 
   if (imode == -1)
     {
       mode = 2;
       rdint
+<<<<<<< HEAD
 	("Photon.sampling.approach(0=T,1=(f1,f2),2=cv,3=yso,4=user_defined),",
+=======
+	("Photon.sampling.approach(0=T,1=(f1,f2),2=cv,3=yso,4=user_defined,5=cloudy_test,6=wide,7=AGN),",
+>>>>>>> dev
 	 &mode);
     }
   else
@@ -230,8 +258,11 @@ bands_init (imode, band)
 	("Enter band boundaries in increasing eV, and assure they are between lowest and highest energy\n");
 
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> dev
       rddoub ("Lowest_energy_to_be_considered(eV)", &xx);
       f1 = xx / HEV;
 
@@ -307,8 +338,11 @@ bands_init (imode, band)
       band->min_fraction[3] = 0.6;
       band->min_fraction[4] = 0.1;
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> dev
       //Set alpha for each band
 
       band->alpha[0] = geo.agn_cltab_low_alpha;
@@ -357,18 +391,24 @@ bands_init (imode, band)
       tmax = geo.tstar;
       fmax = tmax * WIEN;	//Use wiens law to get peak frequency
       printf ("We are in mode 6 - tmax=%e, fmax=%e\n", tmax, fmax);
+<<<<<<< HEAD
       /*     band->nbands = 1;
          band->f1[0] = 1e10; // BB spectrum had dropped to 5e-8 of peak value
          band->f2[0] = 1e20; //100 fmax is roughly where the BB spectrum gets tiny
          band->min_fraction[0] = 1.0;
          printf ("In photon generation, tmax=%e, fmax=%e\n",tmax,fmax); */
+=======
+>>>>>>> dev
 
       band->nbands = 17;
 
 
+<<<<<<< HEAD
 
 
 
+=======
+>>>>>>> dev
       band->f1[0] = 1e10;
       band->f2[0] = band->f1[1] = fmax * 0.01;
       band->f2[1] = band->f1[2] = fmax * 0.1;
@@ -386,6 +426,7 @@ bands_init (imode, band)
       band->f2[13] = band->f1[14] = fmax * 16;
       band->f2[14] = band->f1[15] = fmax * 18;
       band->f2[15] = band->f1[16] = fmax * 20;
+<<<<<<< HEAD
       band->f2[16] = 1e20;	/*  
 				   band->f2[6] = band->f1[7] = 3.162e16;
 				   band->f2[7] = band->f1[8] = 5.623e16;
@@ -399,6 +440,9 @@ bands_init (imode, band)
 				   band->f2[15] = band->f1[16] = 5.623e18;
 				   band->f2[16]                 = 1e19; */
 
+=======
+      band->f2[16] = 1e20;	
+>>>>>>> dev
 
       band->min_fraction[0] = 0.1;
       band->min_fraction[1] = 0.1;
@@ -417,6 +461,7 @@ bands_init (imode, band)
       band->min_fraction[14] = 0.05;
       band->min_fraction[15] = 0.05;
       band->min_fraction[16] = 0.05;
+<<<<<<< HEAD
       /*    band->min_fraction[6]=0.0625;
          band->min_fraction[7]=0.0625;
          band->min_fraction[8]=0.0625;
@@ -429,10 +474,13 @@ bands_init (imode, band)
          band->min_fraction[15]=0.0625;
          band->min_fraction[16]=0.0625;
          band->min_fraction[0]=1.0; */
+=======
+>>>>>>> dev
     }
 
   else if (mode == 7)		//Test for balance matching the bands we have been using for AGN runs
     {
+<<<<<<< HEAD
 /*      band->nbands = 7;
       band->f1[0] = 1/HEV;
       band->f2[0] = band->f1[1] = 13.6 / HEV;
@@ -449,6 +497,8 @@ bands_init (imode, band)
       band->min_fraction[4] = 0.1;
       band->min_fraction[5] = 0.1;
       band->min_fraction[6] = 0.1;*/
+=======
+>>>>>>> dev
 
       band->nbands = 10;
       band->f1[0] = 1e14;
@@ -477,6 +527,48 @@ bands_init (imode, band)
 
 
     }
+<<<<<<< HEAD
+=======
+  else if (mode == 8)		/* 1306 - ksl - Generaglized method to set up logarithmic bands */
+    {
+      printf ("Lowest photon energy is ev (freq) is %f (%.2e)\n", f1 * HEV,
+	      f1);
+      printf ("Highest photon energy is ev (freq) is %f (%.2e)\n", f2 * HEV,
+	      f2);
+
+      band->nbands = 5;
+      rdint ("Num.of.frequency.bands", &band->nbands);
+
+      if (band->nbands>NBANDS){
+	      Error ("bands: Asking for more bands than allowed (%d) by size of bands.  Reducing to maximum value\n",NBANDS);
+	      band->nbands=NBANDS;
+      }
+
+      xx = f1 * HEV;
+      rddoub ("Lowest_energy_to_be_considered(eV)", &xx);
+      f1 = xx / HEV;
+
+      xx = f1 * HEV;
+      rddoub ("Highest_energy_to_be_considered(eV)", &xx);
+      f2 = xx / HEV;
+
+      f1_log = log10 (f1);
+      f2_log = log10 (f2);
+      df = (f2_log - f1_log) / (band->nbands + 1);
+      ii = 0;
+      while (ii < band->nbands)
+	{
+	  band->f1[ii] = pow (10., f1_log + ii * df);
+	  band->f2[ii] = pow (10., f1_log + (ii + 1) * df);
+	  band->min_fraction[ii] = 1. / band->nbands;
+	  ii++;
+	}
+
+
+
+
+    }
+>>>>>>> dev
   else
     {
       Error ("bands_init: Unknown mode %d\n", mode);
@@ -594,7 +686,11 @@ printf ("Tstar=%e, Nupeak=%e\n",geo.tstar,nupeak);*/
   ngood = 0;
   for (i = 0; i < nxfreq; i++)
     {
+<<<<<<< HEAD
       Log ("test: %10.2e %10.2e %10.2e\n", freqmin, freqmax, xfreq[i]);
+=======
+//      Log ("freqs_init: %10.2e %10.2e %10.2e\n", freqmin, freqmax, xfreq[i]);
+>>>>>>> dev
       if (freqmin < xfreq[i] && xfreq[i] < freqmax)
 	{
 	  good[i] = 1;

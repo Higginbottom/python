@@ -124,6 +124,14 @@ History:
 	04aug	ksl	52a -- Coded and debugged.
 	04dec	ksl	54a -- Made minor change to eliminate warning
 			when compiled with 03
+<<<<<<< HEAD
+=======
+	13jun	ksl	Modify the rtheta grid so that no cells extend
+			into the -z plane.  There were problems associted
+			with the fact that somoe of the dummy cells
+			extended into the -z plane. This change amoutns to changing 
+			the way the boundary contintion are set up.
+>>>>>>> dev
 
 **************************************************************/
 
@@ -159,8 +167,11 @@ rtheta_make_grid (w)
 	      dr = (geo.rmax - geo.rstar) / (NDIM - 3);
 	      w[n].r = geo.rstar + i * dr;
 	      w[n].rcen = w[n].r + 0.5 * dr;
+<<<<<<< HEAD
 	      theta = w[n].theta = dtheta * j;
 	      thetacen = w[n].thetacen = w[n].theta + 0.5 * dtheta;
+=======
+>>>>>>> dev
 	    }
 	  else
 	    {			//logarithmic intervals
@@ -169,9 +180,26 @@ rtheta_make_grid (w)
 	      w[n].r = geo.rstar * pow (10., dlogr * (i - 1));
 	      w[n].rcen = 0.5 * geo.rstar * (pow (10., dlogr * (i)) +
 					     pow (10., dlogr * (i - 1)));
+<<<<<<< HEAD
 	      theta = w[n].theta = dtheta * j;
 	      thetacen = w[n].thetacen = w[n].theta + 0.5 * dtheta;
 	    }
+=======
+	    }
+
+	  /* Only the radial distance can be logarithmic */
+
+	      theta = w[n].theta = dtheta * j;
+	      thetacen = w[n].thetacen = w[n].theta + 0.5 * dtheta;
+	      if (theta>90.){
+		      theta=90.;
+	      }
+	      if (thetacen>90.){
+		      thetacen=90.;
+	      }
+
+
+>>>>>>> dev
 	  /* Now calculate the positions of these points in the xz plane */
 	  theta /= RADIAN;
 	  thetacen /= RADIAN;
@@ -377,11 +405,17 @@ rtheta_volumes (w, icomp)
 		  w[n].vol = 0.0;
 		}
 	      else if (jj == kk)
+<<<<<<< HEAD
 		//OLD 70b w[n].inwind = W_ALL_INWIND;       // The cell is completely in the wind
 		w[n].inwind = icomp;	// The cell is completely in the wind
 	      else
 		{
 		  //OLD 70b w[n].inwind = W_PART_INWIND;    //The cell is partially in the wind
+=======
+		w[n].inwind = icomp;	// The cell is completely in the wind
+	      else
+		{
+>>>>>>> dev
 		  w[n].inwind = icomp + 1;	//The cell is partially in the wind
 		  w[n].vol *= fraction;
 		}
@@ -547,6 +581,24 @@ rtheta_get_random_location (n, icomp, x)
 	
 		
  Notes:
+<<<<<<< HEAD
+=======
+      Now we need to updated the densities immediately outside the wind so that the density interpolation in resonate will work.
+     In this case all we have done is to copy the densities from the cell which is just in the wind (as one goes outward) to the
+     cell that is just inside (or outside) the wind. 
+
+     SS asked whether we should also be extending the wind for other parameters, especially ne.  At present we do not interpolate
+     on ne so this is not necessary.  If we did do that it would be required.
+
+     In cylindrical coordinates, the fast dimension is z; grid positions increase up in z, and then out in r.
+     In spperical polar coordinates, the fast dimension is theta; the grid increases in theta (measured)
+     from the z axis), and then in r.
+     In spherical coordinates, the grid increases as one might expect in r..
+     *
+     06may      ksl     57+ -- Trying simply to use mappings to extend the grid in density space.  The
+     danger is that we will do other things, e.g update some of the wrong parameters.
+
+>>>>>>> dev
 
 
 
@@ -562,6 +614,7 @@ rtheta_extend_density (w)
 {
 
   int i, j, n, m;
+<<<<<<< HEAD
   /* Now we need to updated the densities immediately outside the wind so that the density interpolation in resonate will work.
      In this case all we have done is to copy the densities from the cell which is just in the wind (as one goes outward) to the
      cell that is just inside (or outside) the wind. 
@@ -578,6 +631,8 @@ rtheta_extend_density (w)
      danger is that we will do other things, e.g update some of the wrong parameters.
    */
 
+=======
+>>>>>>> dev
   for (i = 0; i < NDIM - 1; i++)
     {
       for (j = 0; j < MDIM - 1; j++)
@@ -588,7 +643,10 @@ rtheta_extend_density (w)
 	    {			//Then this grid point is not in the wind 
 
 	      wind_ij_to_n (i + 1, j, &m);
+<<<<<<< HEAD
 	      //if (w[m].inwind == 0)//SS May04- is this volume based test now correct?
+=======
+>>>>>>> dev
 	      if (w[m].vol > 0)
 		{		//Then the windcell in the +x direction is in the wind and
 		  // we can copy the densities to the grid cell n
@@ -618,7 +676,11 @@ rtheta_extend_density (w)
 
 rtheta_is_cell_in_wind (n)
 
+<<<<<<< HEAD
 This rotine performes is a robust check of whether a cell is in the wind or not.  
+=======
+This routine performes is a robust check of whether a cell is in the wind or not.  
+>>>>>>> dev
 It was created to speed up the evaluation of the volumes for the wind.  It
 checks each of the four boundaries of the wind to see whether any portions
 of these are in the wind

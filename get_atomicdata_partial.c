@@ -1361,7 +1361,12 @@ for the ionstate.
 			      phot_top[ntop_phot].macro_info = 0;
 /*NSH 0312 - next line sees if the topbase level just read in is the ground state - if it is, the ion structure element ntop_ground is set to that topbase level number */
 			      if (islp ==
+<<<<<<< HEAD
 				  config[ion[config[n].nion].
+=======
+				  config[ion
+					 [config[n].nion].
+>>>>>>> dev
 					 first_nlte_level].isp
 				  && ilv ==
 				  config[ion[config[n].nion].

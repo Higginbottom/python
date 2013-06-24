@@ -64,7 +64,10 @@ ion_abundances (xplasma, mode)
 {
   int ireturn;
 
+<<<<<<< HEAD
 //      printf("NSH here we are in ion_abundances, I think we are running at mode %i\n",mode);
+=======
+>>>>>>> dev
 
   if (mode == 0)
     {

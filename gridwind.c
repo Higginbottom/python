@@ -473,7 +473,7 @@ calloc_estimators (nelem)
     {
       if (macromain[n].jbar != NULL)
 	{
-	  //free (macromain[n].jbar);
+	  free (macromain[n].jbar);
 	}
       if ((macromain[n].jbar =
 	   calloc (sizeof (double), size_Jbar_est)) == NULL)
@@ -482,9 +482,10 @@ calloc_estimators (nelem)
 	    ("calloc_estimators: Error in allocating memory for MA estimators\n");
 	  exit (0);
 	}
+
       if (macromain[n].jbar_old != NULL)
 	{
-	  //free (macromain[n].jbar_old);
+	  free (macromain[n].jbar_old);
 	}
       if ((macromain[n].jbar_old =
 	   calloc (sizeof (double), size_Jbar_est)) == NULL)
@@ -496,7 +497,7 @@ calloc_estimators (nelem)
 
       if (macromain[n].gamma != NULL)
 	{
-	  //free (macromain[n].gamma);
+	  free (macromain[n].gamma);
 	}
       if ((macromain[n].gamma =
 	   calloc (sizeof (double), size_gamma_est)) == NULL)
@@ -508,7 +509,7 @@ calloc_estimators (nelem)
 
       if (macromain[n].gamma_old != NULL)
 	{
-	  //free (macromain[n].gamma_old);
+	  free (macromain[n].gamma_old);
 	}
       if ((macromain[n].gamma_old =
 	   calloc (sizeof (double), size_gamma_est)) == NULL)
@@ -520,7 +521,7 @@ calloc_estimators (nelem)
 
       if (macromain[n].gamma_e != NULL)
 	{
-	  //free (macromain[n].gamma_e);
+	  free (macromain[n].gamma_e);
 	}
       if ((macromain[n].gamma_e =
 	   calloc (sizeof (double), size_gamma_est)) == NULL)
@@ -532,7 +533,7 @@ calloc_estimators (nelem)
 
       if (macromain[n].gamma_e_old != NULL)
 	{
-	  //free (macromain[n].gamma_e_old);
+	  free (macromain[n].gamma_e_old);
 	}
       if ((macromain[n].gamma_e_old =
 	   calloc (sizeof (double), size_gamma_est)) == NULL)
@@ -544,7 +545,7 @@ calloc_estimators (nelem)
 
       if (macromain[n].alpha_st != NULL)
 	{
-	  //free (macromain[n].alpha_st);
+	  free (macromain[n].alpha_st);
 	}
       if ((macromain[n].alpha_st =
 	   calloc (sizeof (double), size_gamma_est)) == NULL)
@@ -556,7 +557,7 @@ calloc_estimators (nelem)
 
       if (macromain[n].alpha_st_old != NULL)
 	{
-	  //free (macromain[n].alpha_st_old);
+	  free (macromain[n].alpha_st_old);
 	}
       if ((macromain[n].alpha_st_old =
 	   calloc (sizeof (double), size_gamma_est)) == NULL)
@@ -568,7 +569,7 @@ calloc_estimators (nelem)
 
       if (macromain[n].alpha_st_e != NULL)
 	{
-	  //free (macromain[n].alpha_st_e);
+	  free (macromain[n].alpha_st_e);
 	}
       if ((macromain[n].alpha_st_e =
 	   calloc (sizeof (double), size_gamma_est)) == NULL)
@@ -578,9 +579,9 @@ calloc_estimators (nelem)
 	  exit (0);
 	}
 
-      if (macromain[n].alpha_st_e_old != NULL)
+      if (macromain[n].alpha_st_e_old)
 	{
-	  //free (macromain[n].alpha_st_e_old);
+	  free (macromain[n].alpha_st_e_old);
 	}
       if ((macromain[n].alpha_st_e_old =
 	   calloc (sizeof (double), size_gamma_est)) == NULL)
@@ -592,7 +593,7 @@ calloc_estimators (nelem)
 
       if (macromain[n].recomb_sp != NULL)
 	{
-	  //free (macromain[n].recomb_sp);
+	  free (macromain[n].recomb_sp);
 	}
       if ((macromain[n].recomb_sp =
 	   calloc (sizeof (double), size_alpha_est)) == NULL)
@@ -604,7 +605,7 @@ calloc_estimators (nelem)
 
       if (macromain[n].recomb_sp_e != NULL)
 	{
-	  //free (macromain[n].recomb_sp_e);
+	  free (macromain[n].recomb_sp_e);
 	}
       if ((macromain[n].recomb_sp_e =
 	   calloc (sizeof (double), size_alpha_est)) == NULL)
@@ -616,7 +617,7 @@ calloc_estimators (nelem)
 
       if (macromain[n].matom_emiss != NULL)
 	{
-	  //free (macromain[n].matom_emiss);
+	  free (macromain[n].matom_emiss);
 	}
       if ((macromain[n].matom_emiss =
 	   calloc (sizeof (double), nlevels_macro)) == NULL)
@@ -628,7 +629,7 @@ calloc_estimators (nelem)
 
       if (macromain[n].matom_abs != NULL)
 	{
-	  //free (macromain[n].matom_abs);
+	  free (macromain[n].matom_abs);
 	}
       if ((macromain[n].matom_abs =
 	   calloc (sizeof (double), nlevels_macro)) == NULL)
@@ -641,7 +642,7 @@ calloc_estimators (nelem)
       /* Added ksl 091103 59e */
       if (macromain[n].cooling_bf != NULL)
 	{
-	  //free (macromain[n].cooling_bf);
+	  free (macromain[n].cooling_bf);
 	}
       if ((macromain[n].cooling_bf =
 	   calloc (sizeof (double), ntop_phot)) == NULL)
@@ -653,7 +654,7 @@ calloc_estimators (nelem)
 
       if (macromain[n].cooling_bf_col != NULL)
 	{
-	  //free (macromain[n].cooling_bf_col);
+	  free (macromain[n].cooling_bf_col);
 	}
       if ((macromain[n].cooling_bf_col =
 	   calloc (sizeof (double), ntop_phot)) == NULL)
@@ -665,7 +666,7 @@ calloc_estimators (nelem)
 
       if (macromain[n].cooling_bb != NULL)
 	{
-	  //free (macromain[n].cooling_bb);
+	  free (macromain[n].cooling_bb);
 	}
       if ((macromain[n].cooling_bb =
 	   calloc (sizeof (double), nlines)) == NULL)

@@ -175,6 +175,11 @@ History:
 			This has plenty of range.  Notge that there is no need to make NPHOT
 			a long, as suggested above.  We do not expect it to exceed 2e9,
 			although some kind of error check might be reasonble.
+<<<<<<< HEAD
+=======
+	1306	ksl	Modified to allow a pwoer law component to a stellar spectrum.  Made
+			some changes use DEF variables instead of numbers to make choices
+>>>>>>> dev
  	
  	Look in Readme.c for more text concerning the early history of the program.
 
@@ -191,6 +196,13 @@ History:
 
 #include "python.h"
 #define NSPEC	20
+<<<<<<< HEAD
+=======
+#define SYSTEM_TYPE_STAR    0
+#define SYSTEM_TYPE_BINARY  1
+#define SYSTEM_TYPE_AGN     2
+
+>>>>>>> dev
 int
 main (argc, argv)
      int argc;
@@ -235,6 +247,10 @@ should allocate the space for the spectra to avoid all this nonsense.  02feb ksl
   int istandard, keep_photoabs;
   int opar_stat, restart_stat;
   double time_max;		// The maximum time the program is allowed to run before halting
+<<<<<<< HEAD
+=======
+  double lstar;                 // The luminosity of the star, iv it exists
+>>>>>>> dev
 
 
 
@@ -324,7 +340,11 @@ should allocate the space for the spectra to avoid all this nonsense.  02feb ksl
   /* This completes the parsing of the command line */
 
   /* 0811 - ksl - If the restart flag has been set, we check to see if a windsave file exists.  If it doues we will 
+<<<<<<< HEAD
    *  we will restart from that point.  If the windsave file does not exist we will start from scratch */
+=======
+     we will restart from that point.  If the windsave file does not exist we will start from scratch */
+>>>>>>> dev
 
   if (restart_stat == 0)
     {				// Then we are simply running from a new model
@@ -468,6 +488,7 @@ should allocate the space for the spectra to avoid all this nonsense.  02feb ksl
   z_axis[2] = 1.0;
   z_axis[1] = z_axis[0] = 0.0;
 
+<<<<<<< HEAD
 /* Set up frequency bands in which to record the frequency */
 
 /* Next lines have been moved to a new routine freqs_init which is in bands.c so that we can get control of the frequencies we want
@@ -485,6 +506,9 @@ should allocate the space for the spectra to avoid all this nonsense.  02feb ksl
 //OLD71   xfreq[5] = 2000 / HEV;
 //OLD71   xfreq[6] = 10000 / HEV;
 //OLD71   xfreq[7] = 50000 / HEV;
+=======
+
+>>>>>>> dev
 
 
 
@@ -498,6 +522,11 @@ should allocate the space for the spectra to avoid all this nonsense.  02feb ksl
 
   if (restart_stat == 0)	/* We are starting a new run from scratch */
     {
+<<<<<<< HEAD
+=======
+      /* Note that these describe wind geometryies and not the type of object */
+
+>>>>>>> dev
 
       rdint
 	("Wind_type(0=SV,1=Sphere,2=Previous,3=Proga,4=Corona,5=knigge,6=thierry,7=yso,8=elvis,9=shell)",
@@ -507,9 +536,15 @@ should allocate the space for the spectra to avoid all this nonsense.  02feb ksl
       if (geo.wind_type == 2)
 	{
 	  /* This option is for the confusing case where we want to start with
+<<<<<<< HEAD
 	   * a previous wind model, but we are going to write the result to a
 	   * new windfile. In other words it is not a restart where we would overwrite
 	   * the previous wind model.  */
+=======
+	     a previous wind model, but we are going to write the result to a
+	     new windfile. In other words it is not a restart where we would overwrite
+	     the previous wind model.  */
+>>>>>>> dev
 
 	  strcpy (old_windsavefile, "earlier.run");
 	  rdstr ("Old_windfile(root_only)", old_windsavefile);
@@ -729,7 +764,11 @@ It also seems likely that we have mixed usage of some things, e.g ge.rt_mode and
 
   // Determine what radiation sources there are.  Note that most of these values are initilized in init_geo
 
+<<<<<<< HEAD
   if (geo.system_type != 2)
+=======
+  if (geo.system_type != SYSTEM_TYPE_AGN)
+>>>>>>> dev
     {				/* If is a stellar system */
       rdint ("Star_radiation(y=1)", &geo.star_radiation);
       rdint ("Disk_radiation(y=1)", &geo.disk_radiation);
@@ -768,10 +807,17 @@ It also seems likely that we have mixed usage of some things, e.g ge.rt_mode and
 
 
   /* 080517 - ksl - Reassigning bb to -1, etc is to make room for reading in model
+<<<<<<< HEAD
    * grids, but complicates what happens if one tries to restart a model.  This needs
    * to be updated so one can re-read the geo file, proabbly by defining variaables 
    * BB etc, and then by checking whether or not the type is assigned to BB or read
    * in as 0.  Also need to store each of these model list names in geo structure.
+=======
+     grids, but complicates what happens if one tries to restart a model.  This needs
+     to be updated so one can re-read the geo file, proabbly by defining variaables 
+     BB etc, and then by checking whether or not the type is assigned to BB or read
+     in as 0.  Also need to store each of these model list names in geo structure.
+>>>>>>> dev
    */
 
   get_spectype (geo.star_radiation,
@@ -783,14 +829,43 @@ It also seems likely that we have mixed usage of some things, e.g ge.rt_mode and
 		&geo.disk_ion_spectype);
 
   get_spectype (geo.bl_radiation,
+<<<<<<< HEAD
 		"Rad_type_for_bl(0=bb,1=models)_to_make_wind",
 		&geo.bl_ion_spectype);
 
+=======
+		"Rad_type_for_bl(0=bb,1=models,3=pow)_to_make_wind",
+		&geo.bl_ion_spectype);
+>>>>>>> dev
   get_spectype (geo.agn_radiation,
 		"Rad_type_for_agn(0=bb,1=models,3=power_law,4=cloudy_table)_to_make_wind",
 		&geo.agn_ion_spectype);
 
 
+<<<<<<< HEAD
+=======
+  /* 130621 - ksl - This is a kluge to add a power law to stellar systems.  What id done
+     is to remove the bl emission, which we always assume to some kind of temperature
+     driven source, and replace it with a power law source
+
+     Note that the next 3 or 4 lines just tell you that there is supposed to be a power
+     law source.  They don't teel you what the parameters are.
+   */
+
+  if (geo.bl_ion_spectype == SPECTYPE_POW)
+    {
+      geo.agn_radiation = 1;
+      geo.agn_ion_spectype = SPECTYPE_POW;
+      geo.bl_radiation = 0;
+      Log("Trying to make a start with a power law boundary layer\n");
+    }
+  else {
+      Log("NOt Trying to make a start with a power law boundary layer %d\n",geo.bl_ion_spectype);
+  }
+	  
+
+
+>>>>>>> dev
   if (geo.wind_type == 2)
     {
       disk_illum = geo.disk_illum;
@@ -810,7 +885,11 @@ It also seems likely that we have mixed usage of some things, e.g ge.rt_mode and
        * a non-rotating BH
        */
 
+<<<<<<< HEAD
       if (geo.system_type == 2)
+=======
+      if (geo.system_type == SYSTEM_TYPE_AGN)
+>>>>>>> dev
 	{
 	  geo.rstar = 6. * G * geo.mstar / (C * C);	//correction - ISCO is 6x Rg NSH 121025
 	}
@@ -819,19 +898,31 @@ It also seems likely that we have mixed usage of some things, e.g ge.rt_mode and
 
 
       geo.r_agn = geo.rstar;	/* At present just set geo.r_agn to geo.rstar */
+<<<<<<< HEAD
       if (geo.system_type == 2)
 	{
 	  geo.diskrad = 100. * geo.r_agn;
 	}
 
+=======
+>>>>>>> dev
       geo.rstar_sq = geo.rstar * geo.rstar;
       if (geo.star_radiation)
 	rddoub ("tstar", &geo.tstar);
 
+<<<<<<< HEAD
 
 /* Describe the secondary if that is required */
 
       if (geo.system_type == 1)	/* It's a binary system */
+=======
+      lstar=4*PI*geo.rstar*geo.rstar*STEFAN_BOLTZMANN*pow(geo.tstar,4.);
+
+
+/* Describe the secondary if that is required */
+
+      if (geo.system_type == SYSTEM_TYPE_BINARY)	/* It's a binary system */
+>>>>>>> dev
 	{
 
 	  geo.m_sec /= MSOL;	// Convert units for ease of data entry
@@ -874,6 +965,7 @@ It also seems likely that we have mixed usage of some things, e.g ge.rt_mode and
 	    }
 
 	  /* 04aug ksl ??? Until everything is initialized we need to stick to a simple disk, 
+<<<<<<< HEAD
 	   * while teff is being set up..  This is because some of the
 	   * models, e.g. knigge have wind structures that depend on teff.
 	   *
@@ -885,6 +977,19 @@ It also seems likely that we have mixed usage of some things, e.g ge.rt_mode and
 	   *
 	   * However, the next line does force the illum to
 	   * 0 while initialization is going on, unless ?? the illum is 3
+=======
+	     while teff is being set up..  This is because some of the
+	     models, e.g. knigge have wind structures that depend on teff.
+	     *
+	     080518 - ksl - this is quite confusing.  I understand that the KWD models have
+	     base velocities that are affected by t_eff, but we have not done anything
+	     yet.  Possible this is a consideration for restart, but I would have guessed
+	     we recalculated all of that, and in any event this is within the block to
+	     reset things.  this is likely a problem of some sort
+
+	     However, the next line does force the illum to
+	     0 while initialization is going on, unless ?? the illum is 3
+>>>>>>> dev
 	   */
 
 	  geo.disk_illum = 0;
@@ -893,6 +998,15 @@ It also seems likely that we have mixed usage of some things, e.g ge.rt_mode and
 	      geo.disk_illum = 3;
 	    }
 
+<<<<<<< HEAD
+=======
+	  /* Set a default for diskrad for an AGN */
+      if (geo.system_type == SYSTEM_TYPE_AGN)
+	{
+	  geo.diskrad = 100. * geo.r_agn;
+	}
+
+>>>>>>> dev
 	  rddoub ("disk.radmax(cm)", &geo.diskrad);
 	  Log ("geo.diskrad  %e\n", geo.diskrad);
 
@@ -921,7 +1035,12 @@ It also seems likely that we have mixed usage of some things, e.g ge.rt_mode and
 
 /* Describe the boundary layer */
 
+<<<<<<< HEAD
       if (geo.bl_radiation)
+=======
+//OLD 130622      if (geo.bl_radiation )    Change made to allow a power law boundary layer
+      if (geo.bl_radiation &&  geo.bl_ion_spectype != SPECTYPE_POW)  
+>>>>>>> dev
 	{
 	  xbl = geo.lum_bl = 0.5 * G * geo.mstar * geo.disk_mdot / geo.rstar;
 
@@ -938,7 +1057,58 @@ It also seems likely that we have mixed usage of some things, e.g ge.rt_mode and
 
 /* Describe the agn */
 
+<<<<<<< HEAD
       if (geo.agn_radiation)
+	{
+	  xbl = geo.lum_agn = 0.5 * G * geo.mstar * geo.disk_mdot / geo.r_agn;
+
+=======
+      if (geo.agn_radiation && geo.system_type == SYSTEM_TYPE_AGN)	/* This peculiar line is to enamble us to add a star with a power law component */
+	{
+	  xbl = geo.lum_agn = 0.5 * G * geo.mstar * geo.disk_mdot / geo.r_agn;
+
+	  /* If there is no disk, initilize geo.lum to the luminosity of a star */
+	  if (geo.disk_type==0) {
+		  geo.lum_agn=lstar;
+	  }
+
+>>>>>>> dev
+	  // At present we have set geo.r_agn = geo.rstar, and encouraged the user
+	  // set the default for the radius of the BH to be 6 R_Schwartschild.
+	  // rddoub("R_agn(cm)",&geo.r_agn);
+
+	  rddoub ("lum_agn(ergs/s)", &geo.lum_agn);
+	  Log ("OK, the agn lum will be about %.2e the disk lum\n",
+	       geo.lum_agn / xbl);
+	  geo.alpha_agn = (-1.5);
+	  rddoub ("agn_power_law_index", &geo.alpha_agn);
+
+/* Computes the constant for the power law spectrum from the input alpha and 2-10 luminosity. 
+<<<<<<< HEAD
+* This is only used in the sim correction factor for the first time through. 
+* Afterwards, the photons are used to compute the sim parameters. */
+=======
+This is only used in the sim correction factor for the first time through. 
+Afterwards, the photons are used to compute the sim parameters. */
+
+	  geo.const_agn =
+	    geo.lum_agn /
+	    (((pow (2.42e18, geo.alpha_agn + 1.)) -
+	      pow (4.84e17, geo.alpha_agn + 1.0)) / (geo.alpha_agn + 1.0));
+	  Log ("AGN Input parameters give a power law constant of %e\n",
+	       geo.const_agn);
+
+	  if (geo.agn_ion_spectype == SPECTYPE_CL_TAB)	/*NSH 0412 - option added to allow direct comparison with cloudy power law table option */
+	    {
+	      geo.agn_cltab_low = 1.0;
+	      geo.agn_cltab_hi = 10000;
+	      rddoub ("low_energy_break(ev)", &geo.agn_cltab_low);	/*lo frequency break - in ev */
+	      rddoub ("high_energy_break(ev)", &geo.agn_cltab_hi);
+	      geo.agn_cltab_low_alpha = 2.5;	//this is the default value in cloudy
+	      geo.agn_cltab_hi_alpha = -2.0;	//this is the default value in cloudy
+	    }
+	}
+      else if (geo.agn_radiation)  /* We want to add a power law to something other than an AGN */
 	{
 	  xbl = geo.lum_agn = 0.5 * G * geo.mstar * geo.disk_mdot / geo.r_agn;
 
@@ -953,8 +1123,9 @@ It also seems likely that we have mixed usage of some things, e.g ge.rt_mode and
 	  rddoub ("agn_power_law_index", &geo.alpha_agn);
 
 /* Computes the constant for the power law spectrum from the input alpha and 2-10 luminosity. 
-* This is only used in the sim correction factor for the first time through. 
-* Afterwards, the photons are used to compute the sim parameters. */
+This is only used in the sim correction factor for the first time through. 
+Afterwards, the photons are used to compute the sim parameters. */
+>>>>>>> dev
 
 	  geo.const_agn =
 	    geo.lum_agn /
@@ -1011,7 +1182,11 @@ It also seems likely that we have mixed usage of some things, e.g ge.rt_mode and
 
 /* Describe the wind */
 
+<<<<<<< HEAD
       if (geo.system_type == 2)
+=======
+      if (geo.system_type == SYSTEM_TYPE_AGN)
+>>>>>>> dev
 	{
 	  geo.rmax = 50. * geo.r_agn;
 	}
@@ -1165,7 +1340,11 @@ set defudge slightly differently for the shell wind.*/
 
   /* Calculate additional parameters associated with the binary star system */
 
+<<<<<<< HEAD
   if (geo.system_type == 1)
+=======
+  if (geo.system_type == SYSTEM_TYPE_BINARY)
+>>>>>>> dev
     binary_basics ();
 
   /* Check that the parameters which have been supplied for the star, disk and boundary layer will
@@ -1228,10 +1407,24 @@ set defudge slightly differently for the shell wind.*/
   swavemin = 1450;
   swavemax = 1650;
 
+<<<<<<< HEAD
   select_extract = 1;
   select_spectype = 1;
 
 /* Completed initialization of this section */
+=======
+/* These two variables have to do with what types of spectra are created n the
+ * spectrum files. They are not associated with the nature of the spectra that
+ * are generated by say the boundary layer
+ */
+
+  select_extract = 1;
+  select_spectype = 1;
+
+/* Completed initialization of this section.  Note that get_spectype uses the source of the
+ * ratiation and then value given to return a spectrum type. The output is not the same 
+ * number as one inputs. It's not obvious that this is a good idea. */
+>>>>>>> dev
 
   if (pcycles > 0)
     {
@@ -1250,7 +1443,11 @@ set defudge slightly differently for the shell wind.*/
 		    "Rad_type_for_bl(0=bb,1=models,2=uniform)_in_final_spectrum",
 		    &geo.bl_spectype);
 
+<<<<<<< HEAD
       geo.agn_spectype = SPECTYPE_POW;
+=======
+      geo.agn_spectype = 3;
+>>>>>>> dev
       get_spectype (geo.agn_radiation,
 		    "Rad_type_for_agn(3=power_law,4=cloudy_table)_in_final_spectrum",
 		    &geo.agn_spectype);
@@ -1388,6 +1585,7 @@ run -- 07jul -- ksl
 
 /* Determine the frequency range which will be used to establish the ionization balance of the wind */
 
+<<<<<<< HEAD
 //OLD71  // 59 - Increased to 20,000 A so could go further into NIR 
 //OLD71  freqmin = C / 12000e-8;        /*20000 A */
 
@@ -1413,6 +1611,10 @@ run -- 07jul -- ksl
 
 //Old71  bands_init (0.0, freqmin, freqmax, -1, &xband);
 //OLD71 bands_init (tmax, freqmin, freqmax, -1, &xband);
+=======
+  // Note that bands_init asks .pf file or user what kind of banding is desired 
+
+>>>>>>> dev
   bands_init (-1, &xband);
 
 /*if we have changed min and max in bands_init, we need to make sure this is reflected in the frequency bounds*/
@@ -1597,7 +1799,10 @@ run -- 07jul -- ksl
 	   * photons_per_cycle is the number of photon bundles which will equal the luminosity; 
 	   * 0 => for ionization calculation 
 	   */
+<<<<<<< HEAD
 //OLD70d        printf ("sent to define_phot freqmin=%e freqmax=%e \n",freqmin,freqmax);
+=======
+>>>>>>> dev
 
 
 	  /* JM 130306 need to convert photons_per_cycle to double precision for define_phot */
@@ -1610,7 +1815,10 @@ run -- 07jul -- ksl
 
 	  define_phot (p, freqmin, freqmax, nphot_to_define, 0, iwind, 1);
 
+<<<<<<< HEAD
 //OLD70d        printf ("sent to photon_checks freqmin=%e freqmax=%e \n",freqmin,freqmax);
+=======
+>>>>>>> dev
 
 	  photon_checks (p, freqmin, freqmax, "Check before transport");
 
@@ -1707,7 +1915,10 @@ run -- 07jul -- ksl
 
       Log ("Finished creating spectra\n");
 
+<<<<<<< HEAD
 //OLD70d        printf ("%s %s\n",wspecfile,lspecfile);
+=======
+>>>>>>> dev
 
       spectrum_summary (wspecfile, "w", 0, 5, 0, 1., 0);
       spectrum_summary (lspecfile, "w", 0, 5, 0, 1., 1);	/* output the log spectrum */

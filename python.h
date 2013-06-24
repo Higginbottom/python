@@ -210,7 +210,11 @@ struct geometry
   /* This IS now used by Python - set to 2 for Macro Atom method. Set to 1
      for non-Macro Atom methods (SS) */
 
+<<<<<<< HEAD
   /* 71 - 111229  - ksl - These are the frequency bands used when caluclation parameters like a power law slope
+=======
+  /* 71 - 111229  - ksl - These are the frequency bands used when calculating parameters like a power law slope
+>>>>>>> dev
    * in limited regions.  Moved inside geo becuase we need to know this information in py_wind
    */
 #define  NXBANDS 20		/* the maximum number of bands that can be defined */

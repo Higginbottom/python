@@ -77,10 +77,13 @@ To avoid problems with solving, we need to find a reasonable range of values wit
 	    ("power_abundances: no photons in band %d which runs from %10.2e(%8.2fev) to %10.2e(%8.2fev) \n",
 	     n, geo.xfreq[n], geo.xfreq[n] * HEV, geo.xfreq[n + 1],
 	     geo.xfreq[n + 1] * HEV);
+<<<<<<< HEAD
 //        spec_numin = xband.f1[0];     /*NSH 1108 Use the lower bound of the lowest band for sumnumin */
 //        spec_numax = xband.f2[xband.nbands - 1];      /*NSH 1108 and the upper bound of the upperband for max */
 //        spec_numean = xplasma->ave_freq;
 //        j = 0;                // If there are no photons then our guess is that there is no flux in this band
+=======
+>>>>>>> dev
 	  xplasma->pl_w[n] = 0;	//We also want to make sure that the weight will be zero, this way we make sure there is no contribution to the ionization balance from this frequency.
 	  xplasma->pl_alpha[n] = 999.9;	//Give alpha a value that will show up as an error
 	  xplasma->exp_w[n] = 0.0;	//Make sure that w is zero, s no chance of mucking up ionization balance
@@ -113,7 +116,10 @@ To avoid problems with solving, we need to find a reasonable range of values wit
 
 	  /*1108 NSH ?? this could be a problem. At the moment, it relies on sim_alpha being defined at this point. */
 	  /*We should initialise it somewhere so that it *always* has a value, not just when the power law */
+<<<<<<< HEAD
 //      printf ("NSH We are starting with alpha=%f\n",xplasma->pl_alpha[n]);
+=======
+>>>>>>> dev
 	  pl_alpha_min = -0.1;	/*Lets just start the search around zero */
 	  pl_alpha_max = +0.1;
 
@@ -123,7 +129,10 @@ To avoid problems with solving, we need to find a reasonable range of values wit
 	      pl_alpha_min = pl_alpha_min - 1.0;
 	      pl_alpha_max = pl_alpha_max + 1.0;
 	    }
+<<<<<<< HEAD
 //      printf ("NSH PL alpha bracketed between %f (%e) and %f (%e)\n",pl_alpha_min,pl_alpha_func(pl_alpha_min),pl_alpha_max,pl_alpha_func(pl_alpha_max));
+=======
+>>>>>>> dev
 	  if (sane_check (pl_alpha_func (pl_alpha_min))
 	      || sane_check (pl_alpha_func (pl_alpha_max)))
 	    {
@@ -151,7 +160,10 @@ To avoid problems with solving, we need to find a reasonable range of values wit
  * contains the volume of the cell and a factor of 4pi, so the volume sent to sim_w is set to 1 
  * and j has a factor of 4PI reapplied to it. This means that the equation still works in balance. 
  * It may be better to just implement the factor here, rather than bother with an external call.... */
+<<<<<<< HEAD
 //      printf ("NSH calling pl w with alpha=%f, numin=%e numax=%e\n",pl_alpha_temp,spec_numin,spec_numax);
+=======
+>>>>>>> dev
 	      pl_w_temp = pl_w (j, pl_alpha_temp, spec_numin, spec_numax);
 
 	      if (sane_check (pl_w_temp))
@@ -179,7 +191,10 @@ To avoid problems with solving, we need to find a reasonable range of values wit
 	      exp_temp_min = exp_temp_min * 0.9;
 	      exp_temp_max = exp_temp_max * 1.1;
 	    }
+<<<<<<< HEAD
 //      printf ("NSH exp_temp bracketed between %f (%e) and %f (%e)\n",exp_temp_min,exp_temp_func(exp_temp_min),exp_temp_max,exp_temp_func(exp_temp_max));
+=======
+>>>>>>> dev
 	  if (sane_check (exp_temp_func (exp_temp_min))
 	      || sane_check (exp_temp_func (exp_temp_max)))
 	    {
@@ -457,7 +472,10 @@ exp_temp_func (exp_temp)
   double answer;
 
   answer = exp_mean (exp_temp, spec_numin, spec_numax) - spec_numean;
+<<<<<<< HEAD
   //    printf("NSH alpha=%.3f,f1=%10.2e,f2=%10.2e,meanfreq=%10.2e,ans=%e\n",alpha,spec_numin,spec_numax,spec_numean,answer);
+=======
+>>>>>>> dev
   return (answer);
 }
 
@@ -491,7 +509,11 @@ exp_mean (exp_temp, numin, numax)
 
 
 /**************************************************************************
+<<<<<<< HEAD
                     Southampton university
+=======
+                    Southampton University
+>>>>>>> dev
 
 
   Synopsis:  

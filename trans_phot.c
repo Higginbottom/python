@@ -100,11 +100,25 @@ trans_phot (w, p, iextract)
     }
 
 
+<<<<<<< HEAD
+=======
+  /* 130624 -- ksl - Chaanged the way the watchdog timeer works, so that it does not continually 
+   * add to what is printed out, but overwrites it.  The printf statemen below is just so th
+   * we do not overwrite the last line before the routine is entered.  Note tha fprintf(stdeerr
+   * is required because stderr is flused immediately, whereas printf is normally only flushed by
+   * \n.  NOte that I also increased the interval where items are bing printed out to 50,000, so 
+   * this would be a bit less active
+   */
+  
+  printf("\n");
+
+>>>>>>> dev
   for (nphot = 0; nphot < NPHOT; nphot++)
     {
 
       //This is just a watchdog method to tell the user the program is still running
       //130306 - ksl since we don't really care what the frequencies are any more
+<<<<<<< HEAD
       if (nphot % 10000 == 0)
 	printf ("Photon %7d of %7d or %6.3f per cent \n", nphot, NPHOT,
 		nphot * 100. / NPHOT);
@@ -112,6 +126,12 @@ trans_phot (w, p, iextract)
       //      nphot, p[nphot].x[0], p[nphot].x[1], p[nphot].x[2],
       //      p[nphot].lmn[0], p[nphot].lmn[1], p[nphot].lmn[2],
       //      p[nphot].freq);
+=======
+      if (nphot % 50000 == 0)
+	//OLD 130624 printf ("Photon %7d of %7d or %6.3f per cent \n", nphot, NPHOT,
+	fprintf (stderr, "\rPhoton %7d of %7d or %6.3f per cent", nphot, NPHOT,
+		nphot * 100. / NPHOT);
+>>>>>>> dev
       Log_flush ();		/*NSH June 13 Added call to flush logfile */
 
       /* 74a_ksl Check that the weights are real */
@@ -488,6 +508,11 @@ been initialized. 02may ksl.  This seems to be OK at present.*/
 
     }
   /* This is the end of the loop over all of the photons; after this the routine returns */
+<<<<<<< HEAD
+=======
+  //130624 ksl Line added to complete watchdog timeer,
+  printf("\n\n");
+>>>>>>> dev
 
   return (0);
 }
