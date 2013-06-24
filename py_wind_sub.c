@@ -285,13 +285,9 @@ abs_summary (w, rootname, ochoice)
     }
 
   display (name);
-<<<<<<< HEAD
-  Log ("Component heating %8.3e\n", xtot * py_wind_delta);
-=======
   /* Log ("Component heating %8.3e\n", xtot * py_wind_delta);
      JM130624 v76: Removed py_wind_delta term as gives too high heating */
   Log ("Component heating %8.3e\n", xtot);
->>>>>>> dev
 
   if (ochoice)
     {
@@ -462,14 +458,9 @@ lum_summary (w, rootname, ochoice)
 
   display (name);
 
-<<<<<<< HEAD
-  //Log ("Luminosity total %8.3e\n", xtot * py_wind_delta);
-  Log ("Luminosity total %8.3e\n", xtot );  // removed py_wind_delta to compare macro atom runs
-=======
   /* Log ("Luminosity total %8.3e\n", xtot * py_wind_delta);
      JM130624 v76: Removed py_wind_delta term as gives too high heating */
   Log ("Luminosity total %8.3e\n", xtot);
->>>>>>> dev
 
   if (ochoice)
     {

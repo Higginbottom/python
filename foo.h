@@ -461,9 +461,6 @@ double tb_pow1(double freq);
 double verner_pow1(double freq);
 double verner_exp1(double freq);
 double tb_exp1(double freq);
-/* matom_diag.c */
-int matom_emiss_report(void);
-int matom_trap(void);
 /* py_wind_sub.c */
 int zoom(int direction);
 int overview(WindPtr w, char rootname[]);
@@ -520,6 +517,7 @@ int depcoef_overview(int icell);
 int copy_plasma(PlasmaPtr x1, PlasmaPtr x2);
 int depcoef_overview_specific(int version, int nconfig, WindPtr w, char rootname[], int ochoice);
 /* py_wind.c */
+int main(int argc, char *argv[]);
 int one_choice(int choice, char *root, int ochoice);
 int py_wind_help(void);
 /* test_saha.c */

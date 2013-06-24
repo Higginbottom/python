@@ -40,16 +40,6 @@ auger_ionization (xplasma)
 	augerion[n].adi * pow ((xplasma->t_e),
 			       -1.5) * exp (-1. * augerion[n].t0di /
 					    xplasma->t_e) * (1. +
-<<<<<<< HEAD
-							     (augerion[n].
-							      bdi * exp (-1. *
-									 augerion
-									 [n].
-									 t1di
-									 /
-									 xplasma->
-									 t_e)));
-=======
 							     (augerion[n].bdi
 							      * exp (-1. *
 								     augerion
@@ -57,7 +47,6 @@ auger_ionization (xplasma)
 								     /
 								     xplasma->
 								     t_e)));
->>>>>>> dev
 
 
       if ((augerion[n].nion_target != -1)

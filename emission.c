@@ -110,10 +110,7 @@ wind_luminosity (f1, f2)
   geo.lum_comp = lum_comp;	//1108 NSH The total compton luminosity of the wind is stored in the geo structure
   geo.lum_dr = lum_dr;		//1109 NSH the total DR luminosity of the wind is stored in the geo structure
   geo.lum_adiabatic = lum_adiab;
-<<<<<<< HEAD
-=======
 
->>>>>>> dev
   return (lum);
 }
 
@@ -228,10 +225,7 @@ total_emission (one, f1, f2)
       //OLD     xplasma->lum_rad += xplasma->lum_comp = total_comp (one, t_e); 
     }
 
-<<<<<<< HEAD
-=======
 
->>>>>>> dev
   return (xplasma->lum_rad);
 
 
@@ -289,15 +283,8 @@ adiabatic_cooling (one, t)
 
   cooling = 1.5 * xplasma->ne * BOLTZMANN * t * one->vol * one->div_v;
 
-<<<<<<< HEAD
-  if (geo.rt_mode==2)
-    return (0);
-  else
-    return (cooling);
-=======
   return (cooling);
 
->>>>>>> dev
 }
 
 

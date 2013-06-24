@@ -419,9 +419,6 @@ the number of elements
 		if necessary, but the way this is construced makes it easy to
 		cause errors and it is not obvious how to check this until
 		we put a macro model back in
-1306		75emacro - Commented out free statements as they were causing crashes
-		when running macro atom mode in py_wind
-
  */
 
 

@@ -1371,12 +1371,8 @@ total_rrate (nion, T)
     {
       rate =
 	total_rr[ion[nion].nxtotalrr].params[0] * pow ((T / 1.0e4),
-<<<<<<< HEAD
-						       total_rr[ion[nion].
-=======
 						       total_rr[ion
 								[nion].
->>>>>>> dev
 								nxtotalrr].
 						       params[1]);
     }
