@@ -2042,7 +2042,7 @@ init_geo ()
   geo.ndim = 30;
   geo.mdim = 30;
   geo.disk_z0 = geo.disk_z1 = 0.0;	// 080518 - ksl - moved this up
-  geo.adiabatic = 1;		// Default is now set so that adiabatic cooling is included in the wind
+  geo.adiabatic = 0;		// Default is now set so that adiabatic cooling is included in the wind
   geo.auger_ionization = 1;	//Default is on.
 
 

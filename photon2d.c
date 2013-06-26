@@ -474,10 +474,11 @@ for consistency.  Delete comment when satisfied OK */
 	  bf_estimators_increment (one, p, ds_current);
 /*photon weight times distance in the shell is proportional to the mean intensity */
 	  xplasma->j += p->w * ds_current;
-
 /* frequency weighted by the weights and distance       in the shell .  See eqn 2 ML93 */
 
 	  xplasma->ave_freq += p->freq * p->w * ds_current;
+          Log("!!JMEST p->w %8.4e ds_current %8.4e nplasma %8.4e heat_ff %8.4e\n", 
+           p->w, ds_current, nplasma, xplasma->heat_ff);
 
 	}
 
@@ -485,6 +486,8 @@ for consistency.  Delete comment when satisfied OK */
   else
     {
       radiation (p, ds_current);
+      Log("!!JMRADIATION p->w %8.4e ds_current %8.4e nplasma %8.4e heat_ff %8.4e\n", 
+           p->w, ds_current, nplasma, xplasma->heat_ff);
     }
 
 

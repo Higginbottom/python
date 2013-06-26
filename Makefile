@@ -1,5 +1,10 @@
 # This is the makefile for the python related programs
 #
+# usage      make [D=1] python
+#
+# Adding D=1 causes the routine to be run in a way that profiling and ddd can be used.
+# Otherwise the run will be optimized to run as fast as possible
+#
 # History
 # 05jan	ksl	54f  Modified Makefile so that the Version number is automatically
 # 		copied to version.h  Also fixed so that one does not need to put
@@ -10,6 +15,7 @@
 # 		with gsl after we went to Redhat Enterprise at the Institute, and
 # 		so that Stuart and I could standardise on the distribution.
 # 08jul	ksl	Removed pfop from routines so no need to complile with g77
+# 13jun jm      Added capability to switch to use debugger routne
 CC = gcc
 FC = g77
 # FC = gfortran
@@ -21,16 +27,18 @@ LIB = ../../lib
 LIB2 = ../../gsl/lib
 BIN = ../../bin
 
+ifeq ($(D),1)
 # use pg when you want to use gprof the profiler
-#FFLAGS = -g -pg   
-#CFLAGS = -g -pg -Wall -I$(INCLUDE) -I$(INCLUDE2)  
- 
-
-
-
+# to use profiler make with arguments "make D=1 python" 
+# this can be altered to whatever is best
+	FFLAGS = -g -pg   
+	CFLAGS = -g -pg -Wall -I$(INCLUDE) -I$(INCLUDE2)  
+else
 # Use this for large runs
-  CFLAGS = -O3 -Wall -I$(INCLUDE)  -I$(INCLUDE2)
-  FFLAGS =     
+	CFLAGS = -O3 -Wall -I$(INCLUDE)  -I$(INCLUDE2)
+	FFLAGS =     
+endif
+
 
 # next LIne for debugging when concerned about memory problems
 # LDFLAGS= -L$(LIB) -L$(LIB2)  -lm -lkpar -lcfitsio -lgsl -lgslcblas ../../duma_2_5_3/libduma.a -lpthread
@@ -87,7 +95,6 @@ python: startup  python.o $(python_objects)
 	gcc  ${CFLAGS} python.o $(python_objects) $(LDFLAGS) -o python
 		cp $@ $(BIN)/py
 		mv $@ $(BIN)/py$(VERSION)
-
 
 py_wind_objects = py_wind.o get_atomicdata.o py_wind_sub.o windsave.o py_wind_ion.o \
 		emission.o recomb.o util.o detail.o \

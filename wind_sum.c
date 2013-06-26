@@ -115,6 +115,31 @@ xtemp_rad (w)
       Log ("\n");
     }
 
+
+  Log ("\n j\n");
+  Log ("   z\\x   ");
+  for (i = py_wind_min; i < py_wind_max; i += py_wind_delta)
+    Log ("%8.2e ", w[i * MDIM].x[0]);
+  Log ("\n");
+
+  for (j = 0; j < MDIM; j++)
+    {
+      Log ("%8.2e ", w[j].x[2]);
+      for (i = py_wind_min; i < py_wind_max; i += py_wind_delta)
+	{
+	  n = i * MDIM + j;
+	  if (w[n].vol > 0.0)
+	    {
+	      nplasma = w[n].nplasma;
+	      x = plasmamain[nplasma].j;
+	    }
+	  else
+	    x = 0.0;
+	  Log ("%8.2g ", x);
+	}
+      Log ("\n");
+    }
+
   return (0);
 
 }

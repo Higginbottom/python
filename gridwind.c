@@ -470,7 +470,7 @@ calloc_estimators (nelem)
     {
       if (macromain[n].jbar != NULL)
 	{
-	  //free (macromain[n].jbar);
+          //free (macromain[n].jbar);
 	}
       if ((macromain[n].jbar =
 	   calloc (sizeof (double), size_Jbar_est)) == NULL)

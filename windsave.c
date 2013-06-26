@@ -188,12 +188,9 @@ wind_read (filename)
 
   if (geo.nmacro > 0)
     {
-      calloc_macro (NPLASMA);
+      calloc_macro (2*NPLASMA);
       n += fread (macromain, sizeof (macro_dummy), NPLASMA, fptr);
-      Log
-	("postread: Allocated %10d bytes for each of %5d elements of       macro totaling %10.1f Mb \n",
-	 sizeof (macro_dummy), (nelem + 1),
-	 1.e-6 * sizeof (macromain));
+
       calloc_estimators (NPLASMA);
 
       for (m = 0; m < NPLASMA; m++)
