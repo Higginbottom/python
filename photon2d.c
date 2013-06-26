@@ -486,10 +486,11 @@ for consistency.  Delete comment when satisfied OK */
   else
     {
       radiation (p, ds_current);
-      Log("!!JMRAD p->np %d p->w %8.4e ds_current %8.4e nplasma %d heat_ff %8.4e\n", 
+      if (p->np==23)
+        Log("!!JMRAD p->np %d p->w %8.4e ds_current %8.4e nplasma %d heat_ff %8.4e ds*kappa\n", 
            p->np, p->w, ds_current, nplasma, xplasma->heat_ff);  
    }
-
+  
 
   move_phot (p, ds_current);
 

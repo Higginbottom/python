@@ -1163,7 +1163,7 @@ set defudge slightly differently for the shell wind.*/
     {
       if (geo.rmax / 1.e10 < 1e5)
 	{
-	  dfudge = 1e5;
+	  dfudge = 1.0e5;
 	  Log ("DFUDGE set to minimum value of %e\n", dfudge);
 	}
       else
