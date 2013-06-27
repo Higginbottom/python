@@ -124,10 +124,11 @@ calculate_ds (w, p, tau_scat, tau, nres, smax, istat)
   xplasma = &plasmamain[nplasma];
 
   kap_es = THOMPSON * xplasma->ne;
+  //kap_es=0.0;
   /* This is the electron scattering opacity per unit length. For the Macro Atom approach we need an 
      equivalent opacity per unit length due to each of the b-f continuua. Call it kap_bf. (SS) */
 
-
+  //tau_scat=1.0e30;
   ttau = *tau;
   ds_current = 0;
   init_dvds = 0;
@@ -267,8 +268,8 @@ method). If the macro atom method is not used just get kap_bf to 0 and move on).
 
 
   kap_cont = kap_es + kap_bf_tot + kap_ff;	//total continuum opacity 
-
-
+  //kap_cont = kap_es  + kap_bf_tot + kap_ff;
+  
 
 /* Finally begin the loop over the resonances that can interact with the
      photon in the cell */

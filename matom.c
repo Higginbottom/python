@@ -1805,7 +1805,10 @@ macro_gov (p, nres, matom_or_kpkt, which_out)
 
   escape = 0;			//start with it not being ready to escape as an r-packet
 
-
+  p->freq=5.0e14;
+  p->grid=plasmamain[36].nwind;
+  *nres=5;
+  matom_or_kpkt = 1;
   while (escape == 0)
     {
       if (matom_or_kpkt == 1)	//excite a macro atom - depending on simple/macro choice call different routines

@@ -163,8 +163,11 @@ bf_estimators_increment (one, p, ds)
   y = weight_of_packet * kappa_ff (xplasma, freq_av) * ds;
   xplasma->heat_ff += heat_contribution = y;
   xplasma->heat_tot += heat_contribution;
-  if (xplasma->heat_ff > 1.0e33 | p->np==3)
-    Error("xplasma->heat_ff > 1.0e33\n");
+  //if (y>1.0e30)
+  //  Log("!!JMEST p->np %d p->w %8.4e ds %8.4e nplasma %d heat_ff %8.4e y %8.4e freq %8.4e\n", 
+  //      p->np, p->w, ds, nplasma, xplasma->heat_ff, y, p->freq);
+  //if (xplasma->heat_ff > 1.0e33 | p->np==3)
+   // Error("xplasma->heat_ff > 1.0e33\n");
   /* This heat contribution is also the contibution to making k-packets in this volume. So we record it. */
 
   xplasma->kpkt_abs += heat_contribution;
