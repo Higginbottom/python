@@ -206,7 +206,7 @@ matom (p, nres, escape)
 	      line_ptr = &line[config[uplvl].bbd_jump[n]];
 
 	      rad_rate = (a21 (line_ptr) * p_escape (line_ptr, xplasma));
-	      coll_rate = q21 (line_ptr, t_e);
+	      coll_rate = q21 (line_ptr, t_e); //JM test
 
 	      if (coll_rate < 0)
 		{
@@ -283,7 +283,7 @@ matom (p, nres, escape)
 	      rad_rate =
 		(b12 (line_ptr) *
 		 mplasma->jbar_old[config[uplvl].bbu_indx_first + n]);
-	      coll_rate = q12 (line_ptr, t_e);
+	      coll_rate = q21 (line_ptr, t_e); //JM test
 	      if (coll_rate < 0)
 		{
 		  coll_rate = 0;
@@ -441,7 +441,7 @@ matom (p, nres, escape)
       line_ptr = &line[config[uplvl].bbd_jump[n]];	//pointer for the bb transition
 
       rad_rate = a21 (line_ptr) * p_escape (line_ptr, xplasma);
-      coll_rate = q21 (line_ptr, t_e);
+      coll_rate = q21 (line_ptr, t_e) * ne; //JM test
       if (coll_rate < 0)
 	{
 	  coll_rate = 0.;
@@ -1805,10 +1805,6 @@ macro_gov (p, nres, matom_or_kpkt, which_out)
 
   escape = 0;			//start with it not being ready to escape as an r-packet
 
-  p->freq=5.0e14;
-  p->grid=plasmamain[36].nwind;
-  *nres=5;
-  matom_or_kpkt = 1;
   while (escape == 0)
     {
       if (matom_or_kpkt == 1)	//excite a macro atom - depending on simple/macro choice call different routines
