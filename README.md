@@ -22,8 +22,11 @@ This is the README file for Python76b
 	* #28 wrong collisional deactivation rate in matom()
 	* #31 incorrect loop in bf_estimators_increment which reporting wrong matom heating
 	* Incorrect helper array sizes in python.c- this is a fairly major change in terms of lines of code
+	* #38 incorrect assigning or t_r in p_escape, very minor
+	* #30 gcc compilation error
+	* #41 r-theta runs cannot be restarted
 	
-* makefile syntax edited to make D python for debugging mode
+* makefile syntax edited to make D python for debugging mode. Makefile uses mpicc but can specify gcc with CC=gcc
 
 * Code improvements / enhancements
 	* Incorporated a new scheme for zeus data. Now if you ask for rtheta with 'proga' it generates a grid based on the zeus grid
@@ -31,14 +34,15 @@ This is the README file for Python76b
 	* Minor change to py_wind_sub, velocity components now correctly written to x,y,z files rather than rho, theta, z files. Also py_wind_write now outputs x and z coordinates to 4 dp, which permits r theta grids to be properly described
 	* Changes to the 'e' option in pywind, to get it to report all heating and cooling mechanisms correctly
 	* maximum temperature implemented in ionization.c for proga models
-	* 
+	* kpar is now included directly in python
 
 * Files changed:
 	* too many to list
 	* major changes in
 		* rtheta.c, python.c, ionization.c
 
-***
+
+
 
 # Getting the radiative transfer code 'Python'
 
@@ -53,7 +57,7 @@ Releases of progs can be found under [tags](https://github.com/agnwinds/python/t
 Consult the [wiki](https://github.com/agnwinds/python/wiki/_pages "Wiki") for how to install Python.
 
 
-***
+
 
 # Basic Git Instructions
 
@@ -75,7 +79,8 @@ $ git status
 commit all changes to local repo with commit message:
 $ git commit -am 'Changed something in file.c'
 
-***
+
+
 
 # Original README file from KSL
 
