@@ -4,7 +4,7 @@
 This is the README file for Python76b
 
 * Significant progress in reporting in this version.
-	* it requires kpar_76b_1
+	* kpar is now included in python directly
 	* Thread 0 is the only one which prints to screen
 	* the exception being with parallel messages, which are printed to screen for all threads using new kpar function Log_parallel
 	* Error summaries are collated with scripts py_error.py and watchdog.py
@@ -34,12 +34,14 @@ This is the README file for Python76b
 	* Minor change to py_wind_sub, velocity components now correctly written to x,y,z files rather than rho, theta, z files. Also py_wind_write now outputs x and z coordinates to 4 dp, which permits r theta grids to be properly described
 	* Changes to the 'e' option in pywind, to get it to report all heating and cooling mechanisms correctly
 	* maximum temperature implemented in ionization.c for proga models
-	* kpar is now included directly in python
+	* kpar is now included directly in python which is reflected in new .c files and the makefile
 
 * Files changed:
 	* too many to list
 	* major changes in
 		* rtheta.c, python.c, ionization.c
+	* new files included directly in python
+		* log.c, rdpar.c
 
 
 
