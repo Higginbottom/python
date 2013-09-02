@@ -1,5 +1,5 @@
 
-#Python 76a README 
+#Python 76b README 
 
 This is the README file for Python76b
 
@@ -42,6 +42,10 @@ This is the README file for Python76b
 		* rtheta.c, python.c, ionization.c
 	* new files included directly in python
 		* log.c, rdpar.c
+
+* Limitations
+	* Note that this release does not yet include bugfixes to macro atom issues #37, #40 and #43 as they are still a work in progress
+	* We also still ahve the problem of linearly interpolating between Xsections, #45.
 
 
 
