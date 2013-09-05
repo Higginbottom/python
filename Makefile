@@ -26,6 +26,7 @@
 
 #MPICC is now default compiler- currently code will not compile with gcc
 CC = mpicc
+CC_PARA = mpicc
 # CC = gcc	can use GCC either from command line or by uncommenting this
 FC = g77
 # FC = gfortran
@@ -45,16 +46,19 @@ LIB = ../../lib
 LIB2 = ../../gsl/lib
 BIN = ../../bin
 
+
 ifeq (D,$(firstword $(MAKECMDGOALS)))
 # use pg when you want to use gprof the profiler
 # to use profiler make with arguments "make D python" 
 # this can be altered to whatever is best	
 	CFLAGS = -g -pg -Wall -I$(INCLUDE) -I$(INCLUDE2) $(MPI_FLAG)
+        CFLAGS_PARA = -O3 -Wall -Wall -I$(INCLUDE) -I$(INCLUDE2) -DMPI_ON
 	FFLAGS = -g -pg   
 	PRINT_VAR = DEBUGGING, -g -pg -Wall flags
 else
 # Use this for large runs
 	CFLAGS = -O3 -Wall -I$(INCLUDE)  -I$(INCLUDE2) $(MPI_FLAG)
+        CFLAGS_PARA = -O3 -Wall -Wall -I$(INCLUDE) -I$(INCLUDE2) -DMPI_ON
 	FFLAGS =     
         PRINT_VAR = LARGE RUNS, -03 -Wall flags
 endif
@@ -67,7 +71,7 @@ endif
 LDFLAGS= -L$(LIB) -L$(LIB2)  -lm -lcfitsio -lgsl -lgslcblas 
 
 #Note that version should be a single string without spaces. 
-VERSION = 76c_dev
+VERSION = 76c_macro
 CHOICE=1             // Compress plasma as much as possible
 # CHOICE=0           //  Keep relation between plasma and wind identical
 
@@ -127,6 +131,12 @@ python: startup  python.o $(python_objects)
 	$(CC)  ${CFLAGS} python.o $(python_objects) $(kpar_objects) $(LDFLAGS) -o python
 		cp $@ $(BIN)/py
 		mv $@ $(BIN)/py$(VERSION)
+
+python_para: startup  python.o $(python_objects)
+	$(CC_PARA)  ${CFLAGS_PARA} python.o $(python_objects) $(kpar_objects) $(LDFLAGS) -o python_para
+		cp $@ $(BIN)/mpy
+		mv $@ $(BIN)/mpy$(VERSION)
+	
 
 #This line is jsut so you can use make D python for debugging
 D:	

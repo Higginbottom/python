@@ -2245,6 +2245,7 @@ run -- 07jul -- ksl
 
 
   #ifdef MPI_ON
+    MPI_Barrier(MPI_COMM_WORLD);
     MPI_Finalize();
     Log_parallel("Thread %d Finalized. All done\n", my_rank);
   #endif  

@@ -2037,7 +2037,7 @@ get_matom_f ()
   int num_mpi_cells, num_mpi_extra, position, ndo, n_mpi, num_comm, n_mpi2;
   int size_of_matom_commbuffer;
   char *matom_commbuffer;
-  size_of_matom_commbuffer = 8 * (NLEVELS_MACRO + 2) * ( NPLASMA );
+  size_of_matom_commbuffer = 8 * (NLEVELS_MACRO + 3) * floor(NPLASMA / np_mpi_global );
 
   matom_commbuffer = (char *) malloc (size_of_matom_commbuffer * sizeof (char));
 #endif
@@ -2064,7 +2064,7 @@ get_matom_f ()
 
 
 
-  Log ("Calculating macro atom emissivities- this might take a while...\n");
+  //Log ("Calculating macro atom emissivities- this might take a while...\n");
 
   /* For MPI parallelisation, the following loop will be distributed over multiple tasks. 
      Note that the mynmim and mynmax variables are still used even without MPI on */
@@ -2091,9 +2091,9 @@ get_matom_f ()
     }
   ndo = my_nmax - my_nmin;
 
-  Log_parallel
-    ("Thread %d is calculating macro atom emissivities for macro atoms %d to %d\n",
-     rank_global, my_nmin, my_nmax);
+  //Log_parallel
+  //  ("Thread %d is calculating macro atom emissivities for macro atoms %d to %d\n",
+  //   rank_global, my_nmin, my_nmax);
 
 #endif
 
@@ -2105,15 +2105,15 @@ get_matom_f ()
       /* JM 1309 -- these lines are just log statements which track progress, as this section
          can take a long time */
 #ifdef MPI_ON
-      if (n % 50 == 0)
-	Log
-	  ("Thread %d is calculating  macro atom emissivity for macro atom %7d of %7d or %6.3f per cent\n",
-	   rank_global, n, my_nmax, n * 100. / my_nmax);
+      //if (n % 50 == 0)
+	//Log
+	 // ("Thread %d is calculating  macro atom emissivity for macro atom %7d of %7d or %6.3f per cent\n",
+	 //  rank_global, n, my_nmax, n * 100. / my_nmax);
 #else
-      if (n % 50 == 0)
-	Log
-	  ("Calculating macro atom emissivity for macro atom %7d of %7d or %6.3f per cent\n",
-	   n, my_nmax, n * 100. / my_nmax);
+      //if (n % 50 == 0)
+	//Log
+	//  ("Calculating macro atom emissivity for macro atom %7d of %7d or %6.3f per cent\n",
+	 //  n, my_nmax, n * 100. / my_nmax);
 #endif
 
       for (m = 0; m < nlevels_macro + 1; m++)
@@ -2327,9 +2327,9 @@ get_matom_f ()
       if (rank_global == n_mpi)
 	{
 
-	  Log
-	    ("MPI task %d is working on matoms %d to max %d (total size %d).\n",
-	     rank_global, my_nmin, my_nmax, NPLASMA);
+	  //Log
+	  //  ("MPI task %d is working on matoms %d to max %d (total size %d).\n",
+	  //   rank_global, my_nmin, my_nmax, NPLASMA);
 
           MPI_Pack(&ndo, 1, MPI_INT, matom_commbuffer, size_of_matom_commbuffer, &position, MPI_COMM_WORLD);
 	  for (n = my_nmin; n < my_nmax; n++)
@@ -2339,7 +2339,7 @@ get_matom_f ()
 	      MPI_Pack (macromain[n].matom_emiss, NLEVELS_MACRO, MPI_DOUBLE, matom_commbuffer, size_of_matom_commbuffer, &position, MPI_COMM_WORLD);
 	    }
 
-	  Log_parallel ("MPI task %d broadcasting matom emissivity information.\n", rank_global);
+	  //Log_parallel ("MPI task %d broadcasting matom emissivity information.\n", rank_global);
 	}
 
 
@@ -2347,7 +2347,7 @@ get_matom_f ()
       MPI_Barrier (MPI_COMM_WORLD);
       MPI_Bcast (matom_commbuffer, size_of_matom_commbuffer, MPI_PACKED, n_mpi, MPI_COMM_WORLD);
       MPI_Barrier (MPI_COMM_WORLD);
-      Log_parallel ("MPI task %d survived broadcasting matom emissivity information.\n", rank_global);
+      //Log_parallel ("MPI task %d survived broadcasting matom emissivity information.\n", rank_global);
 
       position = 0;
 
@@ -2379,7 +2379,7 @@ get_matom_f ()
     MPI_Barrier (MPI_COMM_WORLD);
 #endif
   geo.matom_radiation = 1;
-  free ( matom_commbuffer );
+  //free ( matom_commbuffer );
   return (lum);
 }
 
