@@ -68,6 +68,8 @@ History:
 			try and speed up the pairwise ionization scheme
 	13may	nsh	added code to use temprature computed from internal energy in a
 			zeus file as a first guess for temperature in a proga type model
+	13sep	nsh	small change to avoid the muliplicatoin by 0.9 (lucy guess) from giving us the wropng
+			zeus temperature.
 
 **************************************************************/
 
@@ -347,7 +349,7 @@ be optional which variables beyond here are moved to structures othere than Wind
 /* NSH 130530 Next few lines allow the use of the temperature which can be computed from Zeus models to be used as an initial guess for the wind temperature */
       if (geo.wind_type == 3)
 	{
-	  plasmamain[n].t_r = proga_temp (x);
+	  plasmamain[n].t_r = proga_temp (x)/0.9; //This is a kluge, it means that we get the temperature we expect, if we read in a temperature from a zeus file - otherwise it is multiplies by 0.9 //
 	}
       else
 	{

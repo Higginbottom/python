@@ -21,8 +21,8 @@
 
 
 
-struct photoionization *xver;	//Verner & Ferland description of a photoionization x-section
-struct topbase_phot *xtop;	//Topbase description of a photoionization x-section
+//struct photoionization *xver;	//Verner & Ferland description of a photoionization x-section NSH 13Sep - should not be used any more
+struct topbase_phot *xtop;	//Topbase description of a photoionization x-section 
 PlasmaPtr xxxplasma;
 double qromb_temp;		//This is a storage variable for the current electron temperature so it is available for qromb calls
 int niterate;			//Make this a variable that all the subroutines cn see, so we can decide if we need to recompute the numerators
@@ -363,6 +363,7 @@ variable_temperature (xplasma, mode)
   History:
  
 	12feb		NSH	Coded as part of the quasar project
+	13sep	NSH	Changed to always use the topbase style of data - verner data is now tabulated.
 
 **************************************************************/
 int bb_correct_err = 0;
@@ -406,7 +407,33 @@ bb_correct_2 (xtemp, t_r, www, nion)
   if (ion[ion_lower].phot_info == 1)	//topbase
     {
       n = ntmin;
-      xtop = &phot_top[n];
+      xtop = &phot_top[n];  //use the topbase data
+    }
+  else if (ion[ion_lower].phot_info == 0)	// verner
+    {
+      n = nvmin;		//just the ground state ionization fraction.
+      xtop = &xphot_tab[ion[n].nxphot]; //Use the tabuled verner data
+    }
+ else					//no data available
+    {
+      bb_correct_err++;
+      /* 71 - 111229 - ksl - Suppress this error after 100 instances so program does not bomb */
+      if (bb_correct_err < 100)
+	{
+	  Error
+	    ("bb_correct: No photoionization xsections for ion %d (element %d, ion state %d),setting sim_frac to 1\n",
+	     nion, ion[nion].z, ion[nion].istate);
+	}
+      else if (bb_correct_err == 100)
+	{
+	  Error
+	    ("xinteg_sim: Suppressing photoionization xsection error, but more photo xsections are needed in atomic data\n");
+	}
+
+
+      q = 1.;
+      return (q);
+    }
       fthresh = xtop->freq[0];
       fmaxtemp = xtop->freq[xtop->np - 1];
       fmax = check_fmax (fthresh, fmaxtemp, xtemp);
@@ -447,89 +474,17 @@ bb_correct_2 (xtemp, t_r, www, nion)
       if (pow
 	  (((xtemp -
 	     xxxplasma->PWdtemp[ion_lower]) / xxxplasma->PWdtemp[ion_lower]),
-	   2) > 1e-6)
+	   2) > 1e-6) //Only do this integral if there is a significant change in xtemp
 	{
 	  denominator = qromb (tb_planck1, fthresh, fmax, 1.e-4);
 	  xxxplasma->PWdenom[ion_lower] = denominator;
-	  xxxplasma->PWdtemp[ion_lower] = xtemp;
+	  xxxplasma->PWdtemp[ion_lower] = xtemp; //Store the result
 	}
       else
 	{
 	  denominator = xxxplasma->PWdenom[ion_lower];
 	}
 
-
-    }
-  else if (ion[ion_lower].phot_info == 0)	// verner
-    {
-      n = nvmin;		//just the ground state ioinzation fraction.
-      xver = &xphot[ion[n].nxphot];
-      fthresh = xver->freq_t;
-      fmaxtemp = xver->freq_max;
-      fmax = check_fmax (fthresh, fmaxtemp, xtemp);
-      if (fthresh > fmax)
-	{
-	  Error
-	    ("bb_correct: After checking, fthresh has been set below fmin - we cannot compute denominator\n");
-	  q = 1.0;
-	  return (q);
-	}
-      qromb_temp = t_r;
-
-
-
-      if (pow
-	  (((t_r -
-	     xxxplasma->PWntemp[ion_lower]) / xxxplasma->PWntemp[ion_lower]),
-	   2) > 1e-6)
-	{
-	  numerator = www * qromb (verner_planck1, fthresh, fmax, 1.e-4);
-	  xxxplasma->PWnumer[ion_lower] = numerator;
-	  xxxplasma->PWntemp[ion_lower] = t_r;
-	}
-      else
-	{
-	  numerator = xxxplasma->PWnumer[ion_lower];
-	}
-      if (numerator == 0.0)
-	return (0.0);		//There is no need to waste time evaluating the denominator
-      qromb_temp = xtemp;
-      fthresh = xver->freq_t;
-      if (pow
-	  (((xtemp -
-	     xxxplasma->PWdtemp[ion_lower]) / xxxplasma->PWdtemp[ion_lower]),
-	   2) > 1e-6)
-	{
-	  denominator = qromb (verner_planck1, fthresh, fmax, 1.e-4);
-	  xxxplasma->PWdenom[ion_lower] = denominator;
-	  xxxplasma->PWdtemp[ion_lower] = xtemp;
-	}
-      else
-	{
-	  denominator = xxxplasma->PWdenom[ion_lower];
-	}
-    }
-
-  else
-    {
-      bb_correct_err++;
-      /* 71 - 111229 - ksl - Suppress this error after 100 instances so program does not bomb */
-      if (bb_correct_err < 100)
-	{
-	  Error
-	    ("bb_correct: No photoionization xsections for ion %d (element %d, ion state %d),setting sim_frac to 1\n",
-	     nion, ion[nion].z, ion[nion].istate);
-	}
-      else if (bb_correct_err == 100)
-	{
-	  Error
-	    ("xinteg_sim: Suppressing photoionization xsection error, but more photo xsections are needed in atomic data\n");
-	}
-
-
-      q = 1.;
-      return (q);
-    }
 
   q = numerator / denominator;
 
@@ -585,7 +540,10 @@ temp_func (solv_temp)
   History:
  
 	12feb	NSH	Coded as part of the quasar project
-        12aug   NSH     Added code to allow an ex[ponential model of j to be used.
+        12aug   NSH     Added code to allow an exponential model of j to be used.
+	13sep	NSH	Reversed commenting out of lines that check for maximum frequency and 
+			reset integration limits - unsure why this was ever commented out!
+	13sep	NSH	Changed to always use the topbase style of data - verner data is now tabulated.
 
 **************************************************************/
 int pl_correct_err = 0;
@@ -633,6 +591,29 @@ pl_correct_2 (xtemp, nion)
     {
       n = ntmin;
       xtop = &phot_top[n];
+    }
+  else if (ion[ion_lower].phot_info == 0)	// verner
+    {
+      n = nvmin;		//just the ground state ionization fraction.
+      xtop = &xphot_tab[ion[n].nxphot];
+    }
+ else
+    {
+      pl_correct_err++;		/* If we get here, there are no cross sections available */
+      if (pl_correct_err < 100)
+	{
+	  Error
+	    ("pl_correct: No photoionization xsections for ion %d (element %d, ion state %d),setting sim_frac to 1\n",
+	     nion, ion[nion].z, ion[nion].istate);
+	}
+      else if (pl_correct_err == 100)
+	{
+	  Error
+	    ("xinteg_sim: Suppressing photoionization xsection error, but more photo xsections are needed in atomic data\n");
+	}
+      q = 1.;			/*This is really bad actually, this will leave the abundances all wrong.... */
+      return (q);
+    }
       fthresh = xtop->freq[0];
       fmax = xtop->freq[xtop->np - 1];
       numerator = 0;
@@ -644,73 +625,68 @@ pl_correct_2 (xtemp, nion)
 	      xpl_w = xxxplasma->pl_w[j];
 	      xexp_temp = xxxplasma->exp_temp[j];
 	      xexp_w = xxxplasma->exp_w[j];
-	      //      if (ion_lower==0) Log ("BCA IN band %i, we will be using model %i, pl_a=%e, pl_w=%e, (%e-%e) exp_t=%e, exp_w=%e \n",j,xxxplasma->spec_mod_type[j],xxxplasma->pl_alpha[j],xxxplasma->pl_w[j],xxxplasma->pl_w[j]*pow(geo.xfreq[j],xxxplasma->pl_alpha[j]),xxxplasma->pl_w[j]*pow(geo.xfreq[j+1],xxxplasma->pl_alpha[j]),xxxplasma->exp_temp[j],xxxplasma->exp_w[j]);
 	      if (xxxplasma->spec_mod_type[j] > 0)	//Only bother doing the integrals if we have a model in this band
 		{
 		  f1 = geo.xfreq[j];
-//                      if (geo.xfreq[j+1] > xxxplasma->max_freq && geo.xfreq[j] < xxxplasma->max_freq) //The maximum frequency seen in this cell is in this band, so we cannot safely use the power law estimators right up to the top of the band. Note, we hope that all the weights in bands above this will be zero!
-//                              {               
-//                              f2=xxxplasma->max_freq;
-//                              }
-//                      else
-//                              {
+                      if (geo.xfreq[j+1] > xxxplasma->max_freq && geo.xfreq[j] < xxxplasma->max_freq) //The maximum frequency seen in this cell is in this band, so we cannot safely use the power law estimators right up to the top of the band. Note, we hope that all the weights in bands above this will be zero!
+/* NSH 130909 - this loop was commented out at some point in the past - I cannt recall why, but the lines are now reinstated - if they cause a problem - refer back to issue #50! */
+                              {               
+                              f2=xxxplasma->max_freq;
+                              }
+                      else
+                              {
 		  f2 = geo.xfreq[j + 1];	//We can safely integrate over the whole band using the estimators for the cell/band 
-//                              }
+                              }
 		  if (f1 < fthresh && fthresh < f2 && f1 < fmax && fmax < f2)	//Case 1- 
 		    {
 		      if (xxxplasma->spec_mod_type[j] == SPEC_MOD_PL)
 			{
-			  numerator += qromb (tb_pow1, fthresh, fmax, 1.e-4);
+			  numerator += qromb (tb_pow1, fthresh, fmax, pl_qromb);
 			}
 		      else
 			{
 			  numerator +=
 			    qromb (tb_exp1, fthresh, fmax, exp_qromb);
-//                                      Log ("BCA BB integrate (1)= %e,num=%e\n",qromb(tb_planck1, fthresh, fmax, 1.e-4),numerator);
 			}
 		    }
 		  else if (f1 < fthresh && fthresh < f2 && f2 < fmax)	//case 2 
 		    {
 		      if (xxxplasma->spec_mod_type[j] == SPEC_MOD_PL)
 			{
-			  numerator += qromb (tb_pow1, fthresh, f2, 1.e-4);
+			  numerator += qromb (tb_pow1, fthresh, f2, pl_qromb);
 			}
 		      else
 			{
 			  numerator +=
 			    qromb (tb_exp1, fthresh, f2, exp_qromb);
-//                                      Log ("BCA BB integrate (2)= %e, num=%e\n",qromb(tb_planck1, fthresh, f2, 1.e-4),numerator);
 			}
 		    }
 		  else if (f1 > fthresh && f1 < fmax && fmax < f2)	//case 3
 		    {
 		      if (xxxplasma->spec_mod_type[j] == SPEC_MOD_PL)
 			{
-			  numerator += qromb (tb_pow1, f1, fmax, 1.e-4);
+			  numerator += qromb (tb_pow1, f1, fmax, pl_qromb);
 			}
 		      else
 			{
 			  numerator += qromb (tb_exp1, f1, fmax, exp_qromb);
-//                                      Log ("BCA BB integrate (3)= %e, num=%e\n",qromb(tb_planck1, f1, fmax, 1.e-4),numerator);
 			}
 		    }
 		  else if (f1 > fthresh && f2 < fmax)	// case 4
 		    {
 		      if (xxxplasma->spec_mod_type[j] == SPEC_MOD_PL)
 			{
-			  numerator += qromb (tb_pow1, f1, f2, 1.e-4);
+			  numerator += qromb (tb_pow1, f1, f2, pl_qromb);
 			}
 		      else
 			{
 			  numerator += qromb (tb_exp1, f1, f2, exp_qromb);
-//                                      Log ("BCA BB integrate (4)= %e, num=%e\n",qromb(tb_planck1, f1, f2, 1.e-4),numerator);
 			}
 		    }
 		  else		//case 5 - should only be the case where the band is outside the range for the integral.
 		    {
 		      numerator += 0;	// Add nothing - bit of a null statement, but makes the code look nice.
 		    }
-//      if (ion_lower==0) Log ("BCA numerator = %e after band %i, which was model %i \n",numerator,j,xxxplasma->spec_mod_type[j]);
 		}		//End of loop to only integrate in this band if there is power
 	    }			//End of loop over all bands, at this point we have the numerator
 	  xxxplasma->PWnumer[ion_lower] = numerator;	// Store the calculated numerator for this cell - it wont change during one ionization cycle
@@ -746,140 +722,7 @@ pl_correct_2 (xtemp, nion)
 	}
 
 
-    }
-  else if (ion[ion_lower].phot_info == 0)	// verner
-    {
-      n = nvmin;		//just the ground state ionization fraction.
-
-      xver = &xphot[ion[n].nxphot];
-      fthresh = xver->freq_t;
-      fmax = xver->freq_max;
-
-//      if (ion[nion].z==26) Log ("VERNER ion%i, integrating from %e to %e \n",ion[nion].istate,fthresh,fmax);
-
-      numerator = 0;
-      if (niterate == 0)	//first time of iterating this cycle, so calculate the numerator
-	{
-	  for (j = 0; j < geo.nxfreq; j++)	//We loop over all the bands
-	    {
-	      xpl_alpha = xxxplasma->pl_alpha[j];	//Set the variables needed for integration
-	      xpl_w = xxxplasma->pl_w[j];
-	      xexp_temp = xxxplasma->exp_temp[j];
-	      xexp_w = xxxplasma->exp_w[j];
-	      if (xxxplasma->spec_mod_type[j] > 0)	//Only bother doing the integrals if we have a model in this band
-		{
-		  f1 = geo.xfreq[j];
-//                      if (geo.xfreq[j+1] > xxxplasma->max_freq && geo.xfreq[j] < xxxplasma->max_freq) //The maximum frequency seen in this cell is in this band, so we cannot safely use the power law estimators right up to the top of the band. Note, we hope that all the weights in bands above this will be zero!
-//                              {
-//                              f2=xxxplasma->max_freq;
-//                              }
-//                      else
-//                              {
-		  f2 = geo.xfreq[j + 1];	//We can safely integrate over the whole band using the estimators for the cell/band 
-//                              }
-		  if (f1 < fthresh && fthresh < f2 && f1 < fmax && fmax < f2)	//Case 1
-		    {
-		      if (xxxplasma->spec_mod_type[j] == SPEC_MOD_PL)
-			{
-			  numerator +=
-			    qromb (verner_pow1, fthresh, fmax, 1.e-4);
-			}
-		      else
-			{
-			  numerator +=
-			    qromb (verner_exp1, fthresh, fmax, 1.e-4);
-
-			}
-		    }
-		  else if (f1 < fthresh && fthresh < f2 && f2 < fmax)	//case 2 
-		    {
-		      if (xxxplasma->spec_mod_type[j] == SPEC_MOD_PL)
-			numerator += qromb (verner_pow1, fthresh, f2, 1.e-4);
-		      else
-			numerator += qromb (verner_exp1, fthresh, f2, 1.e-4);
-		    }
-		  else if (f1 > fthresh && f1 < fmax && fmax < f2)	//case 3 
-		    {
-		      if (xxxplasma->spec_mod_type[j] == SPEC_MOD_PL)
-			numerator += qromb (verner_pow1, f1, fmax, 1.e-4);
-		      else
-			numerator += qromb (verner_exp1, f1, fmax, 1.e-4);
-		    }
-		  else if (f1 > fthresh && f2 < fmax)	// case 4
-		    {
-		      if (xxxplasma->spec_mod_type[j] == SPEC_MOD_PL)
-			numerator += qromb (verner_pow1, f1, f2, 1.e-4);
-		      else
-			numerator += qromb (verner_exp1, f1, f2, 1.e-4);
-		    }
-		  else		//case 5 - should only be the case where the band is outside the range for the integral.
-		    {
-		      numerator += 0;	// Add nothing - bit of a null statement, but makes the code look nice.
-		    }
-
-		}		//End of if loop to only do any integrations if the band weight is non zero           
-	    }			//End of loop over all the bands, we now have the integration
-	  xxxplasma->PWnumer[ion_lower] = numerator;	//Store the numerator fromn this time - it wont change at all during one ionization cycle  
-	}			//End of if statement to decide if this is the first iteration
-      else			//we have already done one interation, so we can just use the stored numberator
-	{
-	  numerator = xxxplasma->PWnumer[ion_lower];
-	}
-
-      if (numerator == 0.0)
-	return (0.0);		//There is no need to waste time evaluating the denominator
-/* Denominator is integral at LTE of our chosen temperature. */
-      fmaxtemp = xver->freq_max;
-      fmax = check_fmax (fthresh, fmaxtemp, xtemp);
-
-      if (fthresh > fmax)
-	{
-	  Error
-	    ("pl_correct: After checking, fthresh has been set below fmin - we cannot compute denominator\n");
-	  q = 1.0;
-	  return (q);
-	}
-
-
-
-
-      qromb_temp = xtemp;
-
-      if (pow
-	  (((xtemp -
-	     xxxplasma->PWdtemp[ion_lower]) / xxxplasma->PWdtemp[ion_lower]),
-	   2) > 1e-6)
-	{
-	  denominator = qromb (verner_planck1, fthresh, fmax, 1.e-4);
-	  xxxplasma->PWdenom[ion_lower] = denominator;
-	  xxxplasma->PWdtemp[ion_lower] = xtemp;
-	}
-      else
-	{
-	  denominator = xxxplasma->PWdenom[ion_lower];
-	}
-    }				//End of if statement for verner cross section
-
-  else
-    {
-      pl_correct_err++;		/* If we get here, there are no cross sections available */
-      if (pl_correct_err < 100)
-	{
-	  Error
-	    ("pl_correct: No photoionization xsections for ion %d (element %d, ion state %d),setting sim_frac to 1\n",
-	     nion, ion[nion].z, ion[nion].istate);
-	}
-      else if (pl_correct_err == 100)
-	{
-	  Error
-	    ("xinteg_sim: Suppressing photoionization xsection error, but more photo xsections are needed in atomic data\n");
-	}
-
-
-      q = 1.;			/*This is really bad actually, this will leave the abundances all wrong.... */
-      return (q);
-    }
-
+ 
   q = numerator / denominator;	/*Just work out the correction factor - hope it isnt infinite! */
 
 
@@ -965,10 +808,11 @@ This is almost identical to code written to compute the sim power law correction
   History:
 
 12Feb NSH - written as part of the varaible temperature effort.
+13Sep	NSH - no longer called as of python76c - all data is in tabulated topbase type format - this can be deleted in time
 
  ************************************************************************/
 
-
+/*
 double
 verner_planck1 (freq)
      double freq;
@@ -983,6 +827,7 @@ verner_planck1 (freq)
 
   return (answer);
 }
+*/
 
 /**************************************************************************
                     Space Telescope Science Institute
@@ -1053,9 +898,10 @@ This is almost identical to code written to compute the sim power law correction
   History:
 
 12Feb NSH - written as part of the varaible temperature effort.
+13Sep	NSH - no longer called as of python76c - all data is in tabulated topbase type format - this can be deleted in time
  ************************************************************************/
 
-
+/*
 double
 verner_pow1 (freq)
      double freq;
@@ -1067,6 +913,7 @@ verner_pow1 (freq)
 
   return (answer);
 }
+*/
 
 /**************************************************************************
                     Space Telescope Science Institute
@@ -1093,9 +940,10 @@ This is almost identical to code written to compute the sim power law correction
   History:
 
 12Aug NSH - Written as part of the effort to improve the modelling
+13Sep	NSH - no longer called as of python76c - all data is in tabulated topbase type format - this can be deleted in time
  ************************************************************************/
 
-
+/*
 double
 verner_exp1 (freq)
      double freq;
@@ -1107,7 +955,7 @@ verner_exp1 (freq)
   answer /= freq;
   return (answer);
 }
-
+*/
 
 
 

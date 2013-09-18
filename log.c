@@ -17,6 +17,10 @@
 
 		int Error ( char *format, ...)			Send a message prefaced by the word "Error:" to
 										the screen and to the logfile.
+		int Warning ( char *format, ...)		Send a message prefaced by the word "Warning:" to
+										the screen and to the logfile. Warnings
+										are logged just like Errors, but will not
+										cause the code to stop.
 		int Error_silent ( char *format, ...)		Send a message prefaced by the word "Error:" to
 										the logfile
 		
@@ -24,7 +28,8 @@
 
 		int error_summary(char *format)			Summarize all of the erors that have been
 								logged to this point in time
-
+		int warning_summary(char *format)		Summarize all of the warnings that have been
+								logged to this point in time
 		int Log_set_verbosity(vlevel)			Set the verbosity of the what is printed to
 								the cren and the log file
 
@@ -100,6 +105,9 @@ History:
 			divided max errors by n_mpi processors which is communicated
 			via log_set_mpi_rank. The verbosity and rank are also communicated
 			to rdpar from this thread.
+	13sep	nsh	Added a new class of reporting - warnings. Things we would like to 
+			know about (no photons in band, no model in band) but do not want 
+			to crash the code.
 
  
 **************************************************************/
@@ -113,12 +121,14 @@ History:
 
 #define LINELENGTH 132
 #define NERROR_MAX 500		// Number of different errors that are recorded
+#define NWARNING_MAX 500	// Number of different warnings that are recorded
 
 /* definitions of what is logged at what verboisty level */
 
 #define SHOW_PARALLEL		1
 #define SHOW_LOG  		2
 #define SHOW_ERROR		2
+#define SHOW_WARNING	  	3
 #define SHOW_LOG_SILENT  	5
 #define SHOW_ERROR_SILENT	5
 
@@ -136,8 +146,11 @@ typedef struct error_log
 } error_dummy, *ErrorPtr;
 
 ErrorPtr errorlog;
+ErrorPtr warninglog; //We use exactly the same struture as errors to store warnings
+
 
 int nerrors;
+int nwarnings;
 
 FILE *diagptr;
 int init_log = 0;
@@ -158,11 +171,19 @@ Log_init (filename)
 
   nerrors = 0;
   errorlog = (ErrorPtr) calloc (sizeof (error_dummy), NERROR_MAX);
+  nwarnings = 0;
+  warninglog = (ErrorPtr) calloc (sizeof (error_dummy), NWARNING_MAX);
 
   if (errorlog == NULL)
     {
       printf
 	("There is a problem in allocating memory for the errorlog structure\n");
+      exit (0);
+    }
+  if (warninglog == NULL)
+    {
+      printf
+	("There is a problem in allocating memory for the warninglog structure\n");
       exit (0);
     }
 
@@ -185,6 +206,8 @@ Log_append (filename)
 
   nerrors = 0;
   errorlog = (ErrorPtr) calloc (sizeof (error_dummy), NERROR_MAX);
+  nwarnings = 0;
+  warninglog = (ErrorPtr) calloc (sizeof (error_dummy), NWARNING_MAX);
 
   if (errorlog == NULL)
     {
@@ -202,6 +225,7 @@ Log_close ()
   fclose (diagptr);
   init_log = 0;
   free (errorlog);		// Release the error summary structure
+  free (warninglog);		// Release the warning summary structure
   return (0);
 }
 
@@ -301,6 +325,36 @@ Error (char *format, ...)
   va_end (ap);
   return (result);
 }
+
+/* NSH 130909 - The following subroutine is an exact dupliate of Error, but it produces
+	what we call a warning. The only difference between this and an errors, is
+	that no matter how many warning are logged, the code will not be stopped. 
+	They are written out at the end, so the user can see if (s)he is worried. */
+
+
+int
+Warning (char *format, ...)
+{
+  va_list ap,ap2;
+  int result;
+
+  if (init_log == 0)
+    Log_init ("logfile");
+
+  if (warning_count (format) > log_print_max || log_verbosity < SHOW_WARNING )
+    return (0);
+
+  va_start (ap, format);
+  va_copy (ap2,ap); 
+  if (my_rank==0)	
+    result = vprintf (format, ap);
+  fprintf (diagptr, "Warning: ");
+  result = vfprintf (diagptr, format, ap2);
+  va_end (ap);
+  return (result);
+}
+
+
 
 int
 Error_silent (char *format, ...)
@@ -409,6 +463,48 @@ error_count (char *format)
     }
   return (n + 1);
 }
+ /* NSH 130909 - a copy of error_count - but for warnings */ 
+
+int
+warning_count (char *format)
+{
+  int n;
+  n = 0;
+
+  while (n < nwarnings)
+    {
+      if (strcmp (warninglog[n].description, (format)) == 0)
+	break;
+      n++;
+    }
+
+  if (n == nwarnings)
+    {
+      strcpy (warninglog[nwarnings].description, format);
+      warninglog[n].n = 1;
+      if (nwarnings < NWARNING_MAX)
+	{
+	  nwarnings++;
+	}
+      else
+	{
+	  printf ("Exceeded number of different warnings that can be stored\n");
+	  error_summary("Quitting because there are too many differnt types of warningss\n");
+	  exit(0);
+	}
+    }
+  else
+    {
+      n = warninglog[n].n++;
+      if (n == log_print_max)
+	Error ("warning_count: This warning will no longer be logged: %s\n",
+	       format);
+      
+    }
+  return (n + 1);
+}
+
+
 
 
 int
@@ -421,6 +517,23 @@ error_summary (message)
   for (n = 0; n < nerrors; n++)
     {
       Log ("%9d -- %s", errorlog[n].n, errorlog[n].description);
+    }
+
+  return(0);
+}
+
+/*NSH 130909 - a copy of error summary, but for warnings */
+
+int
+warning_summary (message)
+     char *message;
+{
+  int n;
+  Log ("\nWarning summary: %s\n", message);
+  Log ("Recurrences --  Description\n");
+  for (n = 0; n < nwarnings; n++)
+    {
+      Log ("%9d -- %s", warninglog[n].n, warninglog[n].description);
     }
 
   return(0);
@@ -455,7 +568,7 @@ int Log_set_mpi_rank(rank, n_mpi)
 	rdpar_set_mpi_rank(rank);	//this just communicates the rank to rdpar	
 
 	/* if in parallel mode we divide by the number of parallel processes for max errors */
-        time_to_quit /= n_mpi;		
+   //     time_to_quit /= n_mpi;		
         //log_print_max /= n_mpi; for the moment we won'y change this as only master thread prints errors anyway
 	return(0);
 }

@@ -15,6 +15,7 @@ int index_phot_verner(void);
 int index_collisions(void);
 void indexx(int n, float arrin[], int indx[]);
 int limit_lines(double freqmin, double freqmax);
+int tabulate_verner(void);
 /* python.c */
 int main(int argc, char *argv[]);
 int help(void);
@@ -445,13 +446,69 @@ double bb_correct_2(double xtemp, double t_r, double www, int nion);
 double temp_func(double solv_temp);
 double pl_correct_2(double xtemp, int nion);
 double tb_planck1(double freq);
-double verner_planck1(double freq);
 double tb_pow1(double freq);
-double verner_pow1(double freq);
-double verner_exp1(double freq);
 double tb_exp1(double freq);
 /* matom_diag.c */
 int matom_emiss_report(void);
+/* py_wind_sub.c */
+int zoom(int direction);
+int overview(WindPtr w, char rootname[]);
+int position_summary(WindPtr w);
+int abs_summary(WindPtr w, char rootname[], int ochoice);
+int adiabatic_cooling_summary(WindPtr w, char rootname[], int ochoice);
+int lum_summary(WindPtr w, char rootname[], int ochoice);
+int photo_summary(WindPtr w, char rootname[], int ochoice);
+int recomb_summary(WindPtr w, char rootname[], int ochoice);
+int electron_summary(WindPtr w, char rootname[], int ochoice);
+int rho_summary(WindPtr w, char rootname[], int ochoice);
+int plasma_cell(WindPtr w, char rootname[], int ochoice);
+int freq_summary(WindPtr w, char rootname[], int ochoice);
+int nphot_summary(WindPtr w, char rootname[], int ochoice);
+int temp_summary(WindPtr w, char rootname[], int ochoice);
+int temp_rad(WindPtr w, char rootname[], int ochoice);
+int weight_summary(WindPtr w, char rootname[], int ochoice);
+int velocity_summary(WindPtr w, char rootname[], int ochoice);
+int mo_summary(WindPtr w, char rootname[], int ochoice);
+int vol_summary(WindPtr w, char rootname[], int ochoice);
+int wind_element(WindPtr w);
+int tau_h_summary(WindPtr w, char rootname[], int ochoice);
+int coolheat_summary(WindPtr w, char rootname[], int ochoice);
+int complete_file_summary(WindPtr w, char root[], int ochoice);
+int wind_reg_summary(WindPtr w, char rootname[], int ochoice);
+int dvds_summary(WindPtr w, char rootname[], int ochoice);
+int inner_shell_summary(WindPtr w, char rootname[], int ochoice);
+int IP_summary(WindPtr w, char rootname[], int ochoice);
+int alpha_summary(WindPtr w, char rootname[], int ochoice);
+int J_summary(WindPtr w, char rootname[], int ochoice);
+int phot_split(WindPtr w, char rootname[], int ochoice);
+int thompson(WindPtr w, char rootname[], int ochoice);
+int nscat_split(WindPtr w, char rootname[], int ochoice);
+int convergence_summary(WindPtr w, char rootname[], int ochoice);
+int convergence_all(WindPtr w, char rootname[], int ochoice);
+int model_bands(WindPtr w, char rootname[], int ochoice);
+int heatcool_summary(WindPtr w, char rootname[], int ochoice);
+/* py_wind_ion.c */
+int ion_summary(WindPtr w, int element, int istate, int iswitch, char rootname[], int ochoice);
+int tau_ave_summary(WindPtr w, int element, int istate, double freq, char rootname[], int ochoice);
+int line_summary(WindPtr w, int element, int istate, char rootname[], int ochoice);
+int total_emission_summary(WindPtr w, char rootname[], int ochoice);
+int modify_te(WindPtr w, char rootname[], int ochoice);
+int partial_measure_summary(WindPtr w, int element, int istate, char rootname[], int ochoice);
+/* py_wind_write.c */
+int write_array(char filename[], int choice);
+int display(char name[]);
+/* py_wind_macro.c */
+int xadiabatic_cooling_summary(WindPtr w, char rootname[], int ochoice);
+int macro_summary(WindPtr w, char rootname[], int ochoice);
+int ion_overview(int icell);
+int config_overview(int n, int icell);
+int depcoef_overview(int icell);
+int copy_plasma(PlasmaPtr x1, PlasmaPtr x2);
+int depcoef_overview_specific(int version, int nconfig, WindPtr w, char rootname[], int ochoice);
+/* py_wind.c */
+int main(int argc, char *argv[]);
+int one_choice(int choice, char *root, int ochoice);
+int py_wind_help(void);
 /* test_saha.c */
 int main(int argc, char *argv[]);
 /* test_dielectronic.c */

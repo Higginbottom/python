@@ -270,7 +270,7 @@ convergence (xplasma)
 	}
   else //If the cell has reached the maximum temperature
 	{
-	xplasma->techeck = xplasma->hccheck = 2; //we mark it as overlimit
+	xplasma->techeck = techeck = xplasma->hccheck = hccheck = 2; //we mark it as overlimit
 	}
 
 //110919 nsh modified line below to include the adiabatic cooling in the check that heating equals cooling

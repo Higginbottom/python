@@ -8,6 +8,8 @@
 #include "atomic.h"
 #include "log.h"
 
+
+
 #define DEBUG  0		/* nonzero implies debug */
 
 /***********************************************************
@@ -179,7 +181,7 @@ get_atomic_data (masterfile)
   char choice;
   int lineno;			/* the line number in the file beginning with 1 */
   int index_collisions (), index_lines (), index_phot_top (),
-    index_phot_verner ();
+    index_phot_verner (), tabulate_verner();
   int nwords;
   int nlte, nmax;
   //  
@@ -369,6 +371,24 @@ get_atomic_data (masterfile)
       phot_top[i].f = (-1);
       phot_top[i].sigma = 0.0;
     }
+
+  for (i = 0; i < NIONS; i++)
+    {
+      xphot_tab[i].nlev = (-1);
+      xphot_tab[i].uplev = (-1);
+      xphot_tab[i].nion = (-1);
+      xphot_tab[i].z = (-1);
+      xphot_tab[i].np = (-1);
+      xphot_tab[i].macro_info = (-1);	//Initialise - don't know if using Macro Atoms or not: set to -1 (SS)
+      for (j = 0; j < NCROSS; j++)
+	{
+	  xphot_tab[i].freq[j] = (-1);
+	  xphot_tab[i].x[j] = (-1);
+	}
+      xphot_tab[i].f = (-1);
+      xphot_tab[i].sigma = 0.0;
+    }
+
 
   for (i = 0; i < NLEVELS; i++)
     {
@@ -1489,12 +1509,13 @@ for the ionstate.
 				  xphot[nxphot].yw = yw;
 				  xphot[nxphot].y0 = y0;
 				  xphot[nxphot].y1 = y1;
+
+
+
 				  if (ion[n].phot_info == -1)
 				    {
 				      ion[n].phot_info = 0;	/* Mark this ion as using VFKY photo */
 				      ion[n].nxphot = nxphot;
-
-
 				      nxphot++;
 				    }
 				  else if (ion[n].phot_info == 1)
@@ -2652,7 +2673,10 @@ or zero so that simple checks of true and false can be used for them */
 /* Index the verner photionization structure by threshold frequecy -- 57h -- 06jul ksl */
 
   if (nxphot > 0)
+	{
     index_phot_verner ();
+tabulate_verner(); //Create a tabulated version of the data
+	}
 /* Index the topbase photoionization structure by threshold freqeuncy */
   if (ntop_phot > 0)
     index_phot_top ();
@@ -3020,3 +3044,77 @@ limit_lines (freqmin, freqmax)
 
   return (nline_delt = nline_max - nline_min + 1);
 }
+
+
+/***********************************************************
+                Southampton University
+
+Synopsis: tabulate_verner - turn a VFKY type cross section into a tabulated version
+
+Arguments:		none	
+
+Returns:		none - but populates the xphot_tab structure which 
+				has the same form as a topbase array
+ 
+Description:		This subroutine was coded in September 2013 as a 
+				band aid for an issue observed with the variable
+				temperature code. It turned out that integrals
+				over the verner cross sections were taking a great deal
+				of processor time due to having to calculate 
+				the cross section. This routine tabulates the
+				crosss sections on a loagrithmic grid, over the
+				number of points defined by the N_VERNER_TAB
+				number defined at the top of the routine
+
+Notes:
+
+
+History:
+   13sep           nsh     coded and tested
+  
+ 
+**************************************************************/
+
+#define N_VERNER_TAB 100  // The number of points we will tabulate the verner function over
+
+
+struct photoionization *xver;	//Verner & Ferland description of a photoionization x-section
+int
+tabulate_verner ()
+{
+
+  double f1,f2,dlogf,lf1,lf2,freq;
+  double sigma_phot();
+  int  j,n;
+  double very_small; //This is a small number (set to be the same as epsilon - but get_atomic_data doesn't have access to python.h
+
+very_small=1e-6;
+
+
+for (j=0; j < nxphot; j++)
+	{	
+	xver=&xphot[j];
+	xphot_tab[j].z = xphot->z;
+	xphot_tab[j].istate = xphot->istate;
+	xphot_tab[j].nion = xphot->nion;
+	f1=xver->freq_t*(1+very_small); //We need to start our tabulation just a tiny way up from from the threshold, otherwise it is equal to zero.
+	f2=xver->freq_max*(1-very_small); //We need to start our tabulation just a tiny way up from from the threshold, otherwise it is equal to zero.
+	lf1=log(f1);
+	lf2=log(f2);
+	dlogf=(lf2-lf1)/(N_VERNER_TAB);
+
+	for (n=0;n<N_VERNER_TAB+1;n++)
+		{
+		xphot_tab[j].freq[n]=freq=exp(lf1+(n*dlogf));
+		xphot_tab[j].x[n]=sigma_phot (xver, freq);
+		}
+
+	xphot_tab[j].np=N_VERNER_TAB;
+	xphot_tab[j].nlast = -1;
+
+	}
+
+  return (0);
+}
+
+

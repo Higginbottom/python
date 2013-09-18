@@ -183,6 +183,9 @@ History:
 			This was never tested, and never really used.  Knox no longer even has the 
 			models.  Note that Stuart is replacing this with a homologous expansion
 			model
+	1308	nsh	Added a call to generate rtheta wind cones - issue #41
+	1309	nsh	Changed the loop around where disk parameters are read in - issue #44
+	1309	nsh	Added commands to write out warning summary - relating to issue #47
  	
  	Look in Readme.c for more text concerning the early history of the program.
 
@@ -320,12 +323,12 @@ should allocate the space for the spectra to avoid all this nonsense.  02feb ksl
 	    {
 	      help ();
 	    }
-	  if (strcmp (argv[i], "-r") == 0)
+	  else if (strcmp (argv[i], "-r") == 0)
 	    {
 	      Log ("Restarting %s\n", root);
 	      restart_stat = 1;
 	    }
-	  else if (strcmp (argv[i], "-t") == 0)
+	  if (strcmp (argv[i], "-t") == 0)
 	    {
 	      if (sscanf (argv[i + 1], "%lf", &time_max) != 1)
 		{
@@ -581,7 +584,7 @@ should allocate the space for the spectra to avoid all this nonsense.  02feb ksl
 
     }
 
-  else				/* We want to continue a previous run */
+  else	if (restart_stat == 1)		/* We want to continue a previous run*/
     {
       Log ("Continuing a previous run of %s \n", root);
       strcpy (old_windsavefile, root);
@@ -915,8 +918,8 @@ It also seems likely that we have mixed usage of some things, e.g ge.rt_mode and
 	 &geo.disk_type);
       if (geo.disk_type)	/* Then a disk exists and it needs to be described */
 	{
-	  if (geo.disk_radiation)
-	    {
+//	  if (geo.disk_radiation) /*NSH 130906 - Commented out this if loop. It was causing problems with restart - bug #44
+//	    {
 	      geo.disk_mdot /= (MSOL / YR);	// Convert to msol/yr to simplify input
 	      rddoub ("disk.mdot(msol/yr)", &geo.disk_mdot);
 	      geo.disk_mdot *= (MSOL / YR);
@@ -931,12 +934,12 @@ It also seems likely that we have mixed usage of some things, e.g ge.rt_mode and
 		{
 		  rdstr ("T_profile_file", tprofile);
 		}
-	    }
-	  else
-	    {
-	      geo.disk_mdot = 0;
-	      disk_illum = 0;
-	    }
+//	    }
+//	  else
+//	    {
+//	      geo.disk_mdot = 0;
+//	      disk_illum = 0;
+//	    }
 
 	  /* 04aug ksl ??? Until everything is initialized we need to stick to a simple disk, 
 	     while teff is being set up..  This is because some of the
@@ -1275,9 +1278,9 @@ set defudge slightly differently for the shell wind.*/
 /*NSH 130821 broken out into a seperate routine added these lines to fix bug41, where
 the cones are never defined for an rtheta grid if the model is restarted */
 
-  if (geo.coord_type==RTHETA) //We need to generate an rtheta wind cone
+if (geo.coord_type==RTHETA && geo.wind_type==2) //We need to generate an rtheta wind cone if we are restarting
     {
-  rtheta_make_cones(w);
+  rtheta_make_cones(wmain);
     }
 
   geo.rmax_sq = geo.rmax * geo.rmax;
@@ -2238,9 +2241,11 @@ run -- 07jul -- ksl
 #ifdef MPION
   sprintf (dummy,"End of program, Thread %d only",my_rank);   // added so we make clear these are just errors for thread ngit status	
   error_summary (dummy);	// Summarize the errors that were recorded by the program
+  warning_summary (dummy);	// Summarize the warnings that were recorded by the program
   Log ("Run py_error.py for full error report.\n")
 #else
   error_summary ("End of program");	// Summarize the errors that were recorded by the program
+  warning_summary ("End of program");	// Summarize the warnings that were recorded by the program
 #endif
 
 

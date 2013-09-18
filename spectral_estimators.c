@@ -35,6 +35,10 @@ History:
 			errors, when they were just checking for reasonbleness.
 			Also, changed the way the code deals with no photons in	
 			band. Now only an error if we actually generate photons there!
+	130907	nsh	Changed two errors into warnings - no photons in band is
+			not really an error - it is perfectly reasonable so we
+			really dont want the code to stop if it happens too often.
+			However, we do want to know about it!
 
 **************************************************************/
 
@@ -58,7 +62,7 @@ spectral_estimators (xplasma)
   double exp_temp_min, exp_temp_max;	/*120817 the 'temperature' range we are going to search for an effective temperature for the exponential model */
   double exp_temp_temp, exp_w_temp;	/*120817 the temporary values for temperature and weight of the exponential model */
   int n,n1;
-  double pl_sd, exp_sd;		/*120817 Computed standard decviations for two models for comparison with true value */
+  double pl_sd, exp_sd;		/*120817 Computed standard deviations for two models for comparison with true value */
   double ALPHAMAX = 20.0;	/*120817 Something to make it a bit more obvious as to what values of the powerlaw exponent we consider reasonable */
   int plflag, expflag;		/*120817 Two flags to say if we have a reasonable PL or EXP model, set to 1 initially, -1 means there has been some failure that means we must not use this model, +1 means it is OK */
   double genmin,genmax;
@@ -67,7 +71,7 @@ spectral_estimators (xplasma)
 To avoid problems with solving, we need to find a reasonable range of values within which to search for a solution to eq18. A reasonable guess is that it is around the current value....
 */
 
-genmax=xband.f1[0];
+genmin=xband.f1[0];
 genmax=xband.f2[xband.nbands-1];
 
 
@@ -99,13 +103,14 @@ for (n1 =xband.nbands-1; n1>-1; n1--)
       plflag = expflag = 1;	//Both potential models are in the running
       if (xplasma->nxtot[n] == 0)
 		{
-	  	if (geo.xfreq[n] >= genmax || geo.xfreq[n+1] <= genmin) /*The band is outside where photons were generated, so not very surprisoing that there are no photons - just generate a log */
+	  	if (geo.xfreq[n] >= genmax || geo.xfreq[n+1] <= genmin) /*The band is outside where photons were generated, so not very surprising that there are no photons - just generate a log */
 		  	{
 			Log_silent("spectral_estimators: no photons in band %d which runs from %10.2e(%8.2fev) to %10.2e(%8.2fev) but we werent expecting any \n",n, geo.xfreq[n], geo.xfreq[n] * HEV, geo.xfreq[n + 1],geo.xfreq[n + 1] * HEV);
 			}
 		  else
 			{
-			Error("spectral_estimators: no photons in band %d which runs from %10.2e(%8.2fev) to %10.2e(%8.2fev) and we were expecting some\n",n, geo.xfreq[n], geo.xfreq[n] * HEV, geo.xfreq[n + 1],geo.xfreq[n + 1] * HEV);
+			Warning("spectral_estimators: no photons in band %d which runs from %10.2e(%8.2fev) to %10.2e(%8.2fev) and we were expecting some\n",n, geo.xfreq[n], geo.xfreq[n] * HEV, geo.xfreq[n + 1],geo.xfreq[n + 1] * HEV);
+/* NSH 130709 - changed this to be a warning  */
 			}
 	  	xplasma->pl_w[n] = 0;	//We also want to make sure that the weight will be zero, this way we make sure there is no contribution to the ionization balance from this frequency.
 	  	xplasma->pl_alpha[n] = 999.9;	//Give alpha a value that will show up as an error
@@ -271,7 +276,7 @@ for (n1 =xband.nbands-1; n1>-1; n1--)
 	  else
 	    {
 	      xplasma->spec_mod_type[n] = -1;	//Oh dear, there is no suitable model - this should be an error
-	      Error ("No suitable model in band %i cell %i\n", n,
+	      Warning ("No suitable model in band %i cell %i\n", n,
 		     xplasma->nplasma);
 	    }
 	  Log_silent ("NSH In cell %i, band %i, the best model is %i\n",
