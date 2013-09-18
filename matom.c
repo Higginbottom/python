@@ -319,8 +319,7 @@ matom (p, nres, escape)
 					    n] * xplasma->ne *
 		      den_config (xplasma,
 				  cont_ptr->uplev) / den_config (xplasma,
-								 cont_ptr->
-								 nlev)));
+								 cont_ptr->nlev)));
 		  jprbs_known[uplvl][m] = jprbs[m] = 0.0;
 
 		}
@@ -1545,9 +1544,9 @@ macro_pops (xplasma, xne)
 		         other direction. */
 
 		      rate =
-			mplasma->
-			alpha_st_old[config[index_lvl].bfu_indx_first +
-				     index_bfu] * xne;
+			mplasma->alpha_st_old[config[index_lvl].
+					      bfu_indx_first +
+					      index_bfu] * xne;
 
 		      rate_matrix[upper][upper] += -1. * rate;
 		      rate_matrix[lower][upper] += rate;
@@ -2037,9 +2036,10 @@ get_matom_f ()
   int num_mpi_cells, num_mpi_extra, position, ndo, n_mpi, num_comm, n_mpi2;
   int size_of_matom_commbuffer;
   char *matom_commbuffer;
-  size_of_matom_commbuffer = 8 * (NLEVELS_MACRO + 2) * ( NPLASMA );
+  size_of_matom_commbuffer = 8 * (NLEVELS_MACRO + 2) * (NPLASMA);
 
-  matom_commbuffer = (char *) malloc (size_of_matom_commbuffer * sizeof (char));
+  matom_commbuffer =
+    (char *) malloc (size_of_matom_commbuffer * sizeof (char));
 #endif
 
 
@@ -2331,23 +2331,39 @@ get_matom_f ()
 	    ("MPI task %d is working on matoms %d to max %d (total size %d).\n",
 	     rank_global, my_nmin, my_nmax, NPLASMA);
 
-          MPI_Pack(&ndo, 1, MPI_INT, matom_commbuffer, size_of_matom_commbuffer, &position, MPI_COMM_WORLD);
+	  MPI_Pack (&ndo, 1, MPI_INT, matom_commbuffer,
+		    size_of_matom_commbuffer, &position, MPI_COMM_WORLD);
 	  for (n = my_nmin; n < my_nmax; n++)
 	    {
-              MPI_Pack(&n, 1, MPI_INT, matom_commbuffer, size_of_matom_commbuffer, &position, MPI_COMM_WORLD);
-	      MPI_Pack (&plasmamain[n].kpkt_emiss, 1, MPI_DOUBLE, matom_commbuffer, size_of_matom_commbuffer, &position, MPI_COMM_WORLD);
-	      MPI_Pack (macromain[n].matom_emiss, NLEVELS_MACRO, MPI_DOUBLE, matom_commbuffer, size_of_matom_commbuffer, &position, MPI_COMM_WORLD);
+
+	     /* pack the number of the cell, and the kpkt and macro atom emissivites for that cell //*/
+	      MPI_Pack (&n, 1, MPI_INT, matom_commbuffer,
+			size_of_matom_commbuffer, &position, MPI_COMM_WORLD);
+	      MPI_Pack (&plasmamain[n].kpkt_emiss, 1, MPI_DOUBLE,
+			matom_commbuffer, size_of_matom_commbuffer, &position,
+			MPI_COMM_WORLD);
+	      MPI_Pack (macromain[n].matom_emiss, NLEVELS_MACRO, MPI_DOUBLE,
+			matom_commbuffer, size_of_matom_commbuffer, &position,
+			MPI_COMM_WORLD);
+
 	    }
 
-	  Log_parallel ("MPI task %d broadcasting matom emissivity information.\n", rank_global);
+	  Log_parallel
+	    ("MPI task %d broadcasting matom emissivity information.\n",
+	     rank_global);
 	}
 
 
       /* Set MPI_Barriers and broadcast information to other threads */
       MPI_Barrier (MPI_COMM_WORLD);
-      MPI_Bcast (matom_commbuffer, size_of_matom_commbuffer, MPI_PACKED, n_mpi, MPI_COMM_WORLD);
+      MPI_Bcast (matom_commbuffer, size_of_matom_commbuffer, MPI_PACKED,
+		 n_mpi, MPI_COMM_WORLD);
       MPI_Barrier (MPI_COMM_WORLD);
-      Log_parallel ("MPI task %d survived broadcasting matom emissivity information.\n", rank_global);
+      Log_parallel
+	("MPI task %d survived broadcasting matom emissivity information.\n",
+	 rank_global);
+
+
 
       position = 0;
 
@@ -2355,31 +2371,39 @@ get_matom_f ()
 
       if (rank_global != n_mpi)
 	{
-          MPI_Unpack(matom_commbuffer, size_of_matom_commbuffer, &position, &num_comm, 1, MPI_INT, MPI_COMM_WORLD);
+	  MPI_Unpack (matom_commbuffer, size_of_matom_commbuffer, &position,
+		      &num_comm, 1, MPI_INT, MPI_COMM_WORLD);
 	  for (n_mpi2 = 0; n_mpi2 < num_comm; n_mpi2++)
 	    {
 
-              MPI_Unpack(matom_commbuffer, size_of_matom_commbuffer, &position, &n, 1, MPI_INT, MPI_COMM_WORLD);
-	      MPI_Unpack (matom_commbuffer, size_of_matom_commbuffer, &position, &plasmamain[n].kpkt_emiss, 1, MPI_DOUBLE, MPI_COMM_WORLD);
-	      MPI_Unpack (matom_commbuffer, size_of_matom_commbuffer, &position, macromain[n].matom_emiss, NLEVELS_MACRO, MPI_DOUBLE, MPI_COMM_WORLD);
+	      /* unpack the number of the cell, and the kpkt and macro atom emissivites for that cell */
+	      MPI_Unpack (matom_commbuffer, size_of_matom_commbuffer,
+			  &position, &n, 1, MPI_INT, MPI_COMM_WORLD);
+	      MPI_Unpack (matom_commbuffer, size_of_matom_commbuffer,
+			  &position, &plasmamain[n].kpkt_emiss, 1, MPI_DOUBLE,
+			  MPI_COMM_WORLD);
+	      MPI_Unpack (matom_commbuffer, size_of_matom_commbuffer,
+			  &position, macromain[n].matom_emiss, NLEVELS_MACRO,
+			  MPI_DOUBLE, MPI_COMM_WORLD);
 	    }
 	}
     }
 
-
+  //MPI_Barrier (MPI_COMM_WORLD);
   /* this next loop just corrects lum to be the correct summed value in parallel mode */
-  for (n = 0; n < NPLASMA; n++)
+ /*for (n = 0; n < NPLASMA; n++)
     {
 
       for (mm = 0; mm < nlevels_macro; mm++)
 	{
 	  lum += macromain[n].matom_emiss[mm];
 	}
-    }
-    MPI_Barrier (MPI_COMM_WORLD);
+    }*/
+  //MPI_Barrier (MPI_COMM_WORLD);
 #endif
   geo.matom_radiation = 1;
-  free ( matom_commbuffer );
+
+
   return (lum);
 }
 

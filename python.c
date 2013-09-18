@@ -2239,7 +2239,7 @@ run -- 07jul -- ksl
 
 /* Finally done */
 #ifdef MPION
-  sprintf (dummy,"End of program, Thread %d only",my_rank);   // added so we make clear these are just errors for thread ngit status	
+  sprintf (dummy,"End of program, Thread %d only",my_rank);   // added so we make clear these are just errors for thread n	
   error_summary (dummy);	// Summarize the errors that were recorded by the program
   warning_summary (dummy);	// Summarize the warnings that were recorded by the program
   Log ("Run py_error.py for full error report.\n")
