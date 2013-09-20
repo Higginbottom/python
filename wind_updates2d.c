@@ -788,7 +788,7 @@ WindPtr (w);
 
 
 
-
+   free(commbuffer);
 
   return (0);
 }

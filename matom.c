@@ -3040,3 +3040,17 @@ q_recomb (cont_ptr, electron_temperature)
 
   return (coeff);
 }
+
+
+
+
+int print_big_py()
+{
+  printf("__________          __  .__                       \n");
+  printf("\______   \___.__._/  |_|  |__   ____   ____      \n");
+  printf("  |     ___<   |  |\   __\  |  \ /  _ \ /    \    \n");
+  printf("  |    |    \___  | |  | |   Y  (  <_> )   |  \   \n");
+  printf("  |____|    / ____| |__| |___|  /\____/|___|  /   \n");
+  printf("            \/                \/            \/    \n");
+  return 0;
+}

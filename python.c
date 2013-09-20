@@ -274,7 +274,7 @@ should allocate the space for the spectra to avoid all this nonsense.  02feb ksl
     my_rank = 0;
     np_mpi=1;
   #endif
-  
+  print_big_py();
   np_mpi_global = np_mpi;              /// Glob al variable which holds the number of MPI processes
   rank_global = my_rank;   /// Global variable which holds the rank of the active MPI process
 
@@ -328,7 +328,7 @@ should allocate the space for the spectra to avoid all this nonsense.  02feb ksl
 	      Log ("Restarting %s\n", root);
 	      restart_stat = 1;
 	    }
-	  if (strcmp (argv[i], "-t") == 0)
+	  else if (strcmp (argv[i], "-t") == 0)
 	    {
 	      if (sscanf (argv[i + 1], "%lf", &time_max) != 1)
 		{
@@ -2238,11 +2238,11 @@ run -- 07jul -- ksl
 
 
 /* Finally done */
-#ifdef MPION
+#ifdef MPI_ON
   sprintf (dummy,"End of program, Thread %d only",my_rank);   // added so we make clear these are just errors for thread n	
   error_summary (dummy);	// Summarize the errors that were recorded by the program
   warning_summary (dummy);	// Summarize the warnings that were recorded by the program
-  Log ("Run py_error.py for full error report.\n")
+  Log ("Run py_error.py for full error report.\n");
 #else
   error_summary ("End of program");	// Summarize the errors that were recorded by the program
   warning_summary ("End of program");	// Summarize the warnings that were recorded by the program

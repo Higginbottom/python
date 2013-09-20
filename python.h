@@ -23,6 +23,7 @@ int NPLASMA;			//The number of cells with non-zero volume or the size of plasma 
 
 char basename[132];		// The root of the parameter file name being used by python
 
+
 /* These are tunable parameters that control various aspects of python
  * and the assorted programs.  In some cases they affect the "care" with
  * which a calculation is made, and this can in principle affect the
