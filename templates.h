@@ -319,7 +319,6 @@ int photo_gen_matom(PhotPtr p, double weight, int photstart, int nphot);
 int emit_matom(WindPtr w, PhotPtr p, int *nres, int upper);
 double q_ioniz(struct topbase_phot *cont_ptr, double electron_temperature);
 double q_recomb(struct topbase_phot *cont_ptr, double electron_temperature);
-int print_big_py(void);
 /* estimators.c */
 int bf_estimators_increment(WindPtr one, PhotPtr p, double ds);
 int bb_estimators_increment(WindPtr one, PhotPtr p, double tau_sobolev, double dvds, int nn);

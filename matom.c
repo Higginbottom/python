@@ -442,7 +442,7 @@ matom (p, nres, escape)
 
       rad_rate = a21 (line_ptr) * p_escape (line_ptr, xplasma);
       /* JM130716 in some old versions the coll_rate was set incorrectly here- 
-         it needs to be multiplied by electron density */
+	 it needs to be multiplied by electron density */
       coll_rate = q21 (line_ptr, t_e) * ne;
 
       if (coll_rate < 0)
@@ -2030,27 +2030,12 @@ get_matom_f ()
   struct photon ppp;
   double contribution, norm;
   int nres, which_out;
-  int my_nmin, my_nmax;		//These variables are used even if not in parallel mode
-
-#ifdef MPI_ON
-  int num_mpi_cells, num_mpi_extra, position, ndo, n_mpi, num_comm, n_mpi2;
-  int size_of_matom_commbuffer;
-  char *matom_commbuffer;
-  size_of_matom_commbuffer = 8 * (NLEVELS_MACRO + 2) * (NPLASMA);
-
-  matom_commbuffer =
-    (char *) malloc (size_of_matom_commbuffer * sizeof (char));
-#endif
-
-
 
   which_out = 0;
   lum = 0.0;
   n_tries = 5000000;
   geo.matom_radiation = 0;
   n_tries_local = 0;
-
-
 
   norm = 0;
   for (n = 0; n < NPLASMA; n++)
@@ -2062,59 +2047,18 @@ get_matom_f ()
       norm += plasmamain[n].kpkt_abs;
     }
 
+  Log("Calculating macro atom emissivites- this might take a while...\n");
 
-
-  Log ("Calculating macro atom emissivities- this might take a while...\n");
-
-  /* For MPI parallelisation, the following loop will be distributed over multiple tasks. 
-     Note that the mynmim and mynmax variables are still used even without MPI on */
-  my_nmin = 0;
-  my_nmax = NPLASMA;
-
-#ifdef MPI_ON
-  num_mpi_cells = floor (NPLASMA / np_mpi_global);
-  num_mpi_extra = NPLASMA - (np_mpi_global * num_mpi_cells);
-  if (rank_global < num_mpi_extra)
-    {
-      my_nmin = rank_global * (num_mpi_cells + 1);
-      my_nmax = (rank_global + 1) * (num_mpi_cells + 1);
-    }
-  else
-    {
-      my_nmin =
-	num_mpi_extra * (num_mpi_cells + 1) + (rank_global -
-					       num_mpi_extra) *
-	(num_mpi_cells);
-      my_nmax =
-	num_mpi_extra * (num_mpi_cells + 1) + (rank_global - num_mpi_extra +
-					       1) * (num_mpi_cells);
-    }
-  ndo = my_nmax - my_nmin;
-
-  Log_parallel
-    ("Thread %d is calculating macro atom emissivities for macro atoms %d to %d\n",
-     rank_global, my_nmin, my_nmax);
-
-#endif
-
-
-
-  for (n = my_nmin; n < my_nmax; n++)
+  for (n = 0; n < NPLASMA; n++)
     {
 
-      /* JM 1309 -- these lines are just log statements which track progress, as this section
-         can take a long time */
-#ifdef MPI_ON
+
+      /* JM 1309 -- this line is just a log statement which tracks progress, as this section
+	 can take a long time */	
       if (n % 50 == 0)
-	Log
-	  ("Thread %d is calculating  macro atom emissivity for macro atom %7d of %7d or %6.3f per cent\n",
-	   rank_global, n, my_nmax, n * 100. / my_nmax);
-#else
-      if (n % 50 == 0)
-	Log
-	  ("Calculating macro atom emissivity for macro atom %7d of %7d or %6.3f per cent\n",
-	   n, my_nmax, n * 100. / my_nmax);
-#endif
+	Log("Calculating macro atom emissivity for macro atom %7d of %7d or %6.3f per cent\n", n, NPLASMA,
+		n * 100. / NPLASMA);
+
 
       for (m = 0; m < nlevels_macro + 1; m++)
 	{
@@ -2315,94 +2259,7 @@ get_matom_f ()
     }
 
 
-
-  /*This is the end of the update loop that is parallised. We now need to exchange data between the tasks. */
-#ifdef MPI_ON
-  for (n_mpi = 0; n_mpi < np_mpi_global; n_mpi++)
-    {
-      /* here we loop over the number of threads. If the thread is this thread then we pack the macromain information
-         into memory and then broadcast it to ther other threads */
-      position = 0;
-
-      if (rank_global == n_mpi)
-	{
-
-	  Log
-	    ("MPI task %d is working on matoms %d to max %d (total size %d).\n",
-	     rank_global, my_nmin, my_nmax, NPLASMA);
-
-	  MPI_Pack (&ndo, 1, MPI_INT, matom_commbuffer,
-		    size_of_matom_commbuffer, &position, MPI_COMM_WORLD);
-	  for (n = my_nmin; n < my_nmax; n++)
-	    {
-
-	     /* pack the number of the cell, and the kpkt and macro atom emissivites for that cell //*/
-	      MPI_Pack (&n, 1, MPI_INT, matom_commbuffer,
-			size_of_matom_commbuffer, &position, MPI_COMM_WORLD);
-	      MPI_Pack (&plasmamain[n].kpkt_emiss, 1, MPI_DOUBLE,
-			matom_commbuffer, size_of_matom_commbuffer, &position,
-			MPI_COMM_WORLD);
-	      MPI_Pack (macromain[n].matom_emiss, NLEVELS_MACRO, MPI_DOUBLE,
-			matom_commbuffer, size_of_matom_commbuffer, &position,
-			MPI_COMM_WORLD);
-
-	    }
-
-	  Log_parallel
-	    ("MPI task %d broadcasting matom emissivity information.\n",
-	     rank_global);
-	}
-
-
-      /* Set MPI_Barriers and broadcast information to other threads */
-      MPI_Barrier (MPI_COMM_WORLD);
-      MPI_Bcast (matom_commbuffer, size_of_matom_commbuffer, MPI_PACKED,
-		 n_mpi, MPI_COMM_WORLD);
-      MPI_Barrier (MPI_COMM_WORLD);
-      Log_parallel
-	("MPI task %d survived broadcasting matom emissivity information.\n",
-	 rank_global);
-
-
-
-      position = 0;
-
-      /* If not this thread then we unpack the macromain information from the other threads */
-
-      if (rank_global != n_mpi)
-	{
-	  MPI_Unpack (matom_commbuffer, size_of_matom_commbuffer, &position,
-		      &num_comm, 1, MPI_INT, MPI_COMM_WORLD);
-	  for (n_mpi2 = 0; n_mpi2 < num_comm; n_mpi2++)
-	    {
-
-	      /* unpack the number of the cell, and the kpkt and macro atom emissivites for that cell */
-	      MPI_Unpack (matom_commbuffer, size_of_matom_commbuffer,
-			  &position, &n, 1, MPI_INT, MPI_COMM_WORLD);
-	      MPI_Unpack (matom_commbuffer, size_of_matom_commbuffer,
-			  &position, &plasmamain[n].kpkt_emiss, 1, MPI_DOUBLE,
-			  MPI_COMM_WORLD);
-	      MPI_Unpack (matom_commbuffer, size_of_matom_commbuffer,
-			  &position, macromain[n].matom_emiss, NLEVELS_MACRO,
-			  MPI_DOUBLE, MPI_COMM_WORLD);
-	    }
-	}
-    }
-
-  //MPI_Barrier (MPI_COMM_WORLD);
-  /* this next loop just corrects lum to be the correct summed value in parallel mode */
- /*for (n = 0; n < NPLASMA; n++)
-    {
-
-      for (mm = 0; mm < nlevels_macro; mm++)
-	{
-	  lum += macromain[n].matom_emiss[mm];
-	}
-    }*/
-  //MPI_Barrier (MPI_COMM_WORLD);
-#endif
   geo.matom_radiation = 1;
-
 
   return (lum);
 }
@@ -3039,18 +2896,4 @@ q_recomb (cont_ptr, electron_temperature)
 
 
   return (coeff);
-}
-
-
-
-
-int print_big_py()
-{
-  printf("__________          __  .__                       \n");
-  printf("\______   \___.__._/  |_|  |__   ____   ____      \n");
-  printf("  |     ___<   |  |\   __\  |  \ /  _ \ /    \    \n");
-  printf("  |    |    \___  | |  | |   Y  (  <_> )   |  \   \n");
-  printf("  |____|    / ____| |__| |___|  /\____/|___|  /   \n");
-  printf("            \/                \/            \/    \n");
-  return 0;
 }

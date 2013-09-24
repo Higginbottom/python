@@ -274,7 +274,6 @@ should allocate the space for the spectra to avoid all this nonsense.  02feb ksl
     my_rank = 0;
     np_mpi=1;
   #endif
-  print_big_py();
   np_mpi_global = np_mpi;              /// Glob al variable which holds the number of MPI processes
   rank_global = my_rank;   /// Global variable which holds the rank of the active MPI process
 

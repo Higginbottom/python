@@ -95,7 +95,7 @@ python_objects = bb.o get_atomicdata.o photon2d.o photon_gen.o \
 		lines.o  continuum.o get_models.o emission.o recomb.o diag.o \
 		sv.o ionization.o  ispy.o   levels.o gradv.o reposition.o \
 		anisowind.o util.o density.o  detail.o bands.o time.o \
-		matom.o estimators.o wind_sum.o yso.o elvis.o cylindrical.o rtheta.o spherical.o  \
+		estimators.o wind_sum.o yso.o elvis.o cylindrical.o rtheta.o spherical.o  \
 		cylind_var.o bilinear.o gridwind.o partition.o signal.o auger_ionization.o \
 		agn.o shell_wind.o compton.o torus.o zeta.o dielectronic.o \
 		spectral_estimators.o variable_temperature.o matom_diag.o \
@@ -127,13 +127,13 @@ prototypes:
 	cp foo.h templates.h
 	cproto -I$(INCLUDE)  -I$(INCLUDE2) $(kpar_source) > log.h 
 
-python: startup  python.o $(python_objects)
-	$(CC)  ${CFLAGS} python.o $(python_objects) $(kpar_objects) $(LDFLAGS) -o python
+python: startup  python.o matom.o $(python_objects)
+	$(CC)  ${CFLAGS} python.o matom.o $(python_objects) $(kpar_objects) $(LDFLAGS) -o python
 		cp $@ $(BIN)/py
 		mv $@ $(BIN)/py$(VERSION)
 
-python_para: startup  python.o $(python_objects)
-	$(CC_PARA)  ${CFLAGS_PARA} python.o $(python_objects) $(kpar_objects) $(LDFLAGS) -o python_para
+python_para: startup matom_para.o python.o $(python_objects)
+	$(CC_PARA)  ${CFLAGS_PARA} python.o matom_para.o $(python_objects) $(kpar_objects) $(LDFLAGS) -o python_para
 		cp $@ $(BIN)/mpy
 		mv $@ $(BIN)/mpy$(VERSION)
 	
