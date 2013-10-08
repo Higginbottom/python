@@ -106,7 +106,7 @@ get_shell_wind_params ()
 
 /*120130 NSH This line stays as it is */
   rddoub ("shell.wind.acceleration_exponent", &geo.cl_beta);	/* Accleration scale exponent for a CL wind */
-  printf ("Geo rmax = %f\n", geo.rmax);
+  Log ("Geo rmax = %f\n", geo.rmax);
   shell_rmax = geo.wind_rmax = geo.rmax;
 /*120130 NSH These next lines invert the cl velocity equation to get the cl factors from the local shell factors */
   geo.cl_v_zero = shell_vmin;
@@ -133,9 +133,9 @@ get_shell_wind_params ()
 
 
 /* Since this is a diagnostic routine, we will write out some information to check it is doing what we think) */
-  printf ("shell rmin=%f shell rmax=%f\n", shell_rmin, shell_rmax);
+  Log ("shell rmin=%f shell rmax=%f\n", shell_rmin, shell_rmax);
   dr = (shell_rmax - shell_rmin) / 100.0000;
-  printf ("dr= %e, root2= %10.30e\n", dr, pow (2.0, 0.5));
+  Log ("dr= %e, root2= %10.30e\n", dr, pow (2.0, 0.5));
   rmin = shell_rmin - (dr);
 
   for (i = 0; i < 103; i++)
@@ -147,7 +147,7 @@ get_shell_wind_params ()
       speedtemp = stellar_velocity (postemp, vtemp);
       rhotemp[i] = stellar_rho (postemp) * rho2nh;
 //              dvtemp[i]=shell_dv(postemp);
-      printf ("ring=%i,x=%e,r=%10.30e,speed=%10.20e,density=%10.20e\n", i,
+      Log ("ring=%i,x=%e,r=%10.30e,speed=%10.20e,density=%10.20e\n", i,
 	      r[i] / pow (2.0, 0.5), r[i], speedtemp, rhotemp[i]);
     }
 
@@ -156,7 +156,7 @@ get_shell_wind_params ()
     {
       cdensity += ((rhotemp[i] + rhotemp[i + 1]) / 2.) * dr;
     }
-  printf ("Column density of hydrogen=%e\n", cdensity);
+  Log ("Column density of hydrogen=%e\n", cdensity);
 
 
   return (0);

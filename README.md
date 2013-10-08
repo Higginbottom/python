@@ -1,24 +1,51 @@
 
-README 
+#Python 76a README 
+
+This is the README file for Python76b
+
+* Significant progress in reporting in this version.
+	* it requires kpar_76b_1
+	* Thread 0 is the only one which prints to screen
+	* the exception being with parallel messages, which are printed to screen for all threads using new kpar function Log_parallel
+	* Error summaries are collated with scripts py_error.py and watchdog.py
+	* xsignal only writes to sig file for zeroth thread
+	* Diag file now saved under diag_root folder
+	* multiple printf and comment statement cleanup
+
+* Bugfixes
+	* #29 free free issues- some major free free issues fixed by NSH
+		* Fixed errors in the calculation of gaunt factors
+		* Error in Z in Sutherland data gives wrong f-f- heating for nenautral H regions
+		* Error in reset of array pop_kappa_ff_array() gives too high f-f heating
+	* #23 printf statements in code- largely dealt with
+	* Bug fix in rtheta.c check which fails when grid not square due to incorrect MDIM, NDIM order
+	* #28 wrong collisional deactivation rate in matom()
+	* #31 incorrect loop in bf_estimators_increment which reporting wrong matom heating
+	* Incorrect helper array sizes in python.c- this is a fairly major change in terms of lines of code
+	
+* makefile syntax edited to make D python for debugging mode
+
+* Code improvements / enhancements
+	* Incorporated a new scheme for zeus data. Now if you ask for rtheta with 'proga' it generates a grid based on the zeus grid
+	* changes to ionization.c and wind_updates2d.c to move adiabatic cooling from part of the temperature dependant cooling into the 'fixed' heating side
+	* Minor change to py_wind_sub, velocity components now correctly written to x,y,z files rather than rho, theta, z files. Also py_wind_write now outputs x and z coordinates to 4 dp, which permits r theta grids to be properly described
+	* Changes to the 'e' option in pywind, to get it to report all heating and cooling mechanisms correctly
+	* maximum temperature implemented in ionization.c for proga models
+	* 
+
+* Files changed:
+	* too many to list
+	* major changes in
+		* rtheta.c, python.c, ionization.c
+
 ***
-=========
-
-#Python 75e
-
-This is the README file for Python75e. 
-
-* Precursor is python_75d 
-* This version should be identical to 75e except that GNU indent has been run on it
-
-***
-==========
 
 # Getting the radiative transfer code 'Python'
 
 You can download the required structure under the structure branch. e.g.
 git clone https://github.com/agnwinds/python.git -b structure
 or simply click on the 'zip' button!
-
+THIS DOESN'T WORK YET!
 
 
 Releases of progs can be found under [tags](https://github.com/agnwinds/python/tags "Wiki").
@@ -27,7 +54,6 @@ Consult the [wiki](https://github.com/agnwinds/python/wiki/_pages "Wiki") for ho
 
 
 ***
-===========
 
 # Basic Git Instructions
 
@@ -50,7 +76,6 @@ commit all changes to local repo with commit message:
 $ git commit -am 'Changed something in file.c'
 
 ***
-===========
 
 # Original README file from KSL
 

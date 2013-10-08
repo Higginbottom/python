@@ -136,7 +136,7 @@ compute_zeta (temp, nion, mode)
 	ground_frac[nion].frac[ilow] +
 	interpfrac * (ground_frac[nion].frac[ihi] -
 		      ground_frac[nion].frac[ilow]);
-//      printf ("for t_e=%f, ilow=%i, ihi=%i, interpfrac=%f, zeta=%f\n",temp,ilow,ihi,interpfrac,zeta);
+//      Log ("for t_e=%f, ilow=%i, ihi=%i, interpfrac=%f, zeta=%f\n",temp,ilow,ihi,interpfrac,zeta);
     }
   else if (mode == 2)		//Best try at full blown zeta including DR, if we have the data, else default to the old way of doing things....
     {
@@ -148,11 +148,11 @@ compute_zeta (temp, nion, mode)
 		{
 		  zeta =
 		    badnell_gs_rr (nion, temp) / total_rrate (nion, temp);
-//                              printf ("We have the data, and zeta=%f\n",zeta);
+//                              Log ("We have the data, and zeta=%f\n",zeta);
 		}
 	      else		//We are going to have to integrate
 		{
-		  printf
+		  Log
 		    ("We do not have tabulated GS data for state %i of element %i\n",
 		     ion[nion].istate, ion[nion].z);
 		  zeta = milne_gs_rr (nion, temp) / total_rrate (nion, temp);
@@ -164,7 +164,7 @@ compute_zeta (temp, nion, mode)
 		ground_frac[nion].frac[ilow] +
 		interpfrac * (ground_frac[nion].frac[ihi] -
 			      ground_frac[nion].frac[ilow]);
-//                      printf ("We dont have the data and zeta=%f\n",zeta);
+//                      Log ("We dont have the data and zeta=%f\n",zeta);
 	    }
 	}
       else
@@ -195,7 +195,7 @@ compute_zeta (temp, nion, mode)
 		ground_frac[nion].frac[ilow] +
 		interpfrac * (ground_frac[nion].frac[ihi] -
 			      ground_frac[nion].frac[ilow]);
-//                      printf ("We dont have the data and zeta=%f\n",zeta);
+//                      Log ("We dont have the data and zeta=%f\n",zeta);
 	    }
 	}
 
@@ -205,5 +205,8 @@ compute_zeta (temp, nion, mode)
     {
       Error ("Compute zeta: Unkown mode %i \n", mode);
     }
+
+  //printf("element %d ion %d zeta %g\n", ion[nion].z, ion[nion].istate, zeta);
+
   return (zeta);
 }

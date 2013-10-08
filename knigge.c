@@ -147,11 +147,8 @@ in units of WD radii */
  */
 
   geo.xlog_scale = geo.rstar;
-  
-  //if (geo.rt_mode==2)
-  geo.zlog_scale = 1e7;
-  //else
-  //  geo.zlog_scale = geo.rstar;
+  geo.zlog_scale = geo.rstar;
+
 
 
 /*Now calculate the normalization factor for the wind*/

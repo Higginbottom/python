@@ -188,9 +188,8 @@ wind_read (filename)
 
   if (geo.nmacro > 0)
     {
-      calloc_macro (2*NPLASMA);
+      calloc_macro (NPLASMA);
       n += fread (macromain, sizeof (macro_dummy), NPLASMA, fptr);
-
       calloc_estimators (NPLASMA);
 
       for (m = 0; m < NPLASMA; m++)

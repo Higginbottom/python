@@ -151,7 +151,7 @@ lum_lines (one, nmin, nmax)
 	    }
 	  if (sane_check (x) != 0)
 	    {
-	      printf ("total_line_emission:sane_check %e %e\n", x, z);
+	      Error ("total_line_emission:sane_check %e %e\n", x, z);
 	    }
 	}
       else
@@ -565,7 +565,7 @@ scattering_fraction (line_ptr, xplasma)
 //Populate variable from previous calling structure
   ne = xplasma->ne;
   te = xplasma->t_e;
-  tr = xplasma->t_e;
+  tr = xplasma->t_r;	//JM1308 in pre 76b versions this was incorrectly set to xplasma->t_e
   w = xplasma->w;
   dvds = wmain[xplasma->nwind].dvds_ave;
   dd = xplasma->density[line_ptr->nion];
@@ -635,7 +635,7 @@ p_escape (line_ptr, xplasma)
 //Populate variable from previous calling structure
   ne = xplasma->ne;
   te = xplasma->t_e;
-  tr = xplasma->t_e;
+  tr = xplasma->t_r;	//JM1308 in pre 76b versions this was incorrectly set to xplasma->t_e
   w = xplasma->w;
   dd = xplasma->density[line_ptr->nion];
   dvds = wmain[xplasma->nwind].dvds_ave;
@@ -665,7 +665,7 @@ p_escape (line_ptr, xplasma)
 
       tau = (d1 - line_ptr->gl / line_ptr->gu * d2);
       tau *= PI_E2_OVER_M * line_ptr->f / line_ptr->freq / dvds;
-//      printf ("LINE ESCAPE dvds=%e tau=%e\n",dvds,tau);
+
       if (tau < 1e-6)
 	escape = 1.;
       else if (tau < 10.0)

@@ -367,7 +367,7 @@ calloc_macro (nelem)
 
   if (nlevels_macro == 0 && geo.nmacro == 0)
     {
-      //OLD71 - line is redundnat geo.nmacro = 0;
+      
       Log
 	("calloc_macro: Allocated no space for macro since nlevels_macro==0 and geo.nmacro==0\n");
       return (0);
@@ -376,6 +376,7 @@ calloc_macro (nelem)
     {
       free (macromain);
     }
+
   //Allocate one extra element to store data where there is no volume
 
   macromain = (MacroPtr) calloc (sizeof (macro_dummy), (nelem + 1));
@@ -419,6 +420,7 @@ the number of elements
 		if necessary, but the way this is construced makes it easy to
 		cause errors and it is not obvious how to check this until
 		we put a macro model back in
+130625  JM      Commented out free statements due to PYWIND MALLOC MATOM BUG
  */
 
 
@@ -438,12 +440,10 @@ calloc_estimators (nelem)
   //Allocate one extra element to store data where there is no volume
 
 
-
-
-  // printf("nlevels_macro %d\n", nlevels_macro);
   size_Jbar_est = 0;
   size_gamma_est = 0;
   size_alpha_est = 0;
+
   for (n = 0; n < nlevels_macro; n++)
     {
       Log
@@ -468,10 +468,11 @@ calloc_estimators (nelem)
 
   for (n = 0; n < nelem; n++)
     {
-      if (macromain[n].jbar != NULL)
+      /* JM130625: Commented out free statements due to PYWIND MALLOC MATOM BUG
+	 if (macromain[n].jbar != NULL)
 	{
-          //free (macromain[n].jbar);
-	}
+	  free (macromain[n].jbar);
+	}*/
       if ((macromain[n].jbar =
 	   calloc (sizeof (double), size_Jbar_est)) == NULL)
 	{
@@ -480,10 +481,10 @@ calloc_estimators (nelem)
 	  exit (0);
 	}
 
-      if (macromain[n].jbar_old != NULL)
+      /*if (macromain[n].jbar_old != NULL)
 	{
-	  //free (macromain[n].jbar_old);
-	}
+	  free (macromain[n].jbar_old);
+	}*/
       if ((macromain[n].jbar_old =
 	   calloc (sizeof (double), size_Jbar_est)) == NULL)
 	{
@@ -492,10 +493,10 @@ calloc_estimators (nelem)
 	  exit (0);
 	}
 
-      if (macromain[n].gamma != NULL)
+      /*if (macromain[n].gamma != NULL)
 	{
-	  //free (macromain[n].gamma);
-	}
+	  free (macromain[n].gamma);
+	}*/
       if ((macromain[n].gamma =
 	   calloc (sizeof (double), size_gamma_est)) == NULL)
 	{
@@ -504,10 +505,10 @@ calloc_estimators (nelem)
 	  exit (0);
 	}
 
-      if (macromain[n].gamma_old != NULL)
+      /*if (macromain[n].gamma_old != NULL)
 	{
-	  //free (macromain[n].gamma_old);
-	}
+	  free (macromain[n].gamma_old);
+	}*/
       if ((macromain[n].gamma_old =
 	   calloc (sizeof (double), size_gamma_est)) == NULL)
 	{
@@ -516,10 +517,10 @@ calloc_estimators (nelem)
 	  exit (0);
 	}
 
-      if (macromain[n].gamma_e != NULL)
+      /*if (macromain[n].gamma_e != NULL)
 	{
-	  //free (macromain[n].gamma_e);
-	}
+	  free (macromain[n].gamma_e);
+	}*/
       if ((macromain[n].gamma_e =
 	   calloc (sizeof (double), size_gamma_est)) == NULL)
 	{
@@ -528,10 +529,10 @@ calloc_estimators (nelem)
 	  exit (0);
 	}
 
-      if (macromain[n].gamma_e_old != NULL)
+      /*if (macromain[n].gamma_e_old != NULL)
 	{
-	  //free (macromain[n].gamma_e_old);
-	}
+	  free (macromain[n].gamma_e_old);
+	}*/
       if ((macromain[n].gamma_e_old =
 	   calloc (sizeof (double), size_gamma_est)) == NULL)
 	{
@@ -540,10 +541,10 @@ calloc_estimators (nelem)
 	  exit (0);
 	}
 
-      if (macromain[n].alpha_st != NULL)
+      /*if (macromain[n].alpha_st != NULL)
 	{
-	  //free (macromain[n].alpha_st);
-	}
+	  free (macromain[n].alpha_st);
+	}*/
       if ((macromain[n].alpha_st =
 	   calloc (sizeof (double), size_gamma_est)) == NULL)
 	{
@@ -552,10 +553,10 @@ calloc_estimators (nelem)
 	  exit (0);
 	}
 
-      if (macromain[n].alpha_st_old != NULL)
+      /*if (macromain[n].alpha_st_old != NULL)
 	{
-	  //free (macromain[n].alpha_st_old);
-	}
+	  free (macromain[n].alpha_st_old);
+	}*/
       if ((macromain[n].alpha_st_old =
 	   calloc (sizeof (double), size_gamma_est)) == NULL)
 	{
@@ -564,10 +565,10 @@ calloc_estimators (nelem)
 	  exit (0);
 	}
 
-      if (macromain[n].alpha_st_e != NULL)
+      /*if (macromain[n].alpha_st_e != NULL)
 	{
-	  //free (macromain[n].alpha_st_e);
-	}
+	  free (macromain[n].alpha_st_e);
+	}*/
       if ((macromain[n].alpha_st_e =
 	   calloc (sizeof (double), size_gamma_est)) == NULL)
 	{
@@ -576,10 +577,10 @@ calloc_estimators (nelem)
 	  exit (0);
 	}
 
-      if (macromain[n].alpha_st_e_old)
+      /*if (macromain[n].alpha_st_e_old)
 	{
-	  //free (macromain[n].alpha_st_e_old);
-	}
+	  free (macromain[n].alpha_st_e_old);
+	}*/
       if ((macromain[n].alpha_st_e_old =
 	   calloc (sizeof (double), size_gamma_est)) == NULL)
 	{
@@ -588,10 +589,10 @@ calloc_estimators (nelem)
 	  exit (0);
 	}
 
-      if (macromain[n].recomb_sp != NULL)
+      /*if (macromain[n].recomb_sp != NULL)
 	{
-	  //free (macromain[n].recomb_sp);
-	}
+	  free (macromain[n].recomb_sp);
+	}*/
       if ((macromain[n].recomb_sp =
 	   calloc (sizeof (double), size_alpha_est)) == NULL)
 	{
@@ -600,10 +601,10 @@ calloc_estimators (nelem)
 	  exit (0);
 	}
 
-      if (macromain[n].recomb_sp_e != NULL)
+      /*if (macromain[n].recomb_sp_e != NULL)
 	{
-	  //free (macromain[n].recomb_sp_e);
-	}
+	  free (macromain[n].recomb_sp_e);
+	}*/
       if ((macromain[n].recomb_sp_e =
 	   calloc (sizeof (double), size_alpha_est)) == NULL)
 	{
@@ -612,10 +613,10 @@ calloc_estimators (nelem)
 	  exit (0);
 	}
 
-      if (macromain[n].matom_emiss != NULL)
+      /*if (macromain[n].matom_emiss != NULL)
 	{
-	  //free (macromain[n].matom_emiss);
-	}
+	  free (macromain[n].matom_emiss);
+	}*/
       if ((macromain[n].matom_emiss =
 	   calloc (sizeof (double), nlevels_macro)) == NULL)
 	{
@@ -624,10 +625,10 @@ calloc_estimators (nelem)
 	  exit (0);
 	}
 
-      if (macromain[n].matom_abs != NULL)
+      /*if (macromain[n].matom_abs != NULL)
 	{
-	  //free (macromain[n].matom_abs);
-	}
+	  free (macromain[n].matom_abs);
+	}*/
       if ((macromain[n].matom_abs =
 	   calloc (sizeof (double), nlevels_macro)) == NULL)
 	{
@@ -637,10 +638,10 @@ calloc_estimators (nelem)
 	}
 
       /* Added ksl 091103 59e */
-      if (macromain[n].cooling_bf != NULL)
+      /*if (macromain[n].cooling_bf != NULL)
 	{
-	  //free (macromain[n].cooling_bf);
-	}
+	  free (macromain[n].cooling_bf);
+	}*/
       if ((macromain[n].cooling_bf =
 	   calloc (sizeof (double), ntop_phot)) == NULL)
 	{
@@ -649,10 +650,10 @@ calloc_estimators (nelem)
 	  exit (0);
 	}
 
-      if (macromain[n].cooling_bf_col != NULL)
+      /*if (macromain[n].cooling_bf_col != NULL)
 	{
-	  //free (macromain[n].cooling_bf_col);
-	}
+	  free (macromain[n].cooling_bf_col);
+	}*/
       if ((macromain[n].cooling_bf_col =
 	   calloc (sizeof (double), ntop_phot)) == NULL)
 	{
@@ -661,10 +662,10 @@ calloc_estimators (nelem)
 	  exit (0);
 	}
 
-      if (macromain[n].cooling_bb != NULL)
+      /*if (macromain[n].cooling_bb != NULL)
 	{
-	  //free (macromain[n].cooling_bb);
-	}
+	  free (macromain[n].cooling_bb);
+	}*/
       if ((macromain[n].cooling_bb =
 	   calloc (sizeof (double), nlines)) == NULL)
 	{

@@ -141,10 +141,9 @@ radiation (p, ds)
 
   kappa_tot = frac_ff = kappa_ff (xplasma, freq);	/* Add ff opacity */
   kappa_tot += frac_comp = kappa_comp (xplasma, freq);	/* 70 NSH 1108 calculate compton opacity, store it in kappa_comp and also add it to kappa_tot, the total opacity for the photon path */
-  kappa_tot += frac_ind_comp = kappa_ind_comp (xplasma, freq, ds, p->w);
+  kappa_tot += frac_ind_comp = kappa_ind_comp (xplasma, freq);
   frac_tot = frac_z = 0;	/* 59a - ksl - Moved this line out of loop to avoid warning, but notes 
 				   indicate this is all disagnostic and might be removed */
-//      printf ("In radiation we have ds=%e, W=%e, nu=%e\n",ds,p->w,p->freq);
 
   if (freq > phot_freq_min)
 
@@ -184,7 +183,6 @@ of the energy that goes into heating electrons carefully.  */
 		    {
 		      kappa_tot += x =
 			sigma_phot_topbase (x_top_ptr, freq) * density;
-//              printf("Freq=%e, lower level=%i, ion=%i sigma=%e\n",freq,nconf,phot_top_ptr[n]->z,sigma_phot_topbase (x_top_ptr, freq));
 /* I believe most of next steps are totally diagnsitic; it is possible if 
 statement could be deleted entirely 060802 -- ksl */
 		      if (geo.ioniz_or_extract)	// 57h -- ksl -- 060715
@@ -339,15 +337,6 @@ statement could be deleted entirely 060802 -- ksl */
   if (p->freq > xplasma->max_freq)
     xplasma->max_freq = p->freq;
 
-
-//wind_n_to_if(one->nwind,&ii,&jj);  ??? Not complete. Intended to allow more flexible tracking of photon spectra  ksl 1108
-//if ii==ndim/2:  // 110804 - ksl - Adapt to print out a column in the middle no matter what the dimensions
-//      if (one->nwind > 59 && one->nwind < 90)
-//  1.75e16 <     (2*sqrt(one->xcen[0]*one->xcen[0]+one->xcen[1]*one->xcen[1]) - sqrt(one->x[0]*one->x[0]+one->x[1]*one->x[1]))) 
-//      if (geo.wind_type == 9)
-//      if (one->nwind==22)
-//printf ("PHOTON_DETAILS %3d %3d %3d %8.3e %8.3e %8.3e cell%3d wind cell%3d %e %e %e\n",geo.wcycle,ii,jj,p->freq,w_ave,ds,one->nplasma,one->nwind,p->w,w_in,tau);
-
   if (diag_on_off == 1 && ncstat > 0)
     {
       for (i = 0; i < ncstat; i++)
@@ -437,10 +426,10 @@ statement could be deleted entirely 060802 -- ksl */
   for (n = 0; n < nauger; n++)
     {
       ft = augerion[n].freq_t;
-      //printf("Auger tests: %g %g %g\n", augerion[n].freq_t, freq, p->freq);
+      //Log("Auger tests: %g %g %g\n", augerion[n].freq_t, freq, p->freq);
       if (p->freq > ft)
 	{
-	  //      printf("Adding a packet to AUGER via radiation %g \n", freq);
+	  //      Log("Adding a packet to AUGER via radiation %g \n", freq);
 
 	  weight_of_packet = w_ave;
 	  x = sigma_phot_verner (&augerion[n], freq);	//this is the cross section
@@ -568,8 +557,13 @@ sigma_phot (x_ptr, freq)
       /* This was line fixed by CK in 1998 Jul */
       f1 = (x - 1.0) * (x - 1.0) + x_ptr->yw * x_ptr->yw;
 
-      f2 = pow (y, 0.5 * x_ptr->p - 5.5);
-      f3 = pow (1.0 + sqrt (y / x_ptr->ya), -x_ptr->p);
+ //     f2 = pow (y, 0.5 * x_ptr->p - 5.5);
+      f2=exp((0.5 * x_ptr->p - 5.5)*log(y));
+
+//     f3 = pow (1.0 + sqrt (y / x_ptr->ya), -x_ptr->p);
+	f3 = exp(( -x_ptr->p)*log((1.0 + sqrt (y / x_ptr->ya))));
+
+
       xsection = x_ptr->sigma * f1 * f2 * f3;	// the photoinization xsection
 
 /* Store crossesction for future use */
@@ -637,9 +631,9 @@ sigma_phot_topbase (x_ptr, freq)
       if ((fbot = x_ptr->freq[nlast]) < freq
 	  && freq < (ftop = x_ptr->freq[nlast + 1]))
 	{
-	  frac = (freq - fbot) / (ftop - fbot);
+	  frac = (log(freq) - log(fbot)) / (log(ftop) - log(fbot));
 	  xsection =
-	    (1. - frac) * x_ptr->x[nlast] + frac * x_ptr->x[nlast + 1];
+	    exp((1. - frac) * log(x_ptr->x[nlast]) + frac * log(x_ptr->x[nlast + 1]));
 	  //Store the results
 	  x_ptr->sigma = xsection;
 	  x_ptr->f = freq;
@@ -650,7 +644,8 @@ sigma_phot_topbase (x_ptr, freq)
 /* If got to here, have to go the whole hog in calculating the x-section */
   nmax = x_ptr->np;
   x_ptr->nlast =
-    linterp (freq, &x_ptr->freq[0], &x_ptr->x[0], nmax, &xsection);
+    linterp (freq, &x_ptr->freq[0], &x_ptr->x[0], nmax, &xsection,1); //call linterp in log space
+
 
   //Store the results
   x_ptr->sigma = xsection;
@@ -805,28 +800,37 @@ pop_kappa_ff_array ()
   double gsqrd, gaunt, sum;
   int i, j;
 
-  sum = 0.0;
+
   for (i = 0; i < NPLASMA + 1; i++)
     {
-      for (j = 0; j < nions; j++)
+    sum = 0.0;
+    for (j = 0; j < nions; j++)
 	{
-	  gsqrd =
-	    (ion[j].z * ion[j].z * RYD2ERGS) / (BOLTZMANN *
+	if (ion[j].istate != 1) //The neutral ion does not contribute
+		{
+	gsqrd =
+	    ((ion[j].istate-1) * (ion[j].istate-1) * RYD2ERGS) / (BOLTZMANN *
 						plasmamain[i].t_e);
-	  gaunt = gaunt_ff (gsqrd);
-	  sum += plasmamain[i].density[j] * ion[j].z * ion[j].z * gaunt;
+	gaunt = gaunt_ff (gsqrd);
+	sum += plasmamain[i].density[j] * (ion[j].istate-1) * (ion[j].istate-1) * gaunt;
 	  /* 74a_ksl  Added to diagnose problem with kappa_ff_fact producing NaN */
-	  if (sane_check (sum))
+        if (sane_check (sum))
 	    {
 	      Error
 		("pop_kappa_ff_array:sane_check sum is %e this is a problem, possible in gaunt %3\n",
 		 sum, gaunt);
 	    }
+		}
+	else
+		{
+		sum+=0.0;//add nothing to the sum if we have a neutral ion
+		}
 
 	}
       plasmamain[i].kappa_ff_factor = plasmamain[i].ne * sum * 3.692e8;
-
-    }
+}
 
   return (0);
 }
+
+

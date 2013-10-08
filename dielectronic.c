@@ -175,7 +175,6 @@ total_dr (one, t_e)
       if (ion[n].drflag == 0)	//We have no DR for this ion.
 	{
 	  x += 0.0;		//Add nothing to the sum of coefficients
-//              printf ("DDDDDD ion %i has no DR coefficients\n",n);
 	}
       else
 	{
@@ -183,7 +182,6 @@ total_dr (one, t_e)
 	    one->vol * xplasma->ne * xplasma->density[n +
 						      1] * dr_coeffs[n] *
 	    meanke;
-//              printf ("DDDDDD ion %i has DR lum of %e\n",n, one->vol * xplasma->ne * xplasma->density[n] * dr_coeffs[n] * meanke);
 	}
     }
   return (x);

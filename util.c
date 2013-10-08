@@ -94,11 +94,12 @@ History:
 
 
 int
-fraction (value, array, npts, ival, f)
+fraction (value, array, npts, ival, f, mode)
      double array[];		// The array in we want to search
      int npts, *ival;		// ival is the lower point
      double value;		// The value we want to index
      double *f;			// The fractional "distance" to the next point in the array
+     int mode;        // 0 = compute in lin space, 1=compute in log space
 {
   int imin, imax, ihalf;
 
@@ -139,13 +140,24 @@ to reflect the behavior of the search routine in where_in_grid. */
     }
 
 // So array[imin] just <= value
-
-  *f = (value - array[imin]) / (array[imax] - array[imin]);
+  if (mode==0)
+  	*f = (value - array[imin]) / (array[imax] - array[imin]);        //linear interpolation 
+  else if (mode==1)
+  	*f = (log(value) - log(array[imin])) / (log(array[imax]) - log(array[imin]));     //log interpolation
+  else
+	{
+	Error("Fraction - unknown mode %i\n",mode);
+	exit(0);
+	}
 
   *ival = imin;
 
   return (0);
 }
+
+
+
+
 
 /* 
 Given a number x, and an array of x's in xarray, and functional
@@ -161,21 +173,35 @@ circumstances
 */
 
 int
-linterp (x, xarray, yarray, xdim, y)
+linterp (x, xarray, yarray, xdim, y, mode)
      double x;			// The value that we wish to index i
      double xarray[], yarray[];
      int xdim;
      double *y;
+     int mode;      //0 = linear, 1 = log
 {
   int nelem;
   double frac;
   int ierr;
-  ierr = fraction (x, xarray, xdim, &nelem, &frac);
-  *y = (1. - frac) * yarray[nelem] + frac * yarray[nelem + 1];
+  ierr = fraction (x, xarray, xdim, &nelem, &frac, mode);
+
+
+  if (mode==0)
+  	*y = (1. - frac) * yarray[nelem] + frac * yarray[nelem + 1];
+  else if (mode==1)
+	*y = exp((1. - frac) * log(yarray[nelem]) + frac * log(yarray[nelem + 1]));
+  else
+	{
+	Error("linterp - unknown mode %i\n",mode);
+	exit(0);
+	}
 
   return (nelem);
 
 }
+
+
+
 
 /***********************************************************
            Space Telescope Science Institute
@@ -245,6 +271,8 @@ History:
 			which is in cylindvar.c.  PROBABLY THIS ROUTINE
 			SHOULD BE REWRITTEN SO THIS IS THE CASE
 			FOR ALL COORDINATE SYSTEMS.
+	13sep	nsh	76b -- Modified calls to fraction to take
+			account of new mode.
 		       	
 
 **************************************************************/
@@ -326,7 +354,7 @@ coord_fraction (ichoice, x, ii, frac, nelem)
 
   if (geo.coord_type == SPHERICAL)
     {				/* We are dealing with a 1d system */
-      fraction (r, xx, NDIM, &ix, &dr);
+      fraction (r, xx, NDIM, &ix, &dr, 0); //linear space
       ii[0] = ix;
       frac[0] = (1. - dr);
       ii[1] = ix + 1;
@@ -339,8 +367,8 @@ coord_fraction (ichoice, x, ii, frac, nelem)
     }
   else
     {				/* We are dealing with a 2d system */
-      fraction (r, xx, NDIM, &ix, &dr);
-      fraction (z, zz, MDIM, &iz, &dz);
+      fraction (r, xx, NDIM, &ix, &dr, 0);
+      fraction (z, zz, MDIM, &iz, &dz, 0);
 
       ii[0] = ix * MDIM + iz;
       frac[0] = (1. - dz) * (1. - dr);
@@ -517,9 +545,13 @@ wind_n_to_ij (n, i, j)
     {
       *i = n;
       *j = 0;
-      Error
+/*  130624 - ksl - Removed this error as it program appears to be working as intended
+ *  and there are times when this routine should be called for spherical models
+ *  since we basically still have a 2d grid in this case      
+       Error
 	("Warning: wind_n_to_ij being called for spherical coordinates %d \n",
 	 n);
+*/
     }
   *i = n / MDIM;
   *j = n - (*i) * MDIM;

@@ -1,7 +1,16 @@
+#ifdef MPI_ON
+#include "mpi.h"
+#endif 
+
+int np_mpi_global;               /// Global variable which holds the number of MPI processes
+int rank_global; 
 
 #define DEBUG 				0	/* 0 means do not debug */
 int verbosity;			/* verbosity level. 0 low, 10 is high */
 
+/* the functions contained in log., rdpar.c and lineio.c are
+   declare deparately from templates. This is because some functions
+   only use log.h and don't use python.h due to repeated definitions */
 #include "log.h"
 
 /* In python_43 the assignment of the WindPtr size has been moved from a fixed
@@ -26,6 +35,8 @@ char basename[132];		// The root of the parameter file name being used by python
 double dfudge;			// This is the push-through distance
 double DFUDGE;
 #define VCHECK	1.e6		// The maximum allowable error in calculation of the velocity in calculate_ds
+
+
 
 /* 57h -- Changed several defined variables to numbers to allow one to vary them 
 in the process of running the code */
@@ -296,6 +307,7 @@ struct geometry
   double lum_comp;		/*1108 NSH The luminosity of the wind as a result of compton cooling */
   double lum_dr;		/*1109 NSH The luminosity of the wind due to dielectronic recombination */
   double lum_adiabatic;		/*1209 NSH The cooling of the wind due to adiabatic expansion */
+  double heat_adiabatic;		/*1307 NSH The heating of the wind due to adiabatic heating - split out from lum_adiabatic to get an accurate idea of whether it is important */
   double f_tot, f_star, f_disk, f_bl, f_agn, f_wind;	/* The integrated specific L between a freq min and max which are
 							   used to establish the fraction of photons of various types */
 
@@ -603,7 +615,7 @@ typedef struct plasma
   int scatters[NIONS];		/* 68b - The number of scatters in this cell for each ion. */
   double xscatters[NIONS];	/* 68b - Diagnostic measure of energy scattered out of beam on extract */
   double heat_ion[NIONS];	/* The amount of energy being transferred to the electron pool
-				   by this ion via photoionization */
+				   sby this ion via photoionization */
   double lum_ion[NIONS];	/* The amount of energy being released from the electron pool
 				   by this ion via recombination */
   double j, ave_freq, lum;	/*Respectively mean intensity, intensity_averaged frequency, 
@@ -639,10 +651,12 @@ typedef struct plasma
 							   number is the fraction between heating and cooling divided by the sum of the 2       */
   int trcheck, techeck, hccheck;	/* NSH the individual convergence checks used to calculate converge_whole.  Each of these values
 					   is 0 if the fractional change or in the case of the last check error is less than a value, currently
-					   set to 0.05.  ksl 111126      */
+					   set to 0.05.  ksl 111126   
+NSH 130725 - this number is now also used to say if the cell is over temperature - it is set to 2 in this case   */
   int converge_whole, converging;	/* converge_whole is the sum of the indvidual convergence checks.  It is 0 if all of the
 					   convergence checks indicated convergence.subroutine convergence feels point is converged, converging is an
 					   indicator of whether the program thought the cell is on the way to convergence 0 implies converging */
+
 
 
   double gamma_inshl[NAUGER];	/*MC estimator that will record the inner shell ionization rate - very similar to macro atom-style estimators */
@@ -797,6 +811,8 @@ phot.istat below */
 /* ??? TMIN appears to be used both for the minimum temperature and for 
    calculating the fraction of recombinations that go to the ground state.  This
    looks like a problem ksl-98jul???? */
+
+#define TMAX    5e8/*NSH 130725 - this is the maximum temperature permitted - this was introduced following problems with adaibatically heated cells increasing forever. The value was suggested by DP as a sensible compton teperature for the PK05/P05 Zeus models.*/
 
 
 //These constants are used in the various routines which compute ionization state

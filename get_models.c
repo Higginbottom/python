@@ -1,4 +1,31 @@
 
+/**************************************************************************
+                    Space Telescope Science Institute
+
+
+  Synopsis:
+  	The routines here provide a way to read grids of models and
+	then to interpolate between them.
+
+	There are two main routines
+
+		get_models (modellist, npars, spectype)
+
+	which reads a list of models
+
+	and
+		model (spectype, par)
+
+	which given a set of parameters will interpolate between modles
+	given the set of models one wants to interpolate betwee, which
+	is determined by spectype, and the set of parameters (par) that
+	define the models
+ 
+
+  History:
+	13jul	ksl	Added these notes about the purpose of the routines in this file
+************************************************************************/
+ 
 
 
 /**************************************************************************
@@ -7,19 +34,40 @@
 
   Synopsis:
 
+	get_models (modellist, npars, spectype)
+
+
   Description:	These are a generic set of routines to read a grid or grids
-	of models  The grid can be any reasonable number of dimension
+	of models, e.g. a set of Kurucz stellar atmospheres which can
+	used to simulate a disk, given a run of temperature and gravity
+   	
+	
+	The grid can be any reasonable number of dimension
 
   Arguments:		
+     char modellist[];		// filename containing location and associated parameters of models
+     int npars;			// Number of parameters which vary for these models
+
+     The modellist is an ascii file listing one model on each line of the file. Comments
+     lines begining with # are ignored.  For example
+
+     kurucz91/fp00t4000g30k2c125.txt         4000          3.0
+
+     refers to a Kurucz model with a temperature of 4000 K and a log gravity of 3.0
+
 
   Returns:
+     int *spectype;		//  The returned spectrum type 
+
+     spectype really is just an integer that is incremented each time a new set of models
+     is read in.  
 
   Notes:
 	DO NOT INCLUDE ANYTHING THAT IS NOT GENERIC HERE!  
 
-	These routines were written for kslfit, but should be quite generic.
-	The python version does not regrid to a predivined wavelength
-	scale.
+	The models general are also ascii files with wavelengths and fluxes (flambda
+	or something proportional to flambda, although since the routine is generic
+	that is not something that is enforced by this routine.  
 
 	For 1d models we assume the models are read in increasing order of
 	the parameter of interest.  
@@ -34,18 +82,21 @@
 	above, and finally interpolate between these two.  
 	The algorithm for interpolating between models 
 
-	080517 - The kslfit versiono of these routines have been updated
-	significantly, and in particular the number of variables is deduced
-	as the models are read.  That's not appropriate here though, so one needs
-	to be careful.
 
 	Note that each time a new set of models is read in, the spectype is
 	incremented.
+
+	These routines were originally parrt of as set of routines, kslfit,  intended
+	to fit UV models to UV spectra. Subsequently, 080t17, the kslfit routines of the
+	same name were modified and so the two sets of routines are no longer
+	in sync, even though they have the same name.
+
 
 
   History:
 04jul	ksl	Adapted for use in python
 04dec	ksl	54a -- miniscule change to eliminate warning with 03
+13jul	ksl	Another small change to elimated a warning on some compileres
 	
 
  ************************************************************************/
@@ -73,7 +124,7 @@ get_models (modellist, npars, spectype)
 {
   FILE *mptr, *fopen ();
   char dummy[LINELEN];
-  int n, m, nxpar;
+  int n, m, mm, nxpar;
   double xpar[NPARS], xmin[NPARS], xmax[NPARS];
   int get_one_model ();
   int nw, nwaves;
@@ -154,8 +205,9 @@ get_models (modellist, npars, spectype)
 	      if (xpar[m] < xmin[m])
 		xmin[m] = xpar[m];
 	    }
-	  for (m = m; m < NPARS; m++)
-	    mods[n].par[m] = -99;
+	  //130727 - ksl - added a new variable mm to prevent a warning thrown by some compilers 
+	  for (mm = m; mm < NPARS; mm++)
+	    mods[n].par[mm] = -99;
 
 	  nwaves = get_one_model (mods[n].name, &mods[n]);
 	  if (nw > 0 && nwaves != nw)

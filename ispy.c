@@ -69,7 +69,7 @@ ispy_close ()
 {
   if (ispy_start == 0)
     {
-      printf ("ispy file is not open, why are you trying to close it?\n");
+      Log ("ispy file is not open, why are you trying to close it?\n");
     }
   else
     {
@@ -94,7 +94,7 @@ ispy (p, n)
 
   if (ispy_start == 0)
     {
-      printf ("ispy file is not open, why are you trying to write to it?\n");
+      Log ("ispy file is not open, why are you trying to write to it?\n");
       exit (0);
     }
 

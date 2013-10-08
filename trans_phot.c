@@ -107,8 +107,12 @@ trans_phot (w, p, iextract)
    * \n.  NOte that I also increased the interval where items are bing printed out to 50,000, so 
    * this would be a bit less active
    */
+  /* 130718 -- jm -for the moment I've changed this back, as we agreed that printing to 
+   * stderr was bad practice.
+   */
   
-  printf("\n");
+  
+  Log("\n");
 
   for (nphot = 0; nphot < NPHOT; nphot++)
     {
@@ -116,9 +120,10 @@ trans_phot (w, p, iextract)
       //This is just a watchdog method to tell the user the program is still running
       //130306 - ksl since we don't really care what the frequencies are any more
       if (nphot % 50000 == 0)
-	//OLD 130624 printf ("Photon %7d of %7d or %6.3f per cent \n", nphot, NPHOT,
-	fprintf (stderr, "\rPhoton %7d of %7d or %6.3f per cent", nphot, NPHOT,
+	//OLD 130718 fprintf (stderr, "\rPhoton %7d of %7d or %6.3f per cent ", nphot, NPHOT,
+        Log ("Photon %7d of %7d or %6.3f per cent \n", nphot, NPHOT,
 		nphot * 100. / NPHOT);
+
       Log_flush ();		/*NSH June 13 Added call to flush logfile */
 
       /* 74a_ksl Check that the weights are real */
@@ -226,7 +231,7 @@ trans_phot (w, p, iextract)
 
 
 	  istat = translate (w, &pp, tau_scat, &tau, &nres);
-//        printf("Photon=%i,weight=%e,tauscat=%f,nres=%i,istat=%i\n",nphot,p[nphot].w,tau_scat,nres,istat);
+//        Log("Photon=%i,weight=%e,tauscat=%f,nres=%i,istat=%i\n",nphot,p[nphot].w,tau_scat,nres,istat);
 /* nres is the resonance at which the photon was stopped.  At present the
 same value is also stored in pp->nres, but I have not yet eliminated 
 it from translate. ?? 02jan ksl */
@@ -496,7 +501,7 @@ been initialized. 02may ksl.  This seems to be OK at present.*/
     }
   /* This is the end of the loop over all of the photons; after this the routine returns */
   //130624 ksl Line added to complete watchdog timeer,
-  printf("\n\n");
+  Log("\n\n");
 
   return (0);
 }

@@ -92,7 +92,6 @@ agn_init (r, lum, alpha, freqmin, freqmax, ioniz_or_final, f)
     }
   else if (spectype == SPECTYPE_CL_TAB)
     {
-      printf ("WOW we have cltab\n");
       /* Emittance_pow actucally returns the specific luminosity directly */
       emit = emittance_bpow (freqmin, freqmax, lum, alpha);
       *f = emit;
@@ -175,8 +174,7 @@ emittance_bpow (freqmin, freqmax, lum, alpha)
   constant =
     lum / (((pow (XFREQMAX, alpha + 1.)) - pow (XFREQMIN, alpha + 1.0)) /
 	   (alpha + 1.0));
-  printf ("Constant from geo is %e, and computed here is %e\n", geo.const_agn,
-	  constant);
+
 
 /* convert broken power law bands to freq */
 
@@ -188,8 +186,6 @@ emittance_bpow (freqmin, freqmax, lum, alpha)
   constant_hi = xband.pl_const[xband.nbands - 1];
 
 
-  printf ("freqmin=%e, freqmax=%e\n", freqmin, freqmax);
-  printf ("splitlow=%e, splithigh=%e\n", pl_low, pl_hi);
 
   /* now we need to work out the luminosity between our limited frequency range */
   emit = 0.0;
@@ -359,7 +355,6 @@ photo_gen_agn (p, r, alpha, weight, f1, f2, spectype, istart, nphot)
 	    }
 	}
     }
-//ksl1306  printf ("Alpha=%f\n", alpha);
 
 
   for (i = istart; i < iend; i++)

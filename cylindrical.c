@@ -416,6 +416,8 @@ cylind_volumes (w, icomp)
  History:
 	04aug	ksl	52a -- Moved from where_in_wind as incorporated
 			multiple coordinate systems
+  	13sep	nsh	76b -- changed calls to fraction to take account
+			of multiple modes.
  
 **************************************************************/
 
@@ -445,8 +447,8 @@ cylind_where_in_grid (x)
   if (rho < wind_x[0])
     return (-1);
 
-  fraction (rho, wind_x, NDIM, &i, &f);
-  fraction (z, wind_z, MDIM, &j, &f);
+  fraction (rho, wind_x, NDIM, &i, &f, 0);
+  fraction (z, wind_z, MDIM, &j, &f, 0);
 
   /* At this point i,j are just outside the x position */
   wind_ij_to_n (i, j, &n);

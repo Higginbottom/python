@@ -74,6 +74,14 @@ xsignal (char *root, char *format, ...)
   char filename[LINELENGTH];
   double elapsed_time;
 
+
+  /* if we are in MPI mode we only want the master process to write to sig file */
+#ifdef MPI_ON
+  if (rank_global==0)
+    {
+#endif
+
+
   /* Make the filemne */
   strcpy (filename, "");
   strcpy (filename, root);
@@ -113,6 +121,10 @@ xsignal (char *root, char *format, ...)
 
 
   fclose (sptr);
+
+#ifdef MPI_ON
+  }
+#endif
 
   return (0);
 }

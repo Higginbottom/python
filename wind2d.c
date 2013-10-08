@@ -68,6 +68,8 @@ History:
 			try and speed up the pairwise ionization scheme
 	13may	nsh	added code to use temprature computed from internal energy in a
 			zeus file as a first guess for temperature in a proga type model
+	13sep	nsh	small change to avoid the muliplicatoin by 0.9 (lucy guess) from giving us the wropng
+			zeus temperature.
 
 **************************************************************/
 
@@ -110,7 +112,7 @@ define_wind ()
 
 
 
-  if (geo.wind_type == 9)	//This is the mode where we want the wind and the grid carefulluy conrolled to allow a very thin shell. We ensure that the coordinate type is spherical. 
+  if (geo.wind_type == 9)	//This is the mode where we want the wind and the grid carefully controlled to allow a very thin shell. We ensure that the coordinate type is spherical. 
     {
       Log
 	("We are making a thin shell type grid to match a thin shell wind. This is totally aphysical and should only be used for testing purposes\n");
@@ -126,7 +128,14 @@ define_wind ()
     }
   else if (geo.coord_type == RTHETA)
     {
-      rtheta_make_grid (w);
+      if (geo.wind_type == 3) //13jun -- nsh - 76 - This is a switch to allow one to use the actual zeus grid in the special case of a 'proga' wind in rtheta coordinates
+      	{
+	rtheta_make_zeus_grid (w);
+      	}
+      else
+	{
+        rtheta_make_grid (w);
+	}
     }
   else if (geo.coord_type == CYLVAR)
     {
@@ -137,7 +146,6 @@ define_wind ()
       Error ("define_wind: Don't know how to make coordinate type %d\n",
 	     geo.coord_type);
     }
-
   for (n = 0; n < NDIM2; n++)
     {
       /* 04aug -- ksl -52 -- The next couple of lines are part of the changes
@@ -146,7 +154,6 @@ define_wind ()
       model_velocity (w[n].x, w[n].v);
       model_vgrad (w[n].x, w[n].v_grad);
     }
-
 
   wind_complete (w);
 
@@ -180,7 +187,14 @@ recreated when a windfile is read into the program
     }
   else if (geo.coord_type == RTHETA)
     {
-      rtheta_volumes (w, W_ALL_INWIND);
+      if (geo.wind_type == 3) //13jun -- nsh - 76 - This is a switch to allow one to use the actual zeus grid in the special case of a 'proga' wind in rtheta coordinates We dont need to work out if cells are in the wind, they are known to be in the wind.
+      	{
+	rtheta_zeus_volumes (w);
+      	}
+      else
+	{
+        rtheta_volumes (w, W_ALL_INWIND);
+	}
     }
   else if (geo.coord_type == CYLVAR)
     {
@@ -312,11 +326,12 @@ be optional which variables beyond here are moved to structures othere than Wind
 
   for (n = 0; n < NPLASMA; n++)
     {
-
+	
       nwind = plasmamain[n].nwind;
       stuff_v (w[nwind].xcen, x);
       plasmamain[n].rho = model_rho (x);
       plasmamain[n].vol = w[nwind].vol;	// Copy volumes
+
 /* NSH 120817 This is where we initialise the spectral models for the wind. The pl stuff is old, I've put new things in here to initialise the exponential models */
       for (nn = 0; nn < NXBANDS; nn++)
 	{
@@ -334,7 +349,7 @@ be optional which variables beyond here are moved to structures othere than Wind
 /* NSH 130530 Next few lines allow the use of the temperature which can be computed from Zeus models to be used as an initial guess for the wind temperature */
       if (geo.wind_type == 3)
 	{
-	  plasmamain[n].t_r = proga_temp (x);
+	  plasmamain[n].t_r = proga_temp (x)/0.9; //This is a kluge, it means that we get the temperature we expect, if we read in a temperature from a zeus file - otherwise it is multiplies by 0.9 //
 	}
       else
 	{
@@ -1066,6 +1081,5 @@ check_corners_inwind (n, icomp)
       if (where_in_wind (wmain[n + MDIM + 1].x) == icomp)
 	n_inwind++;
     }
-
   return (n_inwind);
 }

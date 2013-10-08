@@ -203,26 +203,26 @@ ds_to_roche_2 (p)
 
 
   if (smin > s)
-    printf ("Error Knoxy %e %e %e\n", smin, s, smax);
+    Log ("Error Knoxy %e %e %e\n", smin, s, smax);
 
   if ((s = rtsafe (roche, smin, s, geo.a / 1000.)) < 0)
     {
-      printf ("Problem located Roche surface s %6.2e\n", s);
-      printf ("smin %6.2e  phi %6.2e %6.2e %6.2e\n", smin, phi (smin),
+      Log ("Problem located Roche surface s %6.2e\n", s);
+      Log ("smin %6.2e  phi %6.2e %6.2e %6.2e\n", smin, phi (smin),
 	      dphi_ds (smin), d2phi_ds2 (smin));
-      printf ("smax %6.2e  phi %6.2e %6.2e %6.2e\n", smax, phi (smax),
+      Log ("smax %6.2e  phi %6.2e %6.2e %6.2e\n", smax, phi (smax),
 	      dphi_ds (smax), d2phi_ds2 (smax));
       stuff_phot (p, &pp);
       move_phot (&pp, smin);
-      printf ("pmin %6.2e %6.2e %6.2e\n", pp.x[0], pp.x[1], pp.x[2]);
+      Log ("pmin %6.2e %6.2e %6.2e\n", pp.x[0], pp.x[1], pp.x[2]);
       stuff_phot (p, &pp);
       move_phot (&pp, smax);
-      printf ("pmax %6.2e %6.2e %6.2e\n", pp.x[0], pp.x[1], pp.x[2]);
+      Log ("pmax %6.2e %6.2e %6.2e\n", pp.x[0], pp.x[1], pp.x[2]);
 
       return (s);		/* This is an error return */
     }
 
-  printf ("Distance to roche surface  %6.2e\n", s);
+  Log ("Distance to roche surface  %6.2e\n", s);
 
 
   return (s);

@@ -383,7 +383,6 @@ one_choice (choice, root, ochoice)
       dvds_summary (wmain, root, ochoice);
       break;
     case 'E':
-      printf ("Doing convergence all\n");
       convergence_all (wmain, root, ochoice);
       break;
     case 'e':			/* print out everything about an element */

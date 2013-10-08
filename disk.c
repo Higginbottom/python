@@ -176,6 +176,7 @@ History:
 
 	08mar	ksl	Added explanation of what the routine does. The
 			routine was not changed.
+        13sep	nsh	Changed linterp call to reflect a new log option.
  */
 double north[] = { 0.0, 0.0, 1.0 };
 
@@ -190,7 +191,7 @@ vdisk (x, v)
   stuff_v (x, xhold);
   xhold[2] = 0.0;
   r = length (xhold);
-  linterp (r, disk.r, disk.v, NRINGS, &speed);
+  linterp (r, disk.r, disk.v, NRINGS, &speed,0); //interpolate in linear space
   cross (north, xhold, v);	/* The velocity vector direction is given by north x r */
   renorm (v, speed);
   return (speed);

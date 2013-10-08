@@ -133,12 +133,12 @@ spherical_make_grid (w)
 	    w[n].r = geo.rstar * pow (10., dlogr * (n - 1));
 	    w[n].rcen = 0.5 * geo.rstar * (pow (10., dlogr * (n)) +
 					   pow (10., dlogr * (n - 1)));
-	    printf ("OLD W.r = %e, w.rcen = %e\n", w[n].r, w[n].rcen);
+	    Log ("OLD W.r = %e, w.rcen = %e\n", w[n].r, w[n].rcen);
 	    dlogr = (log10 (geo.rmax / geo.wind_rmin)) / (NDIM - 3);
 	    w[n].r = geo.wind_rmin * pow (10., dlogr * (n - 1));
 	    w[n].rcen = 0.5 * geo.wind_rmin * (pow (10., dlogr * (n)) +
 					       pow (10., dlogr * (n - 1)));
-	    printf ("New W.r = %e, w.rcen = %e\n", w[n].r, w[n].rcen);
+	    Log ("New W.r = %e, w.rcen = %e\n", w[n].r, w[n].rcen);
 	  }
 
 	/* Now calculate the positions of these points in the xz plane.
@@ -367,6 +367,7 @@ spherical_volumes (w, icomp)
 
  History:
  	05apr	ksl	55d: Adapted from rtheta.c.  
+	13sep	nsh	76b Changed call to fraction to take account of new mode
  
 **************************************************************/
 
@@ -393,7 +394,7 @@ spherical_where_in_grid (x)
       return (-1);		/*x is inside grid */
     }
 
-  fraction (r, wind_x, NDIM, &n, &f);
+  fraction (r, wind_x, NDIM, &n, &f, 0);
 
   return (n);
 }

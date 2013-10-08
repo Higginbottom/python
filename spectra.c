@@ -721,8 +721,8 @@ spectrum_summary (filename, mode, nspecmin, nspecmax, select_spectype, renorm,
       lfreqmax = log10 (s[nspecmin].freqmax);
       ldfreq = (lfreqmax - lfreqmin) / NWAVE;
 
-      printf ("lfreqmin=%e lfreqmax=%e ldfreq=%e\n", lfreqmin, lfreqmax,
-	      ldfreq);
+//OLD      printf ("lfreqmin=%e lfreqmax=%e ldfreq=%e\n", lfreqmin, lfreqmax,
+//OLD	      ldfreq);
       for (i = 1; i < NWAVE - 1; i++)
 	{
 	  freq = pow (10., (lfreqmin + i * ldfreq));

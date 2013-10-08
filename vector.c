@@ -152,9 +152,9 @@ renorm (a, scalar)
   x = (dot (a, a));
   if (x < EPS)
     {
-      printf ("renorm: Cannot renormalize a vector of length 0\n");
-      printf ("renorm: %e %e %e\n", a[0], a[1], a[2]);
-      printf ("renorm returning -1\n");
+      Log ("renorm: Cannot renormalize a vector of length 0\n");
+      Log ("renorm: %e %e %e\n", a[0], a[1], a[2]);
+      Log("renorm returning -1\n");
       return (-1);
     }
   x = scalar / sqrt (x);
@@ -260,7 +260,7 @@ project_from_xyz_cyl (a, b, result)
   n_rho[2] = 0;
   if (renorm (n_rho, 1.0) == -1)
     {
-      printf
+      Log
 	("Position on z axis; conversion cylintrical coords indeterminate\n");
       return (-1);
     }
@@ -327,16 +327,16 @@ create_basis (u, v, basis_new)
     }
   if (renorm (x, 1.) || renorm (y, 1.))
     {
-      printf ("Problem creating basis: Either u or v had length 0\n");
-      printf ("create_basis: u %e %e %e\n", u[0], u[1], u[2]);
-      printf ("create_basis: v %e %e %e\n", v[0], v[1], v[2]);
+      Log ("Problem creating basis: Either u or v had length 0\n");
+      Log ("create_basis: u %e %e %e\n", u[0], u[1], u[2]);
+      Log ("create_basis: v %e %e %e\n", v[0], v[1], v[2]);
       return (-1);
     }
   if ((mu_x = dot (x, y)) > 1. - EPS)
     {
-      printf ("Problem creating basis u,v parallel\n");
-      printf ("create_basis: u %e %e %e\n", u[0], u[1], u[2]);
-      printf ("create_basis: v %e %e %e\n", v[0], v[1], v[2]);
+      Log ("Problem creating basis u,v parallel\n");
+      Log ("create_basis: u %e %e %e\n", u[0], u[1], u[2]);
+      Log ("create_basis: v %e %e %e\n", v[0], v[1], v[2]);
       return (-1);
     }
   for (i = 0; i < 3; i++)

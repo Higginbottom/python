@@ -57,11 +57,11 @@ auger_ionization (xplasma)
 		(rad_rec_rate_coeff + diel_rec_rate_coeff) / xplasma->ne)) <
 	      1.0)
 	    {
-	      //printf("Auger_ionization: overwriting ion %d population %g\n", augerion[n].nion_target, xplasma->density[augerion[n].nion_target]);
-	      //printf("Changing by factor of: %g\n",  xplasma->density[augerion[n].nion_target] / (xplasma->density[augerion[n].nion] * ionization_rate_coeff / (rad_rec_rate_coeff + diel_rec_rate_coeff) / xplasma->ne));
+	      //Log("Auger_ionization: overwriting ion %d population %g\n", augerion[n].nion_target, xplasma->density[augerion[n].nion_target]);
+	      //Log("Changing by factor of: %g\n",  xplasma->density[augerion[n].nion_target] / (xplasma->density[augerion[n].nion] * ionization_rate_coeff / (rad_rec_rate_coeff + diel_rec_rate_coeff) / xplasma->ne));
 	      xplasma->density[augerion[n].nion_target] =
 		xplasma->density[augerion[n].nion] * factor;
-	      //printf("New value: %g %g\n", xplasma->density[augerion[n].nion_target], xplasma->density[augerion[n].nion]);
+	      //Log("New value: %g %g\n", xplasma->density[augerion[n].nion_target], xplasma->density[augerion[n].nion]);
 	    }
 	  else
 	    {

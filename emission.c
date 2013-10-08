@@ -65,6 +65,7 @@ History:
 	11aug	nsh	70 Modifications made to incorporate compton cooling
         11sep   nsh     70 Modifications in incorporate DR cooling (very approximate at the moment)
 	12sep	nsh	73 Added a counter for adiabatic luminosity (!)
+ 	13jul	nsh	76 Split up adiabatic luminosity into heating and cooling.
  
 **************************************************************/
 
@@ -72,14 +73,15 @@ double
 wind_luminosity (f1, f2)
      double f1, f2;		/* freqmin and freqmax */
 {
-  double lum, lum_lines, lum_fb, lum_ff, lum_comp, lum_dr, lum_adiab;	//1108 NSH Added a new variable for compton cooling
+  double lum, lum_lines, lum_fb, lum_ff, lum_comp, lum_dr, lum_adiab, heat_adiab;	//1108 NSH Added a new variable for compton cooling
 //1109 NSH Added a new variable for dielectronic cooling
+//1307 NSH Added a new variable to split out negtive adiabatic cooling (i.e. heating).
   int n;
   double x;
   int nplasma;
 
 
-  lum = lum_lines = lum_fb = lum_ff = lum_comp = lum_dr = lum_adiab = 0;	//1108 NSH Zero the new counter 1109 including DR counter
+  lum = lum_lines = lum_fb = lum_ff = lum_comp = lum_dr = lum_adiab = heat_adiab = 0;	//1108 NSH Zero the new counter 1109 including DR counter
   for (n = 0; n < NDIM2; n++)
     {
       if (wmain[n].vol > 0.0)
@@ -91,7 +93,21 @@ wind_luminosity (f1, f2)
 	  lum_ff += plasmamain[nplasma].lum_ff;
 	  lum_comp += plasmamain[nplasma].lum_comp;	//1108 NSH Increment the new counter by the compton luminosity for that cell.
 	  lum_dr += plasmamain[nplasma].lum_dr;	//1109 NSH Increment the new counter by the DR luminosity for the cell.
-	  lum_adiab += plasmamain[nplasma].lum_adiabatic;
+	  if (geo.adiabatic) //130722 NSH - slight change to allow for adiabatic heating effect - now logged in a new global variable for reporting.
+		{
+		if (plasmamain[nplasma].lum_adiabatic >= 0.0)
+			{
+			lum_adiab += plasmamain[nplasma].lum_adiabatic;
+			}
+		else
+			{
+			heat_adiab += plasmamain[nplasma].lum_adiabatic;
+			}
+		}	
+	  else
+		{
+		lum_adiab = 0.0;
+		}
 	  if (x < 0)
 	    mytrap ();
 	  if (recipes_error != 0)
@@ -110,6 +126,7 @@ wind_luminosity (f1, f2)
   geo.lum_comp = lum_comp;	//1108 NSH The total compton luminosity of the wind is stored in the geo structure
   geo.lum_dr = lum_dr;		//1109 NSH the total DR luminosity of the wind is stored in the geo structure
   geo.lum_adiabatic = lum_adiab;
+  geo.heat_adiabatic = heat_adiab;
 
   return (lum);
 }
@@ -342,7 +359,7 @@ photo_gen_wind (p, weight, freqmin, freqmax, photstart, nphot)
 
 
   photstop = photstart + nphot;
-  Log ("photo_gen_wind creates nphot %5d photons from %5d to %5d \n", nphot,
+  Log_silent ("photo_gen_wind creates nphot %5d photons from %5d to %5d \n", nphot,
        photstart, photstop);
 
   for (n = photstart; n < photstop; n++)
@@ -568,6 +585,7 @@ Note: program uses an integral formula rather than integrating on
         12sep	nsh	73g - increased the number of ions we will use to all of them!!
 	12sep	nsh	73g - incorporated sutherlands data for gaunt factor
 	12dec	nsh	74b - put in code to cope with the case where gaunt factor data is not read in
+        13jul	nsh	76  - fixed major bugs in this code relating to bug number 29!
 */
 
 double
@@ -620,11 +638,18 @@ total_free (one, t_e, f1, f2)
     {
       sum = 0.0;		/*NSH 120920 - zero the summation over all ions */
       for (nion = 0; nion < nions; nion++)
-	{
-	  gsqrd = (ion[nion].z * ion[nion].z * RYD2ERGS) / (BOLTZMANN * t_e);	//
-	  gaunt = gaunt_ff (gsqrd);
-	  sum += xplasma->density[nion] * ion[nion].z * ion[nion].z * gaunt;
-	}
+		{
+		if (ion[nion].istate !=1) //The neutral ion does not contribute
+			{			
+			gsqrd=((ion[nion].istate-1)*(ion[nion].istate-1)*RYD2ERGS)/(BOLTZMANN*t_e);
+			gaunt=gaunt_ff(gsqrd);
+			sum += xplasma->density[nion] * (ion[nion].istate-1) * (ion[nion].istate-1) * gaunt;
+			}
+		else
+			{
+			sum += 0.0;
+			}
+		}
       x = BREMS_CONSTANT * xplasma->ne * (sum) / H_OVER_K;
     }
 
@@ -662,6 +687,7 @@ SS Apr 04: added an "if" statement to deal with case where there's only H.
         12sep	nsh	73g - increased the number of ions we will use to all of them!!
 	12sep	nsh	73g - incorporated sutherlands data for gaunt factor
 	12dec	nsh	74b - put code in to allow for the case where gaunt data is not available.
+        13jul	nsh	76  - fixed major bugs in this code relating to bug number 29!
 	
 */
 
@@ -705,12 +731,19 @@ ff (one, t_e, freq)
     {
       sum = 0.0;
       for (nion = 0; nion < nions; nion++)
-	{
-	  gsqrd = (ion[nion].z * ion[nion].z * RYD2ERGS) / (BOLTZMANN * t_e);
-	  gaunt = gaunt_ff (gsqrd);
-	  sum += xplasma->density[nion] * ion[nion].z * ion[nion].z * gaunt;
-	}
-      fnu = BREMS_CONSTANT * xplasma->ne * (sum) / H_OVER_K;
+		{
+		if (ion[nion].istate !=1) //The neutral ion does not contribute
+			{			
+			gsqrd=((ion[nion].istate-1)*(ion[nion].istate-1)*RYD2ERGS)/(BOLTZMANN*t_e);
+			gaunt=gaunt_ff(gsqrd);
+			sum += xplasma->density[nion] * (ion[nion].istate-1) * (ion[nion].istate-1) * gaunt;
+			}
+		else
+			{
+			sum += 0.0;
+			}
+		}
+      fnu = BREMS_CONSTANT * xplasma->ne * (sum);
     }
 
 

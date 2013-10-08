@@ -616,16 +616,9 @@ emittance_bb (freqmin, freqmax, t)
     }
   else
     {
-//      printf ("BB_emit is requesting a value outside tabulated results\n");
+
       return (q1 * t * t * t * t * integ_planck_d (alphamin, alphamax));
     }
-  ;				/*NSH 120813 73e - changed so we simply integrate the dimensionless blackbody function here */
-  // if (alphamax > ALPHAMAX) alphamax=ALPHAMAX;
-  // if (alphamin > ALPHAMAX) return(0.0);
-//x=q1 * t * t * t * t * qromb(planck_d,alphamin,alphamax,1e-7);
-//printf ("We are in emittance_bb going from %e to %e at temp %e ans=%e\n",freqmin,freqmax,t,x);
-  // return (x);
-
 }
 
 

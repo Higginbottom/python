@@ -19,6 +19,7 @@ Notes:
 History:
 
 	12jun 	nsh	72 Added lines to set up a file for outputting photons in given cells. The cells are read in from a file called diag_cells.dat. The existance of this file defined wether the diagnostic takes place.
+	13jul	jm	changed print statements to logs and made more descriptive
 
 **************************************************************/
 
@@ -55,11 +56,11 @@ open_diagfile ()
 	{
 	  while (fscanf (cellfile, "%d", &cell) == 1)	/*If the line contains only one integer number read it in, otherwise quit reading */
 	    {
-	      printf ("We have a cell - %i, ncstat=%i, NCSTAT=%i\n", cell,
+	      Log ("open_diagfile: Cell diagnostics - we have a cell - %i, ncstat=%i, NCSTAT=%i\n", cell,
 		      ncstat, NCSTAT);
 	      if (-1 < cell && cell < geo.nplasma && ncstat < NCSTAT)	/*if the cells are real */
 		{
-		  printf ("Accepted\n");
+		  Log ("open_diagfile: Cell numbers have been accepted as real.\n");
 		  ncell_stats[ncstat] = cell;
 		  ncstat = ncstat + 1;
 		}

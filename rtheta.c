@@ -199,9 +199,50 @@ rtheta_make_grid (w)
 
 	}
     }
+  rtheta_make_cones(w);
+  /* OK finished successfuly */
+  return (0);
+	}
+
+
+
+
+/***********************************************************
+                                       Space Telescope Science Institute
+
+ Synopsis:
+	rtheta_make_cones defines the wind cones that are needed to calculate ds in a cell              
+
+Arguments:		
+	WindPtr w;	The structure which defines the wind in Python
+ 
+Returns:
+ 
+Description:
+
+	This subroutine defines the edges of the wind
+
+
+History:
+	13Aug	nsh	76b- Broken this small routine out of rtheta_make_grid
+			in order to allow proga.c to use the same commands,
+			This was also to fix issue41 whereby a model with
+			an rtheta grid could not be restarted. This was because
+			these commands are only called when the initial
+			model is set up - and the cones structure is not saved.
+			
+
+**************************************************************/
 
 
   /* Now set up the wind cones that are needed for calclating ds in a cell */
+
+int
+rtheta_make_cones (w)
+     WindPtr w;
+{
+  int  n;
+
 
   cones_rtheta = (ConePtr) calloc (sizeof (cone_dummy), MDIM);
   if (cones_rtheta == NULL)
@@ -219,10 +260,13 @@ rtheta_make_grid (w)
       cones_rtheta[n].dzdr = 1. / tan (w[n].theta / RADIAN);	// New definition
     }
 
-  /* OK finished successfuly */
-  return (0);
 
-}
+  return (0);
+	}
+
+
+
+
 
 
 
@@ -249,7 +293,9 @@ rtheta_wind_complete (w)
      have adoped a "rectangular" grid of points.  Note that rectangular does not mean equally spaced. */
 
   for (i = 0; i < NDIM; i++)
+	{
     wind_x[i] = w[i * MDIM].r;
+}
   for (j = 0; j < MDIM; j++)
     wind_z[j] = w[j].theta;
   for (i = 0; i < NDIM - 1; i++)
@@ -400,8 +446,6 @@ rtheta_volumes (w, icomp)
 
 
 	    }
-
-
 	}
     }
 
@@ -439,6 +483,8 @@ rtheta_volumes (w, icomp)
  History:
 	04aug	ksl	52a -- Adapted from the same routine for cylindrical
 			systems.
+   	13sep	nsh	76b -- Changed calls to fraction to take account of
+			new modes.
  
 **************************************************************/
 
@@ -456,7 +502,8 @@ rtheta_where_in_grid (x)
   theta = acos ((fabs (x[2] / r))) * RADIAN;
 
   /* Check to see if x is outside the region of the calculation */
-  if (r > wind_x[MDIM - 1])
+//  if (r > wind_x[MDIM - 1])  /* ERROR NSH 130626 - wind_x has NDIM members, so this check fails every time if the grid is not square! (/
+    if (r > wind_x[NDIM - 1])  /* Fixed version */
     {
       return (-2);		/* x is outside grid */
     }
@@ -465,8 +512,8 @@ rtheta_where_in_grid (x)
       return (-1);		/*x is inside grid */
     }
 
-  fraction (r, wind_x, NDIM, &i, &f);
-  fraction (theta, wind_z, MDIM, &j, &f);
+  fraction (r, wind_x, NDIM, &i, &f, 0);
+  fraction (theta, wind_z, MDIM, &j, &f, 0);
 
   /* At this point i,j are just outside the x position */
   wind_ij_to_n (i, j, &n);

@@ -961,6 +961,7 @@ on the assumption that the fb information will be reused.
                                                                                                    
                                                                                                    
   History:
+		13sep	nsh	changed call to linterp to reflect new option
                                                                                                    
  ************************************************************************/
 
@@ -973,7 +974,7 @@ get_nrecomb (t, nion)
   int linterp ();
   double x;
 
-  linterp (t, fb_t, xnrecomb[nion], NTEMPS, &x);
+  linterp (t, fb_t, xnrecomb[nion], NTEMPS, &x,0); //Interpolate in linear space
   return (x);
 }
 
@@ -989,7 +990,7 @@ get_fb (t, nion, narray)
   int linterp ();
   double x;
 
-  linterp (t, fb_t, &freebound[narray].emiss[nion][0], NTEMPS, &x);
+  linterp (t, fb_t, &freebound[narray].emiss[nion][0], NTEMPS, &x,0); //Interpolate in linear space
   return (x);
 }
 
@@ -1447,13 +1448,7 @@ badnell_gs_rr (nion, T)
     {
       rates[i] = bad_gs_rr[ion[nion].nxbadgsrr].rates[i];
       temps[i] = bad_gs_rr[ion[nion].nxbadgsrr].temps[i];
-//      printf ("%i, %e, %e\n",i,bad_gs_rr[ion[nion].nxbadgsrr].temps[i],bad_gs_rr[ion[nion].nxbadgsrr].rates[i]);
     }
-
-
-
-//      printf ("We are getting gs for T=%e, tmin=%e, tmax=%e\n",T,temps[0],temps[BAD_GS_RR_PARAMS-1]);
-
 
   if (T < temps[0])		//we are below the range of GS data
     {
@@ -1462,6 +1457,7 @@ badnell_gs_rr (nion, T)
 	 T, nion, temps[0]);
       rate = rates[0];
     }
+
   else if (T >= temps[BAD_GS_RR_PARAMS - 1])	//we are above the range of GS data
     {
       Log_silent
@@ -1473,14 +1469,12 @@ badnell_gs_rr (nion, T)
     {
       for (i = 0; i < BAD_GS_RR_PARAMS - 1; i++)
 	{
-//              printf ("We are searching for %e between %e (%i) and %e (%i)\n",T,temps[i],i,temps[i+1],i+1);
-	  if (temps[i] <= T && T < temps[i + 1])	//We have bracketed the correct temperature
+        if (temps[i] <= T && T < temps[i + 1])	//We have bracketed the correct temperature
 	    {
 	      imin = i;
 	      imax = i + 1;
 	    }
 	}
-//              printf ("We have found that %e is bracketed by %e (%i) and %e (%i)\n",T,temps[imin],imin,temps[imax],imax);
       drdt = (rates[imax] - rates[imin]) / (temps[imax] - temps[imin]);
       dt = (T - temps[imin]);
       rate = rates[imin] + drdt * dt;
@@ -1488,7 +1482,7 @@ badnell_gs_rr (nion, T)
 
 
     }
-  //     printf ("Rate=%e\n",rate);
+
 
 
   return (rate);
@@ -1548,7 +1542,6 @@ milne_gs_rr (nion, T)
   if (ion[nion].phot_info == 1)	//topbase
     {
       ntmin = ion[nion].ntop_ground;
-//                              printf ("We are looking at topbase data for ion %i \n",j-1);
       fb_xtop = &phot_top[ntmin];
       fthresh = fb_xtop->freq[0];
       fmax = fb_xtop->freq[fb_xtop->np - 1];
@@ -1564,7 +1557,6 @@ milne_gs_rr (nion, T)
       nvmin = nion;
       n = nvmin;
       fb_xver = &xphot[ion[n].nxphot];
-//                              printf ("We are looking at verner data for ion %i \n",j);
       fthresh = fb_xver->freq_t;
       fmax = fb_xver->freq_max;
       dnu = 100.0 * (fbt / H_OVER_K);

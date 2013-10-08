@@ -8,6 +8,8 @@
 #include "atomic.h"
 #include "log.h"
 
+
+
 #define DEBUG  0		/* nonzero implies debug */
 
 /***********************************************************
@@ -179,7 +181,7 @@ get_atomic_data (masterfile)
   char choice;
   int lineno;			/* the line number in the file beginning with 1 */
   int index_collisions (), index_lines (), index_phot_top (),
-    index_phot_verner ();
+    index_phot_verner (), tabulate_verner();
   int nwords;
   int nlte, nmax;
   //  
@@ -369,6 +371,24 @@ get_atomic_data (masterfile)
       phot_top[i].f = (-1);
       phot_top[i].sigma = 0.0;
     }
+
+  for (i = 0; i < NIONS; i++)
+    {
+      xphot_tab[i].nlev = (-1);
+      xphot_tab[i].uplev = (-1);
+      xphot_tab[i].nion = (-1);
+      xphot_tab[i].z = (-1);
+      xphot_tab[i].np = (-1);
+      xphot_tab[i].macro_info = (-1);	//Initialise - don't know if using Macro Atoms or not: set to -1 (SS)
+      for (j = 0; j < NCROSS; j++)
+	{
+	  xphot_tab[i].freq[j] = (-1);
+	  xphot_tab[i].x[j] = (-1);
+	}
+      xphot_tab[i].f = (-1);
+      xphot_tab[i].sigma = 0.0;
+    }
+
 
   for (i = 0; i < NLEVELS; i++)
     {
@@ -989,13 +1009,11 @@ a level type has not been established
 			}
 		      else
 			{
-//              printf("Not tracking level %i coz we have more than %i NLTE levels\n",nlevels,ion[n].n_lte_max);
 			  config[nlevels].nden = -1;
 			}
 		    }
 		  else
 		    {
-//                      printf("Not tracking level %i coz no nlte levels wanted\n",nlevels);
 		      config[nlevels].nden = -1;
 		    }
 
@@ -1491,12 +1509,13 @@ for the ionstate.
 				  xphot[nxphot].yw = yw;
 				  xphot[nxphot].y0 = y0;
 				  xphot[nxphot].y1 = y1;
+
+
+
 				  if (ion[n].phot_info == -1)
 				    {
 				      ion[n].phot_info = 0;	/* Mark this ion as using VFKY photo */
 				      ion[n].nxphot = nxphot;
-
-
 				      nxphot++;
 				    }
 				  else if (ion[n].phot_info == 1)
@@ -1541,7 +1560,6 @@ for the ionstate.
 		      Error ("Get_atomic_data: %s\n", aline);
 		      exit (0);
 		    }
-		  //              printf("%d %d %d %d %le %le %le\n",z,istate,nn,nl,yield, arad, etarad);
 		  if (nauger < NAUGER)
 		    {
 		      if ((vptr =
@@ -1991,10 +2009,8 @@ would like to have simple lines for macro-ions */
 		    {
 		      if (ion[n].z == z && ion[n].istate == istate)	// this works out which ion we are dealing with
 			{
-//                      printf ("We have a match, z=%i, istate=%i %c %i\n",z,istate,drflag,nparam);
 			  if (ion[n].drflag == 0)	//This is the first time we have dealt with this ion
 			    {
-//                              printf ("Setting some data\n");
 			      drecomb[ndrecomb].nion = n;	//put the ion number into the DR structure
 			      drecomb[ndrecomb].nparam = nparam;	//Put the number of parameters we ware going to read in, into the DR structure so we know what to iterate over later
 			      ion[n].nxdrecomb = ndrecomb;	//put the number of the DR into the ion                            
@@ -2007,7 +2023,6 @@ would like to have simple lines for macro-ions */
 			    {
 
 			      n1 = ion[n].nxdrecomb;	//     Get the pointer to the correct bit of the recombination coefficient array. This should already be set from the first time through
-			      // printf ("E parameter %i\n",n1);
 			      for (n2 = 0; n2 < nparam; n2++)
 				{
 				  drecomb[n1].e[n2] = drp[n2];	//we are getting e parameters
@@ -2018,7 +2033,6 @@ would like to have simple lines for macro-ions */
 			  else if (drflag == 'C')	//                  must be the second time though, so no need to read in all the other things
 			    {
 			      n1 = ion[n].nxdrecomb;	//     Get the pointer to the correct bit of the recombination coefficient array. This should already be set from the first time through
-			      //              printf ("C parameter %i\n",n1);
 			      for (n2 = 0; n2 < nparam; n2++)
 				{
 				  drecomb[n1].c[n2] = drp[n2];	//           we are getting e parameters
@@ -2050,10 +2064,8 @@ would like to have simple lines for macro-ions */
 		    {
 		      if (ion[n].z == z && ion[n].istate == istate)	// this works out which ion we are dealing with
 			{
-//                      printf ("We have a match, z=%i, istate=%i %c %i\n",z,istate,drflag,nparam);
 			  if (ion[n].drflag == 0)	//This is the first time we have dealt with this ion
 			    {
-//                              printf ("Setting some data\n");
 			      drecomb[ndrecomb].nion = n;	//put the ion number into the DR structure
 			      drecomb[ndrecomb].nparam = nparam;	//Put the number of parameters we ware going to read in, into the DR structure so we know what to iterate over later
 			      ion[n].nxdrecomb = ndrecomb;	//put the number of the DR into the ion                            
@@ -2063,7 +2075,6 @@ would like to have simple lines for macro-ions */
 
 			    }
 			  n1 = ion[n].nxdrecomb;	//     Get the pointer to the correct bit of the recombination coefficient array. This should already be set from the first time through
-//                              printf ("Shull parameter %i\n",n1);
 			  for (n2 = 0; n2 < nparam; n2++)
 			    {
 			      drecomb[n1].shull[n2] = drp[n2];	//we are getting e parameters
@@ -2130,9 +2141,7 @@ BAD_T_RR  5  0  1  1  4.647E-10  0.7484  6.142E+01  1.753E+07*/
 		case 'T':	/*Badnell type total raditive rate coefficients read in */
 
 		  nparam = sscanf (aline, "%*s %d %d %d %le %le %le %le %le %le", &z, &ne, &w, &btrr[0], &btrr[1], &btrr[2], &btrr[3], &btrr[4], &btrr[5]);	//split and assign the line
-//              printf ("We have %i parameters\n",nparam);
 		  nparam -= 3;	//take 4 off the nparam to give the number of actual parameters
-//              printf("We have a badnell type RR with %i parameters\n",nparam);
 		  if (nparam > 6 || nparam < 1)	//     trap errors - not as robust as usual because there are a varaible number of parameters...
 		    {
 		      Error ("Something wrong with badnell total RR data\n",
@@ -2183,9 +2192,7 @@ BAD_T_RR  5  0  1  1  4.647E-10  0.7484  6.142E+01  1.753E+07*/
 
 		case 's':
 		  nparam = sscanf (aline, "%*s %d %d %le %le ", &z, &ne, &btrr[0], &btrr[1]);	//split and assign the line
-//              printf ("We have %i parameters\n",nparam);
 		  nparam -= 2;	//take 4 off the nparam to give the number of actual parameters
-//              printf("We have a shull type RR with %i parameters\n",nparam);
 		  if (nparam > 6 || nparam < 1)	//     trap errors - not as robust as usual because there are a varaible number of parameters...
 		    {
 		      Error ("Something wrong with shull total RR data\n",
@@ -2398,7 +2405,7 @@ BAD_T_RR  5  0  1  1  4.647E-10  0.7484  6.142E+01  1.753E+07*/
   Log
     ("We have read in %3d Badnell GS   Radiative rate coefficients over the temp range %e to %e\n",
      n_bad_gs_rr, gstmin, gstmax);
-  Log ("We have read in %3d Scaled electron temperature gaunt factor lines",
+  Log ("We have read in %3d Scaled electron temperature frequency averaged gaunt factors\n",
        gaunt_n_gsqrd);
   Log ("The minimum frequency for photoionization is %8.2e\n", phot_freq_min);
 
@@ -2666,7 +2673,10 @@ or zero so that simple checks of true and false can be used for them */
 /* Index the verner photionization structure by threshold frequecy -- 57h -- 06jul ksl */
 
   if (nxphot > 0)
+	{
     index_phot_verner ();
+tabulate_verner(); //Create a tabulated version of the data
+	}
 /* Index the topbase photoionization structure by threshold freqeuncy */
   if (ntop_phot > 0)
     index_phot_top ();
@@ -3034,3 +3044,77 @@ limit_lines (freqmin, freqmax)
 
   return (nline_delt = nline_max - nline_min + 1);
 }
+
+
+/***********************************************************
+                Southampton University
+
+Synopsis: tabulate_verner - turn a VFKY type cross section into a tabulated version
+
+Arguments:		none	
+
+Returns:		none - but populates the xphot_tab structure which 
+				has the same form as a topbase array
+ 
+Description:		This subroutine was coded in September 2013 as a 
+				band aid for an issue observed with the variable
+				temperature code. It turned out that integrals
+				over the verner cross sections were taking a great deal
+				of processor time due to having to calculate 
+				the cross section. This routine tabulates the
+				crosss sections on a loagrithmic grid, over the
+				number of points defined by the N_VERNER_TAB
+				number defined at the top of the routine
+
+Notes:
+
+
+History:
+   13sep           nsh     coded and tested
+  
+ 
+**************************************************************/
+
+#define N_VERNER_TAB 100  // The number of points we will tabulate the verner function over
+
+
+struct photoionization *xver;	//Verner & Ferland description of a photoionization x-section
+int
+tabulate_verner ()
+{
+
+  double f1,f2,dlogf,lf1,lf2,freq;
+  double sigma_phot();
+  int  j,n;
+  double very_small; //This is a small number (set to be the same as epsilon - but get_atomic_data doesn't have access to python.h
+
+very_small=1e-6;
+
+
+for (j=0; j < nxphot; j++)
+	{	
+	xver=&xphot[j];
+	xphot_tab[j].z = xphot->z;
+	xphot_tab[j].istate = xphot->istate;
+	xphot_tab[j].nion = xphot->nion;
+	f1=xver->freq_t*(1+very_small); //We need to start our tabulation just a tiny way up from from the threshold, otherwise it is equal to zero.
+	f2=xver->freq_max*(1-very_small); //We need to start our tabulation just a tiny way up from from the threshold, otherwise it is equal to zero.
+	lf1=log(f1);
+	lf2=log(f2);
+	dlogf=(lf2-lf1)/(N_VERNER_TAB);
+
+	for (n=0;n<N_VERNER_TAB+1;n++)
+		{
+		xphot_tab[j].freq[n]=freq=exp(lf1+(n*dlogf));
+		xphot_tab[j].x[n]=sigma_phot (xver, freq);
+		}
+
+	xphot_tab[j].np=N_VERNER_TAB;
+	xphot_tab[j].nlast = -1;
+
+	}
+
+  return (0);
+}
+
+

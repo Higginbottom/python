@@ -275,6 +275,15 @@ Photoionization xphot[NIONS];
 PhotoionizationPtr xphot_ptr[NIONS];	/* Pointers to xphot in threshold frequency order --57h -- ksl */
 PhotoionizationPtr xphot_ptr1[NIONS];	/* Pointers to xphot in ion order --57h -- ksl */
 
+
+
+
+
+
+
+
+
+
 int nxphot;			/*The actual number of ions for which there are VFKY photoionization x-sections */
 double phot_freq_min;		/*The lowest frequency for which photoionization can occur */
 
@@ -311,6 +320,7 @@ typedef struct topbase_phot
 
 Topbase_phot phot_top[NLEVELS];
 TopPhotPtr phot_top_ptr[NLEVELS];	/* Pointers to phot_top in threshold frequency order */
+Topbase_phot xphot_tab[NIONS];  /* Tabulated verner data - uses the same structure as topbase to simplify code.*/
 
 /* Photoionization crossections from Verner & Yakovlev - to be used for inner shell ionization and the Auger effect*/
 typedef struct innershell

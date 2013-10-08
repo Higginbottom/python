@@ -5,7 +5,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <atomic.h>
+#include "atomic.h"
 #include <math.h>
 #include "recipes.h"
 #include "log.h"
@@ -44,7 +44,7 @@ qromb (func, a, b, eps)
 
   if (a >= b)
     {
-      printf ("Error qromb: a %e>=b %e\n", a, b);
+      Error ("Error qromb: a %e>=b %e\n", a, b);
     }
 
   h[1] = 1.0;
@@ -64,7 +64,7 @@ qromb (func, a, b, eps)
       s[j + 1] = s[j];
       h[j + 1] = 0.25 * h[j];
     }
-  printf ("Too many steps in routine QROMB\n");
+  Error ("Too many steps in routine QROMB\n");
   recipes_error = -1;
   return ss;			/* I set this to the best value but the user should beware */
 }
@@ -146,7 +146,7 @@ polint (xa, ya, n, x, y, dy)
 	  hp = xa[i + m] - x;
 	  w = c[i + 1] - d[i];
 	  if ((den = ho - hp) == 0.0)
-	    printf ("Error in routine POLINT\n");
+	    Error ("Error in routine POLINT\n");
 	  den = w / den;
 	  d[i] = hp * den;
 	  c[i] = ho * den;
@@ -174,7 +174,7 @@ zbrent (func, x1, x2, tol)
 
   if (fb * fa > 0.0)
     {
-      printf ("ZBRENT: Min %e & Max %e must bracket zero, but got %e & %e\n",
+      Log ("ZBRENT: Min %e & Max %e must bracket zero, but got %e & %e\n",
 	      x1, x2, fa, fb);
     }
   fc = fb;
@@ -243,7 +243,7 @@ zbrent (func, x1, x2, tol)
 	b += (xm > 0.0 ? fabs (tol1) : -fabs (tol1));
       fb = (*func) (b);
     }
-  printf ("Maximum number of iterations exceeded in ZBRENT\n");
+  Error ("Maximum number of iterations exceeded in ZBRENT\n");
   return b;
 }
 

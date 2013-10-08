@@ -124,11 +124,10 @@ calculate_ds (w, p, tau_scat, tau, nres, smax, istat)
   xplasma = &plasmamain[nplasma];
 
   kap_es = THOMPSON * xplasma->ne;
-  //kap_es=0.0;
   /* This is the electron scattering opacity per unit length. For the Macro Atom approach we need an 
      equivalent opacity per unit length due to each of the b-f continuua. Call it kap_bf. (SS) */
 
-  //tau_scat=1.0e30;
+
   ttau = *tau;
   ds_current = 0;
   init_dvds = 0;
@@ -208,11 +207,12 @@ then the photon frequency will be less. */
 
   if (fabs (dfreq) < EPSILON)
     {
-      vwind_xyz (p, v_inner);
       Error
-	("translate: v same at both sides of cell %d so dfreq is %2g,\n v_inner %.2g %.2g %.2g v_outer %.2g %.2g %.2g \n",
+	("translate: v same at both sides of cell %d\n",one->nwind); /*NSH 130724 shortened error statement, was causing issues with formatting */
+
+/* so dfreq is %2g,\n v_inner %.2g %.2g %.2g v_outer %.2g %.2g %.2g \n",
 	 one->nwind, dfreq, v_inner[0], v_inner[1], v_inner[2], v_outer[0],
-	 v_outer[1], v_outer[2]);
+	 v_outer[1], v_outer[2]); This is the part of the above error statement cut out */
       x = -1;
       return (smax);		// This is not really the best thing to do, but it avoids disaster below
 
@@ -268,8 +268,8 @@ method). If the macro atom method is not used just get kap_bf to 0 and move on).
 
 
   kap_cont = kap_es + kap_bf_tot + kap_ff;	//total continuum opacity 
-  //kap_cont = kap_es  + kap_bf_tot + kap_ff;
-  
+
+
 
 /* Finally begin the loop over the resonances that can interact with the
      photon in the cell */
@@ -300,7 +300,6 @@ process. */
 	      ds_current += (tau_scat - ttau) / (kap_cont);	//distance travelled
 	      ttau = tau_scat;
 	      *tau = ttau;
-//     printf ("NSH Photon %i has scattered by continuum process %i in cell %i after %e cm and now has weight %e and frequency %e\n",p->np,*nres,nplasma,ds_current,p->w,p->freq);
 	      return (ds_current);
 	    }
 	  else
@@ -348,7 +347,7 @@ process. */
 
 		  ttau += tau_sobolev =
 		    sobolev (one, p, dd, lin_ptr[nn], dvds);
-		  //    printf ("NSH Photon %i has enocuntered a resonant line in cell %i after %e cm with tau=%e. Total opacity now %e vs required %e\n",p->np,nplasma,ds_current,tau_sobolev,ttau,tau_scat);
+
 		  /* tau_sobolev now stores the optical depth. This is fed into the next statement for the bb estimator
 		     calculation. SS March 2004 */
 
@@ -422,7 +421,7 @@ process. */
 		  *istat = P_SCAT;
 		  *nres = nn;
 		  *tau = ttau;
-//              printf ("Photon scatters after %e cm\n",ds_current);
+
 
 
 
@@ -465,7 +464,6 @@ event occurred.  04 apr
       *istat = P_INWIND;
       ttau += kap_cont * (smax - ds_current);	/* kap_es replaced with kap_cont (SS) */
       ds_current = smax;
-//      printf ("Photon has hit a wall\n");
 
     }
 

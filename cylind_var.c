@@ -532,6 +532,8 @@ cylvar_volumes (w, icomp)
 			This routine caused a lot of trouble, especially
 			in cases where there were consequences when x
 			was outside the grid.
+	13sep	nsh	76b -- Modified calls to fraction to take account
+			of new modes
  
 **************************************************************/
 
@@ -564,13 +566,13 @@ cylvar_where_in_grid (x, ichoice, fx, fz)
 
   if (ichoice == 0)
     {
-      fraction (rho, wind_x, NDIM, &i, fx);
-      fraction (z[2], wind_z_var[i], MDIM, &j, fz);	// This should get one close
+      fraction (rho, wind_x, NDIM, &i, fx, 0);
+      fraction (z[2], wind_z_var[i], MDIM, &j, fz, 0);	// This should get one close
     }
   else
     {
-      fraction (rho, wind_midx, NDIM, &i, fx);
-      fraction (z[2], wind_midz_var[i], MDIM, &j, fz);	// This should get one close
+      fraction (rho, wind_midx, NDIM, &i, fx, 0);
+      fraction (z[2], wind_midz_var[i], MDIM, &j, fz, 0);	// This should get one close
     }
 
   wind_ij_to_n (i, j, &cylvar_n_approx);
@@ -600,7 +602,7 @@ cylvar_where_in_grid (x, ichoice, fx, fz)
       Error
 	("cylvar_where_in_grid: fraction and where_in_2d_cell incompatible %d -- %e %e\n",
 	 n, z[0], z[2]);
-      fraction (rho, wind_midx, NDIM, &i, fx);
+      fraction (rho, wind_midx, NDIM, &i, fx, 0);
       ii = where_in_2dcell (ichoice, z, n, fx, fz);
     }
 

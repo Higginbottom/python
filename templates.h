@@ -15,6 +15,7 @@ int index_phot_verner(void);
 int index_collisions(void);
 void indexx(int n, float arrin[], int indx[]);
 int limit_lines(double freqmin, double freqmax);
+int tabulate_verner(void);
 /* python.c */
 int main(int argc, char *argv[]);
 int help(void);
@@ -174,12 +175,18 @@ int get_stellar_wind_params(void);
 double stellar_velocity(double x[], double v[]);
 double stellar_rho(double x[]);
 int stellar_vel_grad(double x[], double velgrad[][3]);
+/* homologous.c */
+int get_homologous_params(void);
+double homologous_velocity(double x[], double v[]);
+double homologous_rho(double x[]);
 /* proga.c */
 int get_proga_wind_params(void);
 int get_proga(void);
 double proga_velocity(double x[], double v[]);
 double proga_rho(double x[]);
 double proga_temp(double x[]);
+int rtheta_make_zeus_grid(WindPtr w);
+int rtheta_zeus_volumes(WindPtr w);
 /* corona.c */
 int get_corona_params(void);
 double corona_velocity(double x[], double v[]);
@@ -191,15 +198,6 @@ double kn_rho(double x[]);
 double kn_vzero(double r);
 double kn_wind_mdot_integral(double r);
 double kn_rho_zero(double r);
-/* thierry.c */
-int get_thierry_params(void);
-int read_thierry(char infile[]);
-int thierry_read_set(FILE *fptr, double array[], int nd);
-double xthierry_velocity(double x[], double v[]);
-double thierry_velocity(double x[], double v[]);
-int thierry_vel_grad(double x[], double velgrad[][3]);
-double thierry_rho(double x[]);
-double xthierry_rho(double x[]);
 /* disk.c */
 double tdisk(double m, double mdot, double r);
 double teff(double t, double x);
@@ -286,8 +284,8 @@ double vrandwind(double x);
 double reweightwind(PhotPtr p);
 int make_pdf_randwind(double tau);
 /* util.c */
-int fraction(double value, double array[], int npts, int *ival, double *f);
-int linterp(double x, double xarray[], double yarray[], int xdim, double *y);
+int fraction(double value, double array[], int npts, int *ival, double *f, int mode);
+int linterp(double x, double xarray[], double yarray[], int xdim, double *y, int mode);
 int coord_fraction(int ichoice, double x[], int ii[], double frac[], int *nelem);
 int where_in_2dcell(int ichoice, double x[], int n, double *fx, double *fz);
 int wind_n_to_ij(int n, int *i, int *j);
@@ -366,6 +364,7 @@ int cylind_is_cell_in_wind(int n, int icomp);
 /* rtheta.c */
 double rtheta_ds_in_cell(PhotPtr p);
 int rtheta_make_grid(WindPtr w);
+int rtheta_make_cones(WindPtr w);
 int rtheta_wind_complete(WindPtr w);
 int rtheta_volumes(WindPtr w, int icomp);
 int rtheta_where_in_grid(double x[]);
@@ -419,7 +418,7 @@ int photo_gen_agn(PhotPtr p, double r, double alpha, double weight, double f1, d
 int get_shell_wind_params(void);
 /* compton.c */
 double kappa_comp(PlasmaPtr xplasma, double freq);
-double kappa_ind_comp(PlasmaPtr xplasma, double freq, double ds, double w);
+double kappa_ind_comp(PlasmaPtr xplasma, double freq);
 double total_comp(WindPtr one, double t_e);
 double klein_nishina(double nu);
 /* torus.c */
@@ -441,29 +440,16 @@ double exp_temp_func(double exp_temp);
 double exp_mean(double exp_temp, double numin, double numax);
 double exp_w(double j, double exp_temp, double numin, double numax);
 double exp_stddev(double exp_temp, double numin, double numax);
-/* power_sub.c */
-int sim_driver(PlasmaPtr xplasma);
-int sim_pl(double nh, double t_r, double t_e, double www, int nelem, double ne, double density[], double xne, double newden[], double f1, double f2);
-double xinteg_sim(double t, double f1, double f2, int nion, double max_ratio, double current_ratio);
-double tb_planck(double freq);
-double verner_planck(double freq);
-double tb_pow(double freq);
-double verner_pow(double freq);
-double sim_alphasolve(double ratans, double numin, double numax);
 /* variable_temperature.c */
 int variable_temperature(PlasmaPtr xplasma, int mode);
 double bb_correct_2(double xtemp, double t_r, double www, int nion);
 double temp_func(double solv_temp);
 double pl_correct_2(double xtemp, int nion);
 double tb_planck1(double freq);
-double verner_planck1(double freq);
 double tb_pow1(double freq);
-double verner_pow1(double freq);
-double verner_exp1(double freq);
 double tb_exp1(double freq);
 /* matom_diag.c */
 int matom_emiss_report(void);
-int matom_trap(void);
 /* py_wind_sub.c */
 int zoom(int direction);
 int overview(WindPtr w, char rootname[]);
@@ -524,6 +510,4 @@ int main(int argc, char *argv[]);
 int one_choice(int choice, char *root, int ochoice);
 int py_wind_help(void);
 /* test_saha.c */
-int main(int argc, char *argv[]);
-/* test_dielectronic.c */
 int main(int argc, char *argv[]);
