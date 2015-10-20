@@ -113,7 +113,7 @@ LDFLAGS= -L$(LIB) -lm -lcfitsio -lgsl -lgslcblas
 #Note that version should be a single string without spaces. 
 
 
-VERSION = 79d_dev
+VERSION = 79d_domain
 
 
 CHOICE=1             // Compress plasma as much as possible

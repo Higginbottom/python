@@ -651,6 +651,7 @@ typedef struct wind
   double xcen[3];		/*position of the "center" of a cell (Added by ksl for 52a--04Aug) */
   double r, rcen;		/*radial location of cell (Used for spherical, spherical polar
 				   coordinates. (Added by ksl for 52a --04Aug) */
+	  double dr,dtheta;
   double theta, thetacen;	/*Angle of coordinate from z axis (Added by ksl for 52a -- 04Aug) */
   struct cone wcone;		/*56d -- cone structure that defines the bottom edge of the cell in 
 				   CYLVAR coordinates */

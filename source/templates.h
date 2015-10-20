@@ -192,6 +192,8 @@ double hydro_rho(double x[]);
 double hydro_temp(double x[]);
 int rtheta_make_hydro_grid(WindPtr w);
 int rtheta_hydro_volumes(WindPtr w);
+int hydro_frac(double coord, double coord_array[], int imax, int *cell1, int *cell2, double *frac);
+double hydro_interp_value(double array[], int im, int ii, int jm, int jj, double f1, double f2);
 /* corona.c */
 int get_corona_params(void);
 double corona_velocity(double x[], double v[]);
