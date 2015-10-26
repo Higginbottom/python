@@ -423,6 +423,8 @@ int make_spectra(restart_stat)
   double freqmin, freqmax;
   double renorm;
   long nphot_to_define;
+  char dummy[LINELENGTH];
+  
   int iwind;
 #ifdef MPI_ON
   int spec_spec_helpers;
