@@ -180,8 +180,12 @@ fb_topbase_partial (freq)
   }
 
 
-
   gion = ion[nion + 1].g;       // Want the g factor of the next ion up
+  
+//   printf ("ion %i gn %e gion %e\n",nion,gn,gion);
+  
+  
+  
   x = sigma_phot (fb_xtop, freq);
   // Now calculate emission using Ferland's expression
 
@@ -195,7 +199,6 @@ fb_topbase_partial (freq)
     partial *= (freq - fthresh) / freq;
   else if (fbfr == 2)
     partial /= (H * freq);
-
 
 
   return (partial);
@@ -286,23 +289,32 @@ integ_fb (t, f1, f2, nion, fb_choice)
     return (fnu);
   }
   else if (fb_choice == 2)
-  {
+    {
     /* See if the frequencies correspond to one previously calculated */
     if (nfb > 0)
     {
       fnu = get_nrecomb (t, nion);
       return (fnu);
-    }
+   }
     /* If not calculate it here */
     fnu = xinteg_fb (t, f1, f2, nion, fb_choice);
+    return (fnu);
+  }
+
+  if (fb_choice == 3)
+  {
+    fnu = xinteg_inner_fb (t, f1, f2, nion, fb_choice);
+    return (fnu);
+  }
+  else if (fb_choice == 4)
+    {
+    fnu = xinteg_inner_fb (t, f1, f2, nion, fb_choice);
     return (fnu);
   }
 
   Error ("integ_fb: Unknown fb_choice(%d)\n", fb_choice);
   exit (0);
 }
-
-
 
 
 /**************************************************************************
@@ -334,6 +346,7 @@ integ_fb (t, f1, f2, nion, fb_choice)
   		be used where possible.  This seemed the most conservative place
 		to put these calls since total_fb is always called whenever the
 		band-limited luminosities are needed.
+  17jan nsh added calls to compute inner shell recombination - i.e. dielectronic recombination
                                                                                                    
  ************************************************************************/
 
@@ -343,13 +356,17 @@ total_fb (one, t, f1, f2)
      WindPtr one;
      double t, f1, f2;
 {
-  double total;
+  double total;   //,topup,drrate,inner_topup;
   int nion;
   int nplasma;
   PlasmaPtr xplasma;
+//  double rr_rates[nions];
+//  double dr_rates[nions];
 
   nplasma = one->nplasma;
   xplasma = &plasmamain[nplasma];
+  
+  compute_dr_coeffs (t);
 
   if (t < 1000. || f2 < f1)
     return (0);                 /* It's too cold to emit */
@@ -359,22 +376,55 @@ total_fb (one, t, f1, f2)
 
 
 // Calculate the number of recombinations whenever calculating the fb_luminosities
-  num_recomb (xplasma, t);
-
+  num_recomb (xplasma, t, 1);
+  num_recomb (xplasma, t, 2);   //now also compute the number of inner shell recombinations
+  
   total = 0;
   xplasma->lum_z = 0.0;
 
 
   for (nion = 0; nion < nions; nion++)
   {
+	  
+/* NSH - The following lines are required to do a cloudy style 'topup' of recomb cooling. Currently disabled	  
+	  drrate=dr_coeffs[nion]* xplasma->ne * xplasma->density[nion+1];
+	  if (ion[nion].istate != ion[nion].z+1)
+	  {
+		  rr_rates[nion] = total_rrate (nion+1, t)*xplasma->density[nion+1]*xplasma->ne;  //We also compute the total rate from badnell etc
+		  
+	  }
+	  else
+	  {
+		  rr_rates[nion]=-2.0;
+	  }
+	  */
+	  
     if (xplasma->density[nion] > DENSITY_PHOT_MIN)
     {
-
       total += xplasma->lum_ion[nion] = xplasma->vol * xplasma->ne * xplasma->density[nion + 1] * integ_fb (t, f1, f2, nion, 1);
-      if (nion > 3)
+// This is new 2017 - we also compute a milne relation for inner cross sections.	  
+      total += xplasma->lum_inner_ion[nion] = xplasma->vol * xplasma->ne * xplasma->density[nion + 1] * integ_fb (t, f1, f2, nion, 3);
+	  
+	  
+	  
+      if (ion[nion].z > 3)
         xplasma->lum_z += xplasma->lum_ion[nion];
-    }
+        xplasma->lum_z +=(xplasma->lum_inner_ion[nion]);
+	  
 
+/* NSH these lines calculate and add in topup cooling rates. Its a bit handwaving, so currently disabled.
+		  if (ion[nion].istate != ion[nion].z+1)
+		  {
+			  if (xplasma->lum_ion[nion]>0.0 && xplasma->recomb[nion]>0.0 && rr_rates[nion]>xplasma->recomb[nion])
+				  topup=(rr_rates[nion]-xplasma->recomb[nion])*xplasma->lum_ion[nion]/xplasma->recomb[nion];
+			  else
+				  topup=0.0;
+			  if (xplasma->lum_inner_ion[nion]>0.0 && xplasma->inner_recomb[nion]>0.0 && drrate>xplasma->inner_recomb[nion])
+			  inner_topup=(drrate-xplasma->inner_recomb[nion])*xplasma->lum_inner_ion[nion]/xplasma->inner_recomb[nion];
+			  else
+				  inner_topup=0.0;
+*/
+    }
   }
   return (total);
 }
@@ -571,6 +621,8 @@ generate photons */
   Description:
                                                                                                    
   Arguments:  
+
+	mode = 1=normal, 2=innershell
                                                                                                    
                                                                                                    
   Returns:
@@ -590,13 +642,15 @@ generate photons */
 	02jul	ksl	Modified so that integ_fb is the number of 
 			recombinations per ne and per ion
 	06may	ksl	57+ -- Modified to use plasma structure since on volume
+    17jan   nsh 81c -- added option to calculate inner shell recombination rate
                                                                                                    
  ************************************************************************/
 
 int
-num_recomb (xplasma, t_e)
+num_recomb (xplasma, t_e, mode)
      PlasmaPtr xplasma;
      double t_e;
+	 int mode;
 {
   int nelem;
   int i, imin, imax;
@@ -608,11 +662,18 @@ num_recomb (xplasma, t_e)
     {
       if (xplasma->density[i] > DENSITY_PHOT_MIN)
       {
-        xplasma->recomb[i] = xplasma->ne * xplasma->density[i + 1] * integ_fb (t_e, 3e14, 3e17, i, 2);
+		  if (mode==1)
+        xplasma->recomb[i] = xplasma->ne * xplasma->density[i + 1] * integ_fb (t_e, 0.0, 1e50, i, 2);
+		  else if (mode==2)
+	    xplasma->inner_recomb[i] = xplasma->ne * xplasma->density[i + 1] * integ_fb (t_e, 0.0, 1e50, i, 4);
+			  
       }
     }
+	if (mode==1)
     xplasma->recomb[imax] = 0.0;        // Can't recombine to highest i-state
-
+	else if (mode==2)
+	xplasma->inner_recomb[imax] = 0.0;        // Can't recombine to highest i-state
+	
   }
 
   return (0);
@@ -710,7 +771,6 @@ fb (xplasma, t, freq, ion_choice, fb_choice)
     /* Loop over relevent Topbase photoionization x-sections.  If 
        an ion does not have Topbase photoionization x-sections then
        ntmin and ntmax are the same and the loop will be skipped. */
-
     for (n = nmin; n < nmax; n++)
     {
       fb_xtop = &phot_top[n];   /*Externally transmited to fb_topbase_partial */
@@ -1001,7 +1061,7 @@ xinteg_fb (t, f1, f2, nion, fb_choice)
       nmax = nmin + 1;
     }
     else
-      // the ion is a fullt ionized ion / doesn't have a cross-section, so return 0
+      // the ion is a fully ionized ion / doesn't have a cross-section, so return 0
       return (0.0);
   }
   else                          // Get the total emissivity
@@ -1009,7 +1069,6 @@ xinteg_fb (t, f1, f2, nion, fb_choice)
     Error ("integ_fb: %d is unacceptable value of nion\n", nion);
     exit (0);
   }
-
   // Put information where it can be used by the integrating function
   fbt = t;
   fbfr = fb_choice;
@@ -1021,11 +1080,10 @@ xinteg_fb (t, f1, f2, nion, fb_choice)
   if (f2 > 3e18)                // 110819 nsh increase upper limits to include  highly ionised ions that we are now seeing in x-ray illuminated nebulas.
     f2 = 3e18;                  // This is 1 Angstroms  - ksl
   if (f2 < f1)
-    return (0);                 /* Because there is nothing to integrate */
+    return (0.0);                 /* Because there is nothing to integrate */
 
   fnu = 0.0;
-
-
+  
   for (n = nmin; n < nmax; n++)
   {
     // loop over relevent Topbase or VFKY photoionzation x-sections
@@ -1051,13 +1109,115 @@ xinteg_fb (t, f1, f2, nion, fb_choice)
         {
           fmax = fthresh + dnu;
         }
-        fnu += qromb (fb_topbase_partial, fthresh, fmax, 1.e-4);
+		fnu += qromb (fb_topbase_partial, fthresh, fmax, 1.e-4);
       }
+	  
     }
   }
+  
 
-  /* This completes the calculation of those levels 
-     for which we have Topbase x-sections, now do Verner */
+
+
+  return (fnu);
+}
+
+
+/**************************************************************************
+                    Space Telescope Science Institute
+                                                                                                   
+                                                                                                   
+  Synopsis: xinteg_inner_fb calculates the integrated emissivity of the plasma due to inner shell
+			recombinations.  
+                                                                                                   
+  Description: The way we store inner shells is somewghat different to normal cross sectinos, so
+			we need a seperate routine. It has duplicate code, so it is likely we should do it 
+			a bit better
+                                                                                                   
+  Arguments:  
+                                                                                                   
+                                                                                                   
+  Returns:
+                                                                                                   
+  Notes:
+
+                                                                                                   
+                                                                                                   
+  History:
+	17jan SS      Dulicated and modified from xinteg_inner_fb
+                                                                                                   
+ ************************************************************************/
+
+
+double
+xinteg_inner_fb (t, f1, f2, nion, fb_choice)
+     double t;                  // The temperature at which to calculate the emissivity
+     double f1, f2;             // The frequencies overwhich to integrate the emissivity
+     int nion;                  // The ion for which the "specific emissivity is calculateed
+     int fb_choice;             // 0=full, otherwise reduced
+{
+  int n,nn;
+  double fnu;
+  double dnu;                   //NSH 140120 - a parameter to allow one to restrict the integration limits.
+  double fthresh, fmax;
+  double den_config ();
+  double qromb ();
+
+
+  dnu = 0.0;                    //Avoid compilation errors.
+  
+  fnu = 0.0;
+  
+  nn=-1;
+  
+  /* Limit the frequency range to one that is reasonable before integrating */
+  
+  
+  if (f1 < 3e12)
+    f1 = 3e12;                  // 10000 Angstroms
+  if (f2 > 3e18)                // 110819 nsh increase upper limits to include  highly ionised ions that we are now seeing in x-ray illuminated nebulas.
+    f2 = 3e18;                  // This is 1 Angstroms  - ksl
+  if (f2 < f1)
+    return (0.0);                 /* Because there is nothing to integrate */
+	  
+	  for (n=0;n<n_inner_tot;n++)
+  {
+	  if (inner_cross[n].nion==nion)
+	{	
+		  nn=n; 
+  fbt = t;
+  fbfr = fb_choice;
+
+
+    fb_xtop = &inner_cross[nn];
+
+    /* Adding an if statement here so that photoionization that's part of a macro atom is 
+       not included here (these will be dealt with elsewhere). (SS, Apr04) */
+    if (fb_xtop->macro_info == 0 || geo.macro_simple == 1 || geo.rt_mode == 1)  //Macro atom check. (SS)
+    {
+      fthresh = fb_xtop->freq[0];
+      fmax = fb_xtop->freq[fb_xtop->np - 1];    // Argues that this should be part of structure
+      if (f1 > fthresh)
+        fthresh = f1;
+      if (f2 < fmax)
+        fmax = f2;
+
+      // Now calculate the emissivity as long as fmax exceeds xthreshold and there are ions to recombine
+      if (fmax > fthresh)
+      {
+        //NSH 140120 - this is a test to ensure that the exponential will not go to zero in the integrations 
+        dnu = 100.0 * (fbt / H_OVER_K);
+        if (fthresh + dnu < fmax)
+        {
+          fmax = fthresh + dnu;
+        }
+		fnu += qromb (fb_topbase_partial, fthresh, fmax, 1.e-4);
+      }
+	  
+    }
+  }
+}
+
+
 
   return (fnu);
 }
