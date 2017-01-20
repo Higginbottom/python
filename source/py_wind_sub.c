@@ -705,7 +705,7 @@ recomb_summary (w, rootname, ochoice)
     if (w[n].vol > 0.0)
     {
       nplasma = w[n].nplasma;
-      num_recomb (&plasmamain[nplasma], plasmamain[nplasma].t_e);
+      num_recomb (&plasmamain[nplasma], plasmamain[nplasma].t_e,1);
       aaa[n] = plasmamain[nplasma].recomb[ion];
     }
   }

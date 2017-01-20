@@ -82,7 +82,7 @@ xadiabatic_cooling_summary (w, rootname, ochoice)
     if (w[n].vol > 0.0)
     {
       t_e = plasmamain[w[n].nplasma].t_e;
-      num_recomb (&plasmamain[w[n].nplasma], t_e);
+      num_recomb (&plasmamain[w[n].nplasma], t_e,1);
       tot += aaa[n] = adiabatic_cooling (&w[n], t_e);
     }
   }
