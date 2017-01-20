@@ -430,7 +430,7 @@ spectral_estimators (xplasma)
 
   }                             //End of loop over bands 
 
-  geo.spec_mod=1; //Tell the code we have models
+  geo.spec_mod = 1;             //Tell the code we have models
 
   return (0);
 

@@ -233,7 +233,7 @@ q21 (line_ptr, t)
      struct lines *line_ptr;
      double t;
 {
-  double gaunt,gbar;
+  double gaunt, gbar;
   double omega;
   double u0;
 
@@ -253,34 +253,34 @@ q21 (line_ptr, t)
 
     if (line_ptr->istate == 1 && u0 < 2)        // neutrals at low energy. Used 2 to give continuous function. 
       gaunt = u0 / 10.0;
-	else        // low energy electrons, positive ions
+    else                        // low energy electrons, positive ions
       gaunt = 0.2;
 
 
 
     /* JM 1511 -- For kt >> hnu, we could perhaps adopt equation (6) of Van Regemorter 1962, 
        which give us The Bethe approximation? */
-	/* NSH 1702 -- I dont think the Bethe/Born approximation can be used - it is for a given 
-		electron energy rather than an electronenergy averaged quantity - I think */
+    /* NSH 1702 -- I dont think the Bethe/Born approximation can be used - it is for a given 
+       electron energy rather than an electronenergy averaged quantity - I think */
     //else                                    // Bethe approx
     //gaunt = 3.0 * sqrt(3.0) / 2.0 / PI * (1 - (1.0 / u0));
 
 
-	if (line_ptr->coll_index<0)  //if we do not have a collision strength for this linem use the g-bar formulation
-	{
-    	omega = ECS_CONSTANT * line_ptr->gl * gaunt * line_ptr->f / line_ptr->freq;
-	}
-	else   //otherwise use the collision strength directly. NB what we call omega, most people including hazy call upsilon.
-	{
-    	omega = upsilon(line_ptr->coll_index,u0);
-		gbar=omega/ECS_CONSTANT/line_ptr->gl/line_ptr->f*line_ptr->freq; //check the implied value of gbar
-		if (gbar<0.1 || gbar>10) //if it is odd (i.e. not about 1) throw an error
-		{
-			Error ("q21 - suspicious implied value of gbar for coll strength record %i\n",line_ptr->coll_index);
-		}
-	}	
-		
-	
+    if (line_ptr->coll_index < 0)       //if we do not have a collision strength for this linem use the g-bar formulation
+    {
+      omega = ECS_CONSTANT * line_ptr->gl * gaunt * line_ptr->f / line_ptr->freq;
+    }
+    else                        //otherwise use the collision strength directly. NB what we call omega, most people including hazy call upsilon.
+    {
+      omega = upsilon (line_ptr->coll_index, u0);
+      gbar = omega / ECS_CONSTANT / line_ptr->gl / line_ptr->f * line_ptr->freq;        //check the implied value of gbar
+      if (gbar < 0.1 || gbar > 10)      //if it is odd (i.e. not about 1) throw an error
+      {
+        Error ("q21 - suspicious implied value of gbar for coll strength record %i\n", line_ptr->coll_index);
+      }
+    }
+
+
     q21_a = 8.629e-6 / (sqrt (t) * line_ptr->gu) * omega;
     q21_t_old = t;
   }
@@ -814,59 +814,59 @@ History:
 
 
 double
-upsilon (n_coll,u0)
-	int n_coll;
-	double u0;
+upsilon (n_coll, u0)
+     int n_coll;
+     double u0;
 {
-	double x; //The scaled tamperature
-	double y; //The scaled collision sterngth
-	double upsilon; //The actual collision strength
-	
+  double x;                     //The scaled tamperature
+  double y;                     //The scaled collision sterngth
+  double upsilon;               //The actual collision strength
 
-	
-//First we compute x	
-	
-	if (coll_stren[n_coll].type==1 || coll_stren[n_coll].type==4)
-	{
-		x=1.-log(coll_stren[n_coll].scaling_param)/log(u0+coll_stren[n_coll].scaling_param);
-	}
-	else if (coll_stren[n_coll].type==2 || coll_stren[n_coll].type==3)
-	{
-		x=u0/(u0+coll_stren[n_coll].scaling_param);
-	}
-	else
-	{
-		Error ("upsilon - coll_stren %i has no type %g\n", coll_stren[n_coll].type);
-		exit(0);
-	}
 
-	
-//we now compute y from the interpolation formulae	
-	
-	linterp (x, coll_stren[n_coll].sct,coll_stren[n_coll].scups, coll_stren[n_coll].n_points, &y, 0);
-	
-//now we extract upsilon from y	
-	
-	if (coll_stren[n_coll].type==1)
-	{
-		upsilon=y*(log(u0+exp(1)));
-	}
-	else if (coll_stren[n_coll].type==2)
-	{
-		upsilon=y;
-	}
-	else if (coll_stren[n_coll].type==3)
-	{
-		upsilon=y/(u0+1);
-	}
-	else if (coll_stren[n_coll].type==4)
-	{
-		upsilon=y*(log(u0+coll_stren[n_coll].scaling_param));
-	}
-	else
-	{
-		Error ("upsilon - coll_stren %i has no type %g\n", coll_stren[n_coll].type);
-		exit(0);
-	}
-			return(upsilon);			
+
+//First we compute x    
+
+  if (coll_stren[n_coll].type == 1 || coll_stren[n_coll].type == 4)
+  {
+    x = 1. - log (coll_stren[n_coll].scaling_param) / log (u0 + coll_stren[n_coll].scaling_param);
+  }
+  else if (coll_stren[n_coll].type == 2 || coll_stren[n_coll].type == 3)
+  {
+    x = u0 / (u0 + coll_stren[n_coll].scaling_param);
+  }
+  else
+  {
+    Error ("upsilon - coll_stren %i has no type %g\n", coll_stren[n_coll].type);
+    exit (0);
+  }
+
+
+//we now compute y from the interpolation formulae      
+
+  linterp (x, coll_stren[n_coll].sct, coll_stren[n_coll].scups, coll_stren[n_coll].n_points, &y, 0);
+
+//now we extract upsilon from y 
+
+  if (coll_stren[n_coll].type == 1)
+  {
+    upsilon = y * (log (u0 + exp (1)));
+  }
+  else if (coll_stren[n_coll].type == 2)
+  {
+    upsilon = y;
+  }
+  else if (coll_stren[n_coll].type == 3)
+  {
+    upsilon = y / (u0 + 1);
+  }
+  else if (coll_stren[n_coll].type == 4)
+  {
+    upsilon = y * (log (u0 + coll_stren[n_coll].scaling_param));
+  }
+  else
+  {
+    Error ("upsilon - coll_stren %i has no type %g\n", coll_stren[n_coll].type);
+    exit (0);
+  }
+  return (upsilon);
 }

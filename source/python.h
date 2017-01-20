@@ -540,8 +540,8 @@ struct geometry
   int reverb_dump_cells;        //SWM - Number of cells to dump, list of cells to dump 'nwind' values
   double *reverb_dump_x, *reverb_dump_z;        //SWM - x & z values of the cells to dump
   int reverb_lines, *reverb_line;       //SWM - Number of lines to track, and array of line 'nres' values
-  
-  int spec_mod;  //A flag to say that we do hav spectral models
+
+  int spec_mod;                 //A flag to say that we do hav spectral models
 }
 geo;
 
@@ -750,14 +750,14 @@ typedef struct plasma
   double *ioniz, *recomb;       /* Number of ionizations and recombinations for each ion.
                                    The sense is ionization from ion[n], and recombinations 
                                    to each ion[n] . 78 - changed to dynamic allocation */
-	  double inner_recomb[NIONS];
+  double inner_recomb[NIONS];
   int *scatters;                /* 68b - The number of scatters in this cell for each ion. 78 - changed to dynamic allocation */
   double *xscatters;            /* 68b - Diagnostic measure of energy scattered out of beam on extract. 78 - changed to dynamic allocation */
   double *heat_ion;             /* The amount of energy being transferred to the electron pool
                                    sby this ion via photoionization. 78 - changed to dynamic allocation */
   double *lum_ion;              /* The amount of energy being released from the electron pool
                                    by this ion via recombination. 78 - changed to dynamic allocation */
-	  double lum_inner_ion[NIONS];
+  double lum_inner_ion[NIONS];
   double j, ave_freq, lum;      /*Respectively mean intensity, intensity_averaged frequency, 
                                    luminosity and absorbed luminosity of shell */
   double xj[NXBANDS], xave_freq[NXBANDS];       /* 1108 NSH frequency limited versions of j and ave_freq */
@@ -1204,8 +1204,8 @@ struct fbstruc
 {
   double f1, f2;
   double emiss[NIONS][NTEMPS];
-  double emiss_upper[NIONS][NTEMPS]; //The emissivity of recombinations to the highest energy level we have
-  
+  double emiss_upper[NIONS][NTEMPS];    //The emissivity of recombinations to the highest energy level we have
+
 }
 freebound[NFB];
 

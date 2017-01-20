@@ -29,7 +29,7 @@
 #include "python.h"
 #include <gsl/gsl_rng.h>
 
-PlasmaPtr xplasma;         // Pointer to current plasma cell
+PlasmaPtr xplasma;              // Pointer to current plasma cell
 
 /**************************************************************************
                     Space Telescope Science Institute
@@ -59,7 +59,7 @@ jan 2017 - nsh - and back to approximate cross section - we believe that this is
 
 double
 kappa_comp (xplasma, freq)
-    PlasmaPtr xplasma;         // Pointer to current plasma cell
+     PlasmaPtr xplasma;         // Pointer to current plasma cell
      double freq;               // Frequency of the current photon being tracked
 {
   double x;                     // The opacity of the cell by the time we return it.
@@ -72,8 +72,8 @@ kappa_comp (xplasma, freq)
   ndom = wmain[xplasma->nwind].ndom;
 
 //    sigma = klein_nishina (freq); //NSH 130214 - full KN formula
-  
-   sigma=alpha(freq)*THOMPSON; //NSH - 1701 - turns out we should use the fitted cross section from hazy here 
+
+  sigma = alpha (freq) * THOMPSON;      //NSH - 1701 - turns out we should use the fitted cross section from hazy here 
 
   x = (sigma * H) / (MELEC * C * C);    //Calculate the constant
   x *= xplasma->ne * freq;      //Multiply by cell electron density and frequency of the packet.
@@ -141,7 +141,7 @@ kappa_ind_comp (xplasma, freq)
 //    sigma = klein_nishina (freq); //NSH 130214 - full KN formula
 
 
-   sigma = THOMPSON * alpha(freq); //NSH 1701 - as in normal compton, we should use alpha here
+  sigma = THOMPSON * alpha (freq);      //NSH 1701 - as in normal compton, we should use alpha here
 
   x = (xplasma->ne) / (MELEC);
   x *= sigma * J;               // NSH 130214 factor of THOMPSON removed, since alpha is now the actual compton cross section
@@ -186,18 +186,18 @@ total_comp (one, t_e)
      WindPtr one;               // Pointer to the current wind cell - we need the cell volume, this is not in the plasma structure
      double t_e;                //Current electron temperature of the cell
 {
-  double x,f1,f2;                     //The returned variable
-  int nplasma,j;                  //The cell number in the plasma array
+  double x, f1, f2;             //The returned variable
+  int nplasma, j;               //The cell number in the plasma array
 //  PlasmaPtr xplasma;            //pointer to the relevant cell in the plasma structure - now external to allow for the integration
 
 
   nplasma = one->nplasma;       //Get the correct plasma cell related to this wind cell
   xplasma = &plasmamain[nplasma];       //copy the plasma structure for that cell to local variable
-  
-   x=0.0;
-  
-   if (geo.spec_mod==1) //Check to see if we have generated a spectral model
-   {
+
+  x = 0.0;
+
+  if (geo.spec_mod == 1)        //Check to see if we have generated a spectral model
+  {
     for (j = 0; j < geo.nxfreq; j++)    //We loop over all the bands
     {
       if (xplasma->spec_mod_type[j] != SPEC_MOD_FAIL)   //Only bother doing the integrals if we have a model in this band
@@ -205,18 +205,18 @@ total_comp (one, t_e)
         f1 = xplasma->fmin_mod[j];      //NSH 131114 - Set the low frequency limit to the lowest frequency that the model applies to
         f2 = xplasma->fmax_mod[j];      //NSH 131114 - Set the high frequency limit to the highest frequency that the model applies to
         x += qromb (comp_cool_integrand, f1, f2, 1e-6);
-	}
-}
-}
-    
-else //If no spectral model - do it the old way
-{
-	  x =  THOMPSON * xplasma->j ;   
- }
+      }
+    }
+  }
+
+  else                          //If no spectral model - do it the old way
+  {
+    x = THOMPSON * xplasma->j;
+  }
 
 
- 
-x*= (16. * PI *BOLTZMANN * t_e *xplasma->ne)/ (MELEC * C * C)   * xplasma->vol;
+
+  x *= (16. * PI * BOLTZMANN * t_e * xplasma->ne) / (MELEC * C * C) * xplasma->vol;
 
   return (x);
 }
@@ -475,13 +475,13 @@ sigma_compton_partial (f, x)
  ************************************************************************/
 
 
-double 
-	alpha (nu)
-		double nu;
+double
+alpha (nu)
+     double nu;
 {
-	double alpha;
-	alpha=1./(1.+nu*HRYD*(1.1792e-4+7.084e-10*nu*HRYD));
-		return (alpha);
+  double alpha;
+  alpha = 1. / (1. + nu * HRYD * (1.1792e-4 + 7.084e-10 * nu * HRYD));
+  return (alpha);
 }
 
 /**************************************************************************
@@ -508,14 +508,14 @@ double
 
  ************************************************************************/
 
-double 
-	beta (nu)
-		double nu;
+double
+beta (nu)
+     double nu;
 {
-	double alp,beta;
-	alp=alpha(nu);
-	beta=(1.-alp*nu*HRYD*(1.1792e-4+(2*7.084e-10*nu*HRYD))/4.);
-		return (beta);
+  double alp, beta;
+  alp = alpha (nu);
+  beta = (1. - alp * nu * HRYD * (1.1792e-4 + (2 * 7.084e-10 * nu * HRYD)) / 4.);
+  return (beta);
 }
 
 
@@ -548,15 +548,12 @@ double
  ************************************************************************/
 
 double
-	comp_cool_integrand(nu)
-		double nu;
+comp_cool_integrand (nu)
+     double nu;
 {
-	double value;
-	value=THOMPSON*beta(nu)*mean_intensity(xplasma, nu, 2);
-	
-	
-	return (value);
+  double value;
+  value = THOMPSON * beta (nu) * mean_intensity (xplasma, nu, 2);
+
+
+  return (value);
 }
-
-
-
