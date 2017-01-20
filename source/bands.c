@@ -263,16 +263,16 @@ bands_init (imode, band)
   }
   else if (mode == 5)           /* Set up to compare with cloudy power law table command note that this also sets up the weight and photon index for the PL, to ensure a continuous distribution */
   {
-	  if (geo.agn_ion_spectype != SPECTYPE_CL_TAB)
-	  {
-		  Error("Trying to use a broken power law banding without setting spectype to broken power law - must set spectype to 4\n");
-		  exit(0);
-	  }
+    if (geo.agn_ion_spectype != SPECTYPE_CL_TAB)
+    {
+      Error ("Trying to use a broken power law banding without setting spectype to broken power law - must set spectype to 4\n");
+      exit (0);
+    }
     rddoub ("Lowest_energy_to_be_considered(eV)", &xx);
 
     if (xx > geo.agn_cltab_low)
     {
-	  xx = geo.agn_cltab_low / 10.0;
+      xx = geo.agn_cltab_low / 10.0;
       Log ("Lowest  frequency reset to 1/10 of low frequency break\n");
     }
     f1 = xx / HEV;

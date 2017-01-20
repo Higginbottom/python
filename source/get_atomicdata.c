@@ -144,6 +144,7 @@ History:
 	14nov	nsh	78b - added DERE direct ionizaion data, and changed al recomb data to refer to state being left
                  Also used write_atomicdata to control if summary is written to file.
   15apr JM  79b -- VFKY cross-sections are now tabulated. Multiple changes here, see pull #143
+  17jan NSH 81c -- Added collision strengths
 **************************************************************/
 
 
@@ -217,6 +218,9 @@ get_atomic_data (masterfile)
   int n_fluor_yield_tot;        //The number of inner shell cross sections with matching fluorescent photon yield arrays
   double I, Ea;                 //The ionization energy and mean electron energy for electron yields
   double energy;                //The energy of inner shell fluorescent photons
+  int c_l, c_u;                 //Chianti level indicators
+  double en, gf, hlt, sp;       //Parameters in collision strangth file
+  int type;                     //used in collision strength
 
   /* define which files to read as data files */
 
@@ -425,6 +429,7 @@ get_atomic_data (masterfile)
     line[n].gl = line[n].gu = 0;
     line[n].el = line[n].eu = 0.0;
     line[n].macro_info = -1;
+    line[n].coll_index = -999;
   }
 
 /* 081115 nsh The following lines initialise the dielectronic recombination structure */
@@ -490,8 +495,6 @@ get_atomic_data (masterfile)
   }
 
 
-
-
 /* 0912 nsh the following lines initialise the sutherland gaunt factors */
   gaunt_n_gsqrd = 0;            //The number of sets of scaled temperatures we have data for
   for (n = 0; n < MAX_GAUNT_N_GSQRD; n++)
@@ -504,14 +507,27 @@ get_atomic_data (masterfile)
   }
 
 
+/* 0117 nsh the following lines initialise the collision strengths */
+  n_coll_stren = 0;             //The number of data sets
+  for (n = 0; n < NLINES; n++)
+  {
+    coll_stren[n].n = -1;       //Internal index
+    coll_stren[n].lower = -1;   //The lower energy level - this is in Chianti notation and is currently unused
+    coll_stren[n].upper = -1;   //The upper energy level - this is in Chianti notation and is currently unused
+    coll_stren[n].energy = 0.0; //The energy of the transition
+    coll_stren[n].gf = 0.0;
+    coll_stren[n].hi_t_lim = 0.0;       //The high temerature limit
+    coll_stren[n].n_points = 0.0;       //The number of points in the splie fit
+    coll_stren[n].type = -1;    //The type of fit, this defines how one computes the scaled temperature and scaled coll strength
+    coll_stren[n].scaling_param = 0.0;  //The scaling parameter C used in the Burgess and Tully calculations
+    for (n1 = 0; n1 < N_COLL_STREN_PTS; n1++)
+    {
+      coll_stren[n].sct[n1] = 0.0;      //The scaled temperature points in the fit
+      coll_stren[n].scups[n1] = 0.0;
+    }
+  }
 
 
-  /*              for (n=0;nions;n++) {
-     ground_frac[n].z=-1;
-     ground_frac[n].istate=-1;
-     for (j=0;j<20;j++) {
-     ground_frac[n].frac[j]=1.;}
-     } */
 
   choice = 'x';                 /* Start by assuming you cannot determine what kind of line it is */
   nelements = 0;
@@ -580,6 +596,8 @@ structure does not have this property! */
           choice = 'c';
         else if (strncmp (word, "#", 1) == 0)
           choice = 'c';         /* It's a comment */
+        else if (strncmp (word, "CSTREN", 6) == 0)      //collision strengths
+          choice = 'C';
         else if (strncmp (word, "Element", 5) == 0)
           choice = 'e';
         else if (strncmp (word, "Ion", 3) == 0)
@@ -1373,6 +1391,7 @@ for the ionstate.
           {
             // It's a TOPBASE style photoionization record, beginning with the summary record
             sscanf (aline, "%*s %d %d %d %d %le %d\n", &z, &istate, &islp, &ilv, &exx, &np);
+//                      printf ("reading a topbase sytle PI record for z=%i istate=%i file=%s\n",z,istate,file);
             for (n = 0; n < np; n++)
             {                   //Read the topbase photoionization records
               if (fgets (aline, LINELENGTH, fptr) == NULL)
@@ -1400,8 +1419,7 @@ for the ionstate.
               n++;
             if (n == nlevels)
             {
-
-              Debug ("No ion found to match PhotTop data in file %s on line %d. Data ignored.\n", file, lineno);
+              Debug ("No level found to match PhotTop data in file %s on line %d. Data ignored.\n", file, lineno);
               break;            // There was no pre-existing ion
             }
             if (ion[config[n].nion].macro_info == 0)    //this is not a macro atom level (SS) 
@@ -1413,6 +1431,9 @@ for the ionstate.
               phot_top[ntop_phot].np = np;
               phot_top[ntop_phot].nlast = -1;
               phot_top[ntop_phot].macro_info = 0;
+
+
+
 
               /* NSH 0312 - next line sees if the topbase level just read in is the ground state - 
                  if it is, the ion structure element ntop_ground is set to that topbase level number */
@@ -1426,7 +1447,6 @@ for the ionstate.
               {
                 ion[config[n].nion].phot_info = 1;      /* Mark this ion as using TOPBASE photo */
                 ion[config[n].nion].ntop_first = ntop_phot;
-
               }
               else if (ion[config[n].nion].phot_info == (0))
               {
@@ -1474,7 +1494,7 @@ for the ionstate.
 
           else if (strncmp (word, "PhotVfkyS", 8) == 0)
           {
-            // It's a TOPBASE style photoionization record, beginning with the summary record
+            // It's a VFKY style photoionization record, beginning with the summary record
             sscanf (aline, "%*s %d %d %d %d %le %d\n", &z, &istate, &islp, &ilv, &exx, &np);
             for (n = 0; n < np; n++)
             {
@@ -1595,7 +1615,9 @@ for the ionstate.
           {
             if (ion[nion].z == z && ion[nion].istate == istate)
             {
+//                              printf ("Identified inner shell %i with ion %i z %i state %i which has g %i\n",n_inner_tot,)
               /* Then there is a match */
+              inner_cross[n_inner_tot].nlev = ion[nion].firstlevel;     //All these are for the ground state
               inner_cross[n_inner_tot].nion = nion;
               inner_cross[n_inner_tot].np = np;
               inner_cross[n_inner_tot].z = z;
@@ -1928,6 +1950,7 @@ would like to have simple lines for macro-ions */
               line[nlines].eu = eu;
               line[nlines].nconfigl = nconfigl;
               line[nlines].nconfigu = nconfigu;
+              line[nlines].coll_index = -999;   //Tokick off with we assume there is no collisional strength data
               if (mflag == -1)
               {
                 line[nlines].macro_info = 0;    // It's an old-style line`
@@ -2466,6 +2489,83 @@ BAD_T_RR  5  0  1  1  4.647E-10  0.7484  6.142E+01  1.753E+07*/
           }
           break;
 
+
+/* The lines below read in collision strength data from Chianti (after Burgess and Tully). The original
+		  is stored in .scups files in chianti. The python script searches for matches to the lines_linked_ver_2.py
+		  data file, on the basis of energy and oscillator strength (and z and state). As a rather hamfisted
+		  approach, all of the line data is stored on the same line as the collision strength data in
+		  the file, so it is possible to make a very accurate match. It does mean quite a lot is read in
+		  from a line, but most is thrown away. Currently the code below matches based on z, state, upper and
+		  lower level numbers and oscillator strength */
+
+        case 'C':
+          nparam = (sscanf (aline, "%*s %*s %d %2d %le %le %le %le %le %le %d %d %d %d %le %le %le %d %d %le",
+                            &z, &istate, &freq, &f, &gl, &gu, &el, &eu, &levl, &levu, &c_l, &c_u, &en, &gf, &hlt, &np, &type, &sp));
+          if (nparam != 18)
+          {
+            Error ("Get_atomic_data: file %s line %d: Collision strength line incorrectly formatted\n", file, lineno);
+            Error ("Get_atomic_data: %s\n", aline);
+            exit (0);
+          }
+          for (n = 0; n < nlines; n++)  //loop over all the lines we have read in - look for a match
+          {
+            if (line[n].z == z && line[n].istate == istate && line[n].levl == levl && line[n].levu == levu && line[n].gl == gl
+                && line[n].gu == gu && line[n].f == f)
+            {
+              if (line[n].coll_index > -1)      //We already have a collision strength record from this line - throw an error and quit
+              {
+                Error ("Get_atomic_data More than one collision strength record for line %i\n", n);
+                exit (0);
+              }
+
+              coll_stren[n_coll_stren].n = n_coll_stren;
+              coll_stren[n_coll_stren].lower = c_l;
+              coll_stren[n_coll_stren].upper = c_u;
+              coll_stren[n_coll_stren].energy = en;
+              coll_stren[n_coll_stren].gf = gf;
+              coll_stren[n_coll_stren].hi_t_lim = hlt;
+              coll_stren[n_coll_stren].n_points = np;
+              coll_stren[n_coll_stren].type = type;
+              coll_stren[n_coll_stren].scaling_param = sp;
+
+              line[n].coll_index = n_coll_stren;        //point the line to its matching collision strength
+
+              //We now read in two lines of fitting data
+              if (fgets (aline, LINELENGTH, fptr) == NULL)
+              {
+                Error ("Get_atomic_data: Problem reading collision strength record\n");
+                Error ("Get_atomic_data: %s\n", aline);
+                exit (0);
+              }
+              nparam = sscanf (aline, "%*s %le %le %le %le %le %le %le %le %le %le",
+                               &temp[0], &temp[1], &temp[2], &temp[3], &temp[4], &temp[5], &temp[6], &temp[7], &temp[8], &temp[9]);
+
+              for (nn = 0; nn < np; nn++)
+              {
+                coll_stren[n_coll_stren].sct[nn] = temp[nn];
+              }
+              if (fgets (aline, LINELENGTH, fptr) == NULL)
+              {
+                Error ("Get_atomic_data: Problem reading collision strength record\n");
+                Error ("Get_atomic_data: %s\n", aline);
+                exit (0);
+              }
+              nparam = sscanf (aline, "%*s %le %le %le %le %le %le %le %le %le %le",
+                               &temp[0], &temp[1], &temp[2], &temp[3], &temp[4], &temp[5], &temp[6], &temp[7], &temp[8], &temp[9]);
+
+              for (nn = 0; nn < np; nn++)
+              {
+                coll_stren[n_coll_stren].scups[nn] = temp[nn];
+              }
+              n_coll_stren++;
+            }
+          }
+//                              line[n].coll_index=n_coll_stren;
+
+
+
+          break;
+
         case 'c':              /* It was a comment line so do nothing */
           break;
         case 'z':
@@ -2510,6 +2610,13 @@ BAD_T_RR  5  0  1  1  4.647E-10  0.7484  6.142E+01  1.753E+07*/
   Log
     ("Simple  %3d elements, %3d ions, %5d levels, %5d lines, and %5d topbase records\n",
      nelements, nions_simple, nlevels_simple, nlines_simple, ntop_phot_simple);
+
+
+  Log ("We have read in %3d photoionization cross sections\n", nphot_total);
+  Log ("                %3d are topbase \n", ntop_phot);
+  Log ("                %3d are VFKY \n", nxphot);
+
+  Log ("We have read in %5d   Chiantic collision strengths\n", n_coll_stren);   //1701 nsh collision strengths  
   Log ("We have read in %3d Inner shell photoionization cross sections\n", n_inner_tot);        //110818 nsh added a reporting line about dielectronic recombination coefficients
   Log ("                %3d have matching electron yield data\n", n_elec_yield_tot);
   Log ("                %3d have matching fluorescent yield data\n", n_fluor_yield_tot);

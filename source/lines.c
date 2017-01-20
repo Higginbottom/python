@@ -88,6 +88,8 @@ total_line_emission (one, f1, f2)
   if (xxxpdfwind == 1)
     lum_pdf (&plasmamain[one->nplasma], lum);
 
+//    lum=lum*3.0;;
+
 
   return (lum);
 
@@ -207,6 +209,8 @@ pdf_x[m]-1
    Notes:  This uses a simple approximation for the effective_collision_strength omega.
    ?? I am not sure where this came from at present and am indeed no sure that
    omega is omega(2->1) as it should be.  This should be carefully checked.??
+	This has no been improved, and wherever possible we use tabulared collision 
+	sttength data from Chianti (after Burgess and Tully 1992)
 
    c21=n_e * q21
    q12 = g_2/g_1 q21 exp(-h nu / kT )
@@ -218,6 +222,7 @@ pdf_x[m]-1
 			returns without recalculation
 	12oct	nsh	Added, then commented out approximate gaunt factor given in
 			hazy 2.
+	17jan	nsh Added code to use the actual collision strength date from chianti
 
  */
 struct lines *q21_line_ptr;
@@ -228,7 +233,7 @@ q21 (line_ptr, t)
      struct lines *line_ptr;
      double t;
 {
-  double gaunt;
+  double gaunt,gbar;
   double omega;
   double u0;
 
@@ -243,17 +248,39 @@ q21 (line_ptr, t)
        factor to calculate collision strengths. There is one regime in which kt < hnu. For that
        consult equation 4.20 and 4.21 of Hazy. */
 
+
+
+
     if (line_ptr->istate == 1 && u0 < 2)        // neutrals at low energy. Used 2 to give continuous function. 
       gaunt = u0 / 10.0;
-    else                        // low energy electrons, positive ions
+	else        // low energy electrons, positive ions
       gaunt = 0.2;
+
+
 
     /* JM 1511 -- For kt >> hnu, we could perhaps adopt equation (6) of Van Regemorter 1962, 
        which give us The Bethe approximation? */
+	/* NSH 1702 -- I dont think the Bethe/Born approximation can be used - it is for a given 
+		electron energy rather than an electronenergy averaged quantity - I think */
     //else                                    // Bethe approx
     //gaunt = 3.0 * sqrt(3.0) / 2.0 / PI * (1 - (1.0 / u0));
 
-    omega = ECS_CONSTANT * line_ptr->gl * gaunt * line_ptr->f / line_ptr->freq;
+
+	if (line_ptr->coll_index<0)  //if we do not have a collision strength for this linem use the g-bar formulation
+	{
+    	omega = ECS_CONSTANT * line_ptr->gl * gaunt * line_ptr->f / line_ptr->freq;
+	}
+	else   //otherwise use the collision strength directly. NB what we call omega, most people including hazy call upsilon.
+	{
+    	omega = upsilon(line_ptr->coll_index,u0);
+		gbar=omega/ECS_CONSTANT/line_ptr->gl/line_ptr->f*line_ptr->freq; //check the implied value of gbar
+		if (gbar<0.1 || gbar>10) //if it is odd (i.e. not about 1) throw an error
+		{
+			Error ("q21 - suspicious implied value of gbar for coll strength record %i\n",line_ptr->coll_index);
+		}
+	}	
+		
+	
     q21_a = 8.629e-6 / (sqrt (t) * line_ptr->gu) * omega;
     q21_t_old = t;
   }
@@ -757,4 +784,89 @@ line_heat (xplasma, pp, nres)
 
   return (0);
 
+}
+
+
+
+/***********************************************************
+                                       Kavli Institute for Theoretical Physics
+
+upsilon (n_coll,u0) calculates the thermally averaged collision strength
+	for thermally excited line emission. It uses data extracted from Chianti
+	stored in coll_stren. The paper to consult is Burgess and Tully A&A 254,436 (1992).
+
+Arguments:	
+
+		n_coll - the index of the collision strength record we are working with
+		u_0  - kT_e/hnu - T_
+
+Returns:
+
+		upsilon - the thermally averaged collision strength for a given line at a given temp
+ 
+Description:
+	
+
+History:
+	17	nsh	Coded
+	
+*/
+
+
+double
+upsilon (n_coll,u0)
+	int n_coll;
+	double u0;
+{
+	double x; //The scaled tamperature
+	double y; //The scaled collision sterngth
+	double upsilon; //The actual collision strength
+	
+
+	
+//First we compute x	
+	
+	if (coll_stren[n_coll].type==1 || coll_stren[n_coll].type==4)
+	{
+		x=1.-log(coll_stren[n_coll].scaling_param)/log(u0+coll_stren[n_coll].scaling_param);
+	}
+	else if (coll_stren[n_coll].type==2 || coll_stren[n_coll].type==3)
+	{
+		x=u0/(u0+coll_stren[n_coll].scaling_param);
+	}
+	else
+	{
+		Error ("upsilon - coll_stren %i has no type %g\n", coll_stren[n_coll].type);
+		exit(0);
+	}
+
+	
+//we now compute y from the interpolation formulae	
+	
+	linterp (x, coll_stren[n_coll].sct,coll_stren[n_coll].scups, coll_stren[n_coll].n_points, &y, 0);
+	
+//now we extract upsilon from y	
+	
+	if (coll_stren[n_coll].type==1)
+	{
+		upsilon=y*(log(u0+exp(1)));
+	}
+	else if (coll_stren[n_coll].type==2)
+	{
+		upsilon=y;
+	}
+	else if (coll_stren[n_coll].type==3)
+	{
+		upsilon=y/(u0+1);
+	}
+	else if (coll_stren[n_coll].type==4)
+	{
+		upsilon=y*(log(u0+coll_stren[n_coll].scaling_param));
+	}
+	else
+	{
+		Error ("upsilon - coll_stren %i has no type %g\n", coll_stren[n_coll].type);
+		exit(0);
+	}
+			return(upsilon);			
 }

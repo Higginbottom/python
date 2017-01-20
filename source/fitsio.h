@@ -44,9 +44,9 @@ SERVICES PROVIDED HEREUNDER."
 /* (at least on Solaris platforms using cc)  */
 
 #if defined(_OFF_T) || defined(_MIPS_SZLONG)
-#    define OFF_T off_t
+#define OFF_T off_t
 #else
-#    define OFF_T long
+#define OFF_T long
 #endif
 
 /*  The following exclusion if __CINT__ is defined is needed for ROOT */
@@ -401,8 +401,8 @@ typedef struct                  /* structure for the iterator function column in
 #define BAD_DECIM         411   /* bad number of decimal places specified */
 #define NUM_OVERFLOW      412   /* overflow during datatype conversion */
 
-# define DATA_COMPRESSION_ERR 413       /* error in imcompress routines */
-# define DATA_DECOMPRESSION_ERR 414     /* error in imcompress routines */
+#define DATA_COMPRESSION_ERR 413        /* error in imcompress routines */
+#define DATA_DECOMPRESSION_ERR 414      /* error in imcompress routines */
 
 #define BAD_DATE          420   /* error in date or time conversion */
 

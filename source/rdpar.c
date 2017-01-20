@@ -1100,29 +1100,31 @@ get_root (root, total)
 
   /* Check whether total is an empty string */
 
-  j=strcspn (total, "\n");
-  if (j==0) {
-      strcpy (root, "rdpar");
-      return(0);
+  j = strcspn (total, "\n");
+  if (j == 0)
+  {
+    strcpy (root, "rdpar");
+    return (0);
   }
 
   /* Check for .pf at the end of the string 
    * Note that there is no easy way to actually
    * check for the last occurence.  Here we
    * assume there is only one occurrcne of .pf
-   */ 
+   */
 
-  pf=strstr(total,".pf");
-  if (pf != NULL) {
-      position=pf-total;
-      strncpy(root,total,position);
-      root[position]='\0';
-      printf("xxx %s\n",root);
-      return(0);
+  pf = strstr (total, ".pf");
+  if (pf != NULL)
+  {
+    position = pf - total;
+    strncpy (root, total, position);
+    root[position] = '\0';
+    printf ("xxx %s\n", root);
+    return (0);
   }
 
-  strncpy (root, total,j);
-  root[j]='\0';
+  strncpy (root, total, j);
+  root[j] = '\0';
 
 
 //OLD  Next section replaced 161231

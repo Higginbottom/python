@@ -120,32 +120,32 @@ emittance_pow (freqmin, freqmax, lum, alpha)
   //#define   XFREQMAX  2.42e18
 
   /* first we need to calculate the constant for the power law function */
- 
- /* 
-  if (alpha == -1.0) //deal with the pathological case
-  {
-      constant = lum / (log(XFREQMAX) - log(XFREQMIN));    
-}
-else
-{
-    constant = lum / (((pow (XFREQMAX, alpha + 1.)) - pow (XFREQMIN, alpha + 1.0)) / (alpha + 1.0));      
-}
-  
-  */
+
+  /* 
+     if (alpha == -1.0) //deal with the pathological case
+     {
+     constant = lum / (log(XFREQMAX) - log(XFREQMIN));    
+     }
+     else
+     {
+     constant = lum / (((pow (XFREQMAX, alpha + 1.)) - pow (XFREQMIN, alpha + 1.0)) / (alpha + 1.0));      
+     }
+
+   */
   /* now we need to work out the luminosity between our limited frequency range */
   /* we may need some checking routines to make sure that the requested frequency range is within the defined range,
      or it could default to zero outside the defined range */
-  
-  
-if (alpha == -1.0) //deal with the pathological case
-{
-	emit = geo.const_agn * (log(freqmax) - log(freqmin));
-}
-else
-{
+
+
+  if (alpha == -1.0)            //deal with the pathological case
+  {
+    emit = geo.const_agn * (log (freqmax) - log (freqmin));
+  }
+  else
+  {
     emit = geo.const_agn * ((pow (freqmax, alpha + 1.0) - pow (freqmin, alpha + 1.0)) / (alpha + 1.0));
-}	
-  
+  }
+
 
   return (emit);
 }
@@ -193,19 +193,19 @@ emittance_bpow (freqmin, freqmax, lum, alpha)
   f2 = freqmax;                 /* NSH - 130506 added to reomve 03 compile errors */
   e1 = e2 = e3 = 0.0;           /* NSH - 130506 added to reomve 03 compile errors */
   /* first we need to calculate the constant for the 2-10 kev power law function */
-  
-  
+
+
   /*
-  if (alpha == -1.0) //deal with the pathological case
-  {
-      constant = lum / (log(XFREQMAX) - log(XFREQMIN));    
-	  printf ("BLAH Computed constant=%e\n",constant)  ;  
-}
-else
-{
-    constant = lum / (((pow (XFREQMAX, alpha + 1.)) - pow (XFREQMIN, alpha + 1.0)) / (alpha + 1.0));    NSH 1205 - this seems a bit unnecessary now. The constant is calculaed elsewhere, and with the broken power law we could probably get rid of this - is it even working properly now 
-}
-  */
+     if (alpha == -1.0) //deal with the pathological case
+     {
+     constant = lum / (log(XFREQMAX) - log(XFREQMIN));    
+     printf ("BLAH Computed constant=%e\n",constant)  ;  
+     }
+     else
+     {
+     constant = lum / (((pow (XFREQMAX, alpha + 1.)) - pow (XFREQMIN, alpha + 1.0)) / (alpha + 1.0));    NSH 1205 - this seems a bit unnecessary now. The constant is calculaed elsewhere, and with the broken power law we could probably get rid of this - is it even working properly now 
+     }
+   */
 
 /* convert broken power law bands to freq */
 
@@ -271,11 +271,11 @@ else
     }
 //    atemp = alpha;
 //    ctemp = constant;
-	
-	
-	e2=emittance_pow (f1, f2, lum, alpha);
-	
-	
+
+
+    e2 = emittance_pow (f1, f2, lum, alpha);
+
+
 //    e2 = ctemp * ((pow (f2, atemp + 1.0) - pow (f1, atemp + 1.0)) / (atemp + 1.0));
     Log ("Broken power law: Emittance in centre is %e\n", e2);
   }

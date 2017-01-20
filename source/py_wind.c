@@ -267,7 +267,7 @@ I did not change this now.  Though it could be done.  02apr ksl */
 
   printf ("There were %d domains.  Starting with domain 0\n", geo.ndomain);
   current_domain = 0;
-  printf("JM COORD TYPE %d\n\n", zdom[current_domain].coord_type);
+  printf ("JM COORD TYPE %d\n\n", zdom[current_domain].coord_type);
   /*Set the current domain to zero */
 /* Produce a standard set of output files and exit*/
   if (interactive == 0 && strcmp (parameter_file, "NONE") == 0)

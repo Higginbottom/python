@@ -292,7 +292,7 @@ wind_complete (w)
 
   /* JM Loop over number of domains */
 
-  printf("geo.ndomain %d\n", geo.ndomain);
+  printf ("geo.ndomain %d\n", geo.ndomain);
 
   for (ndom = 0; ndom < geo.ndomain; ndom++)
   {
