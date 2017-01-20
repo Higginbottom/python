@@ -1045,6 +1045,7 @@ mean_intensity (xplasma, freq, mode)
   J = 0.0;                      // Avoid 03 error
 
 
+
   if (geo.ioniz_mode == 5 || geo.ioniz_mode == IONMODE_PAIRWISE_SPECTRALMODEL)  /*If we are using power law ionization, use PL estimators */
   {
     if (geo.wcycle > 0)         /* there is only any point in worrying if we have had at least one cycle otherwise there is no model */

@@ -61,6 +61,9 @@ History:
 l			longer discard models on the basis of numerical limitations,
 			so some of the log_silents have been replaced by 
 			warnings so I can see if we do still get numberical problems.
+	1701	nsh - added a flag to tell the rest of the code wether a
+			model has been made at all. This is currently only used in 
+			compton cooling.
 
 
 **************************************************************/
@@ -427,7 +430,7 @@ spectral_estimators (xplasma)
 
   }                             //End of loop over bands 
 
-
+  geo.spec_mod=1; //Tell the code we have models
 
   return (0);
 

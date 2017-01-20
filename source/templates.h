@@ -419,6 +419,9 @@ double klein_nishina(double nu);
 int compton_dir(PhotPtr p, PlasmaPtr xplasma);
 double compton_func(double f);
 double sigma_compton_partial(double f, double x);
+double alpha(double nu);
+double beta(double nu);
+double comp_cool_integrand(double nu);
 /* torus.c */
 double ds_to_cylinder(double rho, struct photon *p);
 /* zeta.c */
