@@ -55,7 +55,7 @@
 int nelements;                  /* The actual number of ions read from the data file */
 #define NIONS		500     /* Maximum number of ions to consider */
 int nions;                      /*The actual number of ions read from the datafile */
-#define NLEVELS 	120000   /* Maximum number of levels for all elements and ions */
+#define NLEVELS 	12000   /* Maximum number of levels for all elements and ions */
 int nlevels;                    /*These are the actual number of levels which were read in */
 #define NLTE_LEVELS	2700     /* Maximum number of levels to treat explicitly */
 int nlte_levels;                /* Actual number of levels to treat explicityly */
