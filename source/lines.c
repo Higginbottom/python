@@ -266,7 +266,7 @@ q21 (line_ptr, t)
     //gaunt = 3.0 * sqrt(3.0) / 2.0 / PI * (1 - (1.0 / u0));
 
 
-    if (line_ptr->coll_index < 0)       //if we do not have a collision strength for this linem use the g-bar formulation
+    if (line_ptr->coll_index < 0)       //if we do not have a collision strength for this line use the g-bar formulation
     {
       omega = ECS_CONSTANT * line_ptr->gl * gaunt * line_ptr->f / line_ptr->freq;
     }
@@ -274,9 +274,9 @@ q21 (line_ptr, t)
     {
       omega = upsilon (line_ptr->coll_index, u0);
       gbar = omega / ECS_CONSTANT / line_ptr->gl / line_ptr->f * line_ptr->freq;        //check the implied value of gbar
-      if (gbar < 0.1 || gbar > 10)      //if it is odd (i.e. not about 1) throw an error
+      if (gbar < 0.01 || gbar > 10)     //if it is odd (i.e. not about 1) throw an error
       {
-        Error ("q21 - suspicious implied value of gbar for coll strength record %i\n", line_ptr->coll_index);
+        printf ("q21 - suspicious implied value of gbar for coll strength record %i of %e\n", line_ptr->coll_index, gbar);
       }
     }
 

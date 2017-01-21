@@ -275,15 +275,15 @@ integ_fb (t, f1, f2, nion, fb_choice)
 
   if (fb_choice == 1)
   {
-    for (n = 0; n < nfb; n++)
-    {
-      /* See if the frequencies correspond to one previously calculated */
-      if (f1 == freebound[n].f1 && f2 == freebound[n].f2)
-      {
-        fnu = get_fb (t, nion, n);
-        return (fnu);
-      }
-    }
+//    for (n = 0; n < nfb; n++)
+//    {
+    /* See if the frequencies correspond to one previously calculated */
+//      if (f1 == freebound[n].f1 && f2 == freebound[n].f2)
+//      {
+//        fnu = get_fb (t, nion, n);
+//        return (fnu);
+//      }
+//    }
     /* If not calculate it here */
     fnu = xinteg_fb (t, f1, f2, nion, fb_choice);
     return (fnu);
@@ -291,23 +291,59 @@ integ_fb (t, f1, f2, nion, fb_choice)
   else if (fb_choice == 2)
   {
     /* See if the frequencies correspond to one previously calculated */
-    if (nfb > 0)
-    {
-      fnu = get_nrecomb (t, nion);
-      return (fnu);
-    }
+//    if (nfb > 0)
+//    {
+//      fnu = get_nrecomb (t, nion);
+//      return (fnu);
+//    }
     /* If not calculate it here */
     fnu = xinteg_fb (t, f1, f2, nion, fb_choice);
     return (fnu);
   }
 
-  if (fb_choice == 3)
+  Error ("integ_fb: Unknown fb_choice(%d)\n", fb_choice);
+  exit (0);
+}
+
+double
+integ_inner_fb (t, f1, f2, nion, fb_choice)
+     double t;                  // The temperature at which to calculate the emissivity
+     double f1, f2;             // The frequencies overwhich to integrate the emissivity
+     int nion;                  // The ion for which the "specific emissivity is calculateed
+     int fb_choice;             // 0=full, otherwise reduced
+{
+  double xinteg_fb ();
+  double fnu;
+  double get_fb (), get_nrecomb ();
+  int n;
+
+
+
+
+  if (fb_choice == 1)
   {
+//    for (n = 0; n < nfb; n++)
+//    {
+    /* See if the frequencies correspond to one previously calculated */
+//      if (f1 == freebound[n].f1 && f2 == freebound[n].f2)
+//      {
+//        fnu = get_fb (t, nion, n);
+//        return (fnu);
+//      }
+//    }
+    /* If not calculate it here */
     fnu = xinteg_inner_fb (t, f1, f2, nion, fb_choice);
     return (fnu);
   }
-  else if (fb_choice == 4)
+  else if (fb_choice == 2)
   {
+    /* See if the frequencies correspond to one previously calculated */
+//    if (nfb > 0)
+//    {
+//      fnu = get_nrecomb (t, nion);
+//      return (fnu);
+//    }
+    /* If not calculate it here */
     fnu = xinteg_inner_fb (t, f1, f2, nion, fb_choice);
     return (fnu);
   }
@@ -315,6 +351,7 @@ integ_fb (t, f1, f2, nion, fb_choice)
   Error ("integ_fb: Unknown fb_choice(%d)\n", fb_choice);
   exit (0);
 }
+
 
 
 /**************************************************************************
@@ -346,7 +383,6 @@ integ_fb (t, f1, f2, nion, fb_choice)
   		be used where possible.  This seemed the most conservative place
 		to put these calls since total_fb is always called whenever the
 		band-limited luminosities are needed.
-  17jan nsh added calls to compute inner shell recombination - i.e. dielectronic recombination
                                                                                                    
  ************************************************************************/
 
@@ -356,12 +392,12 @@ total_fb (one, t, f1, f2)
      WindPtr one;
      double t, f1, f2;
 {
-  double total;                 //,topup,drrate,inner_topup;
+  double total, topup, drrate, inner_topup;
   int nion;
   int nplasma;
   PlasmaPtr xplasma;
-//  double rr_rates[nions];
-//  double dr_rates[nions];
+  double rr_rates[nions];
+  double dr_rates[nions];
 
   nplasma = one->nplasma;
   xplasma = &plasmamain[nplasma];
@@ -376,8 +412,12 @@ total_fb (one, t, f1, f2)
 
 
 // Calculate the number of recombinations whenever calculating the fb_luminosities
-  num_recomb (xplasma, t, 1);
-  num_recomb (xplasma, t, 2);   //now also compute the number of inner shell recombinations
+//  printf ("BLAH - going to num_recomb");
+  num_recomb (xplasma, t);
+  num_inner_recomb (xplasma, t);
+
+
+
 
   total = 0;
   xplasma->lum_z = 0.0;
@@ -385,45 +425,60 @@ total_fb (one, t, f1, f2)
 
   for (nion = 0; nion < nions; nion++)
   {
+//         if (ion[nion+1].drflag == 0)
+//         {
+//                 drrate=-1.0;
+//         }
+//                         else
+//                         {
+    drrate = dr_coeffs[nion] * xplasma->ne * xplasma->density[nion + 1];
+//                         }
+//                      printf ("Computing dr rate coeff %e rate %e\n",dr_coeffs[nion+1],drrate);
 
-/* NSH - The following lines are required to do a cloudy style 'topup' of recomb cooling. Currently disabled	  
-	  drrate=dr_coeffs[nion]* xplasma->ne * xplasma->density[nion+1];
-	  if (ion[nion].istate != ion[nion].z+1)
-	  {
-		  rr_rates[nion] = total_rrate (nion+1, t)*xplasma->density[nion+1]*xplasma->ne;  //We also compute the total rate from badnell etc
-		  
-	  }
-	  else
-	  {
-		  rr_rates[nion]=-2.0;
-	  }
-	  */
 
-    if (xplasma->density[nion] > DENSITY_PHOT_MIN)
+    if (ion[nion].istate != ion[nion].z + 1)
+    {
+      rr_rates[nion] = total_rrate (nion + 1, t) * xplasma->density[nion + 1] * xplasma->ne;    //We also compute the total rate from badnell etc
+
+    }
+    else
+    {
+      rr_rates[nion] = -2.0;
+    }
+    if (xplasma->density[nion] > DENSITY_PHOT_MIN / 1e99)
     {
       total += xplasma->lum_ion[nion] = xplasma->vol * xplasma->ne * xplasma->density[nion + 1] * integ_fb (t, f1, f2, nion, 1);
-// This is new 2017 - we also compute a milne relation for inner cross sections.          
-      total += xplasma->lum_inner_ion[nion] = xplasma->vol * xplasma->ne * xplasma->density[nion + 1] * integ_fb (t, f1, f2, nion, 3);
-
-
+      total += xplasma->lum_inner_ion[nion] = xplasma->vol * xplasma->ne * xplasma->density[nion + 1] * integ_inner_fb (t, f1, f2, nion, 1);
 
       if (ion[nion].z > 3)
         xplasma->lum_z += xplasma->lum_ion[nion];
-      xplasma->lum_z += (xplasma->lum_inner_ion[nion]);
+      if (ion[nion].istate != ion[nion].z + 1)
+      {
+        if (xplasma->lum_ion[nion] > 0.0 && xplasma->recomb[nion] > 0.0 && rr_rates[nion] > xplasma->recomb[nion])
+          topup = (rr_rates[nion] - xplasma->recomb[nion]) * xplasma->lum_ion[nion] / xplasma->recomb[nion];
+        else
+          topup = 0.0;
+        if (xplasma->lum_inner_ion[nion] > 0.0 && xplasma->inner_recomb[nion] > 0.0 && drrate > xplasma->inner_recomb[nion])
+          inner_topup = (drrate - xplasma->inner_recomb[nion]) * xplasma->lum_inner_ion[nion] / xplasma->inner_recomb[nion];
+        else
+          inner_topup = 0.0;
+//                        printf ("TEST ion %i inner_topup=%e drrate=%e inner_recomb %e\n",nion,inner_topup,drrate,xplasma->inner_recomb[nion]);
+//                printf ("For ion %i  z %i state %i  num_recomb rate %e lum %e badnell rate %e inner_recomb_rate %e inner_lum %e badnell DR rate %e topup %e inner %e \n",nion,ion[nion].z,ion[nion].istate,
+//                                xplasma->recomb[nion],xplasma->lum_ion[nion]/xplasma->vol,rr_rates[nion],
+//                                xplasma->inner_recomb[nion]/xplasma->density[nion+1]/xplasma->ne,xplasma->lum_inner_ion[nion]/xplasma->vol,drrate/xplasma->density[nion+1]/xplasma->ne,topup/xplasma->vol,inner_topup/xplasma->vol
+//                                                                );
 
 
-/* NSH these lines calculate and add in topup cooling rates. Its a bit handwaving, so currently disabled.
-		  if (ion[nion].istate != ion[nion].z+1)
-		  {
-			  if (xplasma->lum_ion[nion]>0.0 && xplasma->recomb[nion]>0.0 && rr_rates[nion]>xplasma->recomb[nion])
-				  topup=(rr_rates[nion]-xplasma->recomb[nion])*xplasma->lum_ion[nion]/xplasma->recomb[nion];
-			  else
-				  topup=0.0;
-			  if (xplasma->lum_inner_ion[nion]>0.0 && xplasma->inner_recomb[nion]>0.0 && drrate>xplasma->inner_recomb[nion])
-			  inner_topup=(drrate-xplasma->inner_recomb[nion])*xplasma->lum_inner_ion[nion]/xplasma->inner_recomb[nion];
-			  else
-				  inner_topup=0.0;
-*/
+
+//                printf ("For ion %i, z %i state %i mean rate=%e normal rate=%e excess rate=%e dr_rate=%e extra=%e normal=%e\n",nion,ion[nion].z,ion[nion].istate,xplasma->lum_ion[nion]/xplasma->recomb[nion],xplasma->recomb[nion],rr_rates[nion]-xplasma->recomb[nion],drrate,topup,xplasma->lum_ion[nion]);
+        total += topup;
+        total += inner_topup;
+        xplasma->lum_ion[nion] += (xplasma->lum_inner_ion[nion] + inner_topup + topup);
+        if (ion[nion].z > 3)
+          xplasma->lum_z += (xplasma->lum_inner_ion[nion] + inner_topup + topup);
+      }
+//                                                                                         printf ("For ion %i  z %i state %i  num_recomb rate %e  badnell rate %e inner_recomb_rate %e  badnell DR rate %e\n",
+//                                                                                                 nion,ion[nion].z,ion[nion].istate,xplasma->recomb[nion],rr_rates[nion],xplasma->inner_recomb[nion],drrate);
     }
   }
   return (total);
@@ -621,8 +676,6 @@ generate photons */
   Description:
                                                                                                    
   Arguments:  
-
-	mode = 1=normal, 2=innershell
                                                                                                    
                                                                                                    
   Returns:
@@ -642,15 +695,13 @@ generate photons */
 	02jul	ksl	Modified so that integ_fb is the number of 
 			recombinations per ne and per ion
 	06may	ksl	57+ -- Modified to use plasma structure since on volume
-    17jan   nsh 81c -- added option to calculate inner shell recombination rate
                                                                                                    
  ************************************************************************/
 
 int
-num_recomb (xplasma, t_e, mode)
+num_recomb (xplasma, t_e)
      PlasmaPtr xplasma;
      double t_e;
-     int mode;
 {
   int nelem;
   int i, imin, imax;
@@ -662,23 +713,42 @@ num_recomb (xplasma, t_e, mode)
     {
       if (xplasma->density[i] > DENSITY_PHOT_MIN)
       {
-        if (mode == 1)
-          xplasma->recomb[i] = xplasma->ne * xplasma->density[i + 1] * integ_fb (t_e, 0.0, 1e50, i, 2);
-        else if (mode == 2)
-          xplasma->inner_recomb[i] = xplasma->ne * xplasma->density[i + 1] * integ_fb (t_e, 0.0, 1e50, i, 4);
-
+        xplasma->recomb[i] = xplasma->ne * xplasma->density[i + 1] * integ_fb (t_e, 0.0, 1e50, i, 2);
+//              printf ("returned from recomb ion %i elem %i state %i coeff %e number %e\n",i,ion[i].z,ion[i].istate,integ_fb (t_e, 0.0, 1e50, i, 2),xplasma->recomb[i]);
       }
     }
-    if (mode == 1)
-      xplasma->recomb[imax] = 0.0;      // Can't recombine to highest i-state
-    else if (mode == 2)
-      xplasma->inner_recomb[imax] = 0.0;        // Can't recombine to highest i-state
+    xplasma->recomb[imax] = 0.0;        // Can't recombine to highest i-state
 
   }
 
   return (0);
 }
 
+int
+num_inner_recomb (xplasma, t_e)
+     PlasmaPtr xplasma;
+     double t_e;
+{
+  int nelem;
+  int i, imin, imax;
+  for (nelem = 0; nelem < nelements; nelem++)
+  {
+    imin = ele[nelem].firstion;
+    imax = imin + ele[nelem].nions;
+    for (i = imin; i < imax; i++)
+    {
+      if (xplasma->density[i] > DENSITY_PHOT_MIN / 1e99)
+      {
+        xplasma->inner_recomb[i] = xplasma->ne * xplasma->density[i + 1] * integ_inner_fb (t_e, 0.0, 1e50, i, 2);
+//              printf ("returned from recomb ion %i elem %i state %i coeff %e number %e\n",i,ion[i].z,ion[i].istate,integ_fb (t_e, 0.0, 1e50, i, 2),xplasma->recomb[i]);
+      }
+    }
+    xplasma->inner_recomb[imax] = 0.0;  // Can't recombine to highest i-state
+
+  }
+
+  return (0);
+}
 
 /**************************************************************************
                     Space Telescope Science Institute
@@ -1039,7 +1109,7 @@ xinteg_fb (t, f1, f2, nion, fb_choice)
      int fb_choice;             // 0=full, otherwise reduced
 {
   int n;
-  double fnu;
+  double fnu[2], ftest, fnu_temp;
   double dnu;                   //NSH 140120 - a parameter to allow one to restrict the integration limits.
   double fthresh, fmax;
   double den_config ();
@@ -1069,6 +1139,7 @@ xinteg_fb (t, f1, f2, nion, fb_choice)
     Error ("integ_fb: %d is unacceptable value of nion\n", nion);
     exit (0);
   }
+//  printf ("Ion %i z%i istate %i\n",nion,ion[nion].z,ion[nion].istate);
   // Put information where it can be used by the integrating function
   fbt = t;
   fbfr = fb_choice;
@@ -1082,10 +1153,16 @@ xinteg_fb (t, f1, f2, nion, fb_choice)
   if (f2 < f1)
     return (0.0);               /* Because there is nothing to integrate */
 
-  fnu = 0.0;
+  fnu[0] = 0.0;
+  fnu[1] = 0.0;
+
+//printf ("for ion %i of element %i state %i  we have xsections from %i to %i\n",nion,ion[nion].z,ion[nion].istate,nmin,nmax);
+
+
 
   for (n = nmin; n < nmax; n++)
   {
+    ftest = 1e99;               //Reset a helper to find the uppermost level
     // loop over relevent Topbase or VFKY photoionzation x-sections
     fb_xtop = &phot_top[n];
 
@@ -1109,43 +1186,29 @@ xinteg_fb (t, f1, f2, nion, fb_choice)
         {
           fmax = fthresh + dnu;
         }
-        fnu += qromb (fb_topbase_partial, fthresh, fmax, 1.e-4);
+        fnu_temp = qromb (fb_topbase_partial, fthresh, fmax, 1.e-4);
+        fnu[0] += fnu_temp;
+        if (fb_xtop->freq[0] < ftest)
+        {
+          ftest = fb_xtop->freq[0];
+          fnu[1] = fnu_temp;
+        }
+//              printf ("n=%i fb_xtop->freq[0]=%e fb_xtop->x[0]=%e fnu=%e fthresh=%e fmax=%e t=%e\n",n,fb_xtop->freq[0],fb_xtop->x[0],fnu_temp,fthresh,fmax,t);
+//          printf("gl=%e gu=%e\n",config[fb_xtop->nlev].g,ion[fb_xtop->nion].g);
+
       }
 
     }
+//      printf (" ion %i elem %i state %i level %i nfu %e\n",nion,ion[nion].z,ion[nion].istate,n,fnu_temp);
   }
+//printf("I think %e is the lowest nu, with fnu_upper %e\n",ftest,fnu[1]);
 
 
 
 
-  return (fnu);
+  return (fnu[0]);
 }
 
-
-/**************************************************************************
-                    Space Telescope Science Institute
-                                                                                                   
-                                                                                                   
-  Synopsis: xinteg_inner_fb calculates the integrated emissivity of the plasma due to inner shell
-			recombinations.  
-                                                                                                   
-  Description: The way we store inner shells is somewghat different to normal cross sectinos, so
-			we need a seperate routine. It has duplicate code, so it is likely we should do it 
-			a bit better
-                                                                                                   
-  Arguments:  
-                                                                                                   
-                                                                                                   
-  Returns:
-                                                                                                   
-  Notes:
-
-                                                                                                   
-                                                                                                   
-  History:
-	17jan SS      Dulicated and modified from xinteg_inner_fb
-                                                                                                   
- ************************************************************************/
 
 
 double
@@ -1156,20 +1219,20 @@ xinteg_inner_fb (t, f1, f2, nion, fb_choice)
      int fb_choice;             // 0=full, otherwise reduced
 {
   int n, nn;
-  double fnu;
+  double fnu[2], ftest, fnu_temp;
   double dnu;                   //NSH 140120 - a parameter to allow one to restrict the integration limits.
   double fthresh, fmax;
   double den_config ();
+  int nmin, nmax;               // These are the limits over which number xsections we will use 
   double qromb ();
 
 
   dnu = 0.0;                    //Avoid compilation errors.
 
-  fnu = 0.0;
+  fnu[0] = 0.0;
+  fnu[1] = 0.0;
 
   nn = -1;
-
-  /* Limit the frequency range to one that is reasonable before integrating */
 
 
   if (f1 < 3e12)
@@ -1184,10 +1247,17 @@ xinteg_inner_fb (t, f1, f2, nion, fb_choice)
     if (inner_cross[n].nion == nion)
     {
       nn = n;
+//       printf ("xinteg%i ion %i element %i state %i using inner %i\n",fb_choice,nion,ion[nion].z,ion[nion].istate,nn); 
+
       fbt = t;
       fbfr = fb_choice;
 
+      /* Limit the frequency range to one that is reasonable before integrating */
 
+
+
+      ftest = 1e99;             //Reset a helper to find the uppermost level
+      // loop over relevent Topbase or VFKY photoionzation x-sections
       fb_xtop = &inner_cross[nn];
 
       /* Adding an if statement here so that photoionization that's part of a macro atom is 
@@ -1210,16 +1280,29 @@ xinteg_inner_fb (t, f1, f2, nion, fb_choice)
           {
             fmax = fthresh + dnu;
           }
-          fnu += qromb (fb_topbase_partial, fthresh, fmax, 1.e-4);
+//              printf ("xinteg%i integrating inner for ion %i elem %i stage %i fthresh %e fmax %e\n",fb_choice,nion,ion[nion].z,ion[nion].istate,fthresh,fmax);
+          fnu_temp = qromb (fb_topbase_partial, fthresh, fmax, 1.e-4);
+          fnu[0] += fnu_temp;
+          if (fb_xtop->freq[0] < ftest)
+          {
+            ftest = fb_xtop->freq[0];
+            fnu[1] = fnu_temp;
+          }
+//              printf ("xinteg%i ion %i inner cross %i fnu_temp=%e fnu_tot=%e\n",nion,inner_cross[n].nion,fb_choice,fnu_temp,fnu[0]);
+//              printf ("n=%i fb_xtop->freq[0]=%e fb_xtop->x[0]=%e fnu=%e fthresh=%e fmax=%e t=%e\n",n,fb_xtop->freq[0],fb_xtop->x[0],fnu_temp,fthresh,fmax,t);
+//          printf("xinteg%i gl=%e (ng=%e) gu=%e\n",fb_choice,config[fb_xtop->nlev].g,ion[nion].g,ion[fb_xtop->nion+1].g);
+
         }
 
       }
+//      printf (" ion %i elem %i state %i level %i nfu %e\n",nion,ion[nion].z,ion[nion].istate,n,fnu_temp);
     }
+//printf("I think %e is the lowest nu, with fnu_upper %e\n",ftest,fnu[1]);
   }
 
 
 
-  return (fnu);
+  return (fnu[0]);
 }
 
 
