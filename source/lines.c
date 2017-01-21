@@ -276,7 +276,7 @@ q21 (line_ptr, t)
       gbar = omega / ECS_CONSTANT / line_ptr->gl / line_ptr->f * line_ptr->freq;        //check the implied value of gbar
       if (gbar < 0.01 || gbar > 10)     //if it is odd (i.e. not about 1) throw an error
       {
-        printf ("q21 - suspicious implied value of gbar for coll strength record %i of %e\n", line_ptr->coll_index, gbar);
+        Error ("q21 - suspicious implied value of gbar for coll strength record %i of %e\n", line_ptr->coll_index, gbar);
       }
     }
 
