@@ -102,6 +102,9 @@ WindPtr (w);
 
   /*1108 NSH csum added to sum compton heating 1204 NSH icsum added to sum induced compton heating */
   double wtest, xsum, asum, psum, fsum, lsum, csum, icsum, ausum;
+  double c_rec,n_rec,o_rec,fe_rec;
+  
+  int nn;
 
   double volume;
   double vol;
@@ -885,8 +888,38 @@ WindPtr (w);
          geo.lum_ff / w[n].vol, geo.lum_comp / w[n].vol,
          geo.lum_dr / w[n].vol, geo.lum_di / w[n].vol, geo.lum_adiabatic / w[n].vol, geo.lum_lines / w[n].vol);
 
-      Log ("OUTPUT Wind_line_cooling(ergs-1cm-3)  HHe %8.2e Metals %8.2e\n", nsh_lum_hhe / w[n].vol, nsh_lum_metals / w[n].vol);
 
+
+		 c_rec=n_rec=o_rec=fe_rec=0.0;
+		 
+		 
+		 
+	 
+		 for (nn=0;nn<nions;nn++)
+		 {
+			 if (ion[nn].z==6)
+		 {
+			 c_rec=c_rec+plasmamain[nstart].lum_ion[nn];
+		 }
+		 if (ion[nn].z==7)
+	 {
+		 n_rec=n_rec+plasmamain[nstart].lum_ion[nn];
+	 }			 
+	 if (ion[nn].z==8)
+		 {
+			 o_rec=o_rec+plasmamain[nstart].lum_ion[nn];
+		 }			 
+		 if (ion[nn].z==26)
+		 {
+			 fe_rec=fe_rec+plasmamain[nstart].lum_ion[nn];
+		 }	 
+		 }		 
+
+
+
+      Log ("OUTPUT Wind_line_cooling(ergs-1cm-3)  HHe %8.2e Metals %8.2e\n", nsh_lum_hhe / w[n].vol, nsh_lum_metals / w[n].vol);
+      Log ("OUTPUT Wind_recomb_cooling(ergs-1cm-3)  H %8.2e He %8.2e C %8.2e N %8.2e O %8.2e Fe %8.2e Metals %8.2e\n", plasmamain[nstart].lum_ion[0] / w[n].vol, 
+	  (plasmamain[nstart].lum_ion[2]+plasmamain[nstart].lum_ion[3]) / w[n].vol, c_rec/ w[n].vol,n_rec/ w[n].vol,o_rec/ w[n].vol,fe_rec/ w[n].vol, plasmamain[nstart].lum_z / w[n].vol);
       /* 1110 NSH Added this line to report all cooling mechanisms, including those that do not generate photons. */
       Log
         ("OUTPUT Balance      Cooling=%8.2e Heating=%8.2e Lum=%8.2e T_e=%e after update\n",
