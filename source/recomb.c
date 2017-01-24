@@ -182,10 +182,6 @@ fb_topbase_partial (freq)
 
   gion = ion[nion + 1].g;       // Want the g factor of the next ion up
 
-//   printf ("ion %i gn %e gion %e\n",nion,gn,gion);
-
-
-
   x = sigma_phot (fb_xtop, freq);
   // Now calculate emission using Ferland's expression
 
@@ -265,7 +261,7 @@ integ_fb (t, f1, f2, nion, fb_choice, mode)
      double f1, f2;             // The frequencies overwhich to integrate the emissivity
      int nion;                  // The ion for which the "specific emissivity is calculateed
      int fb_choice;             // 0=full, otherwise reduced
-     int mode;
+     int mode;					// 1= outer shell 2=inner shell
 {
   double xinteg_fb ();
   double fnu;
@@ -283,7 +279,7 @@ integ_fb (t, f1, f2, nion, fb_choice, mode)
         /* See if the frequencies correspond to one previously calculated */
         if (f1 == freebound[n].f1 && f2 == freebound[n].f2)
         {
-          fnu = get_fb (t, nion, n);
+          fnu = get_fb (t, nion, n,mode);
           return (fnu);
         }
       }
@@ -296,7 +292,7 @@ integ_fb (t, f1, f2, nion, fb_choice, mode)
       /* See if the frequencies correspond to one previously calculated */
       if (nfb > 0)
       {
-        fnu = get_nrecomb (t, nion);
+        fnu = get_nrecomb (t, nion,mode);
         return (fnu);
       }
       /* If not calculate it here */
@@ -311,11 +307,25 @@ integ_fb (t, f1, f2, nion, fb_choice, mode)
   {
     if (fb_choice == 1)
     {
+        for (n = 0; n < nfb; n++)
+        {
+          /* See if the frequencies correspond to one previously calculated */
+          if (f1 == freebound[n].f1 && f2 == freebound[n].f2)
+          {
+            fnu = get_fb (t, nion, n,mode);
+            return (fnu);
+          }
+        }
       fnu = xinteg_inner_fb (t, f1, f2, nion, fb_choice);
       return (fnu);
     }
     else if (fb_choice == 2)
     {
+        if (nfb > 0)
+        {
+          fnu = get_nrecomb (t, nion,mode);
+          return (fnu);
+        }
       fnu = xinteg_inner_fb (t, f1, f2, nion, fb_choice);
       return (fnu);
     }
@@ -868,6 +878,7 @@ init_freebound (t1, t2, f1, f2)
       {
         t = fb_t[j];
         xnrecomb[nion][j] = xinteg_fb (t, 0.0, 1.e50, nion, 2);
+        xninnerrecomb[nion][j] = xinteg_inner_fb (t, 0.0, 1.e50, nion, 2);		
       }
     }
   }
@@ -923,12 +934,16 @@ on the assumption that the fb information will be reused.
   freebound[nput].f1 = f1;
   freebound[nput].f2 = f2;
 
+
+
   for (nion = 0; nion < nions; nion++)
   {
     for (j = 0; j < NTEMPS; j++)
     {                           //j covers the temps
       t = fb_t[j];
       freebound[nput].emiss[nion][j] = xinteg_fb (t, f1, f2, nion, 1);
+      freebound[nput].emiss_inner[nion][j] = xinteg_inner_fb (t, f1, f2, nion, 1);
+	  
     }
   }
 
@@ -963,14 +978,23 @@ on the assumption that the fb information will be reused.
 
 
 double
-get_nrecomb (t, nion)
+get_nrecomb (t, nion,mode)
      double t;
      int nion;
+	 int mode;
 {
   int linterp ();
   double x;
-
-  linterp (t, fb_t, xnrecomb[nion], NTEMPS, &x, 0);     //Interpolate in linear space
+  if (mode==1)
+  	linterp (t, fb_t, xnrecomb[nion], NTEMPS, &x, 0);     //Interpolate in linear space
+  else if (mode==2)
+	  linterp (t, fb_t, xninnerrecomb[nion], NTEMPS, &x, 0);     //Interpolate in linear space
+  else 
+  {
+	  Error ("Get_nrecomb - unkonwn mode %i",mode);
+	  exit (0);
+  }
+	  
   return (x);
 }
 
@@ -978,15 +1002,24 @@ get_nrecomb (t, nion)
 /* Return the specific emissivity due to recombination emission in an interval */
 
 double
-get_fb (t, nion, narray)
+get_fb (t, nion, narray,mode)
      double t;
      int nion;
      int narray;
+	 int mode;
 {
   int linterp ();
   double x;
-
+  if (mode==1)
   linterp (t, fb_t, &freebound[narray].emiss[nion][0], NTEMPS, &x, 0);  //Interpolate in linear space
+  else if (mode==2)
+	  linterp (t, fb_t, &freebound[narray].emiss_inner[nion][0], NTEMPS, &x, 0);  //Interpolate in linear space
+	  
+  else 
+  {
+	  Error ("Get_fb - unkonwn mode %i",mode);
+	  exit (0);
+  }
   return (x);
 }
 

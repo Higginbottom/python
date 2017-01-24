@@ -196,7 +196,9 @@ total_comp (one, t_e)
 
   x = 0.0;
 
-  if (geo.spec_mod == 1)        //Check to see if we have generated a spectral model
+  if (xplasma->comp_nujnu < 0.0)
+  {
+  if (geo.spec_mod == 1)        //Check to see if we have generated a spectral model 
   {
     for (j = 0; j < geo.nxfreq; j++)    //We loop over all the bands
     {
@@ -204,7 +206,10 @@ total_comp (one, t_e)
       {
         f1 = xplasma->fmin_mod[j];      //NSH 131114 - Set the low frequency limit to the lowest frequency that the model applies to
         f2 = xplasma->fmax_mod[j];      //NSH 131114 - Set the high frequency limit to the highest frequency that the model applies to
-        x += qromb (comp_cool_integrand, f1, f2, 1e-6);
+		if (f1 > 1e18) //If all the frequencies are lower than 1e18, then the cross section is constant at sigmaT
+        	x += qromb (comp_cool_integrand, f1, f2, 1e-6);
+		else
+			x += THOMPSON * xplasma->xj[j];  //In the case where we are in the thompson limit, we just multiply the band limited frequency integrated mean in tensity by the Thompson cross section
       }
     }
   }
@@ -213,7 +218,9 @@ total_comp (one, t_e)
   {
     x = THOMPSON * xplasma->j;
   }
-
+  xplasma->comp_nujnu=x;
+}
+else x=xplasma->comp_nujnu;
 
 
   x *= (16. * PI * BOLTZMANN * t_e * xplasma->ne) / (MELEC * C * C) * xplasma->vol;
@@ -480,6 +487,9 @@ alpha (nu)
      double nu;
 {
   double alpha;
+  if (nu<1e17)
+	  alpha=1.0;
+  else
   alpha = 1. / (1. + nu * HRYD * (1.1792e-4 + 7.084e-10 * nu * HRYD));
   return (alpha);
 }
@@ -513,8 +523,13 @@ beta (nu)
      double nu;
 {
   double alp, beta;
+  if (nu<1e17)
+	  beta=1.0;
+  else
+  {
   alp = alpha (nu);
   beta = (1. - alp * nu * HRYD * (1.1792e-4 + (2 * 7.084e-10 * nu * HRYD)) / 4.);
+}
   return (beta);
 }
 
@@ -552,7 +567,8 @@ comp_cool_integrand (nu)
      double nu;
 {
   double value;
-  value = THOMPSON * beta (nu) * mean_intensity (xplasma, nu, 2);
+
+	  value = THOMPSON * beta (nu) * mean_intensity (xplasma, nu, 2);
 
 
   return (value);

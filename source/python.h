@@ -774,6 +774,7 @@ typedef struct plasma
   int nxtot[NXBANDS];           /* 1108 NSH the total number of photon passages in frequency bands */
   double max_freq;              /*1208 NSH The maximum frequency photon seen in this cell */
   double lum_lines, lum_ff, lum_adiabatic;
+  double comp_nujnu;			/* 1701 NSH The integral of alpha(nu)nuj(nu) used to computecompton cooling-  only needs computing once per cycle */
   double lum_comp;              /* 1108 NSH The compton luminosity of the cell */
   double lum_di;                /* 1409 NSH The direct ionization luminosity */
   double lum_dr;                /* 1109 NSH The dielectronic recombination luminosity of the cell */
@@ -1204,12 +1205,16 @@ struct fbstruc
 {
   double f1, f2;
   double emiss[NIONS][NTEMPS];
+  double emiss_inner[NIONS][NTEMPS];    //Emissivity of recombinations to inner shells
   double emiss_upper[NIONS][NTEMPS];    //The emissivity of recombinations to the highest energy level we have
+
 
 }
 freebound[NFB];
 
 double xnrecomb[NIONS][NTEMPS]; // There is only one set of recombination coefficients
+double xninnerrecomb[NIONS][NTEMPS]; // There is only one set of recombination coefficients
+
 double fb_t[NTEMPS];
 int nfb;                        // Actual number of freqency intervals calculated
 
