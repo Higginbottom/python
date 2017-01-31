@@ -1924,6 +1924,7 @@ Col
 			  else if (f <= 0 )
 			  {
                   Error_silent ("getatomic_data: line input oscillator strength negative: %s\n", aline);
+				  printf ("line input oscillator strength negative:");
                   break;
 			  }
 			else if ( gl == 0)
@@ -2466,7 +2467,7 @@ BAD_T_RR  5  0  1  1  4.647E-10  0.7484  6.142E+01  1.753E+07*/
               }
               else
               {
-                Error ("Get_atomic_data: more than one electron yield record for inner_cross %i\n", n);
+                Error_silent ("Get_atomic_data: more than one electron yield record for inner_cross %i\n", n);
               }
             }
           }
@@ -2612,7 +2613,7 @@ BAD_T_RR  5  0  1  1  4.647E-10  0.7484  6.142E+01  1.753E+07*/
     if (inner_cross[n].n_elec_yield != -1)
       n_elec_yield_tot++;
     else
-      Error ("get_atomicdata: No inner electron yield data for inner cross section %i\n", n);
+      Error_silent ("get_atomicdata: No inner electron yield data for inner cross section %i\n", n);
     if (inner_cross[n].n_fluor_yield != -1)
       n_fluor_yield_tot++;
 
