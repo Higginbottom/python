@@ -2499,7 +2499,7 @@ BAD_T_RR  5  0  1  1  4.647E-10  0.7484  6.142E+01  1.753E+07*/
               }
               else
               {
-                Error ("Get_atomic_data: more than one electron yield record for inner_cross %i\n", n);
+                Error_silent ("Get_atomic_data: more than one electron yield record for inner_cross %i\n", n);
               }
             }
           }
