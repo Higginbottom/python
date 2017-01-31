@@ -508,7 +508,7 @@ get_atomic_data (masterfile)
 
 
 /* 0117 nsh the following lines initialise the collision strengths */
-/*  n_coll_stren = 0;             //The number of data sets
+  n_coll_stren = 0;             //The number of data sets
   for (n = 0; n < NLINES; n++)
   {
     coll_stren[n].n = -1;       //Internal index
@@ -526,7 +526,7 @@ get_atomic_data (masterfile)
       coll_stren[n].scups[n1] = 0.0;
     }
   }
-*/
+ 
 
 
   choice = 'x';                 /* Start by assuming you cannot determine what kind of line it is */
@@ -1916,11 +1916,26 @@ Col
           {
             if (ion[n].z == z && ion[n].istate == istate)
             {                   /* Then there is a match */
-              if (freq == 0 || f <= 0 || gl == 0 || gu == 0)
+              if (freq == 0)
               {
-                Error_silent ("getatomic_data: line input incomplete: %s\n", aline);
+                Error_silent ("getatomic_data: line input freq=0: %s\n", aline);
                 break;
               }
+			  else if (f <= 0 )
+			  {
+                  Error_silent ("getatomic_data: line input oscillator strength negative: %s\n", aline);
+                  break;
+			  }
+			else if ( gl == 0)
+				  {
+	                  Error_silent ("getatomic_data: line input gl=0: %s\n", aline);
+	                  break;
+				  } 
+					  else if ( gu == 0)
+					  {
+		                  Error_silent ("getatomic_data: line input gu=0: %s\n", aline);
+		                  break;
+					  } 
               //
               //define macro atom case (SS)
 /* ?? 04 April ksl -- Right now have enforced a clean separation between macro-ions and simple-ions
