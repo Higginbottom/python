@@ -508,7 +508,7 @@ get_atomic_data (masterfile)
 
 
 /* 0117 nsh the following lines initialise the collision strengths */
-  n_coll_stren = 0;             //The number of data sets
+/*  n_coll_stren = 0;             //The number of data sets
   for (n = 0; n < NLINES; n++)
   {
     coll_stren[n].n = -1;       //Internal index
@@ -526,7 +526,7 @@ get_atomic_data (masterfile)
       coll_stren[n].scups[n1] = 0.0;
     }
   }
-
+*/
 
 
   choice = 'x';                 /* Start by assuming you cannot determine what kind of line it is */
