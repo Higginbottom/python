@@ -236,7 +236,7 @@ double gaunt_ff(double gsquared);
 /* recomb.c */
 double fb_topbase_partial(double freq);
 double integ_fb(double t, double f1, double f2, int nion, int fb_choice, int mode);
-double total_fb(WindPtr one, double t, double f1, double f2, double mode);
+double total_fb(WindPtr one, double t, double f1, double f2, int mode);
 double one_fb(WindPtr one, double f1, double f2);
 int num_recomb(PlasmaPtr xplasma, double t_e, int mode);
 double fb(PlasmaPtr xplasma, double t, double freq, int ion_choice, int fb_choice);

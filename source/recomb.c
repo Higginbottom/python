@@ -382,7 +382,7 @@ double
 total_fb (one, t, f1, f2, mode)
      WindPtr one;
      double t, f1, f2;
-     double mode;               //inner=2 outer=1
+     int mode;               //inner=2 outer=1
 {
   double total;
   int nion;
