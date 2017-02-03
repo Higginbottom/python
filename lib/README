@@ -1,0 +1,3 @@
+-Folder to store library files for GSL 
+-
+-Linked using the LIB variable in Makefile
