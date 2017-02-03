@@ -917,15 +917,15 @@ get_bl_and_agn_params (lstar)
     {
       geo.alpha_agn = (-1.5);
       rddoub ("agn_power_law_index", &geo.alpha_agn);
-	  
-      if (geo.alpha_agn == -1.0) //deal with the pathological case
+
+      if (geo.alpha_agn == -1.0)        //deal with the pathological case
       {
-          geo.const_agn = geo.lum_agn / (log(2.42e18) - log(4.84e17));    
-    }
-    else
-    {
+        geo.const_agn = geo.lum_agn / (log (2.42e18) - log (4.84e17));
+      }
+      else
+      {
         geo.const_agn = geo.lum_agn / (((pow (2.42e18, geo.alpha_agn + 1.)) - pow (4.84e17, geo.alpha_agn + 1.0)) / (geo.alpha_agn + 1.0));
-    }
+      }
       Log ("AGN Input parameters give a power law constant of %e\n", geo.const_agn);
     }
     else if (geo.agn_ion_spectype == SPECTYPE_BREM)
@@ -1003,18 +1003,18 @@ get_bl_and_agn_params (lstar)
     /* Computes the constant for the power law spectrum from the input alpha and 2-10 luminosity. 
        This is only used in the sim correction factor for the first time through. 
        Afterwards, the photons are used to compute the sim parameters. */
-	
-	
-    if (geo.alpha_agn == -1.0) //deal with the pathological case
+
+
+    if (geo.alpha_agn == -1.0)  //deal with the pathological case
     {
-        geo.const_agn = geo.lum_agn / (log(2.42e18) - log(4.84e17));    
-  }
-  else
-  {
+      geo.const_agn = geo.lum_agn / (log (2.42e18) - log (4.84e17));
+    }
+    else
+    {
       geo.const_agn = geo.lum_agn / (((pow (2.42e18, geo.alpha_agn + 1.)) - pow (4.84e17, geo.alpha_agn + 1.0)) / (geo.alpha_agn + 1.0));
-  }
-	
-	
+    }
+
+
     Log ("AGN Input parameters give a power law constant of %e\n", geo.const_agn);
 
     if (geo.agn_ion_spectype == SPECTYPE_CL_TAB)        /*NSH 0412 - option added to allow direct comparison with cloudy power law table option */

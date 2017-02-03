@@ -1,4 +1,4 @@
-#define MAXHYDRO 155
+#define MAXHYDRO 1000
 #define IGHOST 0
 
 double hydro_r_cent[MAXHYDRO];

@@ -641,8 +641,13 @@ zero_emit (t)
 
 
   /* 70g - nsh adding this line in next to calculate dielectronic recombination cooling without generating photons */
-  compute_dr_coeffs (t);
-  xxxplasma->lum_dr = total_dr (&wmain[xxxplasma->nwind], t);
+//  compute_dr_coeffs (t);
+//  xxxplasma->lum_dr = total_dr (&wmain[xxxplasma->nwind], t);
+
+  /*81c - nsh - we now treat DR cooling as a recombinational process - still unsure as to how to treat emission, so at the moment
+     it remains here */
+
+  xxxplasma->lum_dr = total_fb (&wmain[xxxplasma->nwind], t, 0, VERY_BIG, 2);
 
   /* 78b - nsh adding this line in next to calculate direct ionization cooling without generating photons */
 

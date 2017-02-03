@@ -29,6 +29,7 @@
 #include "python.h"
 #include <gsl/gsl_rng.h>
 
+PlasmaPtr xplasma;              // Pointer to current plasma cell
 
 /**************************************************************************
                     Space Telescope Science Institute
@@ -49,6 +50,9 @@
   History:
 2011	nsh	Coded as part of the effort to include compton scattering in August 2011 at Southampton.
 feb 2013 - nsh - approximate KN cross section replaced by correct value
+jan 2017 - nsh - and back to approximate cross section - we believe that this is required since not
+	only is the cross section changed by the incoming photon energy (KN) but also the mean energy transfer
+	is changed - the correct cross section to use is that reported in Hazy 3.
 
  ************************************************************************/
 
@@ -67,7 +71,9 @@ kappa_comp (xplasma, freq)
   //sigma=THOMPSON/(1+freq*HRYD*(1.1792e-4+(7.084e-10*freq*HRYD)));
   ndom = wmain[xplasma->nwind].ndom;
 
-  sigma = klein_nishina (freq); //NSH 130214 - full KN formula
+//    sigma = klein_nishina (freq); //NSH 130214 - full KN formula
+
+  sigma = alpha (freq) * THOMPSON;      //NSH - 1701 - turns out we should use the fitted cross section from hazy here 
 
   x = (sigma * H) / (MELEC * C * C);    //Calculate the constant
   x *= xplasma->ne * freq;      //Multiply by cell electron density and frequency of the packet.
@@ -132,8 +138,10 @@ kappa_ind_comp (xplasma, freq)
      NSH moved it into the mean_intensity subroutine. See Pull Request #88 */
 
 
-  sigma = klein_nishina (freq); //NSH 130214 - full KN formula
+//    sigma = klein_nishina (freq); //NSH 130214 - full KN formula
 
+
+  sigma = THOMPSON * alpha (freq);      //NSH 1701 - as in normal compton, we should use alpha here
 
   x = (xplasma->ne) / (MELEC);
   x *= sigma * J;               // NSH 130214 factor of THOMPSON removed, since alpha is now the actual compton cross section
@@ -167,6 +175,9 @@ kappa_ind_comp (xplasma, freq)
 
   History:
 2011	nsh	Coded as part of the effort to include compton scattering in August 2011 at Southampton.
+2017	nsh We can do a little better here now, since we have since included a model of the radiation in 
+	the cell, and technically the compton cooling is an integral over cross section which is frequency
+	dependant times J_nu.
 
  ************************************************************************/
 
@@ -175,17 +186,44 @@ total_comp (one, t_e)
      WindPtr one;               // Pointer to the current wind cell - we need the cell volume, this is not in the plasma structure
      double t_e;                //Current electron temperature of the cell
 {
-  double x;                     //The returned variable
-  int nplasma;                  //The cell number in the plasma array
-  PlasmaPtr xplasma;            //pointer to the relevant cell in the plasma structure
+  double x, f1, f2;             //The returned variable
+  int nplasma, j;               //The cell number in the plasma array
+//  PlasmaPtr xplasma;            //pointer to the relevant cell in the plasma structure - now external to allow for the integration
 
 
   nplasma = one->nplasma;       //Get the correct plasma cell related to this wind cell
   xplasma = &plasmamain[nplasma];       //copy the plasma structure for that cell to local variable
 
-  x = 16. * PI * THOMPSON * BOLTZMANN / (MELEC * C * C);        //Keep all the constants together
-  x *= xplasma->ne * xplasma->vol * xplasma->j * t_e;   //multiply by the volume (from wind) and j (from plasma) and t_e
+  x = 0.0;
 
+  if (xplasma->comp_nujnu < 0.0)
+  {
+  if (geo.spec_mod == 1)        //Check to see if we have generated a spectral model 
+  {
+    for (j = 0; j < geo.nxfreq; j++)    //We loop over all the bands
+    {
+      if (xplasma->spec_mod_type[j] != SPEC_MOD_FAIL)   //Only bother doing the integrals if we have a model in this band
+      {
+        f1 = xplasma->fmin_mod[j];      //NSH 131114 - Set the low frequency limit to the lowest frequency that the model applies to
+        f2 = xplasma->fmax_mod[j];      //NSH 131114 - Set the high frequency limit to the highest frequency that the model applies to
+		if (f1 > 1e18) //If all the frequencies are lower than 1e18, then the cross section is constant at sigmaT
+        	x += qromb (comp_cool_integrand, f1, f2, 1e-6);
+		else
+			x += THOMPSON * xplasma->xj[j];  //In the case where we are in the thompson limit, we just multiply the band limited frequency integrated mean in tensity by the Thompson cross section
+      }
+    }
+  }
+
+  else                          //If no spectral model - do it the old way
+  {
+    x = THOMPSON * xplasma->j;
+  }
+  xplasma->comp_nujnu=x;
+}
+else x=xplasma->comp_nujnu;
+
+
+  x *= (16. * PI * BOLTZMANN * t_e * xplasma->ne) / (MELEC * C * C) * xplasma->vol;
 
   return (x);
 }
@@ -418,4 +456,120 @@ sigma_compton_partial (f, x)
 
   return (tot);
 
+}
+
+/**************************************************************************
+                    Kavli Institute for Theoretical Physics
+
+
+  Synopsis:  alpha is the function that computes the 'heating' cross section correction
+	to Thompson - as discussed in Hazy 3, eq 6.6
+
+  Description:	
+
+  Arguments:  
+			nu - frequency
+
+  Returns:   alpha- the factore one must multiply the thompson cross section by
+	for compton heating processes
+
+  Notes:   
+			
+
+  History:
+2017	NSH coded 
+
+ ************************************************************************/
+
+
+double
+alpha (nu)
+     double nu;
+{
+  double alpha;
+  if (nu<1e17)
+	  alpha=1.0;
+  else
+  alpha = 1. / (1. + nu * HRYD * (1.1792e-4 + 7.084e-10 * nu * HRYD));
+  return (alpha);
+}
+
+/**************************************************************************
+                    Kavli Institute for Theoretical Physics
+
+
+  Synopsis:  beta is the function that computes the 'cooling' cross section correction
+	to Thompson - as discussed in Hazy 3, eq 6.6
+
+  Description:	
+
+  Arguments:  
+			nu - frequency
+
+  Returns:   beta- the factore one must multiply the thompson cross section by
+	(alpng with alpha) for compton cooling processes
+
+
+  Notes:   
+			
+
+  History:
+2017	NSH coded 
+
+ ************************************************************************/
+
+double
+beta (nu)
+     double nu;
+{
+  double alp, beta;
+  if (nu<1e17)
+	  beta=1.0;
+  else
+  {
+  alp = alpha (nu);
+  beta = (1. - alp * nu * HRYD * (1.1792e-4 + (2 * 7.084e-10 * nu * HRYD)) / 4.);
+}
+  return (beta);
+}
+
+
+
+
+
+
+/**************************************************************************
+                    Kavli Institute for Theoretical Physics
+
+
+  Synopsis:  comp_cool_integrand is the integrand sigma x J_nu that is integrated
+	to obtain the compton cooling rate in a cell. I (nsh) believe that we only
+	need to multpliy by beta beacuse we have already multiplied by alpha to get
+	our mean intensity.
+
+  Description:	
+
+  Arguments:  
+			nu - frequency
+
+  Returns:   Thompson cross section x beta x J_nu
+
+  Notes:   
+			
+
+  History:
+2017	NSH coded 
+
+ ************************************************************************/
+
+double
+comp_cool_integrand (nu)
+     double nu;
+{
+  double value;
+
+	  value = THOMPSON * beta (nu) * mean_intensity (xplasma, nu, 2);
+
+
+  return (value);
 }

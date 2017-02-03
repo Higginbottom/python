@@ -540,6 +540,8 @@ struct geometry
   int reverb_dump_cells;        //SWM - Number of cells to dump, list of cells to dump 'nwind' values
   double *reverb_dump_x, *reverb_dump_z;        //SWM - x & z values of the cells to dump
   int reverb_lines, *reverb_line;       //SWM - Number of lines to track, and array of line 'nres' values
+
+  int spec_mod;                 //A flag to say that we do hav spectral models
 }
 geo;
 
@@ -748,12 +750,14 @@ typedef struct plasma
   double *ioniz, *recomb;       /* Number of ionizations and recombinations for each ion.
                                    The sense is ionization from ion[n], and recombinations 
                                    to each ion[n] . 78 - changed to dynamic allocation */
+  double inner_recomb[NIONS];
   int *scatters;                /* 68b - The number of scatters in this cell for each ion. 78 - changed to dynamic allocation */
   double *xscatters;            /* 68b - Diagnostic measure of energy scattered out of beam on extract. 78 - changed to dynamic allocation */
   double *heat_ion;             /* The amount of energy being transferred to the electron pool
                                    sby this ion via photoionization. 78 - changed to dynamic allocation */
   double *lum_ion;              /* The amount of energy being released from the electron pool
                                    by this ion via recombination. 78 - changed to dynamic allocation */
+  double lum_inner_ion[NIONS];
   double j, ave_freq, lum;      /*Respectively mean intensity, intensity_averaged frequency, 
                                    luminosity and absorbed luminosity of shell */
   double xj[NXBANDS], xave_freq[NXBANDS];       /* 1108 NSH frequency limited versions of j and ave_freq */
@@ -770,6 +774,7 @@ typedef struct plasma
   int nxtot[NXBANDS];           /* 1108 NSH the total number of photon passages in frequency bands */
   double max_freq;              /*1208 NSH The maximum frequency photon seen in this cell */
   double lum_lines, lum_ff, lum_adiabatic;
+  double comp_nujnu;			/* 1701 NSH The integral of alpha(nu)nuj(nu) used to computecompton cooling-  only needs computing once per cycle */
   double lum_comp;              /* 1108 NSH The compton luminosity of the cell */
   double lum_di;                /* 1409 NSH The direct ionization luminosity */
   double lum_dr;                /* 1109 NSH The dielectronic recombination luminosity of the cell */
@@ -1200,10 +1205,16 @@ struct fbstruc
 {
   double f1, f2;
   double emiss[NIONS][NTEMPS];
+  double emiss_inner[NIONS][NTEMPS];    //Emissivity of recombinations to inner shells
+  double emiss_upper[NIONS][NTEMPS];    //The emissivity of recombinations to the highest energy level we have
+
+
 }
 freebound[NFB];
 
 double xnrecomb[NIONS][NTEMPS]; // There is only one set of recombination coefficients
+double xninnerrecomb[NIONS][NTEMPS]; // There is only one set of recombination coefficients
+
 double fb_t[NTEMPS];
 int nfb;                        // Actual number of freqency intervals calculated
 

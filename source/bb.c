@@ -340,22 +340,22 @@ get_rand_pow (x1, x2, alpha)
 
   r = rand () / MAXRAND;
 
-  if (alpha==-1)
-	  {
-		  x1=log(x1);
-			  x2=log(x2);
-			  a = (1. - r) * x1 + r * x2;
-			  a=exp(a);
-	  } 
-	  else
-	  {
-		  x1 = pow (x1, alpha + 1.);
-  		x2 = pow (x2, alpha + 1.);
+  if (alpha == -1)
+  {
+    x1 = log (x1);
+    x2 = log (x2);
+    a = (1. - r) * x1 + r * x2;
+    a = exp (a);
+  }
+  else
+  {
+    x1 = pow (x1, alpha + 1.);
+    x2 = pow (x2, alpha + 1.);
 
-	    a = (1. - r) * x1 + r * x2;
+    a = (1. - r) * x1 + r * x2;
 
-  a = pow (a, 1. / (alpha + 1.));
-}
+    a = pow (a, 1. / (alpha + 1.));
+  }
   return (a);
 }
 
