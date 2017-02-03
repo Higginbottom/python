@@ -56,6 +56,9 @@ translate (w, pp, tau_scat, tau, nres)
   int istat;
   int ndomain;
 
+
+  printf ("BLAH %e\n",pp->freq);
+
   if (where_in_wind (pp->x, &ndomain) < 0)
   {
     istat = translate_in_space (pp);
