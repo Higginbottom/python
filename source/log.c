@@ -389,9 +389,8 @@ sane_check (x)
 int
 error_count (char *format)
 {
-  int n,n1;
+  int n;
   n = 0;
-  n1=0;
   while (n < nerrors)
   {
     if (strcmp (errorlog[n].description, (format)) == 0)
@@ -416,16 +415,16 @@ error_count (char *format)
   }
   else
   {
-    n1 = errorlog[n].n++;
-    if (n1 == log_print_max)
+    n = errorlog[n].n++;
+    if (n == log_print_max)
       Error ("error_count: This error will no longer be logged: %s\n", format);
-    if (n1 == max_errors)
+    if (n == max_errors)
     {
       error_summary ("Something is drastically wrong for any error to occur so much!\n");
       exit (0);
     }
   }
-  return (n1);
+  return (n + 1);
 }
 
 
