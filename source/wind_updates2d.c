@@ -1006,7 +1006,7 @@ wind_rad_init ()
   for (n = 0; n < NPLASMA; n++)
   {
     plasmamain[n].j = plasmamain[n].ave_freq = plasmamain[n].ntot = 0;
-    plasmamain[n].j_direct = plasmamain[n].j_scatt = 0, 0;      //NSH 1309 zero j banded by number of scatters
+    plasmamain[n].j_direct = plasmamain[n].j_scatt = 0.0;      //NSH 1309 zero j banded by number of scatters
     plasmamain[n].ip = 0.0;
     plasmamain[n].xi = 0.0;
     plasmamain[n].ip_direct = plasmamain[n].ip_scatt = 0.0;
