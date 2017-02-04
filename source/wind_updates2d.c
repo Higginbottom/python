@@ -757,13 +757,13 @@ WindPtr (w);
 
 
   asum = wind_luminosity (0.0, VERY_BIG);       /*We call wind_luminosity here to obtain an up to date set of cooling rates */
-
+  printf ("done asum\n");
 
   if (modes.zeus_connect == 1)  //If we are running in zeus connect mode, we output heating and cooling rates.
   {
     for (nplasma = 0; nplasma < NPLASMA; nplasma++)
     {
-
+		print ("Doing output for nplasma=%i vol=%e\n",nplasma,vol);
       wind_n_to_ij (geo.hydro_domain_number, plasmamain[nplasma].nwind, &i, &j);
       vol = w[plasmamain[nplasma].nwind].vol;
       fprintf (fptr, "%d %d %e %e %e ", i, j, w[plasmamain[nplasma].nwind].rcen, w[plasmamain[nplasma].nwind].thetacen / RADIAN, vol);  //output geometric things
