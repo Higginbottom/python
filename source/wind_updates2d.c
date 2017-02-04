@@ -763,9 +763,10 @@ WindPtr (w);
   {
     for (nplasma = 0; nplasma < NPLASMA; nplasma++)
     {
-		print ("Doing output for nplasma=%i vol=%e\n",nplasma,vol);
       wind_n_to_ij (geo.hydro_domain_number, plasmamain[nplasma].nwind, &i, &j);
       vol = w[plasmamain[nplasma].nwind].vol;
+	printf ("Doing output for nplasma=%i vol=%e\n",nplasma,vol);
+	  
       fprintf (fptr, "%d %d %e %e %e ", i, j, w[plasmamain[nplasma].nwind].rcen, w[plasmamain[nplasma].nwind].thetacen / RADIAN, vol);  //output geometric things
       fprintf (fptr, "%e %e %e ", plasmamain[nplasma].t_e, plasmamain[nplasma].xi, plasmamain[nplasma].ne);     //output temp, xi and ne to ease plotting of heating rates
       fprintf (fptr, "%e ", (plasmamain[nplasma].heat_photo + plasmamain[nplasma].heat_auger) / vol);   //Xray heating - or photoionization
