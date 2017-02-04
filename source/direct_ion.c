@@ -224,10 +224,12 @@ q_ioniz_dere (nion, t_e)
   double exp_int, dt, drdt, rate;
   int nrec, imax, imin, i;
 
+  imin=imax=-1; //Set to avoid compiler warning
 
   nrec = ion[nion].nxderedi;
 
   /* find the correct coefficient */
+
 
 
   t = (BOLTZMANN * t_e) / (dere_di_rate[nrec].xi * EV2ERGS);
@@ -360,10 +362,9 @@ q_recomb_dere (cont_ptr, electron_temperature)
 {
   int nion;
   double u0;
-  double gaunt, coeff;
+  double coeff;
   double root_etemp;
 
-  gaunt = 0.1;                  //for now - from Mihalas for hydrogen
   u0 = cont_ptr->freq[0] * H_OVER_K / electron_temperature;
   nion = cont_ptr->nion;
 
