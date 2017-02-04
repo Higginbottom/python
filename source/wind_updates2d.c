@@ -763,7 +763,7 @@ WindPtr (w);
   {
     for (nplasma = 0; nplasma < NPLASMA; nplasma++)
     {
-		printf ("Doing output for nplasma=%i vol=%e\n",nplasma);
+		printf ("Doing output for nplasma=%i hydro_domain_number=%e\n",nplasma,geo.hydro_domain_number);
 		
       wind_n_to_ij (geo.hydro_domain_number, plasmamain[nplasma].nwind, &i, &j);
       vol = w[plasmamain[nplasma].nwind].vol;
