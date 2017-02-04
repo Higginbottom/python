@@ -668,7 +668,7 @@ WindPtr (w);
   strcpy (string, "");
   sprintf (string, "# Wind update: Number %d", num_updates);
 
-  if (modes.zeus_connect == 1)  //If we are running in zeus connect mode - we open a file for heatcool rates
+  if (modes.zeus_connect == 1 && geo.hydro_domain_number > -1)  //If we are running in zeus connect mode - we open a file for heatcool rates
   {
     Log ("Outputting heatcool file for connecting to zeus\n");
     fptr = fopen ("py_heatcool.dat", "w");

@@ -478,11 +478,9 @@ populate_ion_rate_matrix (xplasma, rate_matrix, pi_rates, inner_rates, rr_rates,
 
 {
   int nn, mm;
-//  double nh;
   int n_elec, d_elec, ion_out;  //The number of electrons left in a current ion
 
 
-//  nh = xplasma->rho * rho2nh;   // The number density of hydrogen ions - computed from density
 
   /* First we initialise the matrix */
   for (nn = 0; nn < nions; nn++)
@@ -635,7 +633,6 @@ populate_ion_rate_matrix (xplasma, rate_matrix, pi_rates, inner_rates, rr_rates,
   {
     if (ion[nn].istate == 1)
     {
-//        b_temp[nn] = nh * ele[xelem[nn]].abun;
       b_temp[nn] = 1.0;         //In the relative abundance schene this equals one.
 
       for (mm = 0; mm < nions; mm++)
