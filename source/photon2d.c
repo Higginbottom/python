@@ -57,7 +57,6 @@ translate (w, pp, tau_scat, tau, nres)
   int ndomain;
 
 
-  printf ("BLAH %e\n",pp->freq);
 
   if (where_in_wind (pp->x, &ndomain) < 0)
   {
