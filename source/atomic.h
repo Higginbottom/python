@@ -57,7 +57,7 @@ int nelements;                  /* The actual number of ions read from the data 
 int nions;                      /*The actual number of ions read from the datafile */
 #define NLEVELS 	12000   /* Maximum number of levels for all elements and ions */
 int nlevels;                    /*These are the actual number of levels which were read in */
-#define NLTE_LEVELS	2700    /* Maximum number of levels to treat explicitly */
+#define NLTE_LEVELS	270    /* Maximum number of levels to treat explicitly */
 int nlte_levels;                /* Actual number of levels to treat explicityly */
 #define NLEVELS_MACRO   200     /* Maximum number of macro atom levels. (SS, June 04) */
 int nlevels_macro;              /* Actual number of macro atom levels. (SS, June 04) */
@@ -329,7 +329,7 @@ double phot_freq_min;           /*The lowest frequency for which photoionization
 double inner_freq_min;          /*The lowest frequency for which inner shel ionization can take place */
 
 #define NCROSS 1500
-#define NTOP_PHOT 4000          /* Maximum number of photoionisation processes. (SS) */
+#define NTOP_PHOT 400          /* Maximum number of photoionisation processes. (SS) */
 int ntop_phot;                  /* The actual number of TopBase photoionzation x-sections */
 int nphot_total;                /* total number of photoionzation x-sections = nxphot + ntop_phot */
 

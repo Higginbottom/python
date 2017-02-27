@@ -686,7 +686,7 @@ typedef struct plasma
   double *density;              /*The number density of a specific ion.  This needs to correspond
                                    to the ion order obtained by get_atomic_data. 78 - changed to dynamic allocation */
   double *partition;            /*The partition function for each  ion. 78 - changed to dynamic allocation */
-  double levden[NLTE_LEVELS];   /*The number density (occupation number?) of a specific level */
+  double *levden;   /*The number density (occupation number?) of a specific level */
 
   double *PWdenom;              /*The denominator in the pairwise ionization solver. Sicne this is computed at a temperature 
                                    chosen from basic ioinzation proerties to be good for this ion, it should not change
@@ -702,7 +702,7 @@ typedef struct plasma
   double kappa_ff_factor;       /* Multiplicative factor for calculating the FF heating for                                      a photon. */
 
 
-  double recomb_simple[NTOP_PHOT];      /* "alpha_e - alpha" (in Leon's notation) for b-f processes in simple atoms. */
+  double *recomb_simple;      /* "alpha_e - alpha" (in Leon's notation) for b-f processes in simple atoms. */
 
 /* Begining of macro information */
   double kpkt_emiss;            /*This is the specific emissivity due to the conversion k-packet -> r-packet in the cell
@@ -710,7 +710,7 @@ typedef struct plasma
 
   double kpkt_abs;              /* k-packet equivalent of matom_abs. (SS) */
 
-  int kbf_use[NTOP_PHOT];       /* List of the indices of the photoionization processes to be used for kappa_bf. (SS) */
+  int *kbf_use;       /* List of the indices of the photoionization processes to be used for kappa_bf. (SS) */
   int kbf_nuse;                 /* Total number of photoionization processes to be used for kappa_bf. (SS) */
 
 /* End of macro information */
@@ -750,14 +750,14 @@ typedef struct plasma
   double *ioniz, *recomb;       /* Number of ionizations and recombinations for each ion.
                                    The sense is ionization from ion[n], and recombinations 
                                    to each ion[n] . 78 - changed to dynamic allocation */
-  double inner_recomb[NIONS];
+  double *inner_recomb;
   int *scatters;                /* 68b - The number of scatters in this cell for each ion. 78 - changed to dynamic allocation */
   double *xscatters;            /* 68b - Diagnostic measure of energy scattered out of beam on extract. 78 - changed to dynamic allocation */
   double *heat_ion;             /* The amount of energy being transferred to the electron pool
                                    sby this ion via photoionization. 78 - changed to dynamic allocation */
   double *lum_ion;              /* The amount of energy being released from the electron pool
                                    by this ion via recombination. 78 - changed to dynamic allocation */
-  double lum_inner_ion[NIONS];
+  double *lum_inner_ion;
   double j, ave_freq, lum;      /*Respectively mean intensity, intensity_averaged frequency, 
                                    luminosity and absorbed luminosity of shell */
   double xj[NXBANDS], xave_freq[NXBANDS];       /* 1108 NSH frequency limited versions of j and ave_freq */
