@@ -278,7 +278,7 @@ def get_ndf_data(fname,r_file,theta_file):
 #Start of the main code
 
 print "Welcome to hydro_2_python" 
-MU=0.6
+MU=1.43
 
 if len(sys.argv)>1:
 	fname=sys.argv[1]
