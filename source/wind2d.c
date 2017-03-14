@@ -321,8 +321,8 @@ define_wind ()
   }
 
   /* Save the wind file as "test_plasma" */
-  Log ("Saving test wind file NPLASMA %i\n", NPLASMA);
-  wind_save ("test_plasma.wind_save");
+//  Log ("Saving test wind file NPLASMA %i\n", NPLASMA);
+//  wind_save ("test_plasma.wind_save");
 
 /* 06may -- At this point we have calculated the volumes of all of the cells and it should
 be optional which variables beyond here are moved to structures othere than Wind */
