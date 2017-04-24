@@ -1119,7 +1119,7 @@ get_root (root, total)
     position = pf - total;
     strncpy (root, total, position);
     root[position] = '\0';
-    printf ("xxx %s\n", root);
+//    printf ("xxx %s\n", root);
     return (0);
   }
 
