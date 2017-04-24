@@ -452,9 +452,10 @@ photo_gen_wind (p, weight, freqmin, freqmax, photstart, nphot)
     }
     p[n].w = weight;
     /* Determine the position of the photon in the moving frame */
-	if (nplasma==604)
+
+	if (nplasma==499)
 	{
-		Log ("CALL604PHOT freq=%e weight=%e\n",p[n].freq,weight);
+		Log ("CALL499PHOT freq=%e weight=%e\n",p[n].freq,weight);
 	}
 
     get_random_location (icell, p[n].x);
