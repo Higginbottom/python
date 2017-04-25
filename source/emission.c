@@ -432,8 +432,6 @@ photo_gen_wind (p, weight, freqmin, freqmax, photstart, nphot)
     /*Get the total luminosity and MORE IMPORTANT populate xcol.pow and other parameters */
     lum = plasmamain[nplasma].lum_rad;  /* Whilst this says lum - I'm (nsh) pretty sure this is actually a flux between two frequency limits) */
 	
-	if (nplasma==499)
-	printf ("cell 499, lum=%e lum_ff=%e lum_fb=%e lum_line=%e\n",lum,plasmamain[nplasma].lum_ff,plasmamain[nplasma].lum_fb,plasmamain[nplasma].lum_lines);
 
     xlum = lum * (rand () + 0.5) / (MAXRAND);   /*this makes a small test luminosity */
 
@@ -443,8 +441,6 @@ photo_gen_wind (p, weight, freqmin, freqmax, photstart, nphot)
     p[n].nnscat = 1;
     if ((xlumsum += plasmamain[nplasma].lum_ff) > xlum) /*Add the free free luminosity of the cell to the running total. If it is more than our small test luminosity, then we need to make some ff photons */
     {
-		if (nplasma==499)
-			printf ("Making ff photon");
       p[n].freq = one_ff (&wmain[icell], freqmin, freqmax);     /*Get the frequency of one ff photon */
       if (p[n].freq <= 0.0)
       {
@@ -454,22 +450,18 @@ photo_gen_wind (p, weight, freqmin, freqmax, photstart, nphot)
     }
     else if ((xlumsum += plasmamain[nplasma].lum_fb) > xlum)    /*Do the same for fb */
     {
-		if (nplasma==499)
-			printf ("Making fb photon");
       p[n].freq = one_fb (&wmain[icell], freqmin, freqmax);
     }
     else
     {
-		if (nplasma==499)
-			printf ("Making line photon");
       p[n].freq = one_line (&wmain[icell], freqmin, freqmax, &p[n].nres);       /*And fill all the rest of the luminosity up with line photons */
     }
     p[n].w = weight;
     /* Determine the position of the photon in the moving frame */
 
-	if (nplasma==499)
+	if (nplasma==99)
 	{
-		Log ("CALL499PHOT freq=%e weight=%e\n",p[n].freq,weight);
+		Log ("CELL99PHOT freq=%e weight=%e\n",p[n].freq,weight);
 	}
 
     get_random_location (icell, p[n].x);
@@ -533,7 +525,7 @@ was a resonant scatter but we want isotropic scattering anyway.  */
   for (n=0; n<100000; n++)
 	  Log ("nphot in cell %i = %i\n",n,nphot_count[n]);
 
-
+  printf ("MADE %e wind photons\n",nphot);
 
   return (nphot);               /* Return the number of photons generated */
 
