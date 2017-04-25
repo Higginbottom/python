@@ -1227,6 +1227,7 @@ rd_extra (firstword, answer, wordlength)
   char secondword[LINELEN];
   char line[LINELEN];
   char *ccc, *index ();
+  printf ("Got to rd_extra\n");
   if (fgets (line, LINELEN, rdin_ptr) == NULL)
   {
     return (1);                 // get_extra_diagnostics uses this return value 

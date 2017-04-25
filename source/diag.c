@@ -142,7 +142,7 @@ get_extra_diagnostics ()
 
     rdstat = rd_extra (firstword, &answer, &wordlength);
 
-
+	printf ("%s %i\n",firstword,rdstat);
     /* if rdstat is 1 we reached EOF, so exit this routine */
     if (rdstat)
     {

@@ -394,7 +394,7 @@ photo_gen_wind (p, weight, freqmin, freqmax, photstart, nphot)
 
 
   photstop = photstart + nphot;
-  Log_silent ("photo_gen_wind creates nphot %5d photons from %5d to %5d \n", nphot, photstart, photstop);
+  Log ("photo_gen_wind creates nphot %5d photons from %5d to %5d \n", nphot, photstart, photstop);
 
   for (n = photstart; n < photstop; n++)
   {
@@ -426,6 +426,9 @@ photo_gen_wind (p, weight, freqmin, freqmax, photstart, nphot)
 
     /*Get the total luminosity and MORE IMPORTANT populate xcol.pow and other parameters */
     lum = plasmamain[nplasma].lum_rad;  /* Whilst this says lum - I'm (nsh) pretty sure this is actually a flux between two frequency limits) */
+	
+	if (nplasma==499)
+	printf ("cell 499, lum=%e lum_ff=%e lum_fb=%e lum_line=%e\n",lum,plasmamain[nplasma].lum_ff,plasmamain[nplasma].lum_fb,plasmamain[nplasma].lum_lines);
 
     xlum = lum * (rand () + 0.5) / (MAXRAND);   /*this makes a small test luminosity */
 
@@ -435,6 +438,8 @@ photo_gen_wind (p, weight, freqmin, freqmax, photstart, nphot)
     p[n].nnscat = 1;
     if ((xlumsum += plasmamain[nplasma].lum_ff) > xlum) /*Add the free free luminosity of the cell to the running total. If it is more than our small test luminosity, then we need to make some ff photons */
     {
+		if (nplasma==499)
+			printf ("Making ff photon");
       p[n].freq = one_ff (&wmain[icell], freqmin, freqmax);     /*Get the frequency of one ff photon */
       if (p[n].freq <= 0.0)
       {
@@ -444,10 +449,14 @@ photo_gen_wind (p, weight, freqmin, freqmax, photstart, nphot)
     }
     else if ((xlumsum += plasmamain[nplasma].lum_fb) > xlum)    /*Do the same for fb */
     {
+		if (nplasma==499)
+			printf ("Making fb photon");
       p[n].freq = one_fb (&wmain[icell], freqmin, freqmax);
     }
     else
     {
+		if (nplasma==499)
+			printf ("Making line photon");
       p[n].freq = one_line (&wmain[icell], freqmin, freqmax, &p[n].nres);       /*And fill all the rest of the luminosity up with line photons */
     }
     p[n].w = weight;
