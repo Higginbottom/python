@@ -531,7 +531,7 @@ was a resonant scatter but we want isotropic scattering anyway.  */
 
 
   for (n=0; n<100000; n++)
-	  printf ("nphot in cell %i = %i\n",n,nphot_count[n]);
+	  Log ("nphot in cell %i = %i\n",n,nphot_count[n]);
 
 
 
