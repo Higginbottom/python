@@ -750,7 +750,6 @@ typedef struct plasma
   int ntot_disk;
   int ntot_wind;
   int ntot_agn;
-  int ntot_made; /*The number of wind photons made in the cell */
 
 
   int nscat_es;                 /* The number of electrons scatters in the cell */
