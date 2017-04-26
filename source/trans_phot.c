@@ -281,7 +281,7 @@ trans_phot_single (WindPtr w, PhotPtr p, int iextract)
 
   n = 0;                        // Needed to avoid 03 warning, but it is not clear that it is defined as expected.
   iflag=0;
-	if (pp.grid==200)
+	if (pp.origin_orig==PTYPE_AGN)
 		iflag=1;
 
   /* This is the beginning of the loop for each photon and executes until the photon leaves the wind */
