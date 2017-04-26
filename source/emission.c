@@ -525,7 +525,7 @@ was a resonant scatter but we want isotropic scattering anyway.  */
   for (n=0; n<100000; n++)
 	  Log ("nphot in cell %i = %i\n",n,nphot_count[n]);
 
-  printf ("MADE %e wind photonsin band %e - %e\n",nphot,freqmin,freqmax);
+  printf ("MADE %i wind photonsin band %e - %e\n",nphot,freqmin,freqmax);
 
   return (nphot);               /* Return the number of photons generated */
 
