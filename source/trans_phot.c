@@ -295,7 +295,7 @@ trans_phot_single (WindPtr w, PhotPtr p, int iextract)
        which case it reach the inner edge and was reabsorbed. If the photon escapes then we leave the photon at the position
        of it's last scatter.  In most other cases though we store the final position of the photon. */
 	  if (iflag==1)
-		Log ("Photon %i from cell 200 is here in grid %i",pp.np,pp.grid);
+		Log ("Photon %i from cell 200 is here in grid %i\n",pp.np,pp.grid);
 
 
     istat = translate (w, &pp, tau_scat, &tau, &nres);
