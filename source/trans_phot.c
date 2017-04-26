@@ -280,7 +280,7 @@ trans_phot_single (WindPtr w, PhotPtr p, int iextract)
   icell = 0;
 
   n = 0;                        // Needed to avoid 03 warning, but it is not clear that it is defined as expected.
-
+  iflag=0;
 	if (pp.grid==200)
 		iflag=1;
 
