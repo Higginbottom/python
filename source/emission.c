@@ -442,6 +442,10 @@ photo_gen_wind (p, weight, freqmin, freqmax, photstart, nphot)
     if ((xlumsum += plasmamain[nplasma].lum_ff) > xlum) /*Add the free free luminosity of the cell to the running total. If it is more than our small test luminosity, then we need to make some ff photons */
     {
       p[n].freq = one_ff (&wmain[icell], freqmin, freqmax);     /*Get the frequency of one ff photon */
+	  	if (nplasma==99)
+			{
+						Log ("CELL99PHOT FF freq=%e weight=%e\n",p[n].freq,weight);
+				}
       if (p[n].freq <= 0.0)
       {
         Error_silent ("photo_gen_wind: On return from one_ff: icell %d vol %g t_e %g\n", icell, wmain[icell].vol, plasmamain[nplasma].t_e);
@@ -451,10 +455,18 @@ photo_gen_wind (p, weight, freqmin, freqmax, photstart, nphot)
     else if ((xlumsum += plasmamain[nplasma].lum_fb) > xlum)    /*Do the same for fb */
     {
       p[n].freq = one_fb (&wmain[icell], freqmin, freqmax);
+  	if (nplasma==99)
+		{
+					Log ("CELL99PHOT FB freq=%e weight=%e\n",p[n].freq,weight);
+			}
     }
     else
     {
       p[n].freq = one_line (&wmain[icell], freqmin, freqmax, &p[n].nres);       /*And fill all the rest of the luminosity up with line photons */
+    	if (nplasma==99)
+  		{
+  					Log ("CELL99PHOT BB freq=%e weight=%e\n",p[n].freq,weight);
+  			}
     }
     p[n].w = weight;
     /* Determine the position of the photon in the moving frame */
