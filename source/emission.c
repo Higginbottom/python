@@ -459,10 +459,10 @@ photo_gen_wind (p, weight, freqmin, freqmax, photstart, nphot)
     p[n].w = weight;
     /* Determine the position of the photon in the moving frame */
 
-	if (nplasma==99)
-	{
-		Log ("CELL99PHOT freq=%e weight=%e line=%e ff=%e fb=%e totl=%e\n",p[n].freq,weight,plasmamain[nplasma].lum_lines,plasmamain[nplasma].lum_ff,plasmamain[nplasma].lum_fb,plasmamain[nplasma].lum_rad);
-	}
+//	if (nplasma==99)
+//	{
+//		Log ("CELL99PHOT freq=%e weight=%e\n",p[n].freq,weight);
+//	}
 
     get_random_location (icell, p[n].x);
 
@@ -522,10 +522,10 @@ was a resonant scatter but we want isotropic scattering anyway.  */
   }
 
 
-  for (n=0; n<100000; n++)
-	  Log ("nphot in cell %i = %i  band %e - %e\n",n,nphot_count[n],freqmin,freqmax);
+//  for (n=0; n<100000; n++)
+//	  Log ("nphot in cell %i = %i  band %e - %e\n",n,nphot_count[n],freqmin,freqmax);
 
-  printf ("MADE %i wind photonsin band %e - %e\n",nphot,freqmin,freqmax);
+//  printf ("MADE %i wind photonsin band %e - %e\n",nphot,freqmin,freqmax);
 
   return (nphot);               /* Return the number of photons generated */
 

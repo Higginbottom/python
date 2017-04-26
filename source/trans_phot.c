@@ -258,7 +258,7 @@ int
 trans_phot_single (WindPtr w, PhotPtr p, int iextract)
 {
   double tau_scat, tau;
-  int istat;
+  int istat,iflag;
   double rrr;
   int icell;
   int nres, *ptr_nres;
@@ -281,7 +281,8 @@ trans_phot_single (WindPtr w, PhotPtr p, int iextract)
 
   n = 0;                        // Needed to avoid 03 warning, but it is not clear that it is defined as expected.
 
-
+	if (pp.grid==200)
+		iflag=1;
 
   /* This is the beginning of the loop for each photon and executes until the photon leaves the wind */
 
@@ -293,6 +294,8 @@ trans_phot_single (WindPtr w, PhotPtr p, int iextract)
        was a scattering event in the shell, 2 in which case the photon reached the outside edge of the grid and escaped, 3 in 
        which case it reach the inner edge and was reabsorbed. If the photon escapes then we leave the photon at the position
        of it's last scatter.  In most other cases though we store the final position of the photon. */
+	  if (iflag==1)
+		printf ("Photon %i from cell 200 is here in grid %i",pp.np,pp.grid);
 
 
     istat = translate (w, &pp, tau_scat, &tau, &nres);
