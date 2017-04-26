@@ -461,7 +461,7 @@ photo_gen_wind (p, weight, freqmin, freqmax, photstart, nphot)
 
 	if (nplasma==99)
 	{
-		Log ("CELL99PHOT freq=%e weight=%e\n",p[n].freq,weight);
+		Log ("CELL99PHOT freq=%e weight=%e line=%e ff=%e fb=%e totl=%e\n",p[n].freq,weight,plasmamain[nplasma].lum_lines,plasmamain[nplasma].lum_ff,plasmamain[nplasma].lum_fb,plasmamain[nplasma].lum_rad);
 	}
 
     get_random_location (icell, p[n].x);
