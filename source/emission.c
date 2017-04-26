@@ -425,7 +425,7 @@ photo_gen_wind (p, weight, freqmin, freqmax, photstart, nphot)
 
     nplasma = wmain[icell].nplasma;
     ndom = wmain[icell].ndom;
-	 nphot_count[icell]=nphot_count[icell]+1;
+	 nphot_count[nplasma]=nphot_count[nplasma]+1;
 
     /* Now generate a single photon in this cell */
 
@@ -525,7 +525,7 @@ was a resonant scatter but we want isotropic scattering anyway.  */
   for (n=0; n<100000; n++)
 	  Log ("nphot in cell %i = %i\n",n,nphot_count[n]);
 
-  printf ("MADE %e wind photons\n",nphot);
+  printf ("MADE %e wind photonsin band %e - %e\n",nphot,freqmin,freqmax);
 
   return (nphot);               /* Return the number of photons generated */
 
