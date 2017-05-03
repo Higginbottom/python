@@ -460,6 +460,7 @@ photo_gen_wind (p, weight, freqmin, freqmax, photstart, nphot)
 
     }
     p[n].w = weight;
+	photon_source[n]=nplasma;
     /* Determine the position of the photon in the moving frame */
 
 //	if (nplasma==99)

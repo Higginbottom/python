@@ -92,6 +92,9 @@ define_phot (p, f1, f2, nphot_tot, ioniz_or_final, iwind, freq_sampling)
   double ftot;
   int n;
   int iphot_start;
+  
+  for (n=0;n<NPHOT;n++)
+	  photon_source[n]=-1;
 
 
   if (freq_sampling == 0)

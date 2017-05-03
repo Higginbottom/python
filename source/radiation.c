@@ -921,7 +921,7 @@ update_banded_estimators (xplasma, p, ds, w_ave)
 
   if (xplasma->nplasma==2499 || xplasma->nplasma==3699)
   {
-	  Log ("NSH cell %i nphot %i w_ave %e ds %e freq %e origin %i nscat %i\n",xplasma->nplasma,p->np,w_ave,ds,p->freq,p->origin,p->nscat);
+	  Log ("NSH cell %i nphot %i w_ave %e ds %e freq %e origin %i nscat %i gen_cell %i \n",xplasma->nplasma,p->np,w_ave,ds,p->freq,p->origin,p->nscat,photon_source[p->np]);
   }
 
 /* frequency weighted by the weights and distance       in the shell .  See eqn 2 ML93 */
