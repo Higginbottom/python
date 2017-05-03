@@ -919,7 +919,10 @@ update_banded_estimators (xplasma, p, ds, w_ave)
     xplasma->j_scatt += w_ave * ds;
   }
 
-
+  if (xplasma->nplasma==2499 || xplasma->nplasma==3699)
+  {
+	  Log ("NSH cell %i nphot %i w_ave %e ds %e origin %i nscat %i\n",xplasma->nplasma,p->np,w_ave,ds,p->origin,p->nscat);
+  }
 
 /* frequency weighted by the weights and distance       in the shell .  See eqn 2 ML93 */
   xplasma->mean_ds += ds;
