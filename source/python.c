@@ -754,13 +754,13 @@ main (argc, argv)
      Default is fixed, but will vary with different processor numbers */
   /* We don't want to run the same photons each cycle in zeus mode, so 
      everytime we are using zeus we also set to use the clock */
-  if ((modes.rand_seed_usetime == 1) || (modes.zeus_connect == 1))
-  {
-    n = (unsigned int) clock () * (rank_global + 1);
-    srand (n);
-  }
-  else
-    srand (1084515760 + (13 * rank_global));
+//  if ((modes.rand_seed_usetime == 1) || (modes.zeus_connect == 1))
+//  {
+//    n = (unsigned int) clock () * (rank_global + 1);
+//    srand (n);
+//  }
+//  else
+	      srand (1084515760 + (13 * rank_global));
   /* 68b - 0902 - ksl - Start with photon history off */
   phot_hist_on = 0;
   /* If required, read in a non-standard disk temperature profile */
