@@ -283,6 +283,11 @@ trans_phot_single (WindPtr w, PhotPtr p, int iextract)
   iflag=0;
 //	if (pp.origin==PTYPE_AGN)
 //		iflag=1;
+  
+  if (w[p->grid].nplasma==2499 || w[p->grid].nplasma==3699)
+  {
+	  Log ("NSH nphot %i started in cell %i\n",p->np,w[p->grid].nplasma);
+  }
 
   /* This is the beginning of the loop for each photon and executes until the photon leaves the wind */
 
