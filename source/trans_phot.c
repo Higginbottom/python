@@ -281,8 +281,8 @@ trans_phot_single (WindPtr w, PhotPtr p, int iextract)
 
   n = 0;                        // Needed to avoid 03 warning, but it is not clear that it is defined as expected.
   iflag=0;
-	if (pp.origin==PTYPE_AGN)
-		iflag=1;
+//	if (pp.origin==PTYPE_AGN)
+//		iflag=1;
 
   /* This is the beginning of the loop for each photon and executes until the photon leaves the wind */
 
@@ -294,8 +294,8 @@ trans_phot_single (WindPtr w, PhotPtr p, int iextract)
        was a scattering event in the shell, 2 in which case the photon reached the outside edge of the grid and escaped, 3 in 
        which case it reach the inner edge and was reabsorbed. If the photon escapes then we leave the photon at the position
        of it's last scatter.  In most other cases though we store the final position of the photon. */
-	  if (iflag==1)
-		Log ("Photon %i from AGN is here in grid %i x= %e y= %e z= %e freq= %e\n",pp.np,pp.grid,pp.x[0],pp.x[1],pp.x[2],pp.freq);
+//	  if (iflag==1)
+//		Log ("Photon %i from AGN is here in grid %i x= %e y= %e z= %e freq= %e\n",pp.np,pp.grid,pp.x[0],pp.x[1],pp.x[2],pp.freq);
 
 
     istat = translate (w, &pp, tau_scat, &tau, &nres);
