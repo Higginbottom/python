@@ -230,7 +230,7 @@ WindPtr (w);
 
 	  if (plasmamain[n].nplasma==2499 || plasmamain[n].nplasma==3699)
 	  {
-		  printf ("J_CALC cell %i j %e volume %e",plasmamain[n].nplasma,plasmamain[n].j,volume);
+		  Log ("J_CALC cell %i j %e volume %e",plasmamain[n].nplasma,plasmamain[n].j,volume);
 	  }
 
       plasmamain[n].j /= (4. * PI * volume);    //Factor of 2 has been removed from this line (SS, May04)
@@ -239,7 +239,7 @@ WindPtr (w);
 
 	  if (plasmamain[n].nplasma==2499 || plasmamain[n].nplasma==3699)
 	  {
-		  printf (" j %e\n",plasmamain[n].j);
+		  Log (" j %e\n",plasmamain[n].j);
 	  }
 
 
