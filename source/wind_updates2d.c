@@ -228,10 +228,19 @@ WindPtr (w);
         Error ("wind_update:sane_check %d ave_freq %e j %e ntot %d\n", n, wtest, plasmamain[n].j, plasmamain[n].ntot);
       }
 
+	  if (plasmamain[n].nplasma==2499 || plasmamain[n].nplasma==3699)
+	  {
+		  printf ("J_CALC cell %i j %e volume %e",plasmamain[n].nplasma,plasmamain[n].j,volume);
+	  }
+
       plasmamain[n].j /= (4. * PI * volume);    //Factor of 2 has been removed from this line (SS, May04)
       plasmamain[n].j_direct /= (4. * PI * volume);
       plasmamain[n].j_scatt /= (4. * PI * volume);
 
+	  if (plasmamain[n].nplasma==2499 || plasmamain[n].nplasma==3699)
+	  {
+		  printf (" j %e\n",plasmamain[n].j);
+	  }
 
 
       trad = plasmamain[n].t_r = H * plasmamain[n].ave_freq / (BOLTZMANN * 3.832);
