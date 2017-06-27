@@ -2965,8 +2965,11 @@ index_phot_top ()
 
   freqs[0] = 0;
   for (n = 0; n < ntop_phot + nxphot; n++)
+  {
     freqs[n + 1] = phot_top[n].freq[0]; /* So filled matrix 
                                            elements run from 1 to ntop_phot */
+printf ("NPHOT test n, freqs[n+1]=%e ntop_phot=%i nxphot=%i\n",freqs[n + 1],ntop_phot,nxphot);		
+}
 
   indexx (ntop_phot + nxphot, freqs, index);    /* Note that this math recipes routine 
                                                    expects arrays to run from 1 to nlines inclusive */
@@ -2979,7 +2982,8 @@ index_phot_top ()
 
   for (n = 0; n < ntop_phot + nxphot; n++)
   {
-    phot_top_ptr[n] = &phot_top[index[n + 1] - 1];
+    phot_top_ptr[n] = &phot_top[index[n + 1]];
+	printf ("NPHOT test n=%i f_0=%e z=%i state=%i\n",n,phot_top_ptr[n]->freq[0],phot_top_ptr[n]->z,phot_top_ptr[n]->istate);
   }
 
   /* Free the memory for the arrays */
@@ -3093,7 +3097,7 @@ indexx (n, arrin, indx)
 /* NSH 1408 - This routine fails in the very odd circumstance that n=1 so we now do a little test here */
   if (n < 2)
   {
-    Log_silent ("Nothing for indexx to do! Only one element\n");
+    printf ("Nothing for indexx to do! Only one element\n");
     return;
   }
 

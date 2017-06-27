@@ -227,7 +227,7 @@ radiation (p, ds)
     /* Next steps are a way to avoid the loop over photoionization x sections when it should not matter */
     if (DENSITY_PHOT_MIN > 0)   // 57h -- ksl -- 060715
     {                           // Initialize during ionization cycles only
-
+//		printf ("PHOT TOP nphot_total=%i\n,",nphot_total);
 
       /* 57h -- 06jul -- ksl -- change loop to use pointers ordered by frequency */
       /* JM 1503 -- loop over all photoionization xsections */
@@ -235,6 +235,7 @@ radiation (p, ds)
       {
         x_top_ptr = phot_top_ptr[n];
         ft = x_top_ptr->freq[0];
+//		printf ("PHOT TOP ft=%e freq[1]=%e\n",ft,x_top_ptr->freq[1]);
         if (ft > freq_min && ft < freq_max)
         {
           /* then the shifting of the photon causes it to cross an edge. 
