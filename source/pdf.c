@@ -528,18 +528,27 @@ int pdf_n;
 int
 pdf_gen_from_array (pdf, x, y, n_xy, xmin, xmax, njumps, jump)
      PdfPtr pdf;
-     double x[], y[];
-     int n_xy;
-     double xmin, xmax;
-     int njumps;
-     double jump[];
+     double x[], y[];  //The x any y values of the incoming cdf
+     int n_xy;  //The number of points in the incoming cdf
+     double xmin, xmax; //The limits in the x values 
+     int njumps;  //The number of jumps - discontinuities in the cdf
+     double jump[];  //The locations in x space of the discontinuities.
 {
-  int allzero;
+  int allzero;  // a flag to check if all the y values are zero
   int m, n, nn, j;
   double sum, q, xx, yy;
   int njump_min, njump_max;
   double ysum;
   int echeck, pdf_check (), recalc_pdf_from_cdf ();
+
+
+  if (xmin>6.35e15 && xmin<1.52e16)
+   for (n=0;n<n_xy;n++)
+   {
+
+	   	  printf ("INPUT CDF %e %e\n",x[n],y[n]);
+ 	
+   }
 
 
   /* Check the inputs */
@@ -579,26 +588,50 @@ pdf_gen_from_array (pdf, x, y, n_xy, xmin, xmax, njumps, jump)
 /* Finished inital processing of jumps */
 
   allzero = 0;
-  for (n = 0; n < n_xy; n++)
+  for (n = 0; n < n_xy; n++)  //loop over all points in the cdf
   {
-    if (y[n] < 0)
+    if (y[n] < 0)   //we have a negative point - problem
     {
       Error ("pdf_gen_from_array: probability density %g < 0 at element %d\n", y[n], n);
       return (-1);
     }
-    if (y[n] > 0)
+    if (y[n] > 0)   //At least one point is greater than zero - good
     {
-      allzero = 1;
-    };
+      allzero = 1;  //Set the flag
+    }
   }
   /* OK, all the input data seems OK */
 
+  /* The next two checks look to see if there is a part of the CDF that is all zeros as the start or end of the distribution
+  
+  Start first */
+
+  n=0.;
+	  while (y[n]==0.0)
+	  {
+	  xmin=x[n];
+	  n++;
+   }
+   
+   
+   /* Now the end */
+      
+   n=n_xy-1;
+   
+	   while (y[n]==0.0)
+	   {
+		   xmax=x[n];
+			   n--;
+	   }
+	   
+	   /* We should now have reset xmin and xmax to the parts of the CDF that have non zero values */
 
 
 /* Shuffle x and y into pdf_xx and pdf_yy allowing for xmin and xmax */
 
   if (xmax < x[0] || xmin > x[n_xy - 1] || allzero == 0)
   {                             // These are special (probably nonsensical) cases
+	  			
     pdf_x[0] = xmin;
     pdf_z[0] = 0.;
     pdf_x[1] = xmax;
@@ -613,25 +646,25 @@ pdf_gen_from_array (pdf, x, y, n_xy, xmin, xmax, njumps, jump)
     m = 0;
     while (x[m] < xmin)
       m++;                      // Find the bottom boundary
-    pdf_x[0] = xmin;
-    if (m == 0)
+    pdf_x[0] = xmin;  //Set the initial x point in the PDF to the minimum frequency in the required PDF
+    if (m == 0)     //The initial point in the supplied CDF array is below the minimum frequency in the required PDF
     {
       pdf_y[0] = y[0];          //Assume prob. density is constant outside array lims.
     }
     else
     {
       q = (xmin - x[m - 1]) / (x[m] - x[m - 1]);
-      pdf_y[0] = q * y[m] + (1. - q) * y[m - 1];
+      pdf_y[0] = q * y[m] + (1. - q) * y[m - 1];  //We linearly interpolate between the points in the supplied CDF that bracket the first x point.
     }
-    pdf_n = 1;
+    pdf_n = 1;  //We have at least one point in our CDF
     // Completed first element; now do those that are completely in the grid
-    while (x[m] < xmax && m < n_xy)
+    while (x[m] < xmax && m < n_xy) //loop through all the other points in the supplied CDF, till we hit the maximum required frequency
     {
-      pdf_x[pdf_n] = x[m];
+      pdf_x[pdf_n] = x[m]; //Just populate the pdf array with the cdf points
       pdf_y[pdf_n] = y[m];
       m++;
       pdf_n++;
-      if (pdf_n > PDF_ARRAY)
+      if (pdf_n > PDF_ARRAY)  //check that we havent overflowed our local structure (bound set at top of subroutine)
       {
         Error ("pdf_gen_from_array: pdf_n (%d) exceeded maximum array size PDF_ARRAY (%d) \n", pdf_n, PDF_ARRAY);
         Error ("pdf_gen_from_array: n_xy %d xmin %f xmax %f njumps %d\n", n_xy, xmin, xmax, njumps);
@@ -640,10 +673,10 @@ pdf_gen_from_array (pdf, x, y, n_xy, xmin, xmax, njumps, jump)
       }
     }
     // Now worry about the last element
-    pdf_x[pdf_n] = xmax;
+    pdf_x[pdf_n] = xmax;  //just populate the last x value with the maximum required freq in the PDF
     if (m < n_xy - 1)
     {
-      q = (xmax - x[m]) / (x[m + 1] - x[m]);
+      q = (xmax - x[m]) / (x[m + 1] - x[m]); //linearly interpolate to get the y value for the top point
       pdf_y[pdf_n] = q * y[m + 1] + (1. - q) * y[m];
     }
     else
@@ -656,12 +689,13 @@ pdf_gen_from_array (pdf, x, y, n_xy, xmin, xmax, njumps, jump)
  * specified by the input array but we want the cumulative distribution
  */
 
-    pdf_z[0] = 0.;
-    for (n = 1; n < pdf_n; n++)
+    pdf_z[0] = 0.; //initial point in cumlative prob=0.0
+    for (n = 1; n < pdf_n; n++)  //loop trough all points in cdf
     {
       pdf_z[n] = pdf_z[n - 1] + 0.5 * (pdf_y[n - 1] + pdf_y[n]) * (pdf_x[n] - pdf_x[n - 1]);
     }
     sum = pdf_z[pdf_n - 1];
+
 
     for (n = 1; n < pdf_n; n++)
       pdf_z[n] /= sum;
@@ -669,6 +703,12 @@ pdf_gen_from_array (pdf, x, y, n_xy, xmin, xmax, njumps, jump)
    the input array, or more explicitly, at the points specied in the array
    pdf_x
 */
+    if (xmin>6.35e15 && xmin<1.52e16)
+     for (n=0;n<pdf_n;n++)
+     {
+  	   	  printf ("SCALED CDF %e %e\n",pdf_x[n],pdf_z[n]);
+ 	
+     }
 
   }
 
@@ -682,20 +722,23 @@ pdf_gen_from_array (pdf, x, y, n_xy, xmin, xmax, njumps, jump)
      to me that this is the most elegant way to deal with this problem.  
    */
 
+ 
 
 
-  pdf->x[0] = xmin;
+
+
+  pdf->x[0] = xmin;  //Set the initial 
   pdf->y[0] = 0;
 
   j = njump_min;
   m = 0;
   nn = 1;
-  for (n = 1; n < NPDF; n++)
+  for (n = 1; n < NPDF; n++)      
   {
     ysum = ((double) nn) / (NPDF - njumps);     /* This is the target with no jumps */
-
-    while (pdf_z[m] < ysum)
+    while (pdf_z[m] < ysum)  
     {
+//		printf("m=%i pdf_z[m]=%e ysum=%e\n",m,pdf_z[m],ysum);
       while (j < njump_max && jump[j] <= pdf_x[m])
       {
         pdf->x[n] = jump[j];
@@ -706,6 +749,7 @@ pdf_gen_from_array (pdf, x, y, n_xy, xmin, xmax, njumps, jump)
 
         if (pdf->x[n] < pdf->x[n - 1])
         {                       // Then we need to shuffle the pdf
+//			printf ("Shuffling coz %e < %e\n",pdf->x[n],pdf->x[n - 1]);
           xx = pdf->x[n - 1];
           yy = pdf->y[n - 1];
           pdf->y[n - 1] = pdf->y[n];
@@ -720,7 +764,7 @@ pdf_gen_from_array (pdf, x, y, n_xy, xmin, xmax, njumps, jump)
       m++;                      //increment m if necessary
 
     }
-
+//	printf ("Exiting outer loop coz pdf_z[m] %e > ysum %e\n",pdf_z[m],ysum);
     q = (ysum - pdf_z[m - 1]) / (pdf_z[m] - pdf_z[m - 1]);
     pdf->x[n] = q * pdf_x[m] + (1. - q) * pdf_x[m - 1];
     pdf->y[n] = ysum;
@@ -728,6 +772,14 @@ pdf_gen_from_array (pdf, x, y, n_xy, xmin, xmax, njumps, jump)
 
     nn++;
   }
+  
+  if (xmin>6.35e15 && xmin<1.52e16)
+   for (n=0;n<NPDF;n++)
+   {
+	   	  printf ("PDF %e %e\n",pdf->x[n],pdf->y[n]);
+ 	
+   }
+  
 
   pdf->x[NPDF] = xmax;
   pdf->y[NPDF] = 1.0;
@@ -735,6 +787,15 @@ pdf_gen_from_array (pdf, x, y, n_xy, xmin, xmax, njumps, jump)
                                    have been given into a proper probability density function */
 /* Calculate the gradients */
   recalc_pdf_from_cdf (pdf);    // 57ib 
+  
+  
+   if (xmin>6.35e15 && xmin<1.52e16)
+	   for (n=0;n<NPDF+1;n++)
+	   {
+		   	  printf ("PDF WITH GRADIENT %i %i %e %e %e\n",n,NPDF,pdf->x[n],pdf->y[n],pdf->d[n]);
+  	
+	   }
+ //	 exit(0);
 
   if ((echeck = pdf_check (pdf)) != 0)
   {
@@ -742,6 +803,8 @@ pdf_gen_from_array (pdf, x, y, n_xy, xmin, xmax, njumps, jump)
   }
   return (echeck);
 }
+
+
 
 
 
@@ -783,7 +846,7 @@ pdf_get_rand (pdf)
 
   q = rand () / MAXRAND;
 
-  a = 0.5 * (pdf->d[i + 1] - pdf->d[i]);
+  a = 0.5 * (pdf->d[i + 1] - pdf->d[i]); 
   b = pdf->d[i];
   c = (-0.5) * (pdf->d[i + 1] + pdf->d[i]) * q;
 

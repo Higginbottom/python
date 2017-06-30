@@ -580,7 +580,13 @@ use that instead if possible --  57h */
       }                         //IS THIS CORRECT? (SS, MAY04)
     }
 
-
+    if (f1>2.6e15 && f1<6e15)
+    {
+	for (n=0;n<fb_njumps;n++)
+	{
+		printf ("JUMPTEST jump %i freq %e",n,fb_jumps[n]);
+	}
+}
     //!BUG SSMay04
     //It doesn't seem to work unless this is zero? (SS May04)
     fb_njumps = 0;              // FUDGE (SS, May04)
@@ -594,8 +600,9 @@ use that instead if possible --  57h */
       //Debug ("calling fb, n=%i\n", n);
       fb_x[n] = f1 + dfreq * n;
       fb_y[n] = fb (xplasma, xplasma->t_e, fb_x[n], nions, FB_FULL);
-    }
 
+    }
+		printf ("FREEBOUND PDF GEN\n");
     if (pdf_gen_from_array (&pdf_fb, fb_x, fb_y, 200, f1, f2, fb_njumps, fb_jumps) != 0)
     {
       Error ("one_fb after error: f1 %g f2 %g te %g ne %g nh %g vol %g\n",
@@ -615,6 +622,17 @@ generate photons */
 
 /* First generate the phton we need */
   freq = pdf_get_rand (&pdf_fb);
+  
+  if (f1>1e16 && f2<1.52e16)
+  {
+	  if (freq>1e16)
+	  { 
+		  for (n = 0; n < NPDF+2; n++)
+		  {
+  printf ("PDF %e  %e %e\n",freq,pdf_fb.x[n],pdf_fb.y[n]);
+}
+}
+}
 
 /* Now create and store for future use a set of additonal photons */
 
