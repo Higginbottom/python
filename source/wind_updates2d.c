@@ -105,6 +105,8 @@ WindPtr (w);
   double cool_sum,lum_sum; //1706 - the total cooling and luminosity of the wind
   double apsum,aausum,abstot; //Absorbed photon energy from PI and auger
   double c_rec, n_rec, o_rec, fe_rec;   //1701- NSH more outputs to show cooling from a few other elements
+  double c_lum, n_lum, o_lum, fe_lum;   //1708- NSH and luminosities as well
+  double cool_dr_metals;
   int nn;                       //1701 - loop variable to compute recomb cooling
 
   double volume;
@@ -117,8 +119,8 @@ WindPtr (w);
   int nwind;
   int first, last, m;
   double tot, agn_ip;
-  double nsh_lum_hhe;
-  double nsh_lum_metals;
+  double lum_h_line,lum_he_line,lum_c_line,lum_n_line,lum_o_line,lum_fe_line;
+  double h_dr,he_dr,c_dr,n_dr,o_dr,fe_dr;
   int my_nmin, my_nmax;         //Note that these variables are still used even without MPI on
   int ndom;
   FILE *fptr, *fopen ();        /*This is the file to communicate with zeus */
@@ -434,6 +436,7 @@ WindPtr (w);
         MPI_Pack (&plasmamain[n].cool_rr, 1, MPI_DOUBLE, commbuffer, size_of_commbuffer, &position, MPI_COMM_WORLD);
         MPI_Pack (&plasmamain[n].lum_rr, 1, MPI_DOUBLE, commbuffer, size_of_commbuffer, &position, MPI_COMM_WORLD);
         MPI_Pack (&plasmamain[n].cool_rr_metals, 1, MPI_DOUBLE, commbuffer, size_of_commbuffer, &position, MPI_COMM_WORLD);
+        MPI_Pack (&plasmamain[n].lum_rr_metals, 1, MPI_DOUBLE, commbuffer, size_of_commbuffer, &position, MPI_COMM_WORLD);
         MPI_Pack (&plasmamain[n].lum_tot, 1, MPI_DOUBLE, commbuffer, size_of_commbuffer, &position, MPI_COMM_WORLD);
         MPI_Pack (&plasmamain[n].lum_tot_old, 1, MPI_DOUBLE, commbuffer, size_of_commbuffer, &position, MPI_COMM_WORLD);
         MPI_Pack (&plasmamain[n].cool_tot_ioniz, 1, MPI_DOUBLE, commbuffer, size_of_commbuffer, &position, MPI_COMM_WORLD);
@@ -576,6 +579,7 @@ WindPtr (w);
         MPI_Unpack (commbuffer, size_of_commbuffer, &position, &plasmamain[n].cool_rr, 1, MPI_DOUBLE, MPI_COMM_WORLD);
         MPI_Unpack (commbuffer, size_of_commbuffer, &position, &plasmamain[n].lum_rr, 1, MPI_DOUBLE, MPI_COMM_WORLD);
         MPI_Unpack (commbuffer, size_of_commbuffer, &position, &plasmamain[n].cool_rr_metals, 1, MPI_DOUBLE, MPI_COMM_WORLD);
+        MPI_Unpack (commbuffer, size_of_commbuffer, &position, &plasmamain[n].lum_rr_metals, 1, MPI_DOUBLE, MPI_COMM_WORLD);
         MPI_Unpack (commbuffer, size_of_commbuffer, &position, &plasmamain[n].lum_tot, 1, MPI_DOUBLE, MPI_COMM_WORLD);
         MPI_Unpack (commbuffer, size_of_commbuffer, &position, &plasmamain[n].lum_tot_old, 1, MPI_DOUBLE, MPI_COMM_WORLD);
         MPI_Unpack (commbuffer, size_of_commbuffer, &position, &plasmamain[n].cool_tot_ioniz, 1, MPI_DOUBLE, MPI_COMM_WORLD);
@@ -902,15 +906,28 @@ WindPtr (w);
            plasmamain[nstart].pl_alpha[i], plasmamain[nstart].pl_log_w[i], plasmamain[nstart].exp_temp[i], plasmamain[nstart].exp_w[i]);
       }
       /* Get some line diagnostics */
-      nsh_lum_hhe = 0.0;
-      nsh_lum_metals = 0.0;
-
+	  
+	  lum_h_line = 0.0;
+	  lum_he_line = 0.0;
+	  lum_c_line = 0.0;
+	  lum_n_line = 0.0;
+	  lum_o_line = 0.0;
+	  lum_fe_line  = 0.0;
+	  
       for (i = 0; i < nlines; i++)
       {
-        if (lin_ptr[i]->z < 3)
-          nsh_lum_hhe = nsh_lum_hhe + lin_ptr[i]->pow;
-        else
-          nsh_lum_metals = nsh_lum_metals + lin_ptr[i]->pow;
+        if (lin_ptr[i]->z == 1)
+          lum_h_line = lum_h_line + lin_ptr[i]->pow;
+		else if (lin_ptr[i]->z == 2)
+			lum_he_line = lum_he_line + lin_ptr[i]->pow;
+		else if (lin_ptr[i]->z == 6)
+			lum_c_line = lum_c_line + lin_ptr[i]->pow;
+		else if (lin_ptr[i]->z == 7)
+			lum_n_line = lum_n_line + lin_ptr[i]->pow;
+		else if (lin_ptr[i]->z == 8)
+			lum_o_line = lum_o_line + lin_ptr[i]->pow;
+		else if (lin_ptr[i]->z == 26)
+			lum_fe_line = lum_fe_line + lin_ptr[i]->pow;
       }
       agn_ip = geo.const_agn * (((pow (50000 / HEV, geo.alpha_agn + 1.0)) - pow (100 / HEV, geo.alpha_agn + 1.0)) / (geo.alpha_agn + 1.0));
       agn_ip /= (w[n].r * w[n].r);
@@ -936,35 +953,57 @@ WindPtr (w);
          geo.cool_dr / w[n].vol, geo.cool_di / w[n].vol, geo.cool_adiabatic / w[n].vol, geo.lum_lines / w[n].vol);
          Log
            ("OUTPUT Wind_luminosity(ergs-1cm-3)     %8.2e (recomb %8.2e ff %8.2e lines %8.2e ) after update\n",
-            cool_sum / w[n].vol, geo.cool_rr / w[n].vol,
+            lum_sum / w[n].vol, geo.lum_rr / w[n].vol,
             geo.lum_ff / w[n].vol, geo.lum_lines / w[n].vol);
       /* NSH 1701 calculate the recombination cooling for other elements */
 
       c_rec = n_rec = o_rec = fe_rec = 0.0;
+      c_lum = n_lum = o_lum = fe_lum = 0.0;
+      h_dr= he_dr = c_dr = n_dr = o_dr = fe_dr = 0.0;
+	  cool_dr_metals=0.0;
+
       for (nn = 0; nn < nions; nn++)
       {
         if (ion[nn].z == 6)
         {
+          c_dr  = c_dr + plasmamain[nstart].cool_dr_ion[nn];
           c_rec = c_rec + plasmamain[nstart].cool_rr_ion[nn];
+          c_lum = c_lum + plasmamain[nstart].lum_rr_ion[nn];
+		  
         }
         if (ion[nn].z == 7)
         {
+          n_dr  = n_dr + plasmamain[nstart].cool_dr_ion[nn];
           n_rec = n_rec + plasmamain[nstart].cool_rr_ion[nn];
+          n_lum = n_lum + plasmamain[nstart].lum_rr_ion[nn];
         }
         if (ion[nn].z == 8)
         {
+          o_dr  = o_dr + plasmamain[nstart].cool_dr_ion[nn];
           o_rec = o_rec + plasmamain[nstart].cool_rr_ion[nn];
+          o_lum = o_lum + plasmamain[nstart].lum_rr_ion[nn];
         }
         if (ion[nn].z == 26)
         {
-          fe_rec = fe_rec + plasmamain[nstart].cool_rr_ion[nn];
+          fe_dr  = fe_dr + plasmamain[nstart].cool_dr_ion[nn];
+          fe_rec = fe_rec + plasmamain[nstart].cool_rr_ion[nn];          
+		  fe_lum = fe_lum + plasmamain[nstart].lum_rr_ion[nn];
         }
+		if (ion[nn].z > 2)
+			cool_dr_metals=cool_dr_metals+plasmamain[nstart].cool_dr_ion[nn];
       }
 
-      Log ("OUTPUT Wind_line_cooling(ergs-1cm-3)  HHe %8.2e Metals %8.2e\n", nsh_lum_hhe / w[n].vol, nsh_lum_metals / w[n].vol);
+	  Log ("OUTPUT Wind_line_cooling(ergs-1cm-3)  H %8.2e He %8.2e C %8.2e N %8.2e O %8.2e Fe %8.2e Metals %8.2e\n", lum_h_line/w[n].vol,
+	  lum_he_line/w[n].vol,lum_c_line/w[n].vol,lum_n_line/w[n].vol,lum_o_line/w[n].vol,lum_fe_line/w[n].vol);
       Log ("OUTPUT Wind_recomb_cooling(ergs-1cm-3)  H %8.2e He %8.2e C %8.2e N %8.2e O %8.2e Fe %8.2e Metals %8.2e\n",
            plasmamain[nstart].cool_rr_ion[0] / w[n].vol, (plasmamain[nstart].cool_rr_ion[2] + plasmamain[nstart].cool_rr_ion[3]) / w[n].vol,
            c_rec / w[n].vol, n_rec / w[n].vol, o_rec / w[n].vol, fe_rec / w[n].vol, plasmamain[nstart].cool_rr_metals / w[n].vol);
+	  Log ("OUTPUT Wind_recomb_lum(ergs-1cm-3)  H %8.2e He %8.2e C %8.2e N %8.2e O %8.2e Fe %8.2e Metals %8.2e\n",
+	            plasmamain[nstart].lum_rr_ion[0] / w[n].vol, (plasmamain[nstart].lum_rr_ion[2] + plasmamain[nstart].lum_rr_ion[3]) / w[n].vol,
+	            c_lum / w[n].vol, n_lum / w[n].vol, o_lum / w[n].vol, fe_lum / w[n].vol, plasmamain[nstart].lum_rr_metals / w[n].vol);
+		Log ("OUTPUT Wind_dr_cooling(ergs-1cm-3)  H %8.2e He %8.2e C %8.2e N %8.2e O %8.2e Fe %8.2e Metals %8.2e\n",
+		  	            plasmamain[nstart].cool_dr_ion[0] / w[n].vol, (plasmamain[nstart].cool_dr_ion[2] + plasmamain[nstart].cool_dr_ion[3]) / w[n].vol,
+		  	            c_dr / w[n].vol, n_dr / w[n].vol, o_dr / w[n].vol, fe_dr / w[n].vol, cool_dr_metals / w[n].vol);
       /* 1110 NSH Added this line to report all cooling mechanisms, including those that do not generate photons. */
       Log
         ("OUTPUT Balance      Cooling=%8.2e Heating=%8.2e Lum=%8.2e T_e=%e after update\n",

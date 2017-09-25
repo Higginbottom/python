@@ -32,13 +32,13 @@ import sys, subprocess
 def help(flag):
 	''' help function for user'''
 	if flag=='help' or flag =='-h':
-		print '''usage and arguments:
+		print ('''usage and arguments:
 
 		python py_error.py [-f folder] root
 		root is the parameter files
-		-f folder is the folder the diagfiles are in, defaults to diag_root'''
+		-f folder is the folder the diagfiles are in, defaults to diag_root''')
 		sys.exit(0)
-	else: print 'Watchdog.py: for help type use -h flag'
+	else: print ('Watchdog.py: for help type use -h flag')
 
 #strip function for comparing error strings (removes actual numbers from error message)
 def strip_error(s):
@@ -54,7 +54,7 @@ if __name__ == "__main__":		# allows one to run from command line without runnin
 	if len(sys.argv) > 1:
 		root = sys.argv[-1]
 	else:
-		print 'Error: no arguments provided. Exiting.'
+		print ('Error: no arguments provided. Exiting.')
 		exit (0)
 
 	#print help if needed
@@ -195,27 +195,27 @@ if __name__ == "__main__":		# allows one to run from command line without runnin
 	# print the output to screen
 
 	# first we print the total errors across all scripts
-	print "WATCHDOG Error summary: "+root
-	print "Collated errors for " + str(nprocessors) + " processors"
+	print ("WATCHDOG Error summary: "+root)
+	print ("Collated errors for " + str(nprocessors) + " processors")
 	for i in range(n_logs):
-		print "\t%d -- %s -- %d" % (error_count_total[i], error_log_total[i], thread_count[i])
+		print ("\t%d -- %s -- %d" % (error_count_total[i], error_log_total[i], thread_count[i]))
 
 
 	# now the errors for each thread 
-	print '\n-------------------------------\n'
-	print 'Errors which will no longer be logged'
-	print 'Thread -- Error'
+	print ('\n-------------------------------\n')
+	print ('Errors which will no longer be logged')
+	print ('Thread -- Error')
 	for i in range(n_nolonger):
-		print  '%d -- %s %s' % (error_nolonger_thread[i], 'Error count:', error_nolonger[i][57:])
+		print  ('%d -- %s %s' % (error_nolonger_thread[i], 'Error count:', error_nolonger[i][57:]))
 
 
-	print '\n-------------------------------\n'
+	print ('\n-------------------------------\n')
 	for i in range(nprocessors):
-		print '\n'
-		print 'Thread %d errors' % i
-		print 'Recurrences --  Description'
+		print ('\n')
+		print ('Thread %d errors' % i)
+		print ('Recurrences --  Description')
 		for j in range(len(error_log_thread[i])):
-			print "\t%d -- %s" % (error_count_thread[i][j], error_log_thread[i][j])
+			print ("\t%d -- %s" % (error_count_thread[i][j], error_log_thread[i][j]))
 
 	# all done.
 	

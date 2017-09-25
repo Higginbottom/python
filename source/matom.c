@@ -676,6 +676,7 @@ History:
 	131030	JM 		-- Added adiabatic cooling as possible kpkt destruction choice
           
 ************************************************************/
+#define ALPHA_FF 100.     // maximum h nu / kT to create the free free CDF 
 
 int
 kpkt (p, nres, escape)
@@ -731,7 +732,9 @@ kpkt (p, nres, escape)
   {
     /* in spectral cycles, so use the boundaries of the photon generation bands */
     freqmin = xband.f1[0];
-    freqmax = xband.f2[xband.nbands - 1];
+    /* JM 1709 -- introduce a maximum frequency based on exp(-h nu / (kT)), 
+       see issue #300 */
+    freqmax = ALPHA_FF * xplasma->t_e / H_OVER_K;
   }
   else
   {

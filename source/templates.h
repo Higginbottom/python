@@ -607,6 +607,7 @@ int line_summary(WindPtr w, char rootname[], int ochoice);
 int total_emission_summary(WindPtr w, char rootname[], int ochoice);
 int modify_te(WindPtr w, char rootname[], int ochoice);
 int partial_measure_summary(WindPtr w, int element, int istate, char rootname[], int ochoice);
+int collision_summary (WindPtr w, char rootname[], int ochoice);
 /* py_wind_write.c */
 int write_array(char filename[], int choice);
 int display(char name[]);

@@ -816,7 +816,7 @@ typedef struct plasma
   /* The total luminosity of all processes in the cell (Not the same 
                                    as what escapes the cell) */
   double lum_lines, lum_ff, cool_adiabatic;
-  double lum_rr;                 /* 1706 NSH - the radiative recobination luminosity - not the same as the cooling rate */
+  double lum_rr, lum_rr_metals;   /* 1706 NSH - the radiative recobination luminosity - not the same as the cooling rate */
   double cool_comp;              /* 1108 NSH The compton luminosity of the cell */
   double cool_di;                /* 1409 NSH The direct ionization luminosity */
   double cool_dr;                /* 1109 NSH The dielectronic recombination luminosity of the cell */

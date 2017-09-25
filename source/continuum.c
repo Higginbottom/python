@@ -184,9 +184,10 @@ emittance_continuum (spectype, freqmin, freqmax, t, g)
   lambdamax = C / (freqmin * ANGSTROM);
   par[0] = t;
   par[1] = g;
-  nwav = model (spectype, par);
+  model (spectype, par);
+  nwav=comp[spectype].nwaves;
 
-  if (lambdamax > comp[spectype].xmod.w[nwav - 1] || lambdamin < comp[spectype].xmod.w[0])
+  if (lambdamax > comp[spectype].xmod.w[nwav- 1] || lambdamin < comp[spectype].xmod.w[0])
   {
 
     Error ("emittance_continum: Requested wavelengths extend beyond models wavelengths for list %s\n", comp[spectype].name);

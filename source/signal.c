@@ -130,6 +130,9 @@ xsignal (char *root, char *format, ...)
 
 /* 
  * rm the old signal file so one can begin again
+ *
+ * 170904   ksl Added check to see if the file exists, so we don't
+ *              try to remove a non-existent file
  */
 
 int
@@ -143,10 +146,19 @@ xsignal_rm (char *root)
 
     char filename[LINELENGTH];
     char command[LINELENGTH];
+    FILE *tmp_ptr;
     /* Make the filemne */
     strcpy (filename, "");
     strcpy (filename, root);
     strcat (filename, ".sig");
+
+    /* first check if the file exists */
+
+    if ((tmp_ptr = fopen (filename, "r")) == NULL)
+          {
+              return(0);
+          }
+
 
     strcpy (command, "rm ");
     strcat (command, filename);

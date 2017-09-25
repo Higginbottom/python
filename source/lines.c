@@ -801,7 +801,6 @@ Returns:
  
 Description:
 	
-
 History:
 	17	nsh	Coded
 	
@@ -813,17 +812,15 @@ upsilon (n_coll, u0)
      int n_coll;
      double u0;
 {
-  double x;                     //The scaled tamperature
+  double x;                     //The scaled temperature
   double y;                     //The scaled collision sterngth
   double upsilon;               //The actual collision strength
 
-
-
-//First we compute x    
-
+  /* first we compute x. This is the "reduced temperature" from
+     Burgess & Tully 1992. */ 
   if (coll_stren[n_coll].type == 1 || coll_stren[n_coll].type == 4)
   {
-    x = 1. - log (coll_stren[n_coll].scaling_param) / log (u0 + coll_stren[n_coll].scaling_param);
+    x = 1. - (log (coll_stren[n_coll].scaling_param) / log (u0 + coll_stren[n_coll].scaling_param) );
   }
   else if (coll_stren[n_coll].type == 2 || coll_stren[n_coll].type == 3)
   {
@@ -836,11 +833,11 @@ upsilon (n_coll, u0)
   }
 
 
-//we now compute y from the interpolation formulae      
-
+  /* we now compute y from the interpolation formulae 
+     y is the reduced upsilong from Burgess & Tully 1992. */     
   linterp (x, coll_stren[n_coll].sct, coll_stren[n_coll].scups, coll_stren[n_coll].n_points, &y, 0);
 
-//now we extract upsilon from y 
+  /*  now we extract upsilon from y  */  
 
   if (coll_stren[n_coll].type == 1)
   {

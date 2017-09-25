@@ -621,3 +621,68 @@ partial_measure_summary (w, element, istate, rootname, ochoice)
 
   return (0);
 }
+
+
+int collision_summary (w, rootname, ochoice)
+     WindPtr w;
+     char rootname[];
+     int ochoice;
+{
+  int nline, int_te;
+  double t_e, qup, qdown, A, wavelength;
+  char filename[LINELENGTH], suffix[LINELENGTH];
+  FILE *fopen (), *fptr;
+
+  t_e = 10000.0;
+
+  /* Input from user to request temperature */
+  rddoub ("electron temperature for calculation:", &t_e);
+  int_te = (int) t_e; // for file label.
+
+  if (ochoice) {
+    /* open filename root.coll.dat */
+    strcpy (filename, rootname);
+    sprintf (suffix, ".t%d.coll.dat", int_te);
+    strcat (filename, suffix);
+    fptr = fopen (filename, "w");
+
+    Log("\nWriting collision strengths to file %s...\n\n", filename);
+
+    fprintf (fptr, "# Collision strengths at electron temperature %.1fK\n", t_e);
+    fprintf (fptr, "# For atomic data file %s\n", geo.atomic_filename);
+    fprintf (fptr, "line wavelength z istate levu levl q12 q21 a21 macro_info\n");
+  }
+  else {
+    Log ("Collision strengths at electron temperature %.1fK\n", t_e);
+    Log ("line wavelength z istate levu levl q12 q21 a21 macro_info\n");
+  }
+
+  nline = 0;
+
+  while (nline < nlines)
+  {
+    wavelength = C / lin_ptr[nline]->freq / ANGSTROM;
+    
+    qup = q12(lin_ptr[nline], t_e);
+    qdown = q21(lin_ptr[nline], t_e);
+    A = a21 (lin_ptr[nline]);
+
+    if (ochoice) {
+      fprintf(fptr, "%d %8.4e %d %d %d %d %8.4e %8.4e %8.4e %d\n",
+               nline, wavelength, lin_ptr[nline]->z, 
+               lin_ptr[nline]->istate, lin_ptr[nline]->levu, lin_ptr[nline]->levl,
+               qup, qdown, A, lin_ptr[nline]->macro_info);
+    }
+    else {
+      Log("%d %8.4e %d %d %d %d %8.4e %8.4e %8.4e %d\n",
+              nline, wavelength, lin_ptr[nline]->z, 
+              lin_ptr[nline]->istate, lin_ptr[nline]->levu, lin_ptr[nline]->levl,
+              qup, qdown, A, lin_ptr[nline]->macro_info);
+    }
+    nline++;
+  }
+
+  if (ochoice) fclose (fptr);
+
+  return (0);
+}

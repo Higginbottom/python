@@ -85,7 +85,6 @@ cooling (xxxplasma, t)
     xxxplasma->cool_comp + xtotal_emission (&wmain[xxxplasma->nwind], 0.,
 					  VERY_BIG);
 
-
   return (xxxplasma->cool_tot);
 }
 
@@ -371,6 +370,7 @@ wind_cooling (f1, f2)
   
   
 //  cool = cool+ cool_comp+cool_dr+cool_di+cool_adiab; 1709 - no longer needed since cooloing adds all this on now
+
 
   return (cool);
 }

@@ -429,6 +429,7 @@ total_fb (one, t, f1, f2, fb_choice, mode)
 
   total = 0;
   xplasma->cool_rr_metals = 0.0;
+  xplasma->lum_rr_metals = 0.0;
 
 
   for (nion = 0; nion < nions; nion++)
@@ -440,6 +441,8 @@ total_fb (one, t, f1, f2, fb_choice, mode)
 		  if (fb_choice == FB_FULL) // we are calculating a luminosity
 		  {
              total += xplasma->lum_rr_ion[nion] = xplasma->vol * xplasma->ne * xplasma->density[nion + 1] * integ_fb (t, f1, f2, nion, fb_choice, mode);
+		  	 if (ion[nion].z > 3)
+                  xplasma->lum_rr_metals += xplasma->lum_rr_ion[nion];
 	      }
 	      else  // we are calculating a cooling rate
 	      {

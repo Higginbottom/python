@@ -255,7 +255,7 @@ def read_pf(root):
     if not ".pf" in root:
         root = root + ".pf"
 
-    params, vals = np.loadtxt(root, dtype="string", unpack=True)
+    params, vals = np.loadtxt(root, dtype=str, unpack=True)
 
     if OrderedDict_present:
         pf_dict = OrderedDict()

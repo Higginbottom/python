@@ -374,6 +374,7 @@ model (spectype, par)
   int nwaves;
   double flux[NWAVES];
   double q1, q2, lambda, tscale, xxx;   // Used for rescaleing according to a bb
+  FILE *qptr;
 
 
 
@@ -592,15 +593,20 @@ even, and so for those cases we want to make sure to calculate the ratio of qs d
 
 
 /* End of section to reweight the spectra. we can now copy fluxes to structure */
+qptr=fopen("MODEL.txt","w");
 
   for (j = 0; j < nwaves; j++)
   {
     comp[spectype].xmod.f[j] = flux[j];
+    fprintf(qptr,"%f %e\n",comp[spectype].xmod.w[j],flux[j]);
   }
   for (j = 0; j < comp[spectype].npars; j++)
   {
     comp[spectype].xmod.par[j] = par[j];
   }
+
+
+
 
   return (nwaves);
 }

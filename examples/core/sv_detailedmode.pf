@@ -79,3 +79,4 @@ Photon.sampling.approach(0=T,1=(f1,f2),2=cv,3=yso,4=user_defined,5=cloudy_test,6
 @print_windrad_summary(1=yes) 		1
 @print_dvds_info(1=yes) 				1
 @save_extract_photons(1=yes) 		1
+@make_ioncycle_tables 				1

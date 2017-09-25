@@ -394,7 +394,7 @@ main (argc, argv)
       strcat (files.old_windsave, ".wind_save");
 
 
-      Log ("Starting a new run from scratch starting with previous windfile");
+      Log ("Starting a new run from scratch starting using a previous windfile\n");
 
       /* Note that wind_read also reads the atomic data file that was used to create the previous run of the data. */
 
@@ -409,12 +409,9 @@ main (argc, argv)
       ndomain = geo.ndomain;    // Needed because currently we set geo.ndomain=ndomain at the end of the inpusts
       geo.wcycle = 0;
       geo.pcycle = 0;           /* This is a new run of an old windsave file so we set the nunber of cycles already done to 0 */
-
     }
 
-    if (geo.system_type != SYSTEM_TYPE_PREVIOUS)
-
-
+    if (geo.run_type != SYSTEM_TYPE_PREVIOUS)
     {
       /* This option is the most common one, where we are starting to define a completely new system.  
        */
