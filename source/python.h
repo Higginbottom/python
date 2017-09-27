@@ -799,18 +799,13 @@ typedef struct plasma
   //OLD double j, ave_freq, lum;      /*Respectively mean intensity, intensity_averaged frequency, 
   double j, ave_freq;      /*Respectively mean intensity, intensity_averaged frequency, 
                                    luminosity and absorbed luminosity of shell */
-  double xj[NXBANDS], xave_freq[NXBANDS];       /* 1108 NSH frequency limited versions of j and ave_freq */
-  double fmin[NXBANDS];         /* the minimum freqneucy photon seen in a band - this is incremented during photon flight */
-  double fmax[NXBANDS];         /* the maximum frequency photon seen in a band - this is incremented during photon flight */
-  double fmin_mod[NXBANDS];     /* the minimum freqneucy that the model should be applied for */
-  double fmax_mod[NXBANDS];     /* the maximum frequency that the model should be applied for */
+
 
 
 
   double j_direct, j_scatt;     /* 1309 NSH mean intensity due to direct photons and scattered photons */
   double ip_direct, ip_scatt;   /* 1309 NSH mean intensity due to direct photons and scattered photons */
-  double xsd_freq[NXBANDS];     /*1208 NSH the standard deviation of the frequency in the band */
-  int nxtot[NXBANDS];           /* 1108 NSH the total number of photon passages in frequency bands */
+  
   double max_freq;              /*1208 NSH The maximum frequency photon seen in this cell */
   double cool_tot;              /*The total cooling in a cell */
   /* The total luminosity of all processes in the cell (Not the same 
@@ -867,9 +862,20 @@ typedef struct plasma
   double pl_alpha[NXBANDS];     /*Computed spectral index for a power law spectrum representing this cell NSH 120817 - changed name from sim_alpha to PL_alpha */
   double pl_log_w[NXBANDS];     /* NSH 131106 - this is the log version of the power law weight. It is in an attempt to allow very large values of alpha to work with the PL spectral model to avoide NAN problems. The pl_w version can be deleted once testing is complete */
 
-
   double exp_temp[NXBANDS];     /*NSH 120817 - The effective temperature of an exponential representation of the radiation field in a cell */
   double exp_w[NXBANDS];        /*NSH 120817 - The prefector of an exponential representation of the radiation field in a cell */
+  
+  double xj[NXBANDS], xave_freq[NXBANDS];       /* 1108 NSH frequency limited versions of j and ave_freq */
+  double fmin[NXBANDS];         /* the minimum freqneucy photon seen in a band - this is incremented during photon flight */
+  double fmax[NXBANDS];         /* the maximum frequency photon seen in a band - this is incremented during photon flight */
+  double fmin_mod[NXBANDS];     /* the minimum freqneucy that the model should be applied for */
+  double fmax_mod[NXBANDS];     /* the maximum frequency that the model should be applied for */
+  
+  double xsd_freq[NXBANDS];     /*1208 NSH the standard deviation of the frequency in the band */
+  int nxtot[NXBANDS];           /* 1108 NSH the total number of photon passages in frequency bands */
+  
+  
+  
   double sim_ip;                /*Ionisation parameter for the cell as defined in Sim etal 2010 */
   double ferland_ip;            /* IP calculaterd from equation 5.4 in hazy1 - assuming allphotons come from 0,0,0 and the wind is transparent */
   double ip;                    /*NSH 111004 Ionization parameter calculated as number of photons over the lyman limit entering a cell, divided by the number density of hydrogen for the cell */

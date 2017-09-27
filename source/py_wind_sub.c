@@ -1603,6 +1603,9 @@ a:printf ("There are %i wind elements in this model\n", NDIM2);
   Log ("Spectral model details:\n");
   for (nn = 0; nn < geo.nxfreq; nn++)
   {
+	  if (xplasma->fmax_mod[nn]==1e-99) xplasma->fmax_mod[nn]=geo.xfreq[nn + 1];
+	  if (xplasma->fmin_mod[nn]==1e99) xplasma->fmin_mod[nn]=geo.xfreq[nn];
+
     Log ("numin= %9.3e (%9.3e) numax= %9.3e (%9.3e) Model= %2d PL_log_w= %9.3e PL_alpha= %9.3e Exp_w= %9.3e EXP_temp= %9.3e\n",
          xplasma->fmin_mod[nn], geo.xfreq[nn], xplasma->fmax_mod[nn], geo.xfreq[nn + 1], xplasma->spec_mod_type[nn], xplasma->pl_log_w[nn],
          xplasma->pl_alpha[nn], xplasma->exp_w[nn], xplasma->exp_temp[nn]);
