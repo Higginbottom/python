@@ -187,8 +187,8 @@ save_photon_stats (one, p, ds, w_ave)
     if (one->nplasma == ncell_stats[i])
     {
       fprintf (pstatptr,
-               "PHOTON_DETAILS cycle %3d n_photon %d freq %8.3e  w %8.3e ave_w %8.3e ds %8.3e nscat %d plasma cell %3d wind cell %3d\n",
-               geo.wcycle, p->np, p->freq, p->w, w_ave, ds, p->nscat, one->nplasma, one->nwind);
+               "PHOTON_DETAILS cycle %3d n_photon %d freq %8.3e  w %8.3e ave_w %8.3e ds %8.3e nscat %d plasma cell %3d wind cell %3d origin %d\n",
+               geo.wcycle, p->np, p->freq, p->w, w_ave, ds, p->nscat, one->nplasma, one->nwind, p->origin);
     }
   }
   return (0);

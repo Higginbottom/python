@@ -514,6 +514,7 @@ radiation (p, ds)
       xplasma->heat_tot += z * frac_auger;      //All the inner shell opacities
       /* Calculate the number of photoionizations per unit volume for H and He 
          JM 1405 changed this to use freq_xs */
+	  if (freq > 13.6/HEV)
       xplasma->nioniz++;
       q = (z) / (H * freq * xplasma->vol);
       /* So xplasma->ioniz for each species is just 

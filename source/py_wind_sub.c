@@ -1556,6 +1556,11 @@ a:printf ("There are %i wind elements in this model\n", NDIM2);
     ("Convergence status: whole %d converging %d t_r %8.2e t_e %8.2e hc %8.2e \n",
      xplasma->converge_whole, xplasma->converging, xplasma->converge_t_r, xplasma->converge_t_e, xplasma->converge_hc);
 
+	 Log
+		 ("Photon numbers star %d bl %d disk %d wind %d agn %d\n",xplasma->ntot_star,xplasma->ntot_bl,xplasma->ntot_disk,
+	 xplasma->ntot_wind,xplasma->ntot_agn);
+
+
   Log ("Densities:\n");
   for (nn = 0; nn < 5; nn++)
   {
