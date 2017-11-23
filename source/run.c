@@ -159,6 +159,7 @@ calculate_ionization (restart_stat)
 
     define_phot (p, freqmin, freqmax, nphot_to_define, 0, iwind, 1);
 
+
     /* Zero the arrays, and other variables that need to be zeroed after the photons are generated. */
 
 
@@ -174,6 +175,13 @@ calculate_ionization (restart_stat)
 
 
     photon_checks (p, freqmin, freqmax, "Check before transport");
+	
+#ifdef MPI_ON
+    if (rank_global == 0)
+    {
+    printf ("TIME photons_made %e\n",timer ());
+}
+#endif	
 
     wind_ip ();
 
@@ -202,6 +210,13 @@ calculate_ionization (restart_stat)
 
     /* Transport the photons through the wind */
     trans_phot (w, p, 0);
+	
+#ifdef MPI_ON
+    if (rank_global == 0)
+    {
+    printf ("TIME photons_transported %e\n",timer ());
+}
+#endif	
 
     /*Determine how much energy was absorbed in the wind */
     zze = zzz = zz_adiab = 0.0;
@@ -267,6 +282,13 @@ calculate_ionization (restart_stat)
 /* This step should be MPI_parallelised too */
 
     wind_update (w);
+	
+#ifdef MPI_ON
+    if (rank_global == 0)
+    {
+    printf ("TIME wind_updated %e\n",timer ());
+}
+#endif
 
 
     Log ("Completed ionization cycle %d :  The elapsed TIME was %f\n", geo.wcycle, timer ());
@@ -319,6 +341,8 @@ calculate_ionization (restart_stat)
     {
 #endif
       wind_save (files.windsave);
+      printf ("TIME wind_saved %e\n",timer ());
+	  
       Log_silent ("Saved wind structure in %s after cycle %d\n", files.windsave, geo.wcycle);
 
       /* In a diagnostic mode save the wind file for each cycle (from thread 0) */
@@ -353,7 +377,6 @@ calculate_ionization (restart_stat)
 /* XXXX - END OF CYCLE TO CALCULATE THE IONIZATION OF THE WIND */
 
 
-  Log (" Completed wind creation.  The elapsed TIME was %f\n", timer ());
 
   /* SWM - Evaluate wind paths for last iteration */
   if (geo.reverb == REV_WIND || geo.reverb == REV_MATOM)

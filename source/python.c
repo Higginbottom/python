@@ -882,6 +882,15 @@ main (argc, argv)
 /* 67 -ksl- geo.wycle will start at zero unless we are completing an old run */
 
 /* XXXX -  CALCULATE THE IONIZATION OF THE WIND */
+  
+  
+#ifdef MPI_ON
+    if (rank_global == 0)
+    {
+    printf ("TIME geom_made %e\n",timer ());
+}
+#endif  
+  
   calculate_ionization (restart_stat);
 
 /* XXXX - END OF CYCLE TO CALCULATE THE IONIZATION OF THE WIND */
