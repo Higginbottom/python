@@ -172,6 +172,7 @@ levels (xplasma, mode)
           m++;
           nlevden++;
           xplasma->levden[nlevden] = weight * config[m].g * exp ((-config[m].ex + config[m_ground].ex) / kt) / z;
+//		  xplasma->levden[nlevden]=0.5;
         }
       }
     }

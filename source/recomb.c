@@ -135,7 +135,7 @@ fb_topbase_partial (freq)
 				      1.5) * exp (H_OVER_K * (fthresh -
 							      freq) / fbt) * x;
 
-  // 0=emissivity, 1=heat loss from electrons, 2=photons emissivity
+  // FB_FULL=emissivity, FB_REDUCED=heat loss from electrons, FB_RATE=recombination
 
   if (fbfr == FB_REDUCED)
     partial *= (freq - fthresh) / freq;

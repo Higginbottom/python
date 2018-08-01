@@ -158,7 +158,7 @@ radiation (p, ds)
   WindPtr one;
   PlasmaPtr xplasma;
 
-  double freq;
+  double freq,ftemp;
   double kappa_tot, frac_tot, frac_ff;
   double frac_z, frac_comp;     /* frac_comp - the heating in the cell due to compton heating */
   double frac_ind_comp;         /* frac_ind_comp - the heating due to induced compton heating */
@@ -211,6 +211,9 @@ radiation (p, ds)
 
   freq_inner = p->freq * (1. - v1 / C);
   freq_outer = phot.freq * (1. - v2 / C);
+
+
+
 
   /* take the average of the frequencies at original position and original+ds */
   freq = 0.5 * (freq_inner + freq_outer);
@@ -493,8 +496,12 @@ radiation (p, ds)
 
 
 
-  if (p->freq > xplasma->max_freq)      // check if photon frequency exceeds maximum frequency
-    xplasma->max_freq = p->freq;
+//  if (p->freq > xplasma->max_freq)      // check if photon frequency exceeds maximum frequency
+//  xplasma->max_freq = p->freq;
+  
+  if (freq > xplasma->max_freq)      // check if photon frequency exceeds maximum frequency
+      xplasma->max_freq = freq;
+  
 
   if (modes.save_cell_stats && ncstat > 0)
   {
@@ -504,9 +511,10 @@ radiation (p, ds)
 
   /* JM 1402 -- the banded versions of j, ave_freq etc. are now updated in update_banded_estimators,
      which also updates the ionization parameters and scattered and direct contributions */
-
+  ftemp=p->freq;
+  p->freq=freq;
   update_banded_estimators (xplasma, p, ds, w_ave);
-
+  p->freq=ftemp;
 
   if (sane_check (xplasma->j) || sane_check (xplasma->ave_freq))
   {

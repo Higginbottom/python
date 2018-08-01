@@ -621,7 +621,7 @@ freqs_init (freqmin, freqmax)
     nxfreq = 10;
     xfreq[0] = freqmin;         //We need the whole range to be modelled for induced compton heating to work
     xfreq[1] = 1e15;            //This should be below the lowest threshold frequency of any element in our model
-    xfreq[2] = 3.162e15;
+    xfreq[2] = 3.162e16;
     xfreq[3] = 1e16;
     xfreq[4] = 3.162e16;
     xfreq[5] = 1e17;
@@ -655,7 +655,7 @@ freqs_init (freqmin, freqmax)
     }
   }
 
-  Log_silent ("freqs_init: Of %d starting intervals, %d will have photons\n", nxfreq, ngood);
+  Log ("freqs_init: Of %d starting intervals, %d will have photons\n", nxfreq, ngood);
 
   n = 0;
   for (i = 0; i < nxfreq; i++)
