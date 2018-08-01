@@ -790,7 +790,7 @@ hydro_frac (coord, coord_array, imax, cell1, cell2, frac)
  *
  * hydro_interp_value replaces many lines of identical code, all of which
  * interpolate on the input grid to get value for the python grid.
- * This returns the actuak value of an interpolated array
+ * This returns the actual value of an interpolated array
  * XXX - ksl - It is not obvious why this was really needed, assuming that
  * the model has been proper installed in the WindStruct.  Possibly it
  * has to do with where values are centered.  
@@ -908,14 +908,7 @@ hydro_restart (ndom)
 
     }
 
-  /* XXX what is going on here. this looks to be outside the grid altgogether */
-  plasmamain[n].ne = get_ne (plasmamain[n].density);	//we also need to update the electron density
-  partition_functions (&plasmamain[n], NEBULARMODE_LTE_GROUND);	/* WARNING fudge NSH 11/5/14 - this is as a test. We really need a better implementation
-								   of partition functions and levels for a power law illuminating spectrum. We found that
-								   if we didnt make this call, we would end up with undefined levels - which did really
-								   crazy things.  NEBULARMODE_LTE_GROUND puts everythin into the ground state.  Note
-                                  from ksl - It is a bit unclear what is happening here.  I thought that levels were established
-                                 just before photons were going throught the grid, and so partition_functions should be called later */
+
 
 
   /* Recreate the wind cones because these are not part of the windsave file */
