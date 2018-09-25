@@ -1119,6 +1119,11 @@ wind_rad_init ()
     }
 
 
+    for (i = 0; i < 3; i++)
+    {
+      plasmamain[n].dmo_dt[i] = 0.0; //Reset the momentum calculation
+    }
+
 
 
     for (i = 0; i < nions; i++)
