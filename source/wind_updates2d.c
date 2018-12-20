@@ -1146,7 +1146,7 @@ wind_rad_init ()
          this particular phot_tob xsection is treated as a simple x-section. Stuart, is this correct?? I've added
          checks so that macro_info is only 0 (false) or true (1), and so the logic of the next section can be
          simplified.  0608-ksl */
-      if (geo.macro_simple == 0 && phot_top[i].macro_info == 1)
+      if ((geo.macro_simple == 0 && phot_top[i].macro_info == 1) || geo.rt_mode == RT_MODE_2LEVEL)
       {
         plasmamain[n].recomb_simple[i] = 0.0;
         plasmamain[n].recomb_simple_upweight[i] = 1.0;
