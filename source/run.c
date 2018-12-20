@@ -117,6 +117,7 @@ calculate_ionization (restart_stat)
     xsignal (files.root, "%-20s Starting %d of %d ionization cycle \n", "NOK", geo.wcycle, geo.wcycles);
 
     Log ("!!Python: Beginning cycle %d of %d for defining wind\n", geo.wcycle, geo.wcycles);
+Log ("The elapsed TIME was %f\n", geo.wcycle, timer ());
     Log_flush ();               /* Flush the log file (so that we know where are if there are problems */
 
     /* Initialize all of the arrays, etc, that need initialization for each cycle
@@ -124,8 +125,14 @@ calculate_ionization (restart_stat)
 
     spectrum_init (freqmin, freqmax, geo.nangles, geo.angle, geo.phase,
                    geo.scat_select, geo.top_bot_select, geo.select_extract, geo.rho_select, geo.z_select, geo.az_select, geo.r_select);
+				   Log ("AADone spectrum init The elapsed TIME was %f\n", geo.wcycle, timer ());
+	
+	Log_flush ();               /* Flush the log file (so that we know where are if there are problems */
 
     wind_rad_init ();           /*Zero the parameters pertaining to the radiation field */
+   Log ("AADone wind_rad init The elapsed TIME was %f\n", geo.wcycle, timer ());
+ 
+    Log_flush ();               /* Flush the log file (so that we know where are if there are problems */
 
 
     geo.n_ioniz = 0.0;
@@ -149,6 +156,11 @@ calculate_ionization (restart_stat)
 
     define_phot (p, freqmin, freqmax, nphot_to_define, 0, iwind, 1);
 
+    Log ("AADone define_phot The elapsed TIME was %f\n", geo.wcycle, timer ());
+ 
+     Log_flush ();               /* Flush the log file (so that we know where are if there are problems */
+
+
     /* Zero the arrays, and other variables that need to be zeroed after the photons are generated. */
 
 
@@ -164,6 +176,10 @@ calculate_ionization (restart_stat)
 
 
     photon_checks (p, freqmin, freqmax, "Check before transport");
+
+    Log ("AADone photon_checks The elapsed TIME was %f\n", geo.wcycle, timer ());
+ 
+     Log_flush ();               /* Flush the log file (so that we know where are if there are problems */
 
 
 
@@ -183,14 +199,30 @@ calculate_ionization (restart_stat)
      */
 
     kbf_need (freqmin, freqmax);
+    Log ("AADone kbf_need The elapsed TIME was %f\n", geo.wcycle, timer ());
+ 
+     Log_flush ();               /* Flush the log file (so that we know where are if there are problems */
+
 
     /* NSH 22/10/12  This next call populates the prefactor for free free heating for each cell in the plasma array */
     /* NSH 4/12/12  Changed so it is only called if we have read in gsqrd data */
     if (gaunt_n_gsqrd > 0)
       pop_kappa_ff_array ();
 
+    Log ("AADone pop_kappa_ff_array The elapsed TIME was %f\n", geo.wcycle, timer ());
+ 
+     Log_flush ();               /* Flush the log file (so that we know where are if there are problems */
+
+
     /* Transport the photons through the wind */
     trans_phot (w, p, 0);
+
+    Log ("AADone trans_phot The elapsed TIME was %f\n", geo.wcycle, timer ());
+ 
+     Log_flush ();               /* Flush the log file (so that we know where are if there are problems */
+
+
+
 
     /*Determine how much energy was absorbed in the wind */
     zze = zzz = zz_adiab = zz_abs = zz_scat = zz_star = zz_disk = zz_err = zz_else = 0.0;
@@ -245,8 +277,17 @@ calculate_ionization (restart_stat)
 
 
     photon_checks (p, freqmin, freqmax, "Check after transport");
+    Log ("AADone photon_checks The elapsed TIME was %f\n", geo.wcycle, timer ());
+ 
+     Log_flush ();               /* Flush the log file (so that we know where are if there are problems */
+
 
     spectrum_create (p, freqmin, freqmax, geo.nangles, geo.select_extract);
+
+    Log ("AADone spectrum_create The elapsed TIME was %f\n", geo.wcycle, timer ());
+ 
+     Log_flush ();               /* Flush the log file (so that we know where are if there are problems */
+
 
 
 
@@ -259,6 +300,11 @@ calculate_ionization (restart_stat)
 
     communicate_matom_estimators_para ();       // this will return 0 if nlevels_macro == 0
 #endif
+
+    Log ("AADone comms The elapsed TIME was %f\n", geo.wcycle, timer ());
+ 
+     Log_flush ();               /* Flush the log file (so that we know where are if there are problems */
+
 
 
 
