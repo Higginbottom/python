@@ -252,6 +252,8 @@ populate_bands (ioniz_or_final, iwind, band)
       xdefine_phot (band->f1[n], band->f2[n], ioniz_or_final, iwind, PRINT_OFF);
 
       ftot += band->flux[n] = geo.f_tot;
+	  printf ("BLAH %e %e %e\n",band->f1[n], band->f2[n],band->flux[n]);
+	  
     }
     else
       band->flux[n] = 0.0;
@@ -542,8 +544,6 @@ xmake_phot (p, f1, f2, ioniz_or_final, iwind, weight, iphot_start, nphotons)
   Log
     ("photon_gen: band %6.2e to %6.2e weight %6.2e nphotons %8d ndisk %7d nwind %7d nstar %7d npow %d \n",
      f1, f2, weight, nphotons, ndisk, nwind, nstar, nagn);
-	 
-	 printf ("FLIMFLAM thread %i band %6.2e to %6.2e weight %6.2e\n",rank_global,f1, f2, weight);
 
   /* Generate photons from the star, the bl, the wind and then from the disk */
   /* Now adding generation from kpkts and macro atoms too (SS June 04) */
@@ -1349,7 +1349,13 @@ bl_init (lum_bl, t_bl, freqmin, freqmax, ioniz_or_final, f)
   q1 = 2. * PI * (BOLTZMANN * BOLTZMANN * BOLTZMANN * BOLTZMANN) / (H * H * H * C * C);
   alphamin = H * freqmin / (BOLTZMANN * t_bl);
   alphamax = H * freqmax / (BOLTZMANN * t_bl);
-  *f = q1 * integ_planck_d (alphamin, alphamax) * lum_bl / STEFAN_BOLTZMANN;
+//   *f = q1 * integ_planck_d (alphamin, alphamax) * lum_bl / STEFAN_BOLTZMANN;
+  
+  
+   *f =  emittance_bb (freqmin, freqmax, t_bl)*lum_bl/(t_bl*t_bl*t_bl*t_bl*STEFAN_BOLTZMANN);
+  
+  
+//  printf ("BLAH bl %e %e %e %e %e\n",alphamin,alphamax,*f,test,*f/test);
   return (lum_bl);
 }
 

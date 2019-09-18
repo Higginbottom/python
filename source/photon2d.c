@@ -478,8 +478,6 @@ return and record an error */
   {
     return ((int) smax);
   }
-  
-  if (rank_global==3 && p->np==539718) printf ("FEEM after ds in cell %e cell %i loc %20.15e\n",smax,n,length(p->x));
   if (one->inwind == W_PART_INWIND)
   {                             /* The cell is partially in the wind */
     s = ds_to_wind (p, &ndom_current);  /* smax is set to be the distance to edge of the wind */
@@ -519,7 +517,6 @@ The choice of SMAX_FRAC can affect execution time.*/
 
   if (smax > SMAX_FRAC * length (p->x))
   {
-	  printf ("FEEM BOOM - reducing smax from %e to %e\n",smax,SMAX_FRAC * length (p->x));
     smax = SMAX_FRAC * length (p->x);
   }
 
