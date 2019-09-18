@@ -201,6 +201,10 @@ trans_phot (WindPtr w, PhotPtr p, int iextract)
 
   }
 
+
+  printf ("FOOP2 thread %i j %e mean %e mean %e\n",rank_global,plasmamain[0].xj[0],plasmamain[0].xave_freq[0],plasmamain[0].xave_freq[0]/plasmamain[0].xj[0]);
+
+
   /* This is the end of the loop over all of the photons; after this the routine returns */
 
   /* Line to complete watchdog timer */

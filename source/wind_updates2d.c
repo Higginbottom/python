@@ -62,7 +62,7 @@ int
 wind_update (w)
 WindPtr (w);
 {
-  int n, i, j;
+  int n, i, j, ii;
   double trad, nh;
 
   /*1108 NSH csum added to sum compton heating 1204 NSH icsum added to sum induced compton heating */
@@ -89,7 +89,7 @@ WindPtr (w);
   double h_dr, he_dr, c_dr, n_dr, o_dr, fe_dr;
   int my_nmin, my_nmax;         //Note that these variables are still used even without MPI on
   int ndom;
-  FILE *fptr, *fopen ();        /*This is the file to communicate with zeus */
+  FILE *fptr, *fptr2, *fptr3, *fptr5, *fopen ();        /*This is the file to communicate with zeus */
 
 
 #ifdef MPI_ON
@@ -676,12 +676,27 @@ WindPtr (w);
   {
     Log ("Outputting heatcool file for connecting to zeus\n");
     fptr = fopen ("py_heatcool.dat", "w");
+    fptr2 = fopen ("py_flux.dat", "w");
+    fptr3 = fopen ("py_ion_data.dat", "w");
+    fptr5 = fopen ("py_pcon_data.dat", "w");
+	
     fprintf (fptr,
              "i j rcen thetacen vol temp xi ne heat_xray heat_comp heat_lines heat_ff cool_comp cool_lines cool_ff rho n_h rad_f_w rad_f_phi rad_f_z ");
-    for (i = 0; i < geo.nxfreq; i++)
-      fprintf (fptr, "F_x_%i F_y_%i F_z_%i ", i, i, i); //directional flux by band
-    fprintf (fptr, "\n ");
-
+			 fprintf (fptr, "i j ");
+		 	fprintf (fptr2, "nbands %i\n",geo.nxfreq);
+			 
+	for (i = 0; i < geo.nxfreq; i++)
+      fprintf (fptr2, "F_x_%i F_y_%i F_z_%i ", i, i, i); //directional flux by band
+    fprintf (fptr2, "\n ");
+	
+	fprintf (fptr3, "nions %i\n",nions);
+		for (i = 0; i < nions; i++)
+	{
+		fprintf (fptr3, "ion %i %s %i %i\n",i,ele[ion[i].nelem].name,ion[i].z,ion[i].istate);
+	}
+	fprintf (fptr3,"nplasma %i\n",NPLASMA);
+	fprintf (fptr5,"nplasma %i\n",NPLASMA);
+	
   }
 
   /* Check the balance between the absorbed and the emitted flux */
@@ -804,15 +819,26 @@ WindPtr (w);
         fprintf (fptr, "%e ", plasmamain[nplasma].rho * rho2nh);        //hydrogen number density
         fprintf (fptr, "%e ", plasmamain[nplasma].rad_force_es[0]);     //electron scattering radiation force in the w(x) direction
         fprintf (fptr, "%e ", plasmamain[nplasma].rad_force_es[1]);     //electron scattering radiation force in the phi(rotational) directionz direction
-        fprintf (fptr, "%e ", plasmamain[nplasma].rad_force_es[2]);     //electron scattering radiation force in the z direction
-        for (i = 0; i < geo.nxfreq; i++)
-          fprintf (fptr, "%e %e %e ", plasmamain[nplasma].F_x[i], plasmamain[nplasma].F_y[i], plasmamain[nplasma].F_z[i]);      //directional flux by band
-        fprintf (fptr, "\n ");
+        fprintf (fptr, "%e \n", plasmamain[nplasma].rad_force_es[2]);     //electron scattering radiation force in the z direction
+		
+        fprintf (fptr2, "%d %d ", i, j);        //output geometric things		
+        for (ii = 0; ii < geo.nxfreq; ii++)
+          fprintf (fptr2, "%e %e %e ", plasmamain[nplasma].F_x[ii], plasmamain[nplasma].F_y[ii], plasmamain[nplasma].F_z[ii]);      //directional flux by band
+        fprintf (fptr2, "\n");
+        fprintf (fptr3, "%d %d ", i, j);        //output geometric things		
+		for (ii=0;ii<nions;ii++)
+			fprintf (fptr3, "%e ",plasmamain[nplasma].density[ii]);
+        fprintf (fptr3, "\n");
+		
 
-
+		 fprintf (fptr5, "%i %i %e %e %e %e %e\n",i,j,plasmamain[nplasma].t_e,plasmamain[nplasma].rho,plasmamain[nplasma].rho * rho2nh,plasmamain[nplasma].ne,1e-6);
       }
     }
     fclose (fptr);
+    fclose (fptr2);
+    fclose (fptr3);
+    fclose (fptr5);
+
   }
   else if (modes.zeus_connect == 1 && geo.hydro_domain_number < 0)
   {
@@ -950,11 +976,11 @@ WindPtr (w);
       agn_ip /= plasmamain[nshell].rho * rho2nh;
       /* Report luminosities, IP and other diagnositic quantities */
       Log
-        ("OUTPUT Lum_agn= %e T_e= %e N_h= %e N_e= %e alpha= %f IP(sim_2010)= %e Measured_IP(cloudy)= %e Measured_Xi= %e distance= %e volume= %e mean_ds=%e\n",
+        ("OUTPUT Lum_agn= %e T_e= %e N_h= %e N_e= %e alpha= %f IP(sim_2010)= %e Measured_IP(cloudy)= %e Measured_Xi= %e distance= %e volume= %e mean_ds=%e J=%e\n",
          geo.lum_agn, plasmamain[nshell].t_e,
          plasmamain[nshell].rho * rho2nh, plasmamain[nshell].ne,
          geo.alpha_agn, agn_ip, plasmamain[nshell].ip,
-         plasmamain[nshell].xi, w[n].r, w[n].vol, plasmamain[nshell].mean_ds / plasmamain[nshell].n_ds);
+         plasmamain[nshell].xi, w[n].r, w[n].vol, plasmamain[nshell].mean_ds / plasmamain[nshell].n_ds,plasmamain[nshell].j );
 
       /* 1108 NSH Added commands to report compton heating */
       Log

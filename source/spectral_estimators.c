@@ -96,7 +96,7 @@ spectral_estimators (xplasma)
   for (n = 0; n < geo.nxfreq; n++)
 
   {
-    Log_silent
+	  printf
       ("Starting out band %i in cell %i. mean=%e, sd=%e, minfreq=%e, maxfreq=%e, nphot=%i\n",
        n, xplasma->nplasma, xplasma->xave_freq[n], xplasma->xsd_freq[n], xplasma->fmin[n], xplasma->fmax[n], xplasma->nxtot[n]);
 
@@ -293,10 +293,10 @@ spectral_estimators (xplasma)
 
       pl_sd = pl_log_stddev (xplasma->pl_alpha[n], lspec_numin, lspec_numax);
 
-      Log_silent ("NSH in this cell %i band %i PL estimators are log(w)=%10.2e, alpha=%5.3f giving sd=%e compared to %e\n",
+      printf ("NSH in this cell %i band %i PL estimators are log(w)=%10.2e, alpha=%5.3f giving sd=%e compared to %e\n",
                   xplasma->nplasma, n, xplasma->pl_log_w[n], xplasma->pl_alpha[n], pl_sd, xplasma->xsd_freq[n]);
 
-      Log_silent ("NSH in this cell %i band %i exp estimators are w=%10.2e, temp=%10.2e giving sd=%e compared to %e\n",
+      printf ("NSH in this cell %i band %i exp estimators are w=%10.2e, temp=%10.2e giving sd=%e compared to %e\n",
                   xplasma->nplasma, n, xplasma->exp_w[n], xplasma->exp_temp[n], exp_sd, xplasma->xsd_freq[n]);
 
       /*Compute the fractionasl errors in standard dev */

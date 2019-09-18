@@ -911,6 +911,7 @@ update_banded_estimators (xplasma, p, ds, w_ave)
       xplasma->xave_freq[i] += p->freq * w_ave * ds;    /* frequency weighted by weight and distance */
       xplasma->xsd_freq[i] += p->freq * p->freq * w_ave * ds;   /* input to allow standard deviation to be calculated */
       xplasma->xj[i] += w_ave * ds;     /* photon weight times distance travelled */
+	  if (rank_global==3 && i==0 && ds>2.0) printf ("FEEM %i %e %e %e %e %e\n",p->np,xplasma->xj[i],xplasma->xave_freq[i],p->freq, w_ave, ds);
       xplasma->nxtot[i]++;      /* increment the frequency banded photon counter */
       xplasma->F_x[i] += flux[0];       //Increment the banded cartesian flux vectors
       xplasma->F_y[i] += flux[1];

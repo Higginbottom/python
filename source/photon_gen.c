@@ -542,6 +542,8 @@ xmake_phot (p, f1, f2, ioniz_or_final, iwind, weight, iphot_start, nphotons)
   Log
     ("photon_gen: band %6.2e to %6.2e weight %6.2e nphotons %8d ndisk %7d nwind %7d nstar %7d npow %d \n",
      f1, f2, weight, nphotons, ndisk, nwind, nstar, nagn);
+	 
+	 printf ("FLIMFLAM thread %i band %6.2e to %6.2e weight %6.2e\n",rank_global,f1, f2, weight);
 
   /* Generate photons from the star, the bl, the wind and then from the disk */
   /* Now adding generation from kpkts and macro atoms too (SS June 04) */

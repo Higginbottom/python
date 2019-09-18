@@ -75,9 +75,21 @@ spherical_ds_in_cell (ndom, p)
   ix = n;
 
   /* Set up the quadratic equations in the radial  direction */
+  if (rank_global==3 && p->np==539718) printf ("FEEM in ds_in_cell %20.15e %20.15e\n",zdom[ndom].wind_x[ix],zdom[ndom].wind_x[ix+1]);
 
   smax = ds_to_sphere (zdom[ndom].wind_x[ix], p);
   s = ds_to_sphere (zdom[ndom].wind_x[ix + 1], p);
+  
+    if (smax==VERY_BIG && s==VERY_BIG) 
+		{
+			Error ("spherical: ds_in_cell s and smax returning VERY_BIG in cell %i nudging photon by DFUDGE\n");
+			return(DFUDGE); //Set an error condtion and leave
+		}
+  
+  
+  if (rank_global==3 && p->np==539718) printf ("FEEM in ds_in_cell smax %20.15e s %20.15e %e\n",smax,s,dot(p->lmn,p->x));
+  
+  
   if (s < smax)
     smax = s;
 
@@ -85,6 +97,8 @@ spherical_ds_in_cell (ndom, p)
   {
     Error ("spherical: ds_in_cell %f\n", smax);
   }
+  
+
   return (smax);
 }
 

@@ -72,7 +72,7 @@ communicate_estimators_para ()
 
   MPI_Barrier (MPI_COMM_WORLD);
   // the following blocks gather all the estimators to the zeroth (Master) thread
-
+  printf ("FOOP thread %i j %e mean %e mean %e\n",rank_global,plasmamain[0].xj[0],plasmamain[0].xave_freq[0],plasmamain[0].xave_freq[0]/plasmamain[0].xj[0]);
 
   for (mpi_i = 0; mpi_i < NPLASMA; mpi_i++)
   {
