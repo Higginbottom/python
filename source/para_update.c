@@ -47,7 +47,7 @@ communicate_estimators_para ()
 
   /* The size of the helper array for doubles. We transmit 10 numbers 
      for each cell, plus three arrays, each of length NXBANDS */
-  plasma_double_helpers = (18 + 6 * NXBANDS) * NPLASMA;
+  plasma_double_helpers = (29 + 3 * NXBANDS) * NPLASMA;
 
   /* The size of the helper array for integers. We transmit 7 numbers 
      for each cell, plus one array of length NXBANDS */
@@ -95,20 +95,26 @@ communicate_estimators_para ()
     redhelper[mpi_i + 15 * NPLASMA] = plasmamain[mpi_i].rad_force_es[0] / np_mpi_global;
     redhelper[mpi_i + 16 * NPLASMA] = plasmamain[mpi_i].rad_force_es[1] / np_mpi_global;
     redhelper[mpi_i + 17 * NPLASMA] = plasmamain[mpi_i].rad_force_es[2] / np_mpi_global;
+    redhelper[mpi_i + 18 * NPLASMA] = plasmamain[mpi_i].F_vis[0] / np_mpi_global;
+    redhelper[mpi_i + 19 * NPLASMA] = plasmamain[mpi_i].F_vis[1] / np_mpi_global;
+    redhelper[mpi_i + 20 * NPLASMA] = plasmamain[mpi_i].F_vis[2] / np_mpi_global;
+    redhelper[mpi_i + 21 * NPLASMA] = plasmamain[mpi_i].F_UV[0] / np_mpi_global;
+    redhelper[mpi_i + 22 * NPLASMA] = plasmamain[mpi_i].F_UV[1] / np_mpi_global;
+    redhelper[mpi_i + 23 * NPLASMA] = plasmamain[mpi_i].F_UV[2] / np_mpi_global;
+    redhelper[mpi_i + 24 * NPLASMA] = plasmamain[mpi_i].F_Xray[0] / np_mpi_global;
+    redhelper[mpi_i + 25 * NPLASMA] = plasmamain[mpi_i].F_Xray[1] / np_mpi_global;
+    redhelper[mpi_i + 26 * NPLASMA] = plasmamain[mpi_i].F_Xray[2] / np_mpi_global;
+    redhelper[mpi_i + 27 * NPLASMA] = plasmamain[mpi_i].rad_force_bf[0] / np_mpi_global;
+    redhelper[mpi_i + 28 * NPLASMA] = plasmamain[mpi_i].rad_force_bf[1] / np_mpi_global;
+    redhelper[mpi_i + 29 * NPLASMA] = plasmamain[mpi_i].rad_force_bf[2] / np_mpi_global;
+	
+	
 
     for (mpi_j = 0; mpi_j < NXBANDS; mpi_j++)
     {
-      redhelper[mpi_i + (18 + mpi_j) * NPLASMA] = plasmamain[mpi_i].xj[mpi_j] / np_mpi_global;
-      redhelper[mpi_i + (18 + NXBANDS + mpi_j) * NPLASMA] = plasmamain[mpi_i].xave_freq[mpi_j] / np_mpi_global;
-      redhelper[mpi_i + (18 + 2 * NXBANDS + mpi_j) * NPLASMA] = plasmamain[mpi_i].xsd_freq[mpi_j] / np_mpi_global;
-      redhelper[mpi_i + (18 + 3 * NXBANDS + mpi_j) * NPLASMA] = plasmamain[mpi_i].F_x[mpi_j] / np_mpi_global;
-      redhelper[mpi_i + (18 + 4 * NXBANDS + mpi_j) * NPLASMA] = plasmamain[mpi_i].F_y[mpi_j] / np_mpi_global;
-      redhelper[mpi_i + (18 + 5 * NXBANDS + mpi_j) * NPLASMA] = plasmamain[mpi_i].F_z[mpi_j] / np_mpi_global;
-
-
-
-
-
+      redhelper[mpi_i + (29 + mpi_j) * NPLASMA] = plasmamain[mpi_i].xj[mpi_j] / np_mpi_global;
+      redhelper[mpi_i + (29 + NXBANDS + mpi_j) * NPLASMA] = plasmamain[mpi_i].xave_freq[mpi_j] / np_mpi_global;
+      redhelper[mpi_i + (29 + 2 * NXBANDS + mpi_j) * NPLASMA] = plasmamain[mpi_i].xsd_freq[mpi_j] / np_mpi_global;
       /* 131213 NSH populate the band limited min and max frequency arrays */
       maxbandfreqhelper[mpi_i * NXBANDS + mpi_j] = plasmamain[mpi_i].fmax[mpi_j];
       minbandfreqhelper[mpi_i * NXBANDS + mpi_j] = plasmamain[mpi_i].fmin[mpi_j];
@@ -172,15 +178,26 @@ communicate_estimators_para ()
     plasmamain[mpi_i].rad_force_es[0] = redhelper2[mpi_i + 15 * NPLASMA];
     plasmamain[mpi_i].rad_force_es[1] = redhelper2[mpi_i + 16 * NPLASMA];
     plasmamain[mpi_i].rad_force_es[2] = redhelper2[mpi_i + 17 * NPLASMA];
+    plasmamain[mpi_i].F_vis[0] = redhelper2[mpi_i + 18 * NPLASMA];
+    plasmamain[mpi_i].F_vis[1] = redhelper2[mpi_i + 19 * NPLASMA];
+    plasmamain[mpi_i].F_vis[2] = redhelper2[mpi_i + 20 * NPLASMA];
+    plasmamain[mpi_i].F_UV[0] = redhelper2[mpi_i + 21 * NPLASMA];
+    plasmamain[mpi_i].F_UV[1] = redhelper2[mpi_i + 22 * NPLASMA];
+    plasmamain[mpi_i].F_UV[2] = redhelper2[mpi_i + 23 * NPLASMA];
+    plasmamain[mpi_i].F_Xray[0] = redhelper2[mpi_i + 24 * NPLASMA];
+    plasmamain[mpi_i].F_Xray[1] = redhelper2[mpi_i + 25 * NPLASMA];
+    plasmamain[mpi_i].F_Xray[2] = redhelper2[mpi_i + 26 * NPLASMA];
+    plasmamain[mpi_i].rad_force_bf[0] = redhelper2[mpi_i + 27 * NPLASMA];
+    plasmamain[mpi_i].rad_force_bf[1] = redhelper2[mpi_i + 28 * NPLASMA];
+    plasmamain[mpi_i].rad_force_bf[2] = redhelper2[mpi_i + 29 * NPLASMA];
+	
+
 
     for (mpi_j = 0; mpi_j < NXBANDS; mpi_j++)
     {
-      plasmamain[mpi_i].xj[mpi_j] = redhelper2[mpi_i + (18 + mpi_j) * NPLASMA];
-      plasmamain[mpi_i].xave_freq[mpi_j] = redhelper2[mpi_i + (18 + NXBANDS + mpi_j) * NPLASMA];
-      plasmamain[mpi_i].xsd_freq[mpi_j] = redhelper2[mpi_i + (18 + NXBANDS * 2 + mpi_j) * NPLASMA];
-      plasmamain[mpi_i].F_x[mpi_j] = redhelper2[mpi_i + (18 + NXBANDS * 3 + mpi_j) * NPLASMA];
-      plasmamain[mpi_i].F_y[mpi_j] = redhelper2[mpi_i + (18 + NXBANDS * 4 + mpi_j) * NPLASMA];
-      plasmamain[mpi_i].F_z[mpi_j] = redhelper2[mpi_i + (18 + NXBANDS * 5 + mpi_j) * NPLASMA];
+      plasmamain[mpi_i].xj[mpi_j] = redhelper2[mpi_i + (29 + mpi_j) * NPLASMA];
+      plasmamain[mpi_i].xave_freq[mpi_j] = redhelper2[mpi_i + (29 + NXBANDS + mpi_j) * NPLASMA];
+      plasmamain[mpi_i].xsd_freq[mpi_j] = redhelper2[mpi_i + (29 + NXBANDS * 2 + mpi_j) * NPLASMA];
 
 
 

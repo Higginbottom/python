@@ -4,6 +4,10 @@
 
 #endif
 
+
+#define UV_low 7.4e14 //The lower frequency bound of the UV band as defined in IOS 21348
+#define UV_hi 3e16 //The lower frequency bound of the UV band as defined in IOS 21348
+
 int q_test_count;
 
 int np_mpi_global;              /// Global variable which holds the number of MPI processes
@@ -847,9 +851,12 @@ typedef struct plasma
 
 
   /* banded, directional fluxes */
-  double F_x[NXBANDS];
-  double F_y[NXBANDS];
-  double F_z[NXBANDS];
+  
+  
+  
+  double F_vis[3];
+  double F_UV[3];
+  double F_Xray[3];
 
 
 

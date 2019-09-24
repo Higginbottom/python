@@ -252,7 +252,6 @@ populate_bands (ioniz_or_final, iwind, band)
       xdefine_phot (band->f1[n], band->f2[n], ioniz_or_final, iwind, PRINT_OFF);
 
       ftot += band->flux[n] = geo.f_tot;
-	  printf ("BLAH %e %e %e\n",band->f1[n], band->f2[n],band->flux[n]);
 	  
     }
     else
@@ -1355,7 +1354,6 @@ bl_init (lum_bl, t_bl, freqmin, freqmax, ioniz_or_final, f)
    *f =  emittance_bb (freqmin, freqmax, t_bl)*lum_bl/(t_bl*t_bl*t_bl*t_bl*STEFAN_BOLTZMANN);
   
   
-//  printf ("BLAH bl %e %e %e %e %e\n",alphamin,alphamax,*f,test,*f/test);
   return (lum_bl);
 }
 

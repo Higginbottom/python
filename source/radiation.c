@@ -490,7 +490,7 @@ radiation (p, ds)
   }
 
   stuff_v (p->lmn, p_out);
-  renorm (p_out, (z * (frac_tot + frac_auger)) / C);
+  renorm (p_out, (z * (frac_tot + frac_auger)) / C);  
   project_from_xyz_cyl (phot_mid.x, p_out, dp_cyl);
   if (p->x[2] < 0)
     dp_cyl[2] *= (-1);
@@ -903,6 +903,9 @@ update_banded_estimators (xplasma, p, ds, w_ave)
      as energy packets are indisivible in macro atom mode */
 
 
+  if (p->freq<UV_low) vadd (xplasma->F_vis, flux, xplasma->F_vis);
+  else if (p->freq<UV_hi) vadd (xplasma->F_Xray, flux, xplasma->F_Xray);
+  else vadd (xplasma->F_UV, flux, xplasma->F_UV);
 
   for (i = 0; i < geo.nxfreq; i++)
   {
@@ -912,9 +915,6 @@ update_banded_estimators (xplasma, p, ds, w_ave)
       xplasma->xsd_freq[i] += p->freq * p->freq * w_ave * ds;   /* input to allow standard deviation to be calculated */
       xplasma->xj[i] += w_ave * ds;     /* photon weight times distance travelled */
       xplasma->nxtot[i]++;      /* increment the frequency banded photon counter */
-      xplasma->F_x[i] += flux[0];       //Increment the banded cartesian flux vectors
-      xplasma->F_y[i] += flux[1];
-      xplasma->F_z[i] += flux[2];
       /* work out the range of frequencies within a band where photons have been seen */
       if (p->freq < xplasma->fmin[i])
       {
