@@ -88,6 +88,9 @@ define_phot (p, f1, f2, nphot_tot, ioniz_or_final, iwind, freq_sampling)
   int n;
   int iphot_start, nphot_rad, nphot_k;
   long nphot_tot_rad, nphot_tot_k;
+  struct timeval timer_t0;
+  
+  timer_t0 = init_timer_t0 ();
 
   /* if we are generating nonradiative kpackets, then we need to subtract 
      off the fraction reserved for k-packets */
@@ -196,6 +199,10 @@ define_phot (p, f1, f2, nphot_tot, ioniz_or_final, iwind, freq_sampling)
     if (geo.reverb != REV_NONE && p[n].path < 0.0)      // SWM - Set path lengths for disk, star etc.
       simple_paths_gen_phot (&p[n]);
   }
+  
+  
+  print_timer_duration ("!!python: photon generation completed in", timer_t0);
+  
   return (0);
 
 }

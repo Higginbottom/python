@@ -93,6 +93,7 @@ WindPtr (w);
   double t_opt,t_UV,t_Xray,v_th,fhat[3]; /*This is the dimensionless optical depth parameter computed for communication to rad-hydro.*/
   struct photon ptest; //We need a test photon structure in order to compute t
   double kappa_es; //The electron scattering opacity used for t
+  struct timeval timer_t0;
   
 
 #ifdef MPI_ON
@@ -157,6 +158,7 @@ WindPtr (w);
 
   /* we now know how many cells this thread has to process - note this will be
      0-NPLASMA in serial mode */
+  timer_t0 = init_timer_t0 ();
 
   for (n = my_nmin; n < my_nmax; n++)
   {
@@ -280,8 +282,8 @@ WindPtr (w);
       plasmamain[n].F_vis[i] = plasmamain[n].F_vis[i] / volume;
       plasmamain[n].F_UV[i] = plasmamain[n].F_UV[i] / volume;
       plasmamain[n].F_Xray[i] = plasmamain[n].F_Xray[i] / volume;
-	  
   }
+  
   
 
 
@@ -332,6 +334,7 @@ WindPtr (w);
     t_e_ave += plasmamain[n].t_e;
   }
 
+  print_timer_duration ("!!python: wind update completed in", timer_t0);
 
 
   /*This is the end of the update loop that is parallised. We now need to exchange data between the tasks. */
