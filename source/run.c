@@ -181,6 +181,7 @@ calculate_ionization (restart_stat)
     nphot_to_define = (long) NPHOT;
 
     define_phot (p, freqmin, freqmax, nphot_to_define, 0, iwind, 1);
+    xsignal (files.root, "%-20s Defined photons \n", "NOK", geo.wcycle + 1, geo.wcycles);
 
     /* Zero the arrays, and other variables that need to be zeroed after the photons are generated. */
 
@@ -198,6 +199,7 @@ calculate_ionization (restart_stat)
 
     photon_checks (p, freqmin, freqmax, "Check before transport");
 
+    xsignal (files.root, "%-20s Checked photons \n", "NOK", geo.wcycle + 1, geo.wcycles);
 
 
     zz = 0.0;
@@ -224,6 +226,7 @@ calculate_ionization (restart_stat)
 
     /* Transport the photons through the wind */
     trans_phot (w, p, 0);
+    xsignal (files.root, "%-20s Transported photons \n", "NOK", geo.wcycle + 1, geo.wcycles);
 
     /*Determine how much energy was absorbed in the wind */
     zze = zzz = zz_adiab = zz_abs = zz_scat = zz_star = zz_disk = zz_err = zz_else = zz_lofreq = 0.0;
@@ -324,9 +327,11 @@ calculate_ionization (restart_stat)
     Log ("!!python: Number of ionizing photons %g lum of ionizing photons %g\n", geo.n_ioniz, geo.cool_tot_ioniz);
 
 /* This step should be MPI_parallelised too - EP: It looks like this is, infact, parallelised */
+    xsignal (files.root, "%-20s About to update wind \n", "NOK", geo.wcycle + 1, geo.wcycles);
 
     wind_update (w);
 
+    xsignal (files.root, "%-20s Wind updated\n", "NOK", geo.wcycle + 1, geo.wcycles);
 
     Log ("Completed ionization cycle %d :  The elapsed TIME was %f\n", geo.wcycle + 1, timer ());
 
@@ -410,6 +415,7 @@ calculate_ionization (restart_stat)
 
 
   Log (" Completed wind creation.  The elapsed TIME was %f\n", timer ());
+  xsignal (files.root, "%-20s Completed wind creation \n", "NOK", geo.wcycle + 1, geo.wcycles);
 
   /* SWM - Evaluate wind paths for last iteration */
   if (geo.reverb == REV_WIND || geo.reverb == REV_MATOM)

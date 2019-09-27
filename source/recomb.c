@@ -890,8 +890,8 @@ init_freebound (t1, t2, f1, f2)
   double ltmin, ltmax, dlt;
   double xinteg_fb ();
   int nput;
-  struct timeval timer_t0;
-  timer_t0 = init_timer_t0 ();
+
+  xsignal (files.root, "%-20s Sent to init_freebound \n", "NOK", geo.wcycle + 1, geo.wcycles);
 
 
   if (nfb == 0)
@@ -985,8 +985,8 @@ on the assumption that the fb information will be reused.
 
     }
   }
+  xsignal (files.root, "%-20s Returning from init_freebound \n", "NOK", geo.wcycle + 1, geo.wcycles);
 
-  print_timer_duration ("!!python: init_freebound completed in", timer_t0);
 
   return (0);
 }
