@@ -891,11 +891,12 @@ init_freebound (t1, t2, f1, f2)
   double xinteg_fb ();
   int nput;
 
-  xsignal (files.root, "%-20s Sent to init_freebound \n", "NOK", geo.wcycle + 1, geo.wcycles);
 
 
   if (nfb == 0)
   {
+      xsignal (files.root, "%-20s Sent to init_freebound \n", "NOK", geo.wcycle + 1, geo.wcycles);
+      
     if (t2 < t1)
     {
       Error ("init_freebound: t2(%g)<t1(%g)\n", t2, t1);
@@ -922,6 +923,8 @@ init_freebound (t1, t2, f1, f2)
         xninnerrecomb[nion][j] = xinteg_inner_fb (t, 0.0, VERY_BIG, nion, FB_RATE);
       }
     }
+    xsignal (files.root, "%-20s We had to re-initialise freebound \n", "NOK", geo.wcycle + 1, geo.wcycles);
+    
   }
   else if (fabs (fb_t[0] - t1) > 10. || fabs (fb_t[NTEMPS - 1] - t2) > 1000.)
   {
@@ -945,6 +948,7 @@ been calculated for these conditions, and if so simply return.
 /* We have to calculate a new set of freebound data */
   if (i == NFB - 1)
   {
+      
     /* We've filled all the available space in freebound so we start recycling elements, assuming that the latest
      * ones are still likelyt to be needed
      */
@@ -973,6 +977,7 @@ on the assumption that the fb information will be reused.
 
   freebound[nput].f1 = f1;
   freebound[nput].f2 = f2;
+  xsignal (files.root, "%-20s Need to redo init_freebound \n", "NOK", geo.wcycle + 1, geo.wcycles);
 
   for (nion = 0; nion < nions; nion++)
   {
@@ -985,7 +990,7 @@ on the assumption that the fb information will be reused.
 
     }
   }
-  xsignal (files.root, "%-20s Returning from init_freebound \n", "NOK", geo.wcycle + 1, geo.wcycles);
+  xsignal (files.root, "%-20s redone init_freebound \n", "NOK", geo.wcycle + 1, geo.wcycles);
 
 
   return (0);
