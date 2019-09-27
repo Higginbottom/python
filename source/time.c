@@ -158,5 +158,5 @@ print_timer_duration (char *msg, struct timeval timer_t0)
 
   gettimeofday (&timer_t1, NULL);
   td = (timer_t1.tv_sec - timer_t0.tv_sec) + (timer_t1.tv_usec - timer_t0.tv_usec) * 1e-6;
-  Log ("%s: %f seconds\n", msg, td);
+  printf ("%s: %f seconds\n", msg, td);
 }
