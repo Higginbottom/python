@@ -112,7 +112,7 @@ num_int (func, a, b, eps)
   }
   if (zflag == 1)
   {
-    gsl_integration_romberg_workspace *w = gsl_integration_romberg_alloc (10);
+    gsl_integration_romberg_workspace *w = gsl_integration_romberg_alloc (20);
     gsl_integration_romberg (&F, a, b, 0, eps, &result, &neval, w);
 //    gsl_integration_qags (&F, a, b, 0, eps, &result, &neval, w);
     gsl_integration_romberg_free (w);
