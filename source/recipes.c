@@ -87,18 +87,18 @@ num_int (func, a, b, eps)
      double a, b;
      double eps;
 {
-  double result;
+  double result,error;
   double alpha = 0.0;
   void *test = NULL;
   double delta;
   int zflag, i;
+  int status=0;
   double xtime1,xtime2;
   size_t neval;
   gsl_function F;
   F.function = func;
   F.params = &alpha;
   xtime1 = timer();
-  
   zflag = 1;
   if (func (a, test) == 0.0 && func (b, test) == 0.0)
   {
@@ -112,17 +112,36 @@ num_int (func, a, b, eps)
   }
   if (zflag == 1)
   {
-    gsl_integration_romberg_workspace *w = gsl_integration_romberg_alloc (30);
-    gsl_integration_romberg (&F, a, b, 0, eps, &result, &neval, w);
-//    gsl_integration_qags (&F, a, b, 0, eps, &result, &neval, w);
-    gsl_integration_romberg_free (w);
+      gsl_set_error_handler_off (); //We need to be able to catch and handle gsl errors 
+      
+//    gsl_integration_romberg_workspace *w = gsl_integration_romberg_alloc (10);
+      gsl_integration_workspace *w = gsl_integration_workspace_alloc (1000);
+//    gsl_integration_romberg (&F, a, b, 0, eps, &result, &neval, w);
+    status=gsl_integration_qags (&F, a, b, 0, eps, 1000 ,w, &result, &error);
+    if (status)
+    {
+      if (status == GSL_EROUND)   //The rounding error has 
+      {
+          if (error*100. < result)
+          {
+          Error ("num_int: cannot reach tolerance because of roundoff - returning best guess\n");
+          }
+          else
+          {
+              Error ("BLAH num_int: cannot reach tolerance because of roundoff, and guess has error of more than 1pc %e %e\n",error,result);
+//              exit(0);
+          }
+      }
+    }
+//    gsl_integration_romberg_free (w);
+      gsl_integration_workspace_free(w);
   }
   else
   {
     result = 0.0;
   }
   xtime2=timer();
-  printf ("BLAH %e %e %zu %e\n",xtime2-xtime1,result,neval,eps);
+//  printf ("BLAH %e %e %zu %e\n",xtime2-xtime1,result,neval,eps);
 
   return (result);
 }
