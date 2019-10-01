@@ -16,8 +16,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include "atomic.h"
 #include <math.h>
+#include <time.h>
+
+#include "python.h"
+
 #include "recipes.h"
 #include "log.h"
 #include <gsl/gsl_integration.h>
@@ -88,11 +93,13 @@ num_int (func, a, b, eps)
   void *test = NULL;
   double delta;
   int zflag, i;
+  double xtime1,xtime2;
   size_t neval;
-
   gsl_function F;
   F.function = func;
   F.params = &alpha;
+  xtime1 = timer();
+  
   zflag = 1;
   if (func (a, test) == 0.0 && func (b, test) == 0.0)
   {
@@ -114,7 +121,8 @@ num_int (func, a, b, eps)
   {
     result = 0.0;
   }
-
+  xtime2=timer();
+  printf ("BLAH %e %e\n",xtime2-xtime1,result);
 
   return (result);
 }
