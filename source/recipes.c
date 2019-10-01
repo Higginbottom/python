@@ -112,7 +112,7 @@ num_int (func, a, b, eps)
   }
   if (zflag == 1)
   {
-    gsl_integration_romberg_workspace *w = gsl_integration_romberg_alloc (20);
+    gsl_integration_romberg_workspace *w = gsl_integration_romberg_alloc (30);
     gsl_integration_romberg (&F, a, b, 0, eps, &result, &neval, w);
 //    gsl_integration_qags (&F, a, b, 0, eps, &result, &neval, w);
     gsl_integration_romberg_free (w);
@@ -122,7 +122,7 @@ num_int (func, a, b, eps)
     result = 0.0;
   }
   xtime2=timer();
-  printf ("BLAH %e %e\n",xtime2-xtime1,result);
+  printf ("BLAH %e %e %zu %e\n",xtime2-xtime1,result,neval,eps);
 
   return (result);
 }
