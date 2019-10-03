@@ -275,7 +275,9 @@ WindPtr (w);
     for (i = 0; i < 3; i++)
 	{
       plasmamain[n].rad_force_es[i] = plasmamain[n].rad_force_es[i] * (volume * plasmamain[n].ne) / (volume * C);
-      plasmamain[n].rad_force_bf[i] = plasmamain[n].rad_force_bf[i] /volume;
+      plasmamain[n].rad_force_bf[i] = plasmamain[n].rad_force_bf[i] * (volume * plasmamain[n].ne) / (volume * C);
+
+//      plasmamain[n].rad_force_bf[i] = plasmamain[n].rad_force_bf[i] /volume;
 /* Normalise the computed flux in cells by band */
       plasmamain[n].F_vis[i] = plasmamain[n].F_vis[i] / volume;
       plasmamain[n].F_UV[i] = plasmamain[n].F_UV[i] / volume;
@@ -701,7 +703,7 @@ WindPtr (w);
 	
 	fprintf (fptr4, "nbands %i\n",geo.nxfreq);
 	fprintf (fptr4,"nplasma %i\n",NPLASMA);
-	for (i = 0; i < geo.nxfreq; i++)
+	for (i = 0; i < geo.nxfreq+1; i++)
       fprintf (fptr4, "%e ", geo.xfreq[i]); //hard wired band edges
     fprintf (fptr4, "\n ");
 	
@@ -831,11 +833,11 @@ WindPtr (w);
         fprintf (fptr, "%e ", plasmamain[nplasma].rho); //density
         fprintf (fptr, "%e ", plasmamain[nplasma].rho * rho2nh);        //hydrogen number density
         fprintf (fptr, "%e ", plasmamain[nplasma].rad_force_es[0]);     //electron scattering radiation force in the w(x) direction
-        fprintf (fptr, "%e ", plasmamain[nplasma].rad_force_es[1]);     //electron scattering radiation force in the phi(rotational) directionz direction
+        fprintf (fptr, "%e ", plasmamain[nplasma].rad_force_es[1]);     //electron scattering radiation force in the phi(rotational) direction
         fprintf (fptr, "%e ", plasmamain[nplasma].rad_force_es[2]);     //electron scattering radiation force in the z direction
 		
         fprintf (fptr, "%e ", plasmamain[nplasma].rad_force_bf[0]);     //bound free scattering radiation force in the w(x) direction
-        fprintf (fptr, "%e ", plasmamain[nplasma].rad_force_bf[1]);     //bound free scattering radiation force in the phi(rotational) directionz direction
+        fprintf (fptr, "%e ", plasmamain[nplasma].rad_force_bf[1]);     //bound free scattering radiation force in the phi(rotational) direction
         fprintf (fptr, "%e \n", plasmamain[nplasma].rad_force_bf[2]);     //bound free scattering radiation force in the z direction
 		
 		

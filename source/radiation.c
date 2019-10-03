@@ -490,8 +490,10 @@ radiation (p, ds)
   }
 
   stuff_v (p->lmn, p_out);
-  renorm (p_out, (z * (frac_tot + frac_auger)) / C);  
+//  renorm (p_out, (z * (frac_tot + frac_auger)) / C); 
+  renorm (p_out, w_ave * ds * klein_nishina (p->freq)); 
   project_from_xyz_cyl (phot_mid.x, p_out, dp_cyl);
+  
   if (p->x[2] < 0)
     dp_cyl[2] *= (-1);
   for (i = 0; i < 3; i++)
