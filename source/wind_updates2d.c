@@ -275,9 +275,6 @@ WindPtr (w);
     for (i = 0; i < 3; i++)
 	{
       plasmamain[n].rad_force_es[i] = plasmamain[n].rad_force_es[i] * (volume * plasmamain[n].ne) / (volume * C);
-      plasmamain[n].rad_force_bf[i] = plasmamain[n].rad_force_bf[i] * (volume * plasmamain[n].ne) / (volume * C);
-
-//      plasmamain[n].rad_force_bf[i] = plasmamain[n].rad_force_bf[i] /volume;
 /* Normalise the computed flux in cells by band */
       plasmamain[n].F_vis[i] = plasmamain[n].F_vis[i] / volume;
       plasmamain[n].F_UV[i] = plasmamain[n].F_UV[i] / volume;

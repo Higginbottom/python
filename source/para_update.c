@@ -47,7 +47,7 @@ communicate_estimators_para ()
 
   /* The size of the helper array for doubles. We transmit 10 numbers 
      for each cell, plus three arrays, each of length NXBANDS */
-  plasma_double_helpers = (29 + 3 * NXBANDS) * NPLASMA;
+  plasma_double_helpers = (30 + 3 * NXBANDS) * NPLASMA;
 
   /* The size of the helper array for integers. We transmit 7 numbers 
      for each cell, plus one array of length NXBANDS */
@@ -112,9 +112,9 @@ communicate_estimators_para ()
 
     for (mpi_j = 0; mpi_j < NXBANDS; mpi_j++)
     {
-      redhelper[mpi_i + (29 + mpi_j) * NPLASMA] = plasmamain[mpi_i].xj[mpi_j] / np_mpi_global;
-      redhelper[mpi_i + (29 + NXBANDS + mpi_j) * NPLASMA] = plasmamain[mpi_i].xave_freq[mpi_j] / np_mpi_global;
-      redhelper[mpi_i + (29 + 2 * NXBANDS + mpi_j) * NPLASMA] = plasmamain[mpi_i].xsd_freq[mpi_j] / np_mpi_global;
+      redhelper[mpi_i + (30 + mpi_j) * NPLASMA] = plasmamain[mpi_i].xj[mpi_j] / np_mpi_global;
+      redhelper[mpi_i + (30 + NXBANDS + mpi_j) * NPLASMA] = plasmamain[mpi_i].xave_freq[mpi_j] / np_mpi_global;
+      redhelper[mpi_i + (30 + 2 * NXBANDS + mpi_j) * NPLASMA] = plasmamain[mpi_i].xsd_freq[mpi_j] / np_mpi_global;
       /* 131213 NSH populate the band limited min and max frequency arrays */
       maxbandfreqhelper[mpi_i * NXBANDS + mpi_j] = plasmamain[mpi_i].fmax[mpi_j];
       minbandfreqhelper[mpi_i * NXBANDS + mpi_j] = plasmamain[mpi_i].fmin[mpi_j];
@@ -195,9 +195,9 @@ communicate_estimators_para ()
 
     for (mpi_j = 0; mpi_j < NXBANDS; mpi_j++)
     {
-      plasmamain[mpi_i].xj[mpi_j] = redhelper2[mpi_i + (29 + mpi_j) * NPLASMA];
-      plasmamain[mpi_i].xave_freq[mpi_j] = redhelper2[mpi_i + (29 + NXBANDS + mpi_j) * NPLASMA];
-      plasmamain[mpi_i].xsd_freq[mpi_j] = redhelper2[mpi_i + (29 + NXBANDS * 2 + mpi_j) * NPLASMA];
+      plasmamain[mpi_i].xj[mpi_j] = redhelper2[mpi_i + (30 + mpi_j) * NPLASMA];
+      plasmamain[mpi_i].xave_freq[mpi_j] = redhelper2[mpi_i + (30 + NXBANDS + mpi_j) * NPLASMA];
+      plasmamain[mpi_i].xsd_freq[mpi_j] = redhelper2[mpi_i + (30 + NXBANDS * 2 + mpi_j) * NPLASMA];
 
 
 
