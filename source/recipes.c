@@ -93,13 +93,14 @@ num_int (func, a, b, eps)
   double delta;
   int zflag, i;
   int status=0;
-  double xtime1,xtime2;
+  int npoints,j;
+  double dx;
   size_t neval;
   gsl_function F;
   F.function = func;
   F.params = &alpha;
-  xtime1 = timer();
   zflag = 1;
+  npoints=100;
   if (func (a, test) == 0.0 && func (b, test) == 0.0)
   {
     zflag = 0;
@@ -122,6 +123,12 @@ num_int (func, a, b, eps)
     {
       if (status == GSL_EROUND)   //The rounding error has 
       {
+          printf ("Errored %e %e %e %e %e\n",a,b,result,eps,error/result);
+          dx=(b-a)/npoints;
+          for (j=0;j<npoints+1;j++)
+          {
+              printf ("OUTPUT %e %e\n",a+j*dx,func(a+j*dx,test));
+          }
           if (error*100. < result)
           {
           Error ("num_int: cannot reach tolerance because of roundoff - returning best guess\n");
@@ -140,8 +147,6 @@ num_int (func, a, b, eps)
   {
     result = 0.0;
   }
-  xtime2=timer();
-//  printf ("BLAH %e %e %zu %e\n",xtime2-xtime1,result,neval,eps);
 
   return (result);
 }
