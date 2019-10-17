@@ -1127,6 +1127,23 @@ WindPtr (w);
         }
         Log ("\n");
       }
+      
+      Log ("OUTPUT IONS");
+      for (n=0;n<nions;n++)
+      {
+          Log (" %8.2e", plasmamain[nshell].density[n]);
+      }
+      Log ("\n");
+      
+      
+      fptr3 = fopen ("py_ion_data.dat", "w");
+      fprintf (fptr3, "nions %i\n",nions);
+      for (i = 0; i < nions; i++)
+      {
+          fprintf (fptr3, "ion %i %s %i %i\n",i,ele[ion[i].nelem].name,ion[i].z,ion[i].istate);
+      }
+      fclose(fptr3);
+      
       Log ("F_es %i %e %e %e\n", nshell, plasmamain[nshell].rad_force_es[0], plasmamain[nshell].rad_force_es[1],
            plasmamain[nshell].rad_force_es[2]);
       F_x_tot = F_y_tot = F_z_tot = 0.0;
