@@ -332,8 +332,6 @@ WindPtr (w);
   }
 
 
-  xsignal (files.root, "%-20s Finished updating wind \n", "NOK", geo.wcycle + 1, geo.wcycles);
-
   /*This is the end of the update loop that is parallised. We now need to exchange data between the tasks. */
 #ifdef MPI_ON
   for (n_mpi = 0; n_mpi < np_mpi_global; n_mpi++)
@@ -638,8 +636,6 @@ WindPtr (w);
   free (commbuffer);
 #endif
 
-  xsignal (files.root, "%-20s Finished communicating \n", "NOK", geo.wcycle + 1, geo.wcycles);
-
 
   /* Now we need to updated the densities immediately outside the wind so that the density interpolation in resonate will work.
      In this case all we have done is to copy the densities from the cell which is just in the wind (as one goes outward) to the
@@ -714,8 +710,6 @@ WindPtr (w);
 
   cool_sum = wind_cooling ();   /*We call wind_cooling here to obtain an up to date set of cooling rates */
   lum_sum = wind_luminosity (0.0, VERY_BIG);    /*and we also call wind_luminosity to get the luminosities */
-
-  xsignal (files.root, "%-20s Computed wind luminosity \n", "NOK", geo.wcycle + 1, geo.wcycles);
 
 
   xsum = psum = ausum = lsum = fsum = csum = icsum = apsum = aausum = abstot = 0;       //1108 NSH zero the new csum counter for compton heating
@@ -931,10 +925,8 @@ WindPtr (w);
     ("!!wind_update: Wind luminosity  %8.2e (recomb %8.2e ff %8.2e lines %8.2e) after update\n",
      lum_sum, geo.lum_rr, geo.lum_ff, geo.lum_lines);
 
-     xsignal (files.root, "%-20s About to compute wind luminosity again \n", "NOK", geo.wcycle + 1, geo.wcycles);
 
   rad_sum = wind_luminosity (xband.f1[0], xband.f2[xband.nbands - 1]);  /*and we also call wind_luminosity to get the luminosities */
-  xsignal (files.root, "%-20s Computed wind luminosity again \n", "NOK", geo.wcycle + 1, geo.wcycles);
 
   Log
     ("!!wind_update: Rad  luminosity  %8.2e (recomb %8.2e ff %8.2e lines %8.2e) after update\n",
@@ -987,10 +979,8 @@ WindPtr (w);
     Log ("Summary  t_r  %6.0f   %6.0f  #t_r and dt_r on this update\n", t_r_ave, (t_r_ave - t_r_ave_old));
     Log ("Summary  t_e  %6.0f   %6.0f  #t_e and dt_e on this update\n", t_e_ave, (t_e_ave - t_e_ave_old));
   }
-  xsignal (files.root, "%-20s About to check convergence \n", "NOK", geo.wcycle + 1, geo.wcycles);
 
   check_convergence ();
-  xsignal (files.root, "%-20s Checked convergence \n", "NOK", geo.wcycle + 1, geo.wcycles);
 
   /* Summarize the radiative temperatures (ksl 04 mar) */
 
