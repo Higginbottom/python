@@ -905,7 +905,7 @@ update_banded_estimators (xplasma, p, ds, w_ave)
 
 
   if (p->freq<UV_low) vadd (xplasma->F_vis, flux, xplasma->F_vis);
-  else if (p->freq<UV_hi) vadd (xplasma->F_Xray, flux, xplasma->F_Xray);
+  else if (p->freq>UV_hi) vadd (xplasma->F_Xray, flux, xplasma->F_Xray);
   else vadd (xplasma->F_UV, flux, xplasma->F_UV);
 
   for (i = 0; i < geo.nxfreq; i++)

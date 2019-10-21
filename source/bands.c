@@ -644,7 +644,7 @@ freqs_init (freqmin, freqmax)
 
 /* bands try to deal with a blackbody spectrum */
   else
-  {
+/*  {
     nxfreq = 10;
     xfreq[0] = freqmin;         //We need the whole range to be modelled for induced compton heating to work
     xfreq[1] = 1e15;            //This should be below the lowest threshold frequency of any element in our model
@@ -657,9 +657,29 @@ freqs_init (freqmin, freqmax)
     xfreq[8] = 3.162e18;
     xfreq[9] = 1.2e19;          //This is the highest frequency defined in our ionization data
     xfreq[10] = freqmax;
+  }*/
+
+  {
+    nxfreq = 16;
+    xfreq[0] = freqmin;         //We need the whole range to be modelled for induced compton heating to work
+    xfreq[1] = 1e13;            //This should be below the lowest threshold frequency of any element in our model
+    xfreq[2] = 3.162e13;
+    xfreq[3] = 1e14;
+    xfreq[4] = 3.162e14;
+    xfreq[5] = 1e15;
+    xfreq[6] = 2e15;
+    xfreq[7] = 3e15;
+    xfreq[8] = 4e15;
+    xfreq[9] = 5e15;          //This is the highest frequency defined in our ionization data
+    xfreq[10] = 6e15;
+    xfreq[11] = 7e15;
+    xfreq[12] = 8e15;
+    xfreq[13] = 9e15;
+    xfreq[14] = 10e15;
+    xfreq[15] = 10e16;
+    
+    xfreq[16] = freqmax;
   }
-
-
 
 
 

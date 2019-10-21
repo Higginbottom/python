@@ -1341,18 +1341,43 @@ bl_init (lum_bl, t_bl, freqmin, freqmax, ioniz_or_final, f)
      double lum_bl, t_bl, freqmin, freqmax, *f;
      int ioniz_or_final;
 {
-  double q1;
+//  double q1;
   double integ_planck_d ();
-  double alphamin, alphamax;
+//  double alphamin, alphamax;
+  int spectype;
+  double e_tot,log_g,r,emit;
 
-  q1 = 2. * PI * (BOLTZMANN * BOLTZMANN * BOLTZMANN * BOLTZMANN) / (H * H * H * C * C);
-  alphamin = H * freqmin / (BOLTZMANN * t_bl);
-  alphamax = H * freqmax / (BOLTZMANN * t_bl);
-//   *f = q1 * integ_planck_d (alphamin, alphamax) * lum_bl / STEFAN_BOLTZMANN;
+   /* old code
+   q1 = 2. * PI * (BOLTZMANN * BOLTZMANN * BOLTZMANN * BOLTZMANN) / (H * H * H * C * C);
+   alphamin = H * freqmin / (BOLTZMANN * t_bl);
+   alphamax = H * freqmax / (BOLTZMANN * t_bl);
+ //   *f = q1 * integ_planck_d (alphamin, alphamax) * lum_bl / STEFAN_BOLTZMANN;
   
   
-   *f =  emittance_bb (freqmin, freqmax, t_bl)*lum_bl/(t_bl*t_bl*t_bl*t_bl*STEFAN_BOLTZMANN);
+    *f =  emittance_bb (freqmin, freqmax, t_bl)*lum_bl/(t_bl*t_bl*t_bl*t_bl*STEFAN_BOLTZMANN);
+   */ //end of old code
   
+   log_g = log10 (G * geo.mstar / (geo.rstar * geo.rstar));
+   r = geo.rstar;
+  
+  
+  
+   if (ioniz_or_final == 1)
+     spectype = geo.bl_spectype;       /* type for final spectrum */
+   else
+     spectype = geo.bl_ion_spectype;   /*type for ionization calculation */
+
+   if (spectype >= 0)
+   {      
+     e_tot=emittance_continuum (spectype, xband.f1[0], xband.f2[xband.nbands-1], t_bl, log_g);
+     emit = emittance_continuum (spectype, freqmin, freqmax, t_bl, log_g)/e_tot*lum_bl;
+   }
+   else
+   {
+     emit = emittance_bb (freqmin, freqmax, t_bl)*lum_bl/(t_bl*t_bl*t_bl*t_bl*STEFAN_BOLTZMANN);
+   }
+  
+   *f=emit;
   
   return (lum_bl);
 }
