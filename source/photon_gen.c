@@ -1369,8 +1369,8 @@ bl_init (lum_bl, t_bl, freqmin, freqmax, ioniz_or_final, f)
 
    if (spectype >= 0)
    {      
-     e_tot=emittance_continuum (spectype, xband.f1[0], xband.f2[xband.nbands-1], t_bl, log_g);
-     emit = emittance_continuum (spectype, freqmin, freqmax, t_bl, log_g)/e_tot*lum_bl;
+     e_tot=emittance_continuum (spectype, xband.f1[0], xband.f2[xband.nbands-1], t_bl, log_g); //Compute the total emttance over the whole mode
+     emit = emittance_continuum (spectype, freqmin, freqmax, t_bl, log_g)/e_tot*lum_bl; //Scale the emittance over the band to the correct proportion to get the whole BL luminosity
    }
    else
    {
