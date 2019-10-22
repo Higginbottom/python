@@ -1694,11 +1694,9 @@ a:printf ("There are %i wind elements in this model\n", NDIM2);
   }
 
   Log ("Flux:\n");
-  for (nn = 0; nn < geo.nxfreq; nn++)
-  {
-    Log ("F_w= %9.2e  F_phi= %9.2e  F_z= %9.2e \n", xplasma->F_x[nn], xplasma->F_y[nn], xplasma->F_z[nn]);
-  }
-
+  Log ("F_vis_w = %9.2e  F_vis_phi = %9.2e  F_vis_z = %9.2e \n", xplasma->F_vis[0], xplasma->F_vis[1], xplasma->F_vis[2]);
+  Log ("F_UV_w  = %9.2e  F_UV_phi  = %9.2e  F_UV_z  = %9.2e \n", xplasma->F_UV[0], xplasma->F_UV[1], xplasma->F_UV[2]);
+  Log ("F_Xray_w= %9.2e  F_Xray_phi= %9.2e  F_Xray_z= %9.2e \n", xplasma->F_Xray[0], xplasma->F_Xray[1], xplasma->F_Xray[2]);
 
 
   goto a;
@@ -3839,13 +3837,7 @@ flux_summary (w, rootname, ochoice)
   if (ochoice)
   {
     fprintf (fptr, "n\tnplasma\tinwind\ti\tj\tx\tz\tr\ttheta ");
-
-    for (m = 0; m < geo.nxfreq; m++)
-    {
-      fprintf (fptr, "\tF_w%i\tF_p%i\tF_z%i ", m, m, m);
-
-    }
-    fprintf (fptr, "\n");
+    fprintf (fptr, "\tF_vis_w\tF_vis_p\tF_vis_z\tF_UV_w\tF_UV_p\tF_UV_z\tF_Xray_w\tF_Xray_p\tF_Xray_z\n");
   }
 
   Log ("py_wind_sub does not work yet\n");
@@ -3862,10 +3854,11 @@ flux_summary (w, rootname, ochoice)
       {
         fprintf (fptr, "%i %i %i %i %i %8.4e %8.4e %8.4e %8.4e ", n, np, w[n].inwind, ii, jj, w[n].x[0], w[n].x[2], w[n].rcen,
                  w[n].thetacen / RADIAN);
-        for (m = 0; m < geo.nxfreq; m++)
-        {
-          fprintf (fptr, "%8.4e %8.4e %8.4e ", plasmamain[np].F_x[m], plasmamain[np].F_y[m], plasmamain[np].F_z[m]);
-        }
+        fprintf (fptr, "%8.4e %8.4e %8.4e ", plasmamain[np].F_vis[0], plasmamain[np].F_vis[1], plasmamain[np].F_vis[2]);
+        fprintf (fptr, "%8.4e %8.4e %8.4e ", plasmamain[np].F_UV[0], plasmamain[np].F_UV[1], plasmamain[np].F_UV[2]);
+        fprintf (fptr, "%8.4e %8.4e %8.4e ", plasmamain[np].F_Xray[0], plasmamain[np].F_Xray[1], plasmamain[np].F_Xray[2]);
+
+
         fprintf (fptr, "\n");
       }
 
