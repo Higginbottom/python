@@ -330,7 +330,7 @@ radiation (p, ds)
 
   if (tau > 0.0001)
   {                             /* Need differentiate between thick and thin cases */
-    x = exp (-tau);
+    x = test_exp (-tau);
     energy_abs = w_in * (1. - x);
 
   }
@@ -356,7 +356,7 @@ radiation (p, ds)
 
   if (tau > 0.0001)
   {                             /* Need differentiate between thick and thin cases */
-    x = exp (-tau);
+    x = test_exp (-tau);
     p->w = w_out = w_in * x;
     w_ave = (w_in - w_out) / tau;
   }
@@ -1113,4 +1113,12 @@ mean_intensity (xplasma, freq, mode)
   }
 
   return J;
+}
+
+
+
+double
+test_exp (double temp)
+{
+  return exp (temp);
 }
