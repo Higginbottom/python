@@ -37,6 +37,7 @@ int
 ion_abundances (PlasmaPtr xplasma, int mode)
 {
   int ireturn;
+  int mm;
 
 
   if (mode == IONMODE_ML93_FIXTE)
@@ -138,6 +139,17 @@ to match heating and cooling in the wind element! */
 //    {
 //      auger_ionization (xplasma);
 //    }
+  for (mm = 0; mm < nions; mm++)
+  {
+    xplasma->elem_dens[ion[mm].z] = 0.0;
+
+  }
+
+  for (mm = 0; mm < nions; mm++)
+  {
+    xplasma->elem_dens[ion[mm].z] = xplasma->elem_dens[ion[mm].z] + xplasma->density[mm];
+  }
+
 
 
   return (ireturn);

@@ -169,88 +169,89 @@ radiation (p, ds)
        If it has, then we multiply sigma*density by a factor frac_path, which is equal to the how far along 
        ds the edge occurs in frequency space  [(ft - freq_min) / (freq_max - freq_min)] */
 
-
     /* Next steps are a way to avoid the loop over photoionization x sections when it should not matter */
     if (DENSITY_PHOT_MIN > 0)
     {                           // Initialize during ionization cycles only
 
 
       /* Loop over all photoionization xsections */
-      for (n = 0; n < nphot_total; n++)
+      for (n = 0; n < xplasma->kbf_nuse; n++)
+//      for (n = 0; n < nphot_total; n++)
       {
-        x_top_ptr = phot_top_ptr[n];
-        if (xplasma->density[x_top_ptr->nion] > DENSITY_MIN)    //dont even bother if the density for the relvant ion is set to our floor..
+        x_top_ptr = phot_top_ptr[xplasma->kbf_use[n]];
+
+
+
+//        if (xplasma->density[x_top_ptr->nion] / xplasma->elem_dens[ion[x_top_ptr->nion].z] > DENSITY_MIN * 1.1) //dont even bother if the density for the relvant ion is set to our floor..
+//        {
+
+        ft = x_top_ptr->freq[0];
+        if (ft > freq_min && ft < freq_max)
         {
+          /* then the shifting of the photon causes it to cross an edge. 
+             Find out where between fmin and fmax the edge would be in freq space.
+             frac_path is the fraction of the total path length above the absorption edge
+             freq_xs is freq halfway between the edge and the max freq if an edge gets crossed */
+          frac_path = (freq_max - ft) / (freq_max - freq_min);
+          freq_xs = 0.5 * (ft + freq_max);
+        }
 
-          ft = x_top_ptr->freq[0];
-          if (ft > freq_min && ft < freq_max)
+        else if (ft > freq_max)
+          break;                // The remaining transitions will have higher thresholds
+
+        else if (ft < freq_min)
+        {
+          frac_path = 1.0;      // then the frequency of the photon is above the threshold all along the path
+          freq_xs = freq;       // use the average frequency
+        }
+
+        if (freq_xs < x_top_ptr->freq[x_top_ptr->np - 1])
+        {
+          /* Need the appropriate density at this point. 
+             how we get this depends if we have a topbase (level by level) 
+             or vfky cross-section (ion by ion) */
+
+          nion = x_top_ptr->nion;
+          if (ion[nion].phot_info > 0)  // topbase or hybrid
           {
-            /* then the shifting of the photon causes it to cross an edge. 
-               Find out where between fmin and fmax the edge would be in freq space.
-               frac_path is the fraction of the total path length above the absorption edge
-               freq_xs is freq halfway between the edge and the max freq if an edge gets crossed */
-            frac_path = (freq_max - ft) / (freq_max - freq_min);
-            freq_xs = 0.5 * (ft + freq_max);
+            nconf = x_top_ptr->nlev;
+            density = den_config (xplasma, nconf);
           }
 
-          else if (ft > freq_max)
-            break;              // The remaining transitions will have higher thresholds
+          else if (ion[nion].phot_info == 0)    // verner
+            density = xplasma->density[nion];
 
-          else if (ft < freq_min)
+          else
           {
-            frac_path = 1.0;    // then the frequency of the photon is above the threshold all along the path
-            freq_xs = freq;     // use the average frequency
+            Error ("radiation.c: No type (%i) for xsection!\n");
+            density = 0.0;
           }
 
-          if (freq_xs < x_top_ptr->freq[x_top_ptr->np - 1])
+          if (density > DENSITY_PHOT_MIN)
           {
-            /* Need the appropriate density at this point. 
-               how we get this depends if we have a topbase (level by level) 
-               or vfky cross-section (ion by ion) */
 
-            nion = x_top_ptr->nion;
-            if (ion[nion].phot_info > 0)        // topbase or hybrid
-            {
-              nconf = x_top_ptr->nlev;
-              density = den_config (xplasma, nconf);
-            }
-
-            else if (ion[nion].phot_info == 0)  // verner
-              density = xplasma->density[nion];
-
-            else
-            {
-              Error ("radiation.c: No type (%i) for xsection!\n");
-              density = 0.0;
-            }
-
-            if (density > DENSITY_PHOT_MIN)
-            {
-
-              /* Note that this includes a filling factor  */
-              kappa_tot += x = sigma_phot (x_top_ptr, freq_xs) * density * frac_path * zdom[ndom].fill;
+            /* Note that this includes a filling factor  */
+            kappa_tot += x = sigma_phot (x_top_ptr, freq_xs) * density * frac_path * zdom[ndom].fill;
 
 
-              if (geo.ioniz_or_extract)
-              {                 // Calculate during ionization cycles only
+            if (geo.ioniz_or_extract)
+            {                   // Calculate during ionization cycles only
 
-                //This is the heating effect - i.e. the absorbed photon energy less the binding energy of the lost electron
-                frac_tot += z = x * (freq_xs - ft) / freq_xs;
-                //This is the absorbed energy fraction
-                frac_tot_abs += z_abs = x;
+              //This is the heating effect - i.e. the absorbed photon energy less the binding energy of the lost electron
+              frac_tot += z = x * (freq_xs - ft) / freq_xs;
+              //This is the absorbed energy fraction
+              frac_tot_abs += z_abs = x;
 
-                if (nion > 3)
-                {
-                  frac_z += z;
-                }
-
-                frac_ion[nion] += z;
-                kappa_ion[nion] += x;
+              if (nion > 3)
+              {
+                frac_z += z;
               }
 
+              frac_ion[nion] += z;
+              kappa_ion[nion] += x;
             }
 
-
+            //          }
           }
         }
       }
@@ -259,66 +260,67 @@ radiation (p, ds)
 
       if (freq > inner_freq_min)
       {
-        for (n = 0; n < n_inner_tot; n++)
+//        for (n = 0; n < n_inner_tot; n++)
+        for (n = 0; n < xplasma->kbf_inner_nuse; n++)
+
         {
-          if (xplasma->density[x_top_ptr->nion] > DENSITY_MIN)  //dont even bother if the density for the relvant ion is set to our floor..
+          x_top_ptr = inner_cross_ptr[xplasma->kbf_inner_use[n]];
+//          if (xplasma->density[x_top_ptr->nion] / xplasma->elem_dens[ion[x_top_ptr->nion].z] > DENSITY_MIN * 1.1)       //dont even bother if the density for the relvant ion is set to our floor..
+          //        {
+          if (ion[x_top_ptr->nion].phot_info != 1)      //If ion_nfo is equal to 1 - we have only topbase info - this includes the edges so we dont need to do anything here
           {
-            if (ion[inner_cross[n].nion].phot_info != 1)
+            if (x_top_ptr->n_elec_yield != -1)  //Only any point in doing this if we know the energy of elecrons
             {
-              x_top_ptr = inner_cross_ptr[n];
-              if (x_top_ptr->n_elec_yield != -1)        //Only any point in doing this if we know the energy of elecrons
+              ft = x_top_ptr->freq[0];
+
+              if (ft > freq_min && ft < freq_max)
               {
-                ft = x_top_ptr->freq[0];
+                frac_path = (freq_max - ft) / (freq_max - freq_min);
+                freq_xs = 0.5 * (ft + freq_max);
+              }
+              else if (ft > freq_max)
+                break;          // The remaining transitions will have higher thresholds
+              else if (ft < freq_min)
+              {
+                frac_path = 1.0;        // then all frequency along ds are above edge
+                freq_xs = freq; // use the average frequency
+              }
+              if (freq_xs < x_top_ptr->freq[x_top_ptr->np - 1])
+              {
+                nion = x_top_ptr->nion;
+                if (ion[nion].phot_info == 0)   // verner only ion
+                {
+                  density = xplasma->density[nion];     //All these rates are from the ground state, so we just need the density of the ion.
+                }
+                else
+                {
+                  nconf = phot_top[ion[nion].ntop_ground].nlev; //The lower level of the ground state Pi cross section (should be GS!)
+                  density = den_config (xplasma, nconf);
+                }
+                if (density > DENSITY_PHOT_MIN)
+                {
+                  kappa_tot += x = sigma_phot (x_top_ptr, freq_xs) * density * frac_path * zdom[ndom].fill;
+                  if (geo.ioniz_or_extract && x_top_ptr->n_elec_yield != -1)    // Calculate during ionization cycles only
+                  {
+                    frac_auger += z = x * (inner_elec_yield[x_top_ptr->n_elec_yield].Ea / EV2ERGS) / (freq_xs * HEV);
+                    frac_auger_abs += z_abs = x;        //This is the absorbed energy fraction
 
-                if (ft > freq_min && ft < freq_max)
-                {
-                  frac_path = (freq_max - ft) / (freq_max - freq_min);
-                  freq_xs = 0.5 * (ft + freq_max);
-                }
-                else if (ft > freq_max)
-                  break;        // The remaining transitions will have higher thresholds
-                else if (ft < freq_min)
-                {
-                  frac_path = 1.0;      // then all frequency along ds are above edge
-                  freq_xs = freq;       // use the average frequency
-                }
-                if (freq_xs < x_top_ptr->freq[x_top_ptr->np - 1])
-                {
-                  nion = x_top_ptr->nion;
-                  if (ion[nion].phot_info == 0) // verner only ion
-                  {
-                    density = xplasma->density[nion];   //All these rates are from the ground state, so we just need the density of the ion.
-                  }
-                  else
-                  {
-                    nconf = phot_top[ion[nion].ntop_ground].nlev;       //The lower level of the ground state Pi cross section (should be GS!)
-                    density = den_config (xplasma, nconf);
-                  }
-                  if (density > DENSITY_PHOT_MIN)
-                  {
-                    kappa_tot += x = sigma_phot (x_top_ptr, freq_xs) * density * frac_path * zdom[ndom].fill;
-                    if (geo.ioniz_or_extract && x_top_ptr->n_elec_yield != -1)  // Calculate during ionization cycles only
+                    if (nion > 3)
                     {
-                      frac_auger += z = x * (inner_elec_yield[x_top_ptr->n_elec_yield].Ea / EV2ERGS) / (freq_xs * HEV);
-                      frac_auger_abs += z_abs = x;      //This is the absorbed energy fraction
-
-                      if (nion > 3)
-                      {
-                        frac_z += z;
-                      }
-                      frac_ion[nion] += z;
-                      kappa_ion[nion] += x;
+                      frac_z += z;
                     }
+                    frac_ion[nion] += z;
+                    kappa_ion[nion] += x;
                   }
                 }
               }
+              //            }
             }
           }
         }
       }
     }
   }
-
 
 
   /* finished looping over cross-sections to calculate bf opacity 

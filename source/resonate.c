@@ -734,6 +734,53 @@ kbf_need (fmin, fmax)
 
     }
     xplasma->kbf_nuse = nuse;
+
+
+    //now do inner shell
+
+    nuse = 0;
+
+    for (n = 0; n < n_inner_tot; n++)
+    {
+
+      ft = inner_cross[n].freq[0];      //This is the edge frequency (SS)
+
+      if ((ft > (fmin / 3.)) && (ft < fmax))
+      {
+        nion = inner_cross[n].nion;
+
+        if (ion[nion].phot_info == 0)   // vfky
+        {
+          density = xplasma->density[nion];
+        }
+        // else if (ion[nion].phot_info > 0)  // topbase or hybrid
+        else
+        {
+          nconf = inner_cross[n].nlev;  //Returning lower level = correct (SS)
+          density = den_config (xplasma, nconf);
+        }
+
+        tau_test = inner_cross[n].x[0] * density * SMAX_FRAC * length (one->xcen);
+
+
+        if (tau_test > 1.e-6 || inner_cross[n].macro_info == 1)
+        {
+          /* Store the bf transition and increment nuse */
+          xplasma->kbf_inner_use[nuse] = n;
+          nuse += 1;
+        }
+      }
+
+    }
+    xplasma->kbf_inner_nuse = nuse;
+
+
+
+
+
+
+
+
   }
 
 

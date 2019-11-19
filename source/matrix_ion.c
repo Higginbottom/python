@@ -380,6 +380,8 @@ matrix_ion_populations (xplasma, mode)
     if (ion[nn].macro_info == 0 || geo.macro_ioniz_mode == 0 || geo.macro_simple == 1)
     {
       xplasma->density[nn] = newden[nn] * elem_dens[ion[nn].z]; //We return to absolute densities here
+      if (xplasma->density[nn] < DENSITY_MIN)
+        xplasma->density[nn] = DENSITY_MIN;
     }
     if ((sane_check (xplasma->density[nn])) || (xplasma->density[nn] < 0.0))
       Error ("matrix_ion_populations: ion %i has population %8.4e in cell %i\n", nn, xplasma->density[nn], xplasma->nplasma);

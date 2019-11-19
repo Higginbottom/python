@@ -792,6 +792,7 @@ typedef struct plasma
                                    which can differe from the valid volume of the cell due to clumping. */
   double *density;              /*The number density of a specific ion.  This needs to correspond
                                    to the ion order obtained by get_atomic_data. 78 - changed to dynamic allocation */
+      double elem_dens[NELEMENTS];             /*the total number density for the cell*/
   double *partition;            /*The partition function for each  ion. 78 - changed to dynamic allocation */
   double *levden;               /*The number density (occupation number?) of a specific level */
 
@@ -809,6 +810,11 @@ typedef struct plasma
 
   int *kbf_use;                 /* List of the indices of the photoionization processes to be used for kappa_bf. (SS) */
   int kbf_nuse;                 /* Total number of photoionization processes to be used for kappa_bf. (SS) */
+
+  int *kbf_inner_use;                 /* List of the indices of the inner shell photoionization processes to be used for kappa_bf.  */
+  int kbf_inner_nuse;                 /* Total number of inner shell photoionization processes to be used for kappa_bf. */
+
+
 
 /* End of macro information */
 

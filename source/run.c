@@ -218,7 +218,10 @@ calculate_ionization (restart_stat)
       pop_kappa_ff_array ();
 
     /* Transport the photons through the wind */
+    xsignal (files.root, "%-20s About to transmit photons\n", "NOK");
+
     trans_phot (w, p, 0);
+    xsignal (files.root, "%-20s Transmitted photons\n", "NOK");
 
     /*Determine how much energy was absorbed in the wind */
     zze = zzz = zz_adiab = zz_abs = zz_scat = zz_star = zz_disk = zz_err = zz_else = zz_lofreq = 0.0;
@@ -319,8 +322,10 @@ calculate_ionization (restart_stat)
     Log ("!!python: Number of ionizing photons %g lum of ionizing photons %g\n", geo.n_ioniz, geo.cool_tot_ioniz);
 
 /* Note that this step is parallelized */
+    xsignal (files.root, "%-20s About to update wind\n", "NOK");
 
     wind_update (w);
+    xsignal (files.root, "%-20s Updated wind\n", "NOK");
 
 
     Log ("Completed ionization cycle %d :  The elapsed TIME was %f\n", geo.wcycle + 1, timer ());

@@ -658,6 +658,13 @@ calloc_dyn_plasma (nelem)
       Error ("calloc_dyn_plasma: Error in allocating memory for kbf_use\n");
       Exit (0);
     }
+
+    if ((plasmamain[n].kbf_inner_use = calloc (sizeof (double), n_inner_tot)) == NULL)
+    {
+      Error ("calloc_dyn_plasma: Error in allocating memory for kbf_inner_use\n");
+      Exit (0);
+    }
+
   }
 
   Log

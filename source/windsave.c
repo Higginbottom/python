@@ -98,6 +98,8 @@ in the plasma structure */
     n += fwrite (plasmamain[m].recomb_simple, sizeof (double), nphot_total, fptr);
     n += fwrite (plasmamain[m].recomb_simple_upweight, sizeof (double), nphot_total, fptr);
     n += fwrite (plasmamain[m].kbf_use, sizeof (double), nphot_total, fptr);
+    n += fwrite (plasmamain[m].kbf_inner_use, sizeof (double), n_inner_tot, fptr);
+
   }
 
 /* Now write out the macro atom info */
@@ -254,6 +256,8 @@ wind_read (filename)
     n += fread (plasmamain[m].recomb_simple, sizeof (double), nphot_total, fptr);
     n += fread (plasmamain[m].recomb_simple_upweight, sizeof (double), nphot_total, fptr);
     n += fread (plasmamain[m].kbf_use, sizeof (double), nphot_total, fptr);
+    n += fread (plasmamain[m].kbf_inner_use, sizeof (double), n_inner_tot, fptr);
+
   }
 
 
