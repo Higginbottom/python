@@ -182,7 +182,7 @@ radiation (p, ds)
         x_top_ptr = phot_top_ptr[n];
 
 
-        if (xplasma->density[x_top_ptr->nion] / xplasma->elem_dens[ion[x_top_ptr->nion].z] > DENSITY_MIN)       //dont even bother if the density for the relvant ion is set to our floor..
+        if (xplasma->density[x_top_ptr->nion] / xplasma->elem_dens[ion[x_top_ptr->nion].z] > DENSITY_MIN * 1.1) //dont even bother if the density for the relvant ion is set to our floor..
         {
 
           ft = x_top_ptr->freq[0];
@@ -250,7 +250,6 @@ radiation (p, ds)
                 frac_ion[nion] += z;
                 kappa_ion[nion] += x;
               }
-
             }
           }
         }
@@ -261,13 +260,13 @@ radiation (p, ds)
       if (freq > inner_freq_min)
       {
         for (n = 0; n < n_inner_tot; n++)
-          //       for (n = 0; n < xplasma->kbf_inner_nuse; n++)
+//        for (n = 0; n < xplasma->kbf_inner_nuse; n++)
 
         {
           x_top_ptr = inner_cross_ptr[n];
           //         x_top_ptr = inner_cross_ptr[xplasma->kbf_inner_use[n]];
           if (xplasma->density[x_top_ptr->nion] / xplasma->elem_dens[ion[x_top_ptr->nion].z] > DENSITY_MIN * 1.1)       //dont even bother if the density for the relvant ion is set to our floor..
-            //        {
+          {
             if (ion[x_top_ptr->nion].phot_info != 1)    //If ion_nfo is equal to 1 - we have only topbase info - this includes the edges so we dont need to do anything here
             {
               if (x_top_ptr->n_elec_yield != -1)        //Only any point in doing this if we know the energy of elecrons
@@ -315,9 +314,9 @@ radiation (p, ds)
                     }
                   }
                 }
-                //            }
               }
             }
+          }
         }
       }
     }
