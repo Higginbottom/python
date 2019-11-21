@@ -694,11 +694,11 @@ kbf_need (fmin, fmax)
   PlasmaPtr xplasma;
   WindPtr one;
 
-  limit = 1e-200;
+  limit = 1e-6;
   int nplasma, nion;
-  printf ("BOOM %e %e\n", fmin, fmax);
-  fmin = 0.0;
-  fmax = 1e99;
+//  printf ("BOOM %e %e\n", fmin, fmax);
+//  fmin = 0.0;
+//  fmax = 1e99;
   for (nplasma = 0; nplasma < NPLASMA; nplasma++)       // Loop over all the cells in the wind
   {
     xplasma = &plasmamain[nplasma];
@@ -778,8 +778,8 @@ kbf_need (fmin, fmax)
     }
     xplasma->kbf_inner_nuse = nuse;
 
-    printf ("BLAH cell %i outer %i (%i) inner %i (%i) length= %e\n", xplasma->nplasma, xplasma->kbf_nuse, nphot_total,
-            xplasma->kbf_inner_nuse, n_inner_tot, SMAX_FRAC * length (one->xcen));
+//    printf ("BLAH cell %i outer %i (%i) inner %i (%i) length= %e\n", xplasma->nplasma, xplasma->kbf_nuse, nphot_total,
+//            xplasma->kbf_inner_nuse, n_inner_tot, SMAX_FRAC * length (one->xcen));
 
 
 
