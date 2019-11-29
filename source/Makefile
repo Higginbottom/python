@@ -243,6 +243,21 @@ table_objects = windsave2table.o windsave2table_sub.o get_atomicdata.o py_wind_s
 		bb.o rdpar.o rdpar_init.o xlog.o direct_ion.o diag.o matrix_ion.o \
 		pi_rates.o photo_gen_matom.o macro_gov.o reverb.o paths.o time.o synonyms.o \
 		cooling.o
+        
+        
+rad_driv_objects = rad_driving_calc.o get_atomicdata.o py_wind_sub.o windsave.o py_wind_ion.o \
+		emission.o recomb.o wind_util.o  \
+		cdf.o random.o recipes.o saha.o \
+		stellar_wind.o homologous.o sv.o hydro_import.o corona.o knigge.o  disk.o\
+		lines.o vvector.o wind2d.o wind.o  ionization.o  py_wind_write.o levels.o \
+		radiation.o gradv.o phot_util.o anisowind.o resonate.o density.o \
+		matom.o estimators.o photon2d.o cylindrical.o rtheta.o spherical.o \
+		import.o import_spherical.o import_cylindrical.o import_rtheta.o  \
+		cylind_var.o bilinear.o gridwind.o py_wind_macro.o partition.o \
+		spectral_estimators.o shell_wind.o compton.o zeta.o dielectronic.o \
+		bb.o rdpar.o rdpar_init.o xlog.o direct_ion.o diag.o matrix_ion.o \
+		pi_rates.o photo_gen_matom.o macro_gov.o reverb.o paths.o time.o synonyms.o \
+		cooling.o        
 
 
 run_indent:
@@ -253,6 +268,12 @@ windsave2table: $(table_objects)
 	$(CC) $(CFLAGS) $(table_objects) $(LDFLAGS) -o windsave2table
 	cp $@ $(BIN)
 	mv $@ $(BIN)/windsave2table$(VERSION)
+	@if [ $(INDENT) = yes ] ; then  ../py_progs/run_indent.py -changed ; fi
+
+rad_driving_calc: $(rad_driv_objects)
+	$(CC) $(CFLAGS) $(rad_driv_objects) $(LDFLAGS) -o rad_driving_calc
+	cp $@ $(BIN)
+	mv $@ $(BIN)/rad_driving_calc$(VERSION)
 	@if [ $(INDENT) = yes ] ; then  ../py_progs/run_indent.py -changed ; fi
 
 
