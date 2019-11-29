@@ -914,7 +914,7 @@ typedef struct plasma
   double rad_force_es[3];       /*Radiative force of wind */
   double rad_force_ff[3];       /*Radiative force of wind */
   double rad_force_bf[3];       /*Radiative force of wind */
-
+  double t_opt,t_UV,t_Xray;     /*The t factor used in computing accerleration */
 
 
   double gain;                  /* The gain being used in iterations of the structure */

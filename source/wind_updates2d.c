@@ -89,7 +89,7 @@ WindPtr (w);
   int my_nmin, my_nmax;         //Note that these variables are still used even without MPI on
   int ndom;
   FILE *fptr, *fptr2, *fptr3, *fptr4, *fptr5, *fopen ();        /*This is the file to communicate with zeus */
-  double t_opt, t_UV, t_Xray, v_th, fhat[3];    /*This is the dimensionless optical depth parameter computed for communication to rad-hydro. */
+  double v_th, fhat[3];         /*This is the dimensionless optical depth parameter computed for communication to rad-hydro. */
   struct photon ptest;          //We need a test photon structure in order to compute t
   double kappa_es;              //The electron scattering opacity used for t
 
@@ -108,7 +108,7 @@ WindPtr (w);
    * size must must be increased.
    */
 
-  size_of_commbuffer = 8 * (9 * nions + nlte_levels + 3 * nphot_total + 15 * NXBANDS + 126) * (floor (NPLASMA / np_mpi_global) + 1);
+  size_of_commbuffer = 8 * (9 * nions + nlte_levels + 3 * nphot_total + 15 * NXBANDS + 129) * (floor (NPLASMA / np_mpi_global) + 1);
   commbuffer = (char *) malloc (size_of_commbuffer * sizeof (char));
 
   /* JM 1409 -- Initialise parallel only variables */
@@ -306,6 +306,48 @@ WindPtr (w);
     ion_abundances (&plasmamain[n], geo.ioniz_mode);
 
 
+    //We now compute the t factor for this cell.
+
+
+    v_th = pow ((2. * BOLTZMANN * plasmamain[n].t_e / MPROT), 0.5);     //We need the thermal velocity for hydrogen
+    stuff_v (w[plasmamain[n].nwind].xcen, ptest.x);     //place our test photon at the centre of the cell
+    ptest.grid = nwind;         //We need our test photon to know where it is 
+    kappa_es = THOMPSON * plasmamain[n].ne / plasmamain[n].rho;
+
+    //First for the optical band (up to 4000AA)     
+    if (length (plasmamain[n].F_vis) > 0.0)     //Only makes sense if flux in this band is non-zero
+    {
+      stuff_v (plasmamain[n].F_vis, fhat);
+      renorm (fhat, 1.);        //A unit vector in the direction of the flux - this can be treated as the lmn vector of a pretend photon
+      stuff_v (fhat, ptest.lmn);        //place our test photon at the centre of the cell            
+      plasmamain[n].t_opt = kappa_es * plasmamain[n].rho * v_th / fabs (dvwind_ds (&ptest));
+    }
+    else
+      plasmamain[n].t_opt = 0.0;        //Essentually a flag that there is no way of computing t (and hence M) in this cell.
+
+    //Now for the UV band (up to 4000AA->100AA)                                             
+    if (length (plasmamain[n].F_UV) > 0.0)      //Only makes sense if flux in this band is non-zero
+    {
+      stuff_v (plasmamain[n].F_UV, fhat);
+      renorm (fhat, 1.);        //A unit vector in the direction of the flux - this can be treated as the lmn vector of a pretend photon
+      stuff_v (fhat, ptest.lmn);        //place our test photon at the centre of the cell            
+      plasmamain[n].t_UV = kappa_es * plasmamain[n].rho * v_th / fabs (dvwind_ds (&ptest));
+    }
+    else
+      plasmamain[n].t_UV = 0.0; //Essentually a flag that there is no way of computing t (and hence M) in this cell.
+
+
+    //And finally for the Xray band (up to 100AA and up)
+    if (length (plasmamain[n].F_Xray) > 0.0)    //Only makes sense if flux in this band is non-zero
+    {
+      stuff_v (plasmamain[n].F_Xray, fhat);
+      renorm (fhat, 1.);        //A unit vector in the direction of the flux - this can be treated as the lmn vector of a pretend photon
+      stuff_v (fhat, ptest.lmn);        //place our test photon at the centre of the cell            
+      plasmamain[n].t_Xray = kappa_es * plasmamain[n].rho * v_th / fabs (dvwind_ds (&ptest));
+    }
+    else
+      plasmamain[n].t_Xray = 0.0;       //Essentually a flag that there is no way of computing t (and hence M) in this cell.                
+
 
     /* Perform checks to see how much temperatures have changed in this iteration */
 
@@ -404,6 +446,9 @@ WindPtr (w);
         MPI_Pack (plasmamain[n].F_vis, 3, MPI_DOUBLE, commbuffer, size_of_commbuffer, &position, MPI_COMM_WORLD);
         MPI_Pack (plasmamain[n].F_UV, 3, MPI_DOUBLE, commbuffer, size_of_commbuffer, &position, MPI_COMM_WORLD);
         MPI_Pack (plasmamain[n].F_Xray, 3, MPI_DOUBLE, commbuffer, size_of_commbuffer, &position, MPI_COMM_WORLD);
+        MPI_Pack (&plasmamain[n].t_opt, 1, MPI_DOUBLE, commbuffer, size_of_commbuffer, &position, MPI_COMM_WORLD);
+        MPI_Pack (&plasmamain[n].t_UV, 1, MPI_DOUBLE, commbuffer, size_of_commbuffer, &position, MPI_COMM_WORLD);
+        MPI_Pack (&plasmamain[n].t_Xray, 1, MPI_DOUBLE, commbuffer, size_of_commbuffer, &position, MPI_COMM_WORLD);
         MPI_Pack (&plasmamain[n].max_freq, 1, MPI_DOUBLE, commbuffer, size_of_commbuffer, &position, MPI_COMM_WORLD);
         MPI_Pack (&plasmamain[n].lum_lines, 1, MPI_DOUBLE, commbuffer, size_of_commbuffer, &position, MPI_COMM_WORLD);
         MPI_Pack (&plasmamain[n].lum_ff, 1, MPI_DOUBLE, commbuffer, size_of_commbuffer, &position, MPI_COMM_WORLD);
@@ -545,6 +590,9 @@ WindPtr (w);
         MPI_Unpack (commbuffer, size_of_commbuffer, &position, plasmamain[n].F_vis, 3, MPI_DOUBLE, MPI_COMM_WORLD);
         MPI_Unpack (commbuffer, size_of_commbuffer, &position, plasmamain[n].F_UV, 3, MPI_DOUBLE, MPI_COMM_WORLD);
         MPI_Unpack (commbuffer, size_of_commbuffer, &position, plasmamain[n].F_Xray, 3, MPI_DOUBLE, MPI_COMM_WORLD);
+        MPI_Unpack (commbuffer, size_of_commbuffer, &position, &plasmamain[n].t_opt, 1, MPI_DOUBLE, MPI_COMM_WORLD);
+        MPI_Unpack (commbuffer, size_of_commbuffer, &position, &plasmamain[n].t_UV, 1, MPI_DOUBLE, MPI_COMM_WORLD);
+        MPI_Unpack (commbuffer, size_of_commbuffer, &position, &plasmamain[n].t_Xray, 1, MPI_DOUBLE, MPI_COMM_WORLD);
         MPI_Unpack (commbuffer, size_of_commbuffer, &position, &plasmamain[n].max_freq, 1, MPI_DOUBLE, MPI_COMM_WORLD);
         MPI_Unpack (commbuffer, size_of_commbuffer, &position, &plasmamain[n].lum_lines, 1, MPI_DOUBLE, MPI_COMM_WORLD);
         MPI_Unpack (commbuffer, size_of_commbuffer, &position, &plasmamain[n].lum_ff, 1, MPI_DOUBLE, MPI_COMM_WORLD);
@@ -840,51 +888,9 @@ WindPtr (w);
                    plasmamain[nplasma].exp_temp[ii]);
         fprintf (fptr4, "\n ");
 
-
-        //We need to compute the g factor for this cell and output it.
-
-
-        v_th = pow ((2. * BOLTZMANN * plasmamain[nplasma].t_e / MPROT), 0.5);   //We need the thermal velocity for hydrogen
-        stuff_v (w[plasmamain[nplasma].nwind].xcen, ptest.x);   //place our test photon at the centre of the cell
-        ptest.grid = nwind;     //We need our test photon to know where it is 
-        kappa_es = THOMPSON * plasmamain[nplasma].ne / plasmamain[nplasma].rho;
-
-        //First for the optcial band (up to 4000AA)     
-        if (length (plasmamain[nplasma].F_vis) > 0.0)   //Only makes sense if flux in this band is non-zero
-        {
-          stuff_v (plasmamain[nplasma].F_vis, fhat);
-          renorm (fhat, 1.);    //A unit vector in the direction of the flux - this can be treated as the lmn vector of a pretend photon
-          stuff_v (fhat, ptest.lmn);    //place our test photon at the centre of the cell            
-          t_opt = kappa_es * plasmamain[nplasma].rho * v_th / fabs (dvwind_ds (&ptest));
-        }
-        else
-          t_opt = 0.0;          //Essentually a flag that there is no way of computing t (and hence M) in this cell.
-
-        //Now for the UV band (up to 4000AA->100AA)                                             
-        if (length (plasmamain[nplasma].F_UV) > 0.0)    //Only makes sense if flux in this band is non-zero
-        {
-          stuff_v (plasmamain[nplasma].F_UV, fhat);
-          renorm (fhat, 1.);    //A unit vector in the direction of the flux - this can be treated as the lmn vector of a pretend photon
-          stuff_v (fhat, ptest.lmn);    //place our test photon at the centre of the cell            
-          t_UV = kappa_es * plasmamain[nplasma].rho * v_th / fabs (dvwind_ds (&ptest));
-        }
-        else
-          t_UV = 0.0;           //Essentually a flag that there is no way of computing t (and hence M) in this cell.
-
-
-        //And finally for the Xray band (up to 100AA and up)
-        if (length (plasmamain[nplasma].F_Xray) > 0.0)  //Only makes sense if flux in this band is non-zero
-        {
-          stuff_v (plasmamain[nplasma].F_Xray, fhat);
-          renorm (fhat, 1.);    //A unit vector in the direction of the flux - this can be treated as the lmn vector of a pretend photon
-          stuff_v (fhat, ptest.lmn);    //place our test photon at the centre of the cell            
-          t_Xray = kappa_es * plasmamain[nplasma].rho * v_th / fabs (dvwind_ds (&ptest));
-        }
-        else
-          t_Xray = 0.0;         //Essentually a flag that there is no way of computing t (and hence M) in this cell.                
-
         fprintf (fptr5, "%i %i %e %e %e %e %e %e %e\n", i, j, plasmamain[nplasma].t_e, plasmamain[nplasma].rho,
-                 plasmamain[nplasma].rho * rho2nh, plasmamain[nplasma].ne, t_opt, t_UV, t_Xray);
+                 plasmamain[nplasma].rho * rho2nh, plasmamain[nplasma].ne, plasmamain[nplasma].t_opt, plasmamain[nplasma].t_UV,
+                 plasmamain[nplasma].t_Xray);
       }
     }
     fclose (fptr);
@@ -1207,6 +1213,9 @@ wind_rad_init ()
       plasmamain[n].rad_force_ff[i] = 0.0;      //Zero the radiation force calculation
     for (i = 0; i < 3; i++)
       plasmamain[n].rad_force_bf[i] = 0.0;      //Zero the radiation force calculation
+
+
+    plasmamain[n].t_opt = plasmamain[n].t_UV = plasmamain[n].t_Xray = 0.0;      //Zero the t factors
 
 
     if (geo.rt_mode == RT_MODE_MACRO)
