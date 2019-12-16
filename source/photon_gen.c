@@ -1373,13 +1373,42 @@ bl_init (lum_bl, t_bl, freqmin, freqmax, ioniz_or_final, f)
   double q1;
   double integ_planck_d ();
   double alphamin, alphamax;
+  int spectype;
+  double emit;
 
-  q1 = 2. * PI * (BOLTZMANN * BOLTZMANN * BOLTZMANN * BOLTZMANN) / (PLANCK * PLANCK * PLANCK * VLIGHT * VLIGHT);
-  alphamin = PLANCK * freqmin / (BOLTZMANN * t_bl);
-  alphamax = PLANCK * freqmax / (BOLTZMANN * t_bl);
+
+  printf ("BLAH %e %e\n", freqmin, freqmax);
+
+  if (ioniz_or_final == 1)
+    spectype = geo.bl_spectype; /* type for final spectrum */
+  else
+    spectype = geo.bl_ion_spectype;     /*type for ionization calculation */
+
+  if (spectype >= 0)
+  {
+    emit = emittance_continuum (spectype, freqmin, freqmax, 0.0, 0.0);
+    *f = emit * lum_bl / emittance_continuum (spectype, 0.0, VERY_BIG, 0.0, 0.0);
+  }
+  else
+  {
+    emit = emittance_bb (freqmin, freqmax, t_bl);
+    *f = emit * lum_bl / (t_bl * t_bl * t_bl * t_bl * STEFAN_BOLTZMANN);
+  }
+
+
+//  printf ("BLAH %e %e\n",emit,)
+
+
+
+
+
+
+//  q1 = 2. * PI * (BOLTZMANN * BOLTZMANN * BOLTZMANN * BOLTZMANN) / (PLANCK * PLANCK * PLANCK * VLIGHT * VLIGHT);/
+//  alphamin = PLANCK * freqmin / (BOLTZMANN * t_bl);
+//  alphamax = PLANCK * freqmax / (BOLTZMANN * t_bl);
 //  *f = q1 * integ_planck_d (alphamin, alphamax) * lum_bl / STEFAN_BOLTZMANN;
 
-  *f = emittance_bb (freqmin, freqmax, t_bl) * lum_bl / (t_bl * t_bl * t_bl * t_bl * STEFAN_BOLTZMANN);
+//  *f = emittance_bb (freqmin, freqmax, t_bl) * lum_bl / (t_bl * t_bl * t_bl * t_bl * STEFAN_BOLTZMANN);
 
 
 

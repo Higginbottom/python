@@ -123,12 +123,14 @@ import_cylindrical (ndom, filename)
       {
         xx_cyl.t[ncell] = 10000.;
       }
+      printf ("BLAH %i %e %e %i\n", ncell, xx_cyl.x[ncell], xx_cyl.z[ncell], xx_cyl.inwind[ncell]);
+
       ncell++;
 
     }
   }
 
-
+  printf ("BOOM - read in grid ncell=%i\n", ncell);
 /* 
  * Now calculate the dimensions of the grid.  This next calculation makes the assumption that
  * The last element of the grid was the last grid cell.  So we now calculate the sizes of

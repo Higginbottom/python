@@ -272,7 +272,7 @@ get_hydro (ndom)
   }
 
 
-
+  printf ("BLAH %e %e\n", hydro_r_edge[0], geo.rstar);
 
   if (hydro_r_edge[0] < geo.rstar)
   {
