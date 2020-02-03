@@ -101,7 +101,7 @@ int NPHOT_MAX;                  /* The maximum number of photon bundles created 
 int NPHOT;                      /* The number of photon bundles created, defined in setup.c */
 
 #define NWAVE  			  10000 //This is the number of wavelength bins in spectra that are produced
-#define MAXSCAT 			1000
+#define MAXSCAT 			2000
 
 /* Define the structures */
 
@@ -363,7 +363,7 @@ struct geometry
   double swavemin, swavemax, sfmin, sfmax;      // The minimum and maximum wavelengths/freqs for detailed spectra
   int select_extract, select_spectype;
 
-/* Begin description of the actual geometery */
+/* Begin description of the actual geometry */
 
 /* The next variables refere to the entire space in which pbotons sill be tracked.  Photons
  * outside these regions are assumed to have hit something or be freely moving through space.
@@ -394,7 +394,7 @@ struct geometry
                                            the temperature of the disk for future ionization cycles
                                          */
 
-  int absorb_reflect;           /*Controls what happens when a photong hits the disk or star
+  int absorb_reflect;           /*Controls what happens when a photon hits the disk or star
                                  */
 
 #define DISK_TPROFILE_STANDARD          0       // This is a standard Shakura-Sunyaev disk. The profile depends on mstar and mdot_disk
@@ -581,7 +581,6 @@ struct geometry
                                    of the agn is elsewhere in the structure
                                  */
   double const_agn;             /*The constant for the Power law, there are lots of ways of defining the PL which is best? */
-//OLD  double r_agn;                 /* radius of the "photosphere" of the BH in the AGN.  */
   double d_agn;                 /* the distance to the agn - only used in balance to calculate the ionization fraction */
 
 
@@ -795,11 +794,11 @@ typedef struct plasma
   double *partition;            /*The partition function for each  ion. 78 - changed to dynamic allocation */
   double *levden;               /*The number density (occupation number?) of a specific level */
 
-  double kappa_ff_factor;       /* Multiplicative factor for calculating the FF heating for                                      a photon. */
+  double kappa_ff_factor;       /* Multiplicative factor for calculating the FF heating for a photon. */
 
 
   double *recomb_simple;        /* "alpha_e - alpha" (in Leon's notation) for b-f processes in simple atoms. */
-  double *recomb_simple_upweight;       /* multiplicative factor to account for ration of total to "cooling" energy for b-f processes in simple atoms. */
+  double *recomb_simple_upweight;       /* multiplicative factor to account for ratio of total to "cooling" energy for b-f processes in simple atoms. */
 
 /* Begining of macro information */
   double kpkt_emiss;            /*This is the specific emissivity due to the conversion k-packet -> r-packet in the cell
@@ -1152,6 +1151,7 @@ typedef struct photon
   int np;                       /*NSH 13/4/11 - an internal pointer to the photon number so 
                                    so we can write out details of where the photon goes */
   double path;                  /* SWM - Photon path length */
+  double ds;                    // EP 11/19 - the distance of the path the photon previously moved
 }
 p_dummy, *PhotPtr;
 
@@ -1380,7 +1380,12 @@ int nfb;                        // Actual number of freqency intervals calculate
 #include "templates.h"
 #include "recipes.h"
 
-// 04apr ksl -- made kap_bf external so can be passed around variables
+/* kap_bf stores opacities for a single cell and as calculated by the routine kappa_bf. 
+ * It was made an external array to avoid having to pass it between various calling routines
+ * but this means that one has to be careful that data is not stale.  It is required for 
+ * macro-atoms where bf is a scattering process, but not for the simple case.
+ */
+
 double kap_bf[NLEVELS];
 
 
