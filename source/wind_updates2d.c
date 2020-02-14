@@ -196,10 +196,7 @@ WindPtr (w);
       {
         Error ("wind_update:sane_check %d ave_freq %e j %e ntot %d\n", n, wtest, plasmamain[n].j, plasmamain[n].ntot);
       }
-      if (plasmamain[n].nplasma == 321 || plasmamain[n].nplasma == 200 || plasmamain[n].nplasma == 512)
-      {
-        printf ("BOOM %d %e %e %e\n", plasmamain[n].nplasma, plasmamain[n].j, volume, plasmamain[n].j / (4. * PI * volume));
-      }
+
 
       plasmamain[n].j /= (4. * PI * volume);
       plasmamain[n].j_direct /= (4. * PI * volume);

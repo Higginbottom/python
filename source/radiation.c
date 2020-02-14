@@ -870,9 +870,9 @@ update_banded_estimators (xplasma, p, ds, w_ave)
     xplasma->j_scatt += w_ave * ds;
   }
 
-  if (xplasma->nplasma == 321 || xplasma->nplasma == 200 || xplasma->nplasma == 512)
-    printf ("nplasma %i np %i w_ave %e ds %e freq %e nscat %d origin %d origin_orig %d\n", xplasma->nplasma, p->np, w_ave, ds, p->freq,
-            p->nscat, p->origin, p->origin_orig);
+//  if (xplasma->nplasma == 321 || xplasma->nplasma == 190 || xplasma->nplasma == 512)
+//    printf ("nplasma %i np %i w_ave %e ds %e freq %e nscat %d origin %d origin_orig %d\n", xplasma->nplasma, p->np, w_ave, ds, p->freq,
+//            p->nscat, p->origin, p->origin_orig);
 
 /* frequency weighted by the weights and distance in the shell .  See eqn 2 ML93 */
   xplasma->mean_ds += ds;
