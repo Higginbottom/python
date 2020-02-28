@@ -72,6 +72,7 @@ stuff_phot (pin, pout)
   pout->np = pin->np;
 
   pout->path = pin->path;
+  pout->cell_orig = pin->cell_orig;
 
   return (0);
 }

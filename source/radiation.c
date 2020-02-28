@@ -860,9 +860,9 @@ update_banded_estimators (xplasma, p, ds, w_ave)
 
 
 //  if (xplasma->nplasma == 190)
-//  {
-//    printf ("nplasma %i np %i w_ave %e ds %e freq %e nscat %i origin %i origin_orig %i orig_cell %i\n", xplasma->nplasma, p->np, w_ave, ds, p->freq,
-//            p->nscat, p->origin, p->origin_orig);
+//    {
+//    printf ("nplasma %i np %i w_ave %e ds %e freq %e nscat %i origin %i origin_orig %i orig_cell %i\n", xplasma->nplasma, p->np, w_ave, ds,
+//            p->freq, p->nscat, p->origin, p->origin_orig, p->cell_orig);
 //  }
 
   /*photon weight times distance in the shell is proportional to the mean intensity */
