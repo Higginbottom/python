@@ -1152,6 +1152,7 @@ typedef struct photon
                                    so we can write out details of where the photon goes */
   double path;                  /* SWM - Photon path length */
   double ds;                    // EP 11/19 - the distance of the path the photon previously moved
+  int cell_orig;
 }
 p_dummy, *PhotPtr;
 

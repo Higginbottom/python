@@ -842,6 +842,7 @@ photo_gen_star (p, r, t, weight, f1, f2, spectype, istart, nphot)
   for (i = istart; i < iend; i++)
   {
     p[i].origin = PTYPE_STAR;   // For BL photons this is corrected in photon_gen
+    p[i].cell_orig = -1 * PTYPE_STAR;   // For BL photons this is corrected in photon_gen    
     p[i].w = weight;
     p[i].istat = p[i].nscat = p[i].nrscat = 0;
     p[i].grid = 0;
@@ -1177,6 +1178,8 @@ photo_gen_disk (p, weight, f1, f2, spectype, istart, nphot)
   for (i = istart; i < iend; i++)
   {
     p[i].origin = PTYPE_DISK;   // identify this as a disk photon
+    p[i].cell_orig = -1 * PTYPE_DISK;   // identify this as a disk photon
+
     p[i].w = weight;
     p[i].istat = p[i].nscat = p[i].nrscat = 0;
     p[i].tau = 0;

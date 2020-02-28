@@ -404,6 +404,8 @@ was a resonant scatter but we want isotropic scattering anyway.  */
       p[np].istat = 0;
       p[np].tau = p[np].nscat = p[np].nrscat = 0;
       p[np].origin = PTYPE_WIND;        // A wind photon
+      p[np].cell_orig = icell;  // A wind photon
+
       switch (geo.reverb)
       {                         // SWM 26-3-15: Added wind paths
       case REV_WIND:

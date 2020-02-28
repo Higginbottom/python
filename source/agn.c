@@ -403,6 +403,8 @@ photo_gen_agn (p, r, alpha, weight, f1, f2, spectype, istart, nphot)
   for (i = istart; i < iend; i++)       //Loop over the number of photons we are asked to make
   {
     p[i].origin = PTYPE_AGN;    // For BL photons this is corrected in photon_gen 
+    p[i].cell_orig = -1 * PTYPE_AGN;    // For BL photons this is corrected in photon_gen 
+
     p[i].w = weight;            //Set the weight
     p[i].istat = p[i].nscat = p[i].nrscat = 0;  //Initialise status, number of scatters and number of resonant scatters
     p[i].grid = 0;              //Set the grid number to zero 
