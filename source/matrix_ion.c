@@ -141,6 +141,9 @@ matrix_ion_populations (xplasma, mode)
         Exit (0);
       }
     }
+    printf ("BOOM_outer matrix %i %e estim %e dens %e\n", mm, pi_rates[mm], xplasma->ioniz[mm] / xplasma->density[mm],
+            xplasma->density[mm]);
+
 
     for (nn = 0; nn < nelements; nn++)
     {
@@ -157,7 +160,7 @@ matrix_ion_populations (xplasma, mode)
   /* The next loop generates the inner shell ionization rates, if they are present in the atomic data and
      we wish to compute auger ionizaion rates. This only computes the rates out of each ion, we also need to
      consult the electron yield array if we are to compute the change in electron number */
-
+  printf ("BARRIER %i %i\n", nions, n_inner_tot);
   if (geo.auger_ionization == 1)
   {
     for (mm = 0; mm < n_inner_tot; mm++)
@@ -170,6 +173,9 @@ matrix_ion_populations (xplasma, mode)
       {
         inner_rates[mm] = calc_pi_rate (mm, xplasma, 1, 2);
       }
+
+      printf ("BOOM_inner matrix %i  %e estim %e dens %e\n", inner_cross[mm].nion, inner_rates[mm],
+              xplasma->inner_ioniz[mm] / xplasma->density[inner_cross[mm].nion], xplasma->density[inner_cross[mm].nion]);
     }
   }
 

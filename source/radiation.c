@@ -66,6 +66,8 @@ radiation (p, ds)
   double frac_tot_abs, frac_auger_abs, z_abs;
   double kappa_ion[NIONS];
   double frac_ion[NIONS];
+  double kappa_inner_ion[n_inner_tot];
+  double frac_inner_ion[n_inner_tot];
   double density, ft, tau, tau2;
   double energy_abs;
   int n, nion;
@@ -158,6 +160,11 @@ radiation (p, ds)
       {
         kappa_ion[nion] = 0;
         frac_ion[nion] = 0;
+      }
+      for (n = 0; n < n_inner_tot; n++)
+      {
+        kappa_inner_ion[n] = 0;
+        frac_inner_ion[n] = 0;
       }
     }
 
@@ -299,8 +306,10 @@ radiation (p, ds)
                     {
                       frac_z += z;
                     }
-                    frac_ion[nion] += z;
-                    kappa_ion[nion] += x;
+//                    frac_ion[nion] += z;
+//                    kappa_ion[nion] += x;                    
+                    frac_inner_ion[n] += z;     //NSH We need to log the auger rate seperately - we do this by cross section
+                    kappa_inner_ion[n] += x;
                   }
                 }
               }
@@ -465,6 +474,11 @@ radiation (p, ds)
       {
         xplasma->ioniz[nion] += kappa_ion[nion] * q;
         xplasma->heat_ion[nion] += frac_ion[nion] * z;
+      }
+      for (n = 0; n < n_inner_tot; n++)
+      {
+        xplasma->inner_ioniz[n] += kappa_inner_ion[n] * q;      //This is the number of ionizations from this innershell cross section
+        xplasma->heat_inner_ion[inner_cross[n].nion] += frac_inner_ion[n] * z;  //This quantity is per ion
       }
 
     }

@@ -92,6 +92,9 @@ WindPtr (w);
   struct photon ptest;          //We need a test photon structure in order to compute t
   double kappa_es;              //The electron scattering opacity used for t
 
+
+  printf ("BOOM %e %e\n", plasmamain[0].ioniz[5], plasmamain[0].inner_ioniz[0]);
+
 #ifdef MPI_ON
   int num_mpi_cells, num_mpi_extra, position, ndo, n_mpi, num_comm, n_mpi2;
   int size_of_commbuffer;
@@ -107,7 +110,8 @@ WindPtr (w);
    * size must must be increased.
    */
 
-  size_of_commbuffer = 8 * (9 * nions + nlte_levels + 3 * nphot_total + 15 * NXBANDS + 126) * (floor (NPLASMA / np_mpi_global) + 1);
+  size_of_commbuffer =
+    8 * (n_inner_tot + 10 * nions + nlte_levels + 3 * nphot_total + 15 * NXBANDS + 126) * (floor (NPLASMA / np_mpi_global) + 1);
   commbuffer = (char *) malloc (size_of_commbuffer * sizeof (char));
 
   /* JM 1409 -- Initialise parallel only variables */
@@ -385,10 +389,12 @@ WindPtr (w);
         MPI_Pack (&plasmamain[n].nrad, 1, MPI_INT, commbuffer, size_of_commbuffer, &position, MPI_COMM_WORLD);
         MPI_Pack (&plasmamain[n].nioniz, 1, MPI_INT, commbuffer, size_of_commbuffer, &position, MPI_COMM_WORLD);
         MPI_Pack (plasmamain[n].ioniz, nions, MPI_DOUBLE, commbuffer, size_of_commbuffer, &position, MPI_COMM_WORLD);
+        MPI_Pack (plasmamain[n].inner_ioniz, n_inner_tot, MPI_DOUBLE, commbuffer, size_of_commbuffer, &position, MPI_COMM_WORLD);
         MPI_Pack (plasmamain[n].recomb, nions, MPI_DOUBLE, commbuffer, size_of_commbuffer, &position, MPI_COMM_WORLD);
         MPI_Pack (plasmamain[n].scatters, nions, MPI_INT, commbuffer, size_of_commbuffer, &position, MPI_COMM_WORLD);
         MPI_Pack (plasmamain[n].xscatters, nions, MPI_DOUBLE, commbuffer, size_of_commbuffer, &position, MPI_COMM_WORLD);
         MPI_Pack (plasmamain[n].heat_ion, nions, MPI_DOUBLE, commbuffer, size_of_commbuffer, &position, MPI_COMM_WORLD);
+        MPI_Pack (plasmamain[n].heat_inner_ion, nions, MPI_DOUBLE, commbuffer, size_of_commbuffer, &position, MPI_COMM_WORLD);
         MPI_Pack (plasmamain[n].cool_rr_ion, nions, MPI_DOUBLE, commbuffer, size_of_commbuffer, &position, MPI_COMM_WORLD);
         MPI_Pack (plasmamain[n].lum_rr_ion, nions, MPI_DOUBLE, commbuffer, size_of_commbuffer, &position, MPI_COMM_WORLD);
         MPI_Pack (&plasmamain[n].j, 1, MPI_DOUBLE, commbuffer, size_of_commbuffer, &position, MPI_COMM_WORLD);
@@ -526,10 +532,12 @@ WindPtr (w);
         MPI_Unpack (commbuffer, size_of_commbuffer, &position, &plasmamain[n].nrad, 1, MPI_INT, MPI_COMM_WORLD);
         MPI_Unpack (commbuffer, size_of_commbuffer, &position, &plasmamain[n].nioniz, 1, MPI_INT, MPI_COMM_WORLD);
         MPI_Unpack (commbuffer, size_of_commbuffer, &position, plasmamain[n].ioniz, nions, MPI_DOUBLE, MPI_COMM_WORLD);
+        MPI_Unpack (commbuffer, size_of_commbuffer, &position, plasmamain[n].inner_ioniz, n_inner_tot, MPI_DOUBLE, MPI_COMM_WORLD);
         MPI_Unpack (commbuffer, size_of_commbuffer, &position, plasmamain[n].recomb, nions, MPI_DOUBLE, MPI_COMM_WORLD);
         MPI_Unpack (commbuffer, size_of_commbuffer, &position, plasmamain[n].scatters, nions, MPI_INT, MPI_COMM_WORLD);
         MPI_Unpack (commbuffer, size_of_commbuffer, &position, plasmamain[n].xscatters, nions, MPI_DOUBLE, MPI_COMM_WORLD);
         MPI_Unpack (commbuffer, size_of_commbuffer, &position, plasmamain[n].heat_ion, nions, MPI_DOUBLE, MPI_COMM_WORLD);
+        MPI_Unpack (commbuffer, size_of_commbuffer, &position, plasmamain[n].heat_inner_ion, nions, MPI_DOUBLE, MPI_COMM_WORLD);
         MPI_Unpack (commbuffer, size_of_commbuffer, &position, plasmamain[n].cool_rr_ion, nions, MPI_DOUBLE, MPI_COMM_WORLD);
         MPI_Unpack (commbuffer, size_of_commbuffer, &position, plasmamain[n].lum_rr_ion, nions, MPI_DOUBLE, MPI_COMM_WORLD);
         MPI_Unpack (commbuffer, size_of_commbuffer, &position, &plasmamain[n].j, 1, MPI_DOUBLE, MPI_COMM_WORLD);
@@ -1229,9 +1237,14 @@ wind_rad_init ()
     for (i = 0; i < nions; i++)
     {
       plasmamain[n].ioniz[i] = plasmamain[n].recomb[i] = plasmamain[n].heat_ion[i] = plasmamain[n].cool_rr_ion[i] =
-        plasmamain[n].lum_rr_ion[i] = 0.0;
-
+        plasmamain[n].lum_rr_ion[i] = plasmamain[n].heat_inner_ion[i] = 0.0;
     }
+
+    for (i = 0; i < n_inner_tot; i++)
+    {
+      plasmamain[n].inner_ioniz[i] = 0.0;
+    }
+    printf ("BOOM_0 %e\n", plasmamain[n].inner_ioniz[0]);
 
     /*Block added (Dec 08) to zero the auger rate estimators */
     /* commented out by NSH 2018 - removed code */

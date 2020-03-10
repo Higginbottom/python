@@ -592,6 +592,11 @@ calloc_dyn_plasma (nelem)
       Error ("calloc_dyn_plasma: Error in allocating memory for ioniz\n");
       Exit (0);
     }
+    if ((plasmamain[n].inner_ioniz = calloc (sizeof (double), n_inner_tot)) == NULL)
+    {
+      Error ("calloc_dyn_plasma: Error in allocating memory for inner_ioniz\n");
+      Exit (0);
+    }
     if ((plasmamain[n].recomb = calloc (sizeof (double), nions)) == NULL)
     {
       Error ("calloc_dyn_plasma: Error in allocating memory for recomb\n");
@@ -610,6 +615,11 @@ calloc_dyn_plasma (nelem)
     if ((plasmamain[n].heat_ion = calloc (sizeof (double), nions)) == NULL)
     {
       Error ("calloc_dyn_plasma: Error in allocating memory for heat_ion\n");
+      Exit (0);
+    }
+    if ((plasmamain[n].heat_inner_ion = calloc (sizeof (double), nions)) == NULL)
+    {
+      Error ("calloc_dyn_plasma: Error in allocating memory for heat_inner_ion\n");
       Exit (0);
     }
     if ((plasmamain[n].cool_rr_ion = calloc (sizeof (double), nions)) == NULL)

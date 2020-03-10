@@ -851,11 +851,14 @@ typedef struct plasma
   double *ioniz, *recomb;       /* Number of ionizations and recombinations for each ion.
                                    The sense is ionization from ion[n], and recombinations 
                                    to each ion[n].  */
+  double *inner_ioniz;         /* The number of ionizatuions for this cross section.*/
   double *inner_recomb;
   int *scatters;                /* The number of scatters in this cell for each ion.*/
   double *xscatters;            /* Diagnostic measure of energy scattered out of beam on extract. */
   double *heat_ion;             /* The amount of energy being transferred to the electron pool
                                    by this ion via photoionization.*/
+  double *heat_inner_ion;             /* The amount of energy being transferred to the electron pool
+                                       by this ion via inner shell photoionization.*/      
   double *cool_rr_ion;          /* The amount of energy being released from the electron pool
                                    by this ion via recombination.*/
   double *lum_rr_ion;           /* The recombination luminosity
