@@ -1089,6 +1089,8 @@ int size_Jbar_est, size_gamma_est, size_alpha_est;
 #define IONMODE_ML93 3          // Lucy Mazzali
 #define IONMODE_MATRIX_BB 8     // matrix solver BB model
 #define IONMODE_MATRIX_SPECTRALMODEL 9  // matrix solver spectral model based on power laws
+#define IONMODE_MATRIX_ESTIMATORS 10  // matrix solver spectral model based on power laws
+
 
 // and the corresponding modes in nebular_concentrations
 #define NEBULARMODE_TR 0        // LTE using t_r
@@ -1100,6 +1102,7 @@ int size_Jbar_est, size_gamma_est, size_alpha_est;
 #define NEBULARMODE_PAIRWISE_SPECTRALMODEL 7    // pairwise spectral models (power law or expoentials)
 #define NEBULARMODE_MATRIX_BB 8 // matrix solver BB model
 #define NEBULARMODE_MATRIX_SPECTRALMODEL 9      // matrix solver spectral model
+#define NEBULARMODE_MATRIX_ESTIMATORS 10      // matrix solver spectral model
 
 
 typedef struct photon

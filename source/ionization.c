@@ -122,6 +122,27 @@ to match heating and cooling in the wind element! */
 /* Convergence check */
     convergence (xplasma);
   }
+  else if (IONMODE_MATRIX_ESTIMATORS)
+  {
+
+/*  spectral_estimators does the work of getting banded W and alpha. Then oneshot gets called. */
+
+    ireturn = spectral_estimators (xplasma);
+
+    xplasma->dt_e_old = xplasma->dt_e;
+    xplasma->dt_e = xplasma->t_e - xplasma->t_e_old;
+    xplasma->t_e_old = xplasma->t_e;
+    //OLD xplasma->t_r_old = xplasma->t_r;
+    xplasma->lum_tot_old = xplasma->lum_tot;
+    xplasma->heat_tot_old = xplasma->heat_tot;
+
+
+    ireturn = one_shot (xplasma, mode);
+
+
+/* Convergence check */
+    convergence (xplasma);
+  }
   else
   {
     Error ("ion_abundances: Could not calculate abundances for mode %d\n", mode);

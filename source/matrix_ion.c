@@ -135,15 +135,16 @@ matrix_ion_populations (xplasma, mode)
       {
         pi_rates[mm] = calc_pi_rate (mm, xplasma, 1, 1);        // PI rate for an explicit spectral model
       }
+      else if (mode == NEBULARMODE_MATRIX_ESTIMATORS)
+      {
+        pi_rates[mm] = xplasma->ioniz[mm];      // PI rate for an explicit spectral model
+      }
       else
       {
         Error ("matrix_ion_populations: Unknown mode %d\n", mode);
         Exit (0);
       }
     }
-    printf ("BOOM_outer matrix %i %e estim %e dens %e\n", mm, pi_rates[mm], xplasma->ioniz[mm] / xplasma->density[mm],
-            xplasma->density[mm]);
-
 
     for (nn = 0; nn < nelements; nn++)
     {
@@ -173,9 +174,16 @@ matrix_ion_populations (xplasma, mode)
       {
         inner_rates[mm] = calc_pi_rate (mm, xplasma, 1, 2);
       }
-
-      printf ("BOOM_inner matrix %i  %e estim %e dens %e\n", inner_cross[mm].nion, inner_rates[mm],
-              xplasma->inner_ioniz[mm] / xplasma->density[inner_cross[mm].nion], xplasma->density[inner_cross[mm].nion]);
+      else if (mode == NEBULARMODE_MATRIX_ESTIMATORS)
+      {
+        for (nn = 0; nn < n_inner_tot; nn++)
+        {
+          if (inner_cross[mm].nion == inner_cross_ptr[nn]->nion && inner_cross[mm].freq[0] == inner_cross_ptr[nn]->freq[0])
+          {
+            inner_rates[mm] = xplasma->inner_ioniz[nn] / xplasma->density[inner_cross_ptr[nn]->nion];
+          }
+        }
+      }
     }
   }
 
@@ -195,7 +203,7 @@ matrix_ion_populations (xplasma, mode)
   {
     partition_functions (xplasma, NEBULARMODE_ML93);    // We use t_r and the radiative weight
   }
-  else if (mode == NEBULARMODE_MATRIX_SPECTRALMODEL)
+  else if (mode == NEBULARMODE_MATRIX_SPECTRALMODEL || mode == NEBULARMODE_MATRIX_ESTIMATORS)
   {
     partition_functions (xplasma, NEBULARMODE_LTE_GROUND);      // Set to ground state
   }

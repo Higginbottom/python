@@ -74,6 +74,9 @@ communicate_estimators_para ()
   ionhelper2 = calloc (sizeof (double), NPLASMA * NIONS);
   inner_ionhelper = calloc (sizeof (double), NPLASMA * n_inner_tot);
   inner_ionhelper2 = calloc (sizeof (double), NPLASMA * n_inner_tot);
+
+
+
   /* JM -- added routine to average the qdisk quantities. The 2 is because
      we only have two doubles to worry about (heat and ave_freq) and 
      two integers (nhit and nphot) */

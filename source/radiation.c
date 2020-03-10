@@ -263,7 +263,7 @@ radiation (p, ds)
       {
         for (n = 0; n < n_inner_tot; n++)
         {
-          if (ion[inner_cross[n].nion].phot_info != 1)
+          if (ion[inner_cross_ptr[n]->nion].phot_info != 1)
           {
             x_top_ptr = inner_cross_ptr[n];
             if (x_top_ptr->n_elec_yield != -1)  //Only any point in doing this if we know the energy of elecrons
@@ -477,10 +477,9 @@ radiation (p, ds)
       }
       for (n = 0; n < n_inner_tot; n++)
       {
-        xplasma->inner_ioniz[n] += kappa_inner_ion[n] * q;      //This is the number of ionizations from this innershell cross section
-        xplasma->heat_inner_ion[inner_cross[n].nion] += frac_inner_ion[n] * z;  //This quantity is per ion
+        xplasma->heat_inner_ion[inner_cross_ptr[n]->nion] += frac_inner_ion[n] * z;     //This quantity is per ion 
+        xplasma->inner_ioniz[n] += kappa_inner_ion[n] * q;      //This is the number of ionizations from this innershell cross section                
       }
-
     }
   }
 
@@ -1061,7 +1060,7 @@ mean_intensity (xplasma, freq, mode)
 
 
 
-  if (geo.ioniz_mode == IONMODE_MATRIX_SPECTRALMODEL)   /*If we are using power law ionization, use PL estimators */
+  if (geo.ioniz_mode == IONMODE_MATRIX_SPECTRALMODEL || geo.ioniz_mode == IONMODE_MATRIX_ESTIMATORS)    /*If we are using power law ionization, use PL estimators */
   {
     if (geo.spec_mod > 0)       /* do we have a spectral model yet */
     {
