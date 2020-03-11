@@ -93,7 +93,6 @@ WindPtr (w);
   double kappa_es;              //The electron scattering opacity used for t
 
 
-  printf ("BOOM %e %e\n", plasmamain[0].ioniz[5], plasmamain[0].inner_ioniz[0]);
 
 #ifdef MPI_ON
   int num_mpi_cells, num_mpi_extra, position, ndo, n_mpi, num_comm, n_mpi2;

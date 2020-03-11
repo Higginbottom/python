@@ -450,7 +450,7 @@ meaning in nebular concentrations.
 
   if (mode == IONMODE_ML93)
     mode = NEBULARMODE_ML93;    // This is weird, why not continue
-  else if (mode <= 1 || mode == 5 || mode > 9)
+  else if (mode <= 1 || mode == 5 || mode > 10)
   {
     /* There is no mode 5 at present  - SIM + two new modes in Feb 2012  + mode 5 now removed */
 
