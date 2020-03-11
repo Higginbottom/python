@@ -1243,7 +1243,6 @@ wind_rad_init ()
     {
       plasmamain[n].inner_ioniz[i] = 0.0;
     }
-    printf ("BOOM_0 %e\n", plasmamain[n].inner_ioniz[0]);
 
     /*Block added (Dec 08) to zero the auger rate estimators */
     /* commented out by NSH 2018 - removed code */

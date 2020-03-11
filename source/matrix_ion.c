@@ -161,7 +161,6 @@ matrix_ion_populations (xplasma, mode)
   /* The next loop generates the inner shell ionization rates, if they are present in the atomic data and
      we wish to compute auger ionizaion rates. This only computes the rates out of each ion, we also need to
      consult the electron yield array if we are to compute the change in electron number */
-  printf ("BARRIER %i %i\n", nions, n_inner_tot);
   if (geo.auger_ionization == 1)
   {
     for (mm = 0; mm < n_inner_tot; mm++)
