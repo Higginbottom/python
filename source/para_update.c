@@ -75,7 +75,7 @@ communicate_estimators_para ()
   inner_ionhelper = calloc (sizeof (double), NPLASMA * n_inner_tot);    //Helpers of the size n_nner tot to comminuicate inner shell ionization rates
   inner_ionhelper2 = calloc (sizeof (double), NPLASMA * n_inner_tot);
 
-
+//  printf ("BOOM1 %i %i\n", NPLASMA * NIONS, NPLASMA * n_inner_tot);
 
   /* JM -- added routine to average the qdisk quantities. The 2 is because
      we only have two doubles to worry about (heat and ave_freq) and 
@@ -138,10 +138,8 @@ communicate_estimators_para ()
     {
       inner_ionhelper[n_inner_tot * mpi_i + mpi_j] = plasmamain[mpi_i].inner_ioniz[mpi_j] / np_mpi_global;      //inner shell ionization
     }
-
-
-
   }
+
 
   for (mpi_i = 0; mpi_i < NRINGS; mpi_i++)
   {
@@ -159,13 +157,13 @@ communicate_estimators_para ()
   MPI_Reduce (redhelper, redhelper2, plasma_double_helpers, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 
   MPI_Reduce (ionhelper, ionhelper2, NIONS * NPLASMA, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-  MPI_Reduce (inner_ionhelper, inner_ionhelper2, n_inner_tot * NPLASMA, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+//  MPI_Reduce (inner_ionhelper, inner_ionhelper2, n_inner_tot * NPLASMA, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 
 
   /* JM 1607 -- seum up the qdisk values */
   MPI_Reduce (qdisk_helper, qdisk_helper2, 2 * NRINGS, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 
-  if (rank_global == 0)
+//  if (rank_global == 0)
   {
 
     Log_parallel ("Zeroth thread successfully received the normalised estimators. About to broadcast.\n");
@@ -303,7 +301,7 @@ communicate_estimators_para ()
   MPI_Reduce (iredhelper, iredhelper2, plasma_int_helpers, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
   MPI_Reduce (iqdisk_helper, iqdisk_helper2, 2 * NRINGS, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 
-  if (rank_global == 0)
+//  if (rank_global == 0)
   {
     Log_parallel ("Zeroth thread successfully received the integer sum. About to broadcast.\n");
   }
