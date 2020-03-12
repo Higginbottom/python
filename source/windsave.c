@@ -81,6 +81,7 @@ in the plasma structure */
     n += fwrite (plasmamain[m].partition, sizeof (double), nions, fptr);
 
     n += fwrite (plasmamain[m].ioniz, sizeof (double), nions, fptr);
+    n += fwrite (plasmamain[m].inner_ioniz, sizeof (double), n_inner_tot, fptr);
     n += fwrite (plasmamain[m].recomb, sizeof (double), nions, fptr);
     n += fwrite (plasmamain[m].inner_recomb, sizeof (double), nions, fptr);
 
@@ -89,6 +90,8 @@ in the plasma structure */
     n += fwrite (plasmamain[m].xscatters, sizeof (double), nions, fptr);
 
     n += fwrite (plasmamain[m].heat_ion, sizeof (double), nions, fptr);
+    n += fwrite (plasmamain[m].heat_inner_ion, sizeof (double), nions, fptr);
+
     n += fwrite (plasmamain[m].cool_rr_ion, sizeof (double), nions, fptr);
     n += fwrite (plasmamain[m].cool_dr_ion, sizeof (double), nions, fptr);
     n += fwrite (plasmamain[m].lum_rr_ion, sizeof (double), nions, fptr);
@@ -239,6 +242,8 @@ wind_read (filename)
     n += fread (plasmamain[m].partition, sizeof (double), nions, fptr);
 
     n += fread (plasmamain[m].ioniz, sizeof (double), nions, fptr);
+    n += fread (plasmamain[m].inner_ioniz, sizeof (double), n_inner_tot, fptr);
+
     n += fread (plasmamain[m].recomb, sizeof (double), nions, fptr);
     n += fread (plasmamain[m].inner_recomb, sizeof (double), nions, fptr);
 
@@ -246,6 +251,8 @@ wind_read (filename)
     n += fread (plasmamain[m].xscatters, sizeof (double), nions, fptr);
 
     n += fread (plasmamain[m].heat_ion, sizeof (double), nions, fptr);
+    n += fread (plasmamain[m].heat_inner_ion, sizeof (double), nions, fptr);
+
     n += fread (plasmamain[m].cool_rr_ion, sizeof (double), nions, fptr);
     n += fread (plasmamain[m].cool_dr_ion, sizeof (double), nions, fptr);
     n += fread (plasmamain[m].lum_rr_ion, sizeof (double), nions, fptr);

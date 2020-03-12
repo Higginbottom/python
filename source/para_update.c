@@ -70,9 +70,9 @@ communicate_estimators_para ()
   redhelper = calloc (sizeof (double), plasma_double_helpers);
   redhelper2 = calloc (sizeof (double), plasma_double_helpers);
 
-  ionhelper = calloc (sizeof (double), NPLASMA * NIONS);
+  ionhelper = calloc (sizeof (double), NPLASMA * NIONS);        //Helpers of the size NIONS tot to comminuicate ionization rates
   ionhelper2 = calloc (sizeof (double), NPLASMA * NIONS);
-  inner_ionhelper = calloc (sizeof (double), NPLASMA * n_inner_tot);
+  inner_ionhelper = calloc (sizeof (double), NPLASMA * n_inner_tot);    //Helpers of the size n_nner tot to comminuicate inner shell ionization rates
   inner_ionhelper2 = calloc (sizeof (double), NPLASMA * n_inner_tot);
 
 
@@ -132,11 +132,11 @@ communicate_estimators_para ()
     }
     for (mpi_j = 0; mpi_j < NIONS; mpi_j++)
     {
-      ionhelper[NIONS * mpi_i + mpi_j] = plasmamain[mpi_i].ioniz[mpi_j] / np_mpi_global;
+      ionhelper[NIONS * mpi_i + mpi_j] = plasmamain[mpi_i].ioniz[mpi_j] / np_mpi_global;        //ionization rates
     }
     for (mpi_j = 0; mpi_j < n_inner_tot; mpi_j++)
     {
-      inner_ionhelper[n_inner_tot * mpi_i + mpi_j] = plasmamain[mpi_i].inner_ioniz[mpi_j] / np_mpi_global;
+      inner_ionhelper[n_inner_tot * mpi_i + mpi_j] = plasmamain[mpi_i].inner_ioniz[mpi_j] / np_mpi_global;      //inner shell ionization
     }
 
 
@@ -251,6 +251,9 @@ communicate_estimators_para ()
   }
   Log_parallel ("Thread %d happy after broadcast.\n", rank_global);
 
+  MPI_Barrier (MPI_COMM_WORLD);
+
+
   /* now we've done all the doubles so we can free their helper arrays */
   free (qdisk_helper);
   free (qdisk_helper2);
@@ -331,6 +334,8 @@ communicate_estimators_para ()
     qdisk.nphot[mpi_i] = iqdisk_helper2[mpi_i];
     qdisk.nhit[mpi_i] = iqdisk_helper2[mpi_i + NRINGS];
   }
+
+  MPI_Barrier (MPI_COMM_WORLD);
 
   free (iredhelper);
   free (iredhelper2);

@@ -309,7 +309,7 @@ radiation (p, ds)
 //                    frac_ion[nion] += z;
 //                    kappa_ion[nion] += x;                    
                     frac_inner_ion[n] += z;     //NSH We need to log the auger rate seperately - we do this by cross section
-                    kappa_inner_ion[n] += x;
+                    kappa_inner_ion[n] += x;    //NSH and we also og the opacity by ion
                   }
                 }
               }
@@ -477,8 +477,8 @@ radiation (p, ds)
       }
       for (n = 0; n < n_inner_tot; n++)
       {
-        xplasma->heat_inner_ion[inner_cross_ptr[n]->nion] += frac_inner_ion[n] * z;     //This quantity is per ion 
-        xplasma->inner_ioniz[n] += kappa_inner_ion[n] * q;      //This is the number of ionizations from this innershell cross section                
+        xplasma->heat_inner_ion[inner_cross_ptr[n]->nion] += frac_inner_ion[n] * z;     //This quantity is per ion - the ion number comes from the freq ordered cross section
+        xplasma->inner_ioniz[n] += kappa_inner_ion[n] * q;      //This is the number of ionizations from this innershell cross section - at this point, inner_ioniz is ordered by frequency                
       }
     }
   }
