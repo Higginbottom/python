@@ -69,9 +69,10 @@ communicate_estimators_para ()
   redhelper = calloc (sizeof (double), plasma_double_helpers);
   redhelper2 = calloc (sizeof (double), plasma_double_helpers);
 
+  printf ("BOOM %i %i %i\n", plasma_double_helpers, NPLASMA * NIONS, NPLASMA * n_inner_tot);
 
 
-//  printf ("BOOM1 %i %i\n", NPLASMA * NIONS, NPLASMA * N_INNER_TOT);
+//  printf ("BOOM1 %i %i\n", NPLASMA * NIONS, NPLASMA * n_inner_tot);
 
   /* JM -- added routine to average the qdisk quantities. The 2 is because
      we only have two doubles to worry about (heat and ave_freq) and 
@@ -317,48 +318,48 @@ communicate_estimators_para ()
 
 
 
-     ionhelper = calloc (sizeof (double), NPLASMA * NIONS);        //Helpers of the size NIONS tot to comminuicate ionization rates
-     ionhelper2 = calloc (sizeof (double), NPLASMA * NIONS);
-  inner_ionhelper = calloc (sizeof (double), NPLASMA * N_INNER_TOT);    //Helpers of the size n_nner tot to comminuicate inner shell ionization rates
-  inner_ionhelper2 = calloc (sizeof (double), NPLASMA * N_INNER_TOT);
+  ionhelper = calloc (sizeof (double), NPLASMA * NIONS);        //Helpers of the size NIONS tot to comminuicate ionization rates
+  ionhelper2 = calloc (sizeof (double), NPLASMA * NIONS);
+  inner_ionhelper = calloc (sizeof (double), NPLASMA * n_inner_tot);    //Helpers of the size n_nner tot to comminuicate inner shell ionization rates
+  inner_ionhelper2 = calloc (sizeof (double), NPLASMA * n_inner_tot);
   MPI_Barrier (MPI_COMM_WORLD);
 
   for (mpi_i = 0; mpi_i < NPLASMA; mpi_i++)
   {
-         for (mpi_j = 0; mpi_j < NIONS; mpi_j++)
-         {
-         ionhelper[NIONS * mpi_i + mpi_j] = plasmamain[mpi_i].ioniz[mpi_j] / np_mpi_global;        //ionization rates
-         }
-    for (mpi_j = 0; mpi_j < N_INNER_TOT; mpi_j++)
+    for (mpi_j = 0; mpi_j < NIONS; mpi_j++)
     {
-      inner_ionhelper[N_INNER_TOT * mpi_i + mpi_j] = plasmamain[mpi_i].inner_ioniz[mpi_j] / np_mpi_global;      //inner shell ionization
+      ionhelper[NIONS * mpi_i + mpi_j] = plasmamain[mpi_i].ioniz[mpi_j] / np_mpi_global;        //ionization rates
+    }
+    for (mpi_j = 0; mpi_j < n_inner_tot; mpi_j++)
+    {
+      inner_ionhelper[n_inner_tot * mpi_i + mpi_j] = plasmamain[mpi_i].inner_ioniz[mpi_j] / np_mpi_global;      //inner shell ionization
     }
   }
   MPI_Barrier (MPI_COMM_WORLD);
 
-//     MPI_Reduce (ionhelper, ionhelper2, NIONS * NPLASMA, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-  MPI_Reduce (inner_ionhelper, inner_ionhelper2, N_INNER_TOT * NPLASMA, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce (ionhelper, ionhelper2, NIONS * NPLASMA, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce (inner_ionhelper, inner_ionhelper2, n_inner_tot * NPLASMA, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
   MPI_Barrier (MPI_COMM_WORLD);
 
-//     MPI_Bcast (ionhelper2, NIONS * NPLASMA, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-  MPI_Bcast (inner_ionhelper2, N_INNER_TOT * NPLASMA, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Bcast (ionhelper2, NIONS * NPLASMA, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Bcast (inner_ionhelper2, n_inner_tot * NPLASMA, MPI_DOUBLE, 0, MPI_COMM_WORLD);
   MPI_Barrier (MPI_COMM_WORLD);
 
   for (mpi_i = 0; mpi_i < NPLASMA; mpi_i++)
   {
-         for (mpi_j = 0; mpi_j < NIONS; mpi_j++)
-         {
-         plasmamain[mpi_i].ioniz[mpi_j] = ionhelper2[NIONS * mpi_i + mpi_j];
-         }
-    for (mpi_j = 0; mpi_j < N_INNER_TOT; mpi_j++)
+    for (mpi_j = 0; mpi_j < NIONS; mpi_j++)
     {
-      plasmamain[mpi_i].inner_ioniz[mpi_j] = inner_ionhelper2[N_INNER_TOT * mpi_i + mpi_j];
+      plasmamain[mpi_i].ioniz[mpi_j] = ionhelper2[NIONS * mpi_i + mpi_j];
+    }
+    for (mpi_j = 0; mpi_j < n_inner_tot; mpi_j++)
+    {
+      plasmamain[mpi_i].inner_ioniz[mpi_j] = inner_ionhelper2[n_inner_tot * mpi_i + mpi_j];
     }
   }
   MPI_Barrier (MPI_COMM_WORLD);
 
-     free (ionhelper);
-     free (ionhelper2);
+  free (ionhelper);
+  free (ionhelper2);
   free (inner_ionhelper);
   free (inner_ionhelper2);
 

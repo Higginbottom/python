@@ -292,8 +292,10 @@ calculate_ionization (restart_stat)
        that has been accummulated on differenet MPI tasks */
 
 #ifdef MPI_ON
-
+    MPI_Barrier (MPI_COMM_WORLD);
+    printf ("Going to communicate\n");
     communicate_estimators_para ();
+    printf ("Communicated\n");
 
     communicate_matom_estimators_para ();       // this will return 0 if nlevels_macro == 0
 #endif
