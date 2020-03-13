@@ -33,12 +33,10 @@
  * required for the spectral model ionization scheme, and 
  * also heating and cooling quantities in cells.
  **********************************************************/
-
 int
 communicate_estimators_para ()
 {
 #ifdef MPI_ON                   // these routines should only be called anyway in parallel but we need these to compile
-
   int mpi_i, mpi_j;
   double *maxfreqhelper, *maxfreqhelper2;
   /*NSH 131213 the next line introduces new helper arrays for the max and min frequencies in bands */
@@ -49,10 +47,11 @@ communicate_estimators_para ()
   // int size_of_helpers;
   int plasma_double_helpers, plasma_int_helpers;
 
+
+
   /* The size of the helper array for doubles. We transmit 10 numbers 
      for each cell, plus three arrays, each of length NXBANDS */
   plasma_double_helpers = (30 + 3 * NXBANDS) * NPLASMA;
-
 
 
   /* The size of the helper array for integers. We transmit 7 numbers 
@@ -70,12 +69,9 @@ communicate_estimators_para ()
   redhelper = calloc (sizeof (double), plasma_double_helpers);
   redhelper2 = calloc (sizeof (double), plasma_double_helpers);
 
-  ionhelper = calloc (sizeof (double), NPLASMA * NIONS);        //Helpers of the size NIONS tot to comminuicate ionization rates
-  ionhelper2 = calloc (sizeof (double), NPLASMA * NIONS);
-  inner_ionhelper = calloc (sizeof (double), NPLASMA * n_inner_tot);    //Helpers of the size n_nner tot to comminuicate inner shell ionization rates
-  inner_ionhelper2 = calloc (sizeof (double), NPLASMA * n_inner_tot);
 
-//  printf ("BOOM1 %i %i\n", NPLASMA * NIONS, NPLASMA * n_inner_tot);
+
+//  printf ("BOOM1 %i %i\n", NPLASMA * NIONS, NPLASMA * N_INNER_TOT);
 
   /* JM -- added routine to average the qdisk quantities. The 2 is because
      we only have two doubles to worry about (heat and ave_freq) and 
@@ -130,14 +126,6 @@ communicate_estimators_para ()
       maxbandfreqhelper[mpi_i * NXBANDS + mpi_j] = plasmamain[mpi_i].fmax[mpi_j];
       minbandfreqhelper[mpi_i * NXBANDS + mpi_j] = plasmamain[mpi_i].fmin[mpi_j];
     }
-    for (mpi_j = 0; mpi_j < NIONS; mpi_j++)
-    {
-      ionhelper[NIONS * mpi_i + mpi_j] = plasmamain[mpi_i].ioniz[mpi_j] / np_mpi_global;        //ionization rates
-    }
-    for (mpi_j = 0; mpi_j < n_inner_tot; mpi_j++)
-    {
-      inner_ionhelper[n_inner_tot * mpi_i + mpi_j] = plasmamain[mpi_i].inner_ioniz[mpi_j] / np_mpi_global;      //inner shell ionization
-    }
   }
 
 
@@ -156,8 +144,6 @@ communicate_estimators_para ()
   MPI_Reduce (redhelper, redhelper2, plasma_double_helpers, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
   MPI_Reduce (redhelper, redhelper2, plasma_double_helpers, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 
-  MPI_Reduce (ionhelper, ionhelper2, NIONS * NPLASMA, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-//  MPI_Reduce (inner_ionhelper, inner_ionhelper2, n_inner_tot * NPLASMA, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 
 
   /* JM 1607 -- seum up the qdisk values */
@@ -176,8 +162,7 @@ communicate_estimators_para ()
   MPI_Bcast (minbandfreqhelper2, NPLASMA * NXBANDS, MPI_DOUBLE, 0, MPI_COMM_WORLD);
   MPI_Bcast (maxbandfreqhelper2, NPLASMA * NXBANDS, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
-  MPI_Bcast (ionhelper2, NIONS * NPLASMA, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-  MPI_Bcast (inner_ionhelper2, n_inner_tot * NPLASMA, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
 
 
 
@@ -230,16 +215,6 @@ communicate_estimators_para ()
       plasmamain[mpi_i].fmin[mpi_j] = minbandfreqhelper2[mpi_i * NXBANDS + mpi_j];
 
     }
-
-    for (mpi_j = 0; mpi_j < NIONS; mpi_j++)
-    {
-      plasmamain[mpi_i].ioniz[mpi_j] = ionhelper2[NIONS * mpi_i + mpi_j];
-    }
-    for (mpi_j = 0; mpi_j < n_inner_tot; mpi_j++)
-    {
-      plasmamain[mpi_i].inner_ioniz[mpi_j] = inner_ionhelper2[n_inner_tot * mpi_i + mpi_j];
-    }
-
   }
 
   for (mpi_i = 0; mpi_i < NRINGS; mpi_i++)
@@ -263,10 +238,7 @@ communicate_estimators_para ()
   free (maxbandfreqhelper2);
   free (minbandfreqhelper);
   free (minbandfreqhelper2);
-  free (ionhelper);
-  free (ionhelper2);
-  free (inner_ionhelper);
-  free (inner_ionhelper2);
+
 
   /* allocate the integer helper arrays, set a barrier, then do all the integers. */
   iqdisk_helper = calloc (sizeof (int), NRINGS * 2);
@@ -339,6 +311,53 @@ communicate_estimators_para ()
   free (iredhelper2);
   free (iqdisk_helper);
   free (iqdisk_helper2);
+
+
+  MPI_Barrier (MPI_COMM_WORLD);
+
+
+
+  ionhelper = calloc (sizeof (double), NPLASMA * NIONS);        //Helpers of the size NIONS tot to comminuicate ionization rates
+  ionhelper2 = calloc (sizeof (double), NPLASMA * NIONS);
+  inner_ionhelper = calloc (sizeof (double), NPLASMA * N_INNER_TOT);    //Helpers of the size n_nner tot to comminuicate inner shell ionization rates
+  inner_ionhelper2 = calloc (sizeof (double), NPLASMA * N_INNER_TOT);
+
+  for (mpi_i = 0; mpi_i < NPLASMA; mpi_i++)
+  {
+    for (mpi_j = 0; mpi_j < NIONS; mpi_j++)
+    {
+      ionhelper[NIONS * mpi_i + mpi_j] = plasmamain[mpi_i].ioniz[mpi_j] / np_mpi_global;        //ionization rates
+    }
+    for (mpi_j = 0; mpi_j < N_INNER_TOT; mpi_j++)
+    {
+      inner_ionhelper[N_INNER_TOT * mpi_i + mpi_j] = plasmamain[mpi_i].inner_ioniz[mpi_j] / np_mpi_global;      //inner shell ionization
+    }
+  }
+
+  MPI_Reduce (ionhelper, ionhelper2, NIONS * NPLASMA, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce (inner_ionhelper, inner_ionhelper2, N_INNER_TOT * NPLASMA, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+
+  MPI_Bcast (ionhelper2, NIONS * NPLASMA, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Bcast (inner_ionhelper2, N_INNER_TOT * NPLASMA, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+  for (mpi_i = 0; mpi_i < NPLASMA; mpi_i++)
+  {
+    for (mpi_j = 0; mpi_j < NIONS; mpi_j++)
+    {
+      plasmamain[mpi_i].ioniz[mpi_j] = ionhelper2[NIONS * mpi_i + mpi_j];
+    }
+    for (mpi_j = 0; mpi_j < N_INNER_TOT; mpi_j++)
+    {
+      plasmamain[mpi_i].inner_ioniz[mpi_j] = inner_ionhelper2[N_INNER_TOT * mpi_i + mpi_j];
+    }
+  }
+
+  free (ionhelper);
+  free (ionhelper2);
+  free (inner_ionhelper);
+  free (inner_ionhelper2);
+
+
 
 #endif
   return (0);

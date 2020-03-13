@@ -66,6 +66,7 @@ int nlines;                     /* Actual number of lines that were read in */
 int nlines_macro;               /* Actual number of Macro Atom lines that were read in.  New version of get_atomic
                                    data assumes that macro lines are read in before non-macro lines */
 #define N_INNER     10          /*Maximum number of inner shell ionization cross sections per ion */
+#define N_INNER_TOT N_INNER*NIONS
 int n_inner_tot;                /*The actual number of inner shell ionization cross sections in total */
 
 
