@@ -306,7 +306,10 @@ main (argc, argv)
       }
       fprintf (fptr3, "%d %d ", i, j);  //output geometric things               
       for (ii = 0; ii < nions; ii++)
-        fprintf (fptr3, "%e ", plasmamain[nplasma].density[ii]);
+      {
+//        fprintf (fptr3, "%e ", plasmamain[nplasma].density[ii]); original
+        fprintf (fptr3, "%e ", plasmamain[1].density[ii] / plasmamain[1].rho * plasmamain[nplasma].rho);
+      }
       fprintf (fptr3, "\n");
       fprintf (fptr4, "%d %d ", i, j);  //output geometric things 
       if (geo.ioniz_mode == IONMODE_MATRIX_SPECTRALMODEL)
