@@ -149,6 +149,8 @@ main (argc, argv)
   char parameter_file[LINELENGTH];
   int ion_switch, nwind, nplasma;
   int i, j, ii, domain;
+  double dvds;
+  double fornberg_grad ();
   double vol, kappa_es, lum_sum, cool_sum;
   double t_opt, t_UV, t_Xray, v_th, fhat[3];    /*This is the dimensionless optical depth parameter computed for communication to rad-hydro. */
 
@@ -260,11 +262,11 @@ main (argc, argv)
 
   for (nwind = zdom[domain].nstart; nwind < zdom[domain].nstop; nwind++)
   {
-    printf ("nwind=%i\n", nwind);
+//    printf ("nwind=%i\n", nwind);
     if (wmain[nwind].vol > 0.0)
     {
       nplasma = wmain[nwind].nplasma;
-      printf ("Doing cell %i\n", nplasma);
+//      printf ("Doing cell %i\n", nplasma);
       wind_n_to_ij (domain, plasmamain[nplasma].nwind, &i, &j);
       i = i - 1;                //There is a radial 'ghost zone' in python, we need to make our i,j agree with zeus
       vol = wmain[plasmamain[nplasma].nwind].vol;
@@ -334,7 +336,6 @@ main (argc, argv)
       kappa_es = THOMPSON * plasmamain[nplasma].ne / plasmamain[nplasma].rho;
       kappa_es = THOMPSON / MPROT;
 
-      printf ("BOOM %e\n", kappa_es);
       //First for the optcial band (up to 4000AA)     
       if (length (plasmamain[nplasma].F_vis) > 0.0)     //Only makes sense if flux in this band is non-zero
       {
@@ -370,8 +371,11 @@ main (argc, argv)
           stuff_v (plasmamain[nplasma].F_UV, fhat);
         }
         renorm (fhat, 1.);      //A unit vector in the direction of the flux - this can be treated as the lmn vector of a pretend photon
-        stuff_v (fhat, ptest.lmn);      //place our test photon at the centre of the cell            
-        t_UV = kappa_es * plasmamain[nplasma].rho * v_th / fabs (dvwind_ds (&ptest));
+        stuff_v (fhat, ptest.lmn);      //place our test photon at the centre of the cell  
+        dvds = fornberg_grad (nplasma);
+//        printf ("BOOM %e %e %e %e %e\n", wmain[plasmamain[nplasma].nwind].rcen, wmain[plasmamain[nplasma].nwind].v[0], dvwind_ds (&ptest),
+        //              dvds, dvwind_ds (&ptest) / dvds);
+        t_UV = kappa_es * plasmamain[nplasma].rho * v_th / fabs (dvds);
       }
       else
         t_UV = 0.0;             //Essentually a flag that there is no way of computing t (and hence M) in this cell.
@@ -409,4 +413,91 @@ main (argc, argv)
   fclose (fptr4);
   fclose (fptr5);
   exit (0);
+}
+
+
+
+double
+fornberg_grad (int nplasma)
+{
+  double dvdr = 0.0;
+  int istart, iend;
+  int N, M, n, m, nu;
+  double delta[10][10][10], x0, alpha_nu[9], v[9];
+  double c1, c2, c3;
+  int lmin, i;
+
+  N = 8;                        //this uses 9 points to compute the derivative
+  M = 1;                        //We are only interested in the first dreivative
+
+
+  x0 = wmain[plasmamain[nplasma].nwind].rcen;
+  c1 = 1.0;
+
+  if (nplasma < N / 2.)
+  {
+    istart = 0;
+    iend = N + 1;
+  }
+  else if (nplasma > (NPLASMA - N / 2. - 1))
+  {
+    istart = NPLASMA - N - 1;
+    iend = NPLASMA;
+  }
+  else
+  {
+    istart = nplasma - (N / 2);
+    iend = nplasma + (N / 2) + 1;
+  }
+  i = 0;
+  for (n = istart; n < iend; n++)
+  {
+    alpha_nu[i] = wmain[plasmamain[n].nwind].rcen;
+    v[i] = wmain[plasmamain[n].nwind].v[0];     //In spherical coordinates the first component of velocity is the radial velocity
+    i = i + 1;
+  }
+
+  delta[0][0][0] = 1.0;
+  for (n = 1; n < N + 1; n++)
+  {
+    c2 = 1.0;
+    for (nu = 0; nu < n; nu++)
+    {
+      c3 = alpha_nu[n] - alpha_nu[nu];
+      c2 = c2 * c3;
+      if (n <= M)
+      {
+        delta[n][n - 1][nu] = 0.0;
+      }
+      lmin = M;
+      if (n < M)
+        lmin = n;
+      for (m = 0; m < lmin + 1; m++)
+      {
+        delta[m][n][nu] = ((alpha_nu[n] - x0) * delta[m][n - 1][nu] - m * delta[m - 1][n - 1][nu]) / c3;
+      }
+    }
+    lmin = M;
+    if (n < M)
+      lmin = n;
+    for (m = 0; m < lmin + 1; m++)
+    {
+      delta[m][n][n] = (c1 / c2) * (m * delta[m - 1][n - 1][n - 1] - (alpha_nu[n - 1] - x0) * delta[m][n - 1][n - 1]);
+    }
+    c1 = c2;
+  }
+
+  dvdr = 0.0;
+  for (n = 0; n < 9; n++)
+  {
+    dvdr = dvdr + delta[1][8][n] * v[n];
+  }
+
+
+
+
+
+  return (dvdr);
+
+
 }
