@@ -331,6 +331,10 @@ main (argc, argv)
 
 
       v_th = pow ((2. * BOLTZMANN * plasmamain[nplasma].t_e / MPROT), 0.5);     //We need the thermal velocity for hydrogen
+
+      dvds = fornberg_grad (nplasma);
+
+
       stuff_v (wmain[plasmamain[nplasma].nwind].xcen, ptest.x); //place our test photon at the centre of the cell
       ptest.grid = nwind;       //We need our test photon to know where it is 
       kappa_es = THOMPSON * plasmamain[nplasma].ne / plasmamain[nplasma].rho;
@@ -351,8 +355,8 @@ main (argc, argv)
         }
         renorm (fhat, 1.);      //A unit vector in the direction of the flux - this can be treated as the lmn vector of a pretend photon
         stuff_v (fhat, ptest.lmn);      //place our test photon at the centre of the cell            
-        t_opt = kappa_es * plasmamain[nplasma].rho * v_th / fabs (dvwind_ds (&ptest));
-
+//        t_opt = kappa_es * plasmamain[nplasma].rho * v_th / fabs (dvwind_ds (&ptest));
+        t_opt = kappa_es * plasmamain[nplasma].rho * v_th / fabs (dvds);
       }
       else
         t_opt = 0.0;            //Essentually a flag that there is no way of computing t (and hence M) in this cell.
@@ -372,9 +376,9 @@ main (argc, argv)
         }
         renorm (fhat, 1.);      //A unit vector in the direction of the flux - this can be treated as the lmn vector of a pretend photon
         stuff_v (fhat, ptest.lmn);      //place our test photon at the centre of the cell  
-        dvds = fornberg_grad (nplasma);
 //        printf ("BOOM %e %e %e %e %e\n", wmain[plasmamain[nplasma].nwind].rcen, wmain[plasmamain[nplasma].nwind].v[0], dvwind_ds (&ptest),
         //              dvds, dvwind_ds (&ptest) / dvds);
+//        t_UV = kappa_es * plasmamain[nplasma].rho * v_th / fabs (dvwind_ds (&ptest));
         t_UV = kappa_es * plasmamain[nplasma].rho * v_th / fabs (dvds);
       }
       else
@@ -395,8 +399,9 @@ main (argc, argv)
           stuff_v (plasmamain[nplasma].F_Xray, fhat);
         }
         renorm (fhat, 1.);      //A unit vector in the direction of the flux - this can be treated as the lmn vector of a pretend photon
-        stuff_v (fhat, ptest.lmn);      //place our test photon at the centre of the cell            
-        t_Xray = kappa_es * plasmamain[nplasma].rho * v_th / fabs (dvwind_ds (&ptest));
+        stuff_v (fhat, ptest.lmn);      //place our test photon at the centre of the cell    
+//        t_Xray = kappa_es * plasmamain[nplasma].rho * v_th / fabs (dvwind_ds (&ptest));        
+        t_Xray = kappa_es * plasmamain[nplasma].rho * v_th / fabs (dvds);
       }
       else
         t_Xray = 0.0;           //Essentually a flag that there is no way of computing t (and hence M) in this cell.                
