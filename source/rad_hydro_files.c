@@ -149,7 +149,7 @@ main (argc, argv)
   char parameter_file[LINELENGTH];
   int ion_switch, nwind, nplasma;
   int i, j, ii, domain;
-  double dvds;
+  double dvds_UV, dvds_opt, dvds_Xray;
   double fornberg_grad ();
   double vol, kappa_es, lum_sum, cool_sum;
   double t_opt, t_UV, t_Xray, v_th, fhat[3];    /*This is the dimensionless optical depth parameter computed for communication to rad-hydro. */
@@ -235,7 +235,7 @@ main (argc, argv)
 
   fprintf (fptr5, "nplasma %i\n", NPLASMA);
 
-  fprintf (fptr6, "i j rcen thetacen v_th dvdr \n");
+  fprintf (fptr6, "i j rcen thetacen density v_th dvdr_opt dvdr_UV dvdr_Xray \n");
 
   printf ("Set up files\n");
 
@@ -309,8 +309,8 @@ main (argc, argv)
       fprintf (fptr3, "%d %d ", i, j);  //output geometric things               
       for (ii = 0; ii < nions; ii++)
       {
-//        fprintf (fptr3, "%e ", plasmamain[nplasma].density[ii]); original
-        fprintf (fptr3, "%e ", plasmamain[1].density[ii] / plasmamain[1].rho * plasmamain[nplasma].rho);
+        fprintf (fptr3, "%e ", plasmamain[nplasma].density[ii]);
+//        fprintf (fptr3, "%e ", plasmamain[1].density[ii] / plasmamain[1].rho * plasmamain[nplasma].rho);
       }
       fprintf (fptr3, "\n");
       fprintf (fptr4, "%d %d ", i, j);  //output geometric things 
@@ -332,7 +332,7 @@ main (argc, argv)
 
       v_th = pow ((2. * BOLTZMANN * plasmamain[nplasma].t_e / MPROT), 0.5);     //We need the thermal velocity for hydrogen
 
-      dvds = fornberg_grad (nplasma);
+      dvds_opt = dvds_UV = dvds_Xray = fornberg_grad (nplasma);
 
 
       stuff_v (wmain[plasmamain[nplasma].nwind].xcen, ptest.x); //place our test photon at the centre of the cell
@@ -354,9 +354,10 @@ main (argc, argv)
           stuff_v (plasmamain[nplasma].F_vis, fhat);
         }
         renorm (fhat, 1.);      //A unit vector in the direction of the flux - this can be treated as the lmn vector of a pretend photon
-        stuff_v (fhat, ptest.lmn);      //place our test photon at the centre of the cell            
-//        t_opt = kappa_es * plasmamain[nplasma].rho * v_th / fabs (dvwind_ds (&ptest));
-        t_opt = kappa_es * plasmamain[nplasma].rho * v_th / fabs (dvds);
+        stuff_v (fhat, ptest.lmn);      //place our test photon at the centre of the cell  
+        dvds_opt = dvwind_ds (&ptest);
+
+        t_opt = kappa_es * plasmamain[nplasma].rho * v_th / fabs (dvds_opt);
       }
       else
         t_opt = 0.0;            //Essentually a flag that there is no way of computing t (and hence M) in this cell.
@@ -376,10 +377,8 @@ main (argc, argv)
         }
         renorm (fhat, 1.);      //A unit vector in the direction of the flux - this can be treated as the lmn vector of a pretend photon
         stuff_v (fhat, ptest.lmn);      //place our test photon at the centre of the cell  
-//        printf ("BOOM %e %e %e %e %e\n", wmain[plasmamain[nplasma].nwind].rcen, wmain[plasmamain[nplasma].nwind].v[0], dvwind_ds (&ptest),
-        //              dvds, dvwind_ds (&ptest) / dvds);
-//        t_UV = kappa_es * plasmamain[nplasma].rho * v_th / fabs (dvwind_ds (&ptest));
-        t_UV = kappa_es * plasmamain[nplasma].rho * v_th / fabs (dvds);
+        dvds_UV = dvwind_ds (&ptest);
+        t_UV = kappa_es * plasmamain[nplasma].rho * v_th / fabs (dvds_UV);
       }
       else
         t_UV = 0.0;             //Essentually a flag that there is no way of computing t (and hence M) in this cell.
@@ -399,9 +398,9 @@ main (argc, argv)
           stuff_v (plasmamain[nplasma].F_Xray, fhat);
         }
         renorm (fhat, 1.);      //A unit vector in the direction of the flux - this can be treated as the lmn vector of a pretend photon
-        stuff_v (fhat, ptest.lmn);      //place our test photon at the centre of the cell    
-//        t_Xray = kappa_es * plasmamain[nplasma].rho * v_th / fabs (dvwind_ds (&ptest));        
-        t_Xray = kappa_es * plasmamain[nplasma].rho * v_th / fabs (dvds);
+        stuff_v (fhat, ptest.lmn);      //place our test photon at the centre of the cell  
+        dvds_Xray = dvwind_ds (&ptest);
+        t_Xray = kappa_es * plasmamain[nplasma].rho * v_th / fabs (dvds_Xray);
       }
       else
         t_Xray = 0.0;           //Essentually a flag that there is no way of computing t (and hence M) in this cell.                
@@ -409,7 +408,7 @@ main (argc, argv)
       fprintf (fptr5, "%i %i %e %e %e %e %e %e %e\n", i, j, plasmamain[nplasma].t_e, plasmamain[nplasma].rho,
                plasmamain[nplasma].rho * rho2nh, plasmamain[nplasma].ne, t_opt, t_UV, t_Xray);
 
-      fprintf (fptr6, "%d %d %e %e %e %e\n", i, j, wmain[plasmamain[nplasma].nwind].rcen, wmain[plasmamain[nplasma].nwind].thetacen / RADIAN, v_th, fabs (dvwind_ds (&ptest))); //output geometric things
+      fprintf (fptr6, "%d %d %e %e %e %e %e %e %e\n", i, j, wmain[plasmamain[nplasma].nwind].rcen, wmain[plasmamain[nplasma].nwind].thetacen / RADIAN, plasmamain[nplasma].rho, v_th, fabs (dvds_opt), fabs (dvds_UV), fabs (dvds_Xray));       //output geometric things
     }
   }
   fclose (fptr);
