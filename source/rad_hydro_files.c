@@ -355,7 +355,7 @@ main (argc, argv)
         }
         renorm (fhat, 1.);      //A unit vector in the direction of the flux - this can be treated as the lmn vector of a pretend photon
         stuff_v (fhat, ptest.lmn);      //place our test photon at the centre of the cell  
-        dvds_opt = dvwind_ds (&ptest);
+//        dvds_opt = dvwind_ds (&ptest);
 
         t_opt = kappa_es * plasmamain[nplasma].rho * v_th / fabs (dvds_opt);
       }
@@ -377,7 +377,7 @@ main (argc, argv)
         }
         renorm (fhat, 1.);      //A unit vector in the direction of the flux - this can be treated as the lmn vector of a pretend photon
         stuff_v (fhat, ptest.lmn);      //place our test photon at the centre of the cell  
-        dvds_UV = dvwind_ds (&ptest);
+//        dvds_UV = dvwind_ds (&ptest);
         t_UV = kappa_es * plasmamain[nplasma].rho * v_th / fabs (dvds_UV);
       }
       else
@@ -399,7 +399,7 @@ main (argc, argv)
         }
         renorm (fhat, 1.);      //A unit vector in the direction of the flux - this can be treated as the lmn vector of a pretend photon
         stuff_v (fhat, ptest.lmn);      //place our test photon at the centre of the cell  
-        dvds_Xray = dvwind_ds (&ptest);
+//        dvds_Xray = dvwind_ds (&ptest);
         t_Xray = kappa_es * plasmamain[nplasma].rho * v_th / fabs (dvds_Xray);
       }
       else
