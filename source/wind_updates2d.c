@@ -205,6 +205,11 @@ WindPtr (w);
       trad = plasmamain[n].t_r = PLANCK * plasmamain[n].ave_freq / (BOLTZMANN * 3.832);
       plasmamain[n].w = PI * plasmamain[n].j / (STEFAN_BOLTZMANN * trad * trad * trad * trad);
 
+      plasmamain[n].t_r = 42000.0;
+      plasmamain[n].w =
+        (0.5 * (1. - sqrt (1. - ((geo.rstar / (w[plasmamain[n].nwind].rcen) * (geo.rstar / w[plasmamain[n].nwind].rcen))))));
+
+
 
       if (plasmamain[n].w > 1e10)
       {
