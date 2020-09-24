@@ -268,6 +268,8 @@ main (argc, argv)
       nplasma = wmain[nwind].nplasma;
 //      printf ("Doing cell %i\n", nplasma);
       wind_n_to_ij (domain, plasmamain[nplasma].nwind, &i, &j);
+//      printf ("Doing cell %i %i %i\n", nplasma, i, j);
+
       i = i - 1;                //There is a radial 'ghost zone' in python, we need to make our i,j agree with zeus
       vol = wmain[plasmamain[nplasma].nwind].vol;
       fprintf (fptr, "%d %d %e %e %e ", i, j, wmain[plasmamain[nplasma].nwind].rcen, wmain[plasmamain[nplasma].nwind].thetacen / RADIAN, vol);  //output geometric things
@@ -306,7 +308,8 @@ main (argc, argv)
         fprintf (fptr2, "%e ", plasmamain[nplasma].rad_force_bf[2]);    //bound free scattering radiation force in the z direction
         fprintf (fptr2, "%e \n", plasmamain[nplasma].rad_force_bf[3]);  //sum of magnitude of bound free scattering radiation force 
       }
-      fprintf (fptr3, "%d %d ", i, j);  //output geometric things               
+      fprintf (fptr3, "%d %d ", i, j);  //output geometric things   
+
       for (ii = 0; ii < nions; ii++)
       {
         fprintf (fptr3, "%e ", plasmamain[nplasma].density[ii]);
@@ -355,7 +358,7 @@ main (argc, argv)
         }
         renorm (fhat, 1.);      //A unit vector in the direction of the flux - this can be treated as the lmn vector of a pretend photon
         stuff_v (fhat, ptest.lmn);      //place our test photon at the centre of the cell  
-//        dvds_opt = dvwind_ds (&ptest);
+        dvds_opt = dvwind_ds (&ptest);
 
         t_opt = kappa_es * plasmamain[nplasma].rho * v_th / fabs (dvds_opt);
       }

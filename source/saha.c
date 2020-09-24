@@ -466,7 +466,6 @@ lucy (xplasma)
       /* JM1308 -- Here we apply the lucy/mazzali correction factors to the saha abundances
          which are contained in xplasma. These corrected abundances are copied to newden, which
          is transferred over to xplasma when we converge on ne */
-
       lucy_mazzali1 (nh, t_r, t_e, www, nelem, xplasma->ne, xplasma->density, xne, newden);
     }
 
@@ -575,7 +574,6 @@ lucy_mazzali1 (nh, t_r, t_e, www, nelem, ne, density, xne, newden)
   double sum, a;
   int first, last, nion;
   double numerator, denominator;
-
   if (ele[nelem].z == 26)
   {
     Debug ("Working on Fe\n");
@@ -583,7 +581,9 @@ lucy_mazzali1 (nh, t_r, t_e, www, nelem, ne, density, xne, newden)
 
   if (t_r > MIN_TEMP)
   {
-    fudge = www * sqrt (t_e / t_r);
+//    fudge = www * sqrt (t_e / t_r);
+    fudge = 1e12 * sqrt (t_e / t_r);
+
   }
 
   else
@@ -641,7 +641,8 @@ lucy_mazzali1 (nh, t_r, t_e, www, nelem, ne, density, xne, newden)
 
   for (nion = first + 1; nion < last; nion++)
   {
-    numerator = newden[nion - 1] * fudge * (ne) * density[nion];
+//    numerator = newden[nion - 1] * fudge * (ne) * density[nion];
+    numerator = newden[nion - 1] * fudge * density[nion];
     denominator = density[nion - 1] * xne;
     q = numerator / denominator;
 
