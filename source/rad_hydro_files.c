@@ -230,7 +230,7 @@ main (argc, argv)
       fprintf (fptr4, "%e ", geo.xfreq[i]);     //hard wired band edges
     fprintf (fptr4, "\n ");
   }
-  else if (geo.ioniz_mode == IONMODE_MATRIX_BB)
+  else if (geo.ioniz_mode == IONMODE_MATRIX_BB || geo.ioniz_mode == IONMODE_ML93)
     fprintf (fptr4, "nplasma %i\n", NPLASMA);
 
   fprintf (fptr5, "nplasma %i\n", NPLASMA);
@@ -358,7 +358,7 @@ main (argc, argv)
         }
         renorm (fhat, 1.);      //A unit vector in the direction of the flux - this can be treated as the lmn vector of a pretend photon
         stuff_v (fhat, ptest.lmn);      //place our test photon at the centre of the cell  
-        dvds_opt = dvwind_ds (&ptest);
+//        dvds_opt = dvwind_ds (&ptest);
 
         t_opt = kappa_es * plasmamain[nplasma].rho * v_th / fabs (dvds_opt);
       }
