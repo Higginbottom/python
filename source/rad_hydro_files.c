@@ -325,7 +325,7 @@ main (argc, argv)
                    plasmamain[nplasma].pl_log_w[ii], plasmamain[nplasma].pl_alpha[ii], plasmamain[nplasma].exp_w[ii],
                    plasmamain[nplasma].exp_temp[ii]);
       }
-      else if (geo.ioniz_mode == IONMODE_MATRIX_BB)
+      else if (geo.ioniz_mode == IONMODE_MATRIX_BB || geo.ioniz_mode == IONMODE_ML93)
         fprintf (fptr4, "%e %e ", plasmamain[nplasma].t_r, plasmamain[nplasma].w);
       fprintf (fptr4, "\n ");
 
