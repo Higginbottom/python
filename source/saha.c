@@ -581,8 +581,8 @@ lucy_mazzali1 (nh, t_r, t_e, www, nelem, ne, density, xne, newden)
 
   if (t_r > MIN_TEMP)
   {
-    fudge = www * sqrt (t_e / t_r);
-//    fudge = 1e12 * sqrt (t_e / t_r);
+//    fudge = www * sqrt (t_e / t_r);
+    fudge = 1e15 * sqrt (t_e / t_r);
 
   }
 
@@ -641,8 +641,8 @@ lucy_mazzali1 (nh, t_r, t_e, www, nelem, ne, density, xne, newden)
 
   for (nion = first + 1; nion < last; nion++)
   {
-    numerator = newden[nion - 1] * fudge * (ne) * density[nion];
-//    numerator = newden[nion - 1] * fudge * density[nion];
+//    numerator = newden[nion - 1] * fudge * (ne) * density[nion];
+    numerator = newden[nion - 1] * fudge * density[nion];
     denominator = density[nion - 1] * xne;
     q = numerator / denominator;
 

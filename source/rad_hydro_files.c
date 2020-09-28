@@ -149,7 +149,7 @@ main (argc, argv)
   char parameter_file[LINELENGTH];
   int ion_switch, nwind, nplasma;
   int i, j, ii, domain;
-  double dvds_UV, dvds_opt, dvds_Xray;
+  double dvds_UV, dvds_opt, dvds_Xray, flux;
   double fornberg_grad ();
   double vol, kappa_es, lum_sum, cool_sum;
   double t_opt, t_UV, t_Xray, v_th, fhat[3];    /*This is the dimensionless optical depth parameter computed for communication to rad-hydro. */
@@ -265,6 +265,7 @@ main (argc, argv)
 //    printf ("nwind=%i\n", nwind);
     if (wmain[nwind].vol > 0.0)
     {
+      flux = geo.lum_star_init / 4. / PI / wmain[plasmamain[nplasma].nwind].rcen / wmain[plasmamain[nplasma].nwind].rcen;
       nplasma = wmain[nwind].nplasma;
 //      printf ("Doing cell %i\n", nplasma);
       wind_n_to_ij (domain, plasmamain[nplasma].nwind, &i, &j);
@@ -288,11 +289,11 @@ main (argc, argv)
       fprintf (fptr2, "%e ", plasmamain[nplasma].ne);
       if (zdom[domain].coord_type == SPHERICAL)
       {
-        fprintf (fptr2, "%e ", plasmamain[nplasma].F_vis[0]);   //directional flux by band
-        fprintf (fptr2, "%e ", plasmamain[nplasma].F_UV[0]);    //directional flux by band
-        fprintf (fptr2, "%e ", plasmamain[nplasma].F_Xray[0]);  //directional flux by band
-        fprintf (fptr2, "%e ", plasmamain[nplasma].rad_force_es[0]);    //electron scattering radiation force in the w(x) direction
-        fprintf (fptr2, "%e\n", plasmamain[nplasma].rad_force_bf[0]);   //bound free scattering radiation force in the w(x) direction          
+        fprintf (fptr2, "%e ", 0.0);    //directional flux by band
+        fprintf (fptr2, "%e ", flux);   //directional flux by band
+        fprintf (fptr2, "%e ", 0.0);    //directional flux by band
+        fprintf (fptr2, "%e ", plasmamain[nplasma].ne * flux * THOMPSON * vol / VLIGHT);        //electron scattering radiation force in the w(x) direction
+        fprintf (fptr2, "%e\n", 0.0);   //bound free scattering radiation force in the w(x) direction          
       }
       else
       {
@@ -335,7 +336,7 @@ main (argc, argv)
 
       v_th = pow ((2. * BOLTZMANN * plasmamain[nplasma].t_e / MPROT), 0.5);     //We need the thermal velocity for hydrogen
 
-//      dvds_opt = dvds_UV = dvds_Xray = fornberg_grad (nplasma);
+      dvds_opt = dvds_UV = dvds_Xray = fornberg_grad (nplasma);
 
 
       stuff_v (wmain[plasmamain[nplasma].nwind].xcen, ptest.x); //place our test photon at the centre of the cell
@@ -358,7 +359,7 @@ main (argc, argv)
         }
         renorm (fhat, 1.);      //A unit vector in the direction of the flux - this can be treated as the lmn vector of a pretend photon
         stuff_v (fhat, ptest.lmn);      //place our test photon at the centre of the cell  
-        dvds_opt = dvwind_ds (&ptest);
+//        dvds_opt = dvwind_ds (&ptest);
 
         t_opt = kappa_es * plasmamain[nplasma].rho * v_th / fabs (dvds_opt);
       }
@@ -380,7 +381,7 @@ main (argc, argv)
         }
         renorm (fhat, 1.);      //A unit vector in the direction of the flux - this can be treated as the lmn vector of a pretend photon
         stuff_v (fhat, ptest.lmn);      //place our test photon at the centre of the cell  
-        dvds_UV = dvwind_ds (&ptest);
+//        dvds_UV = dvwind_ds (&ptest);
         t_UV = kappa_es * plasmamain[nplasma].rho * v_th / fabs (dvds_UV);
       }
       else
@@ -402,7 +403,7 @@ main (argc, argv)
         }
         renorm (fhat, 1.);      //A unit vector in the direction of the flux - this can be treated as the lmn vector of a pretend photon
         stuff_v (fhat, ptest.lmn);      //place our test photon at the centre of the cell  
-        dvds_Xray = dvwind_ds (&ptest);
+//        dvds_Xray = dvwind_ds (&ptest);
         t_Xray = kappa_es * plasmamain[nplasma].rho * v_th / fabs (dvds_Xray);
       }
       else
