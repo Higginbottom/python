@@ -363,8 +363,10 @@ main (argc, argv)
         t_opt = kappa_es * plasmamain[nplasma].rho * v_th / fabs (dvds_opt);
       }
       else
+      {
+        dvds_opt = 0.0;
         t_opt = 0.0;            //Essentually a flag that there is no way of computing t (and hence M) in this cell.
-
+      }
       //Now for the UV band (up to 4000AA->100AA)                                             
       if (length (plasmamain[nplasma].F_UV) > 0.0)      //Only makes sense if flux in this band is non-zero
       {
@@ -384,8 +386,10 @@ main (argc, argv)
         t_UV = kappa_es * plasmamain[nplasma].rho * v_th / fabs (dvds_UV);
       }
       else
+      {
+        dvds_UV = 0.0;
         t_UV = 0.0;             //Essentually a flag that there is no way of computing t (and hence M) in this cell.
-
+      }
 
       //And finally for the Xray band (up to 100AA and up)
       if (length (plasmamain[nplasma].F_Xray) > 0.0)    //Only makes sense if flux in this band is non-zero
@@ -406,8 +410,10 @@ main (argc, argv)
         t_Xray = kappa_es * plasmamain[nplasma].rho * v_th / fabs (dvds_Xray);
       }
       else
+      {
+        dvds_Xray = 0.0;
         t_Xray = 0.0;           //Essentually a flag that there is no way of computing t (and hence M) in this cell.                
-
+      }
       fprintf (fptr5, "%i %i %e %e %e %e %e %e %e\n", i, j, plasmamain[nplasma].t_e, plasmamain[nplasma].rho,
                plasmamain[nplasma].rho * rho2nh, plasmamain[nplasma].ne, t_opt, t_UV, t_Xray);
 
