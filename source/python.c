@@ -199,6 +199,12 @@ main (argc, argv)
         get_models (geo.model_list[n], 2, &dummy_spectype);
       }
     }
+    if (geo.disk_tprofile == DISK_TPROFILE_READIN)
+    {
+      rdstr ("Disk.T_profile_file", files.tprofile);
+      geo.diskrad = read_non_standard_disk_profile (files.tprofile);
+      geo.disk_mdot = 0;
+    }
     if (geo.pcycle > 0)
     {
       spec_read (files.specsave);

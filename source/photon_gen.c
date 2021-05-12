@@ -1051,8 +1051,8 @@ photo_gen_disk (p, weight, f1, f2, spectype, istart, nphot)
     {
       t = disk.t[nring];
       p[i].freq = planck (t, freqmin, freqmax);
-//      if (rank_global == 0)
-//        printf ("BOOM %i %e %e %e\n", nring, r, t, p[i].freq);
+      // if (rank_global == 0)
+      //   printf ("BOOM %i %e %e %e\n", nring, r, t, p[i].freq);
 
     }
     else if (spectype == SPECTYPE_UNIFORM)
