@@ -1072,10 +1072,10 @@ calc_cdf_gradient (cdf)
 //    cdf->d[cdf->ncdf - 1] + (cdf->d[cdf->ncdf - 2] - cdf->d[cdf->ncdf - 1]) / (cdf->x[cdf->ncdf - 2] -
 //                                                                               cdf->x[cdf->ncdf - 1]) * (cdf->x[cdf->ncdf] -
 //                                                                                                         cdf->x[cdf->ncdf - 1]);
-  for (n = 0; n < cdf->ncdf + 1; n++)
-  {
-    printf ("BOOM3 %i %e %e %e\n", n, cdf->x[n], cdf->y[n], cdf->d[n]);
-  }
+//  for (n = 0; n < cdf->ncdf + 1; n++)
+//  {
+//    printf ("BOOM3 %i %e %e %e\n", n, cdf->x[n], cdf->y[n], cdf->d[n]);
+//  }
 
 
   return (istat);

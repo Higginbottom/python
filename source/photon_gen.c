@@ -903,8 +903,10 @@ photo_gen_star (p, r, t, weight, f1, f2, spectype, istart, nphot)
       }
     }
 
-    randvcos (p[i].lmn, p[i].x);
-
+//    randvcos (p[i].lmn, p[i].x);
+    p[i].lmn[0] = p[i].x[0] / length (p[i].x);
+    p[i].lmn[1] = p[i].x[1] / length (p[i].x);
+    p[i].lmn[2] = p[i].x[2] / length (p[i].x);
 
   }
   return (0);
@@ -984,7 +986,6 @@ photo_gen_disk (p, weight, f1, f2, spectype, istart, nphot)
 
     nring = random_number (0.0, 1.0) * (NRINGS - 1);
 
-
     if ((nring < 0) || (nring > NRINGS - 2))
     {
       Error ("photon_gen: photon launch out of bounds. nring = %d\n", nring);
@@ -1050,6 +1051,9 @@ photo_gen_disk (p, weight, f1, f2, spectype, istart, nphot)
     {
       t = disk.t[nring];
       p[i].freq = planck (t, freqmin, freqmax);
+//      if (rank_global == 0)
+//        printf ("BOOM %i %e %e %e\n", nring, r, t, p[i].freq);
+
     }
     else if (spectype == SPECTYPE_UNIFORM)
     {

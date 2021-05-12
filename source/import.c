@@ -81,7 +81,6 @@ import_wind2 (ndom, filename)
   }
   else if (zdom[ndom].coord_type == RTHETA)
   {
-    printf ("BOOM doing the right thing\n");
     import_rtheta (ndom, filename);
   }
   else
