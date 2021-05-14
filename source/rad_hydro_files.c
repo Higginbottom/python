@@ -256,15 +256,15 @@ main (argc, argv)
 
   if (zdom[domain].coord_type == SPHERICAL)
   {
-    fprintf (fptr2, "i j rcen thetacen vol rho ne F_vis_r F_UV_r F_Xray_r es_f_r bf_f_r\n");    //directional flux by band
+    fprintf (fptr2, "i j rcen thetacen vol rho ne F_vis_r F_UV_r F_Xray_r es_f_r bf_f_r ka_f_r\n");     //directional flux by band
   }
   else if (zdom[domain].coord_type == CYLIND)
   {
-    fprintf (fptr2, "i j rcen zcen vol rho ne F_vis_x F_vis_y F_vis_z F_vis_mod F_UV_x F_UV_y F_UV_z F_UV_mod F_Xray_x F_Xray_y F_Xray_z F_Xray_mod es_f_x es_f_y es_f_z es_f_mod bf_f_x bf_f_y bf_f_z bf_f_mod\n");    //directional flux by band
+    fprintf (fptr2, "i j rcen zcen vol rho ne F_vis_x F_vis_y F_vis_z F_vis_mod F_UV_x F_UV_y F_UV_z F_UV_mod F_Xray_x F_Xray_y F_Xray_z F_Xray_mod es_f_x es_f_y es_f_z es_f_mod bf_f_x bf_f_y bf_f_z bf_f_mod  ka_f_x ka_f_y ka_f_z ka_f_mod\n");     //directional flux by band
   }
   else if (zdom[domain].coord_type == RTHETA)
   {
-    fprintf (fptr2, "i j rcen thetacen vol rho ne F_vis_x F_vis_y F_vis_z F_vis_mod F_UV_x F_UV_y F_UV_z F_UV_mod F_Xray_x F_Xray_y F_Xray_z F_Xray_mod es_f_x es_f_y es_f_z es_f_mod bf_f_x bf_f_y bf_f_z bf_f_mod\n");        //directional flux by band
+    fprintf (fptr2, "i j rcen thetacen vol rho ne F_vis_x F_vis_y F_vis_z F_vis_mod F_UV_x F_UV_y F_UV_z F_UV_mod F_Xray_x F_Xray_y F_Xray_z F_Xray_mod es_f_x es_f_y es_f_z es_f_mod bf_f_x bf_f_y bf_f_z bf_f_mod ka_f_x ka_f_y ka_f_z ka_f_mod\n");  //directional flux by band
   }
 
 
@@ -308,7 +308,8 @@ main (argc, argv)
         fprintf (fptr2, "%e ", plasmamain[nplasma].F_UV[0]);    //directional flux by band
         fprintf (fptr2, "%e ", plasmamain[nplasma].F_Xray[0]);  //directional flux by band
         fprintf (fptr2, "%e ", plasmamain[nplasma].rad_force_es[0]);    //electron scattering radiation force in the w(x) direction
-        fprintf (fptr2, "%e\n", plasmamain[nplasma].rad_force_bf[0]);   //bound free scattering radiation force in the w(x) direction          
+        fprintf (fptr2, "%e ", plasmamain[nplasma].rad_force_bf[0]);    //bound free scattering radiation force in the w(x) direction          
+        fprintf (fptr2, "%e\n", plasmamain[nplasma].rad_force_ka[0]);   //k-alpha approximate line scattering radiation force in the w(x) direction         
       }
       else
       {
@@ -322,7 +323,11 @@ main (argc, argv)
         fprintf (fptr2, "%e ", plasmamain[nplasma].rad_force_bf[0]);    //bound free scattering radiation force in the w(x) direction
         fprintf (fptr2, "%e ", plasmamain[nplasma].rad_force_bf[1]);    //bound free scattering radiation force in the phi(rotational) direction
         fprintf (fptr2, "%e ", plasmamain[nplasma].rad_force_bf[2]);    //bound free scattering radiation force in the z direction
-        fprintf (fptr2, "%e \n", plasmamain[nplasma].rad_force_bf[3]);  //sum of magnitude of bound free scattering radiation force 
+        fprintf (fptr2, "%e ", plasmamain[nplasma].rad_force_bf[3]);    //sum of magnitude of bound free scattering radiation force 
+        fprintf (fptr2, "%e ", plasmamain[nplasma].rad_force_ka[0]);    //bound free scattering radiation force in the w(x) direction
+        fprintf (fptr2, "%e ", plasmamain[nplasma].rad_force_ka[1]);    //bound free scattering radiation force in the phi(rotational) direction
+        fprintf (fptr2, "%e ", plasmamain[nplasma].rad_force_ka[2]);    //bound free scattering radiation force in the z direction
+        fprintf (fptr2, "%e \n", plasmamain[nplasma].rad_force_ka[3]);  //sum of magnitude of bound free scattering radiation force 
       }
       fprintf (fptr3, "%d %d ", i, j);  //output geometric things               
       for (ii = 0; ii < nions; ii++)

@@ -55,7 +55,7 @@ communicate_estimators_para ()
   /* The size of the helper array for doubles. We transmit 10 numbers 
      for each cell, plus three arrays, each of length NXBANDS */
 
-  plasma_double_helpers = (39 + 3 * NXBANDS) * NPLASMA;
+  plasma_double_helpers = (43 + 3 * NXBANDS) * NPLASMA;
 
   /* The size of the helper array for integers. We transmit 7 numbers 
      for each cell, plus one array of length NXBANDS */
@@ -128,12 +128,16 @@ communicate_estimators_para ()
     redhelper[mpi_i + 36 * NPLASMA] = plasmamain[mpi_i].rad_force_ff[1] / np_mpi_global;
     redhelper[mpi_i + 37 * NPLASMA] = plasmamain[mpi_i].rad_force_ff[2] / np_mpi_global;
     redhelper[mpi_i + 38 * NPLASMA] = plasmamain[mpi_i].rad_force_ff[3] / np_mpi_global;
+    redhelper[mpi_i + 39 * NPLASMA] = plasmamain[mpi_i].rad_force_ka[0] / np_mpi_global;
+    redhelper[mpi_i + 40 * NPLASMA] = plasmamain[mpi_i].rad_force_ka[1] / np_mpi_global;
+    redhelper[mpi_i + 41 * NPLASMA] = plasmamain[mpi_i].rad_force_ka[2] / np_mpi_global;
+    redhelper[mpi_i + 42 * NPLASMA] = plasmamain[mpi_i].rad_force_ka[3] / np_mpi_global;
 
     for (mpi_j = 0; mpi_j < NXBANDS; mpi_j++)
     {
-      redhelper[mpi_i + (39 + mpi_j) * NPLASMA] = plasmamain[mpi_i].xj[mpi_j] / np_mpi_global;
-      redhelper[mpi_i + (39 + NXBANDS + mpi_j) * NPLASMA] = plasmamain[mpi_i].xave_freq[mpi_j] / np_mpi_global;
-      redhelper[mpi_i + (39 + 2 * NXBANDS + mpi_j) * NPLASMA] = plasmamain[mpi_i].xsd_freq[mpi_j] / np_mpi_global;
+      redhelper[mpi_i + (42 + mpi_j) * NPLASMA] = plasmamain[mpi_i].xj[mpi_j] / np_mpi_global;
+      redhelper[mpi_i + (42 + NXBANDS + mpi_j) * NPLASMA] = plasmamain[mpi_i].xave_freq[mpi_j] / np_mpi_global;
+      redhelper[mpi_i + (42 + 2 * NXBANDS + mpi_j) * NPLASMA] = plasmamain[mpi_i].xsd_freq[mpi_j] / np_mpi_global;
       /* 131213 NSH populate the band limited min and max frequency arrays */
       maxbandfreqhelper[mpi_i * NXBANDS + mpi_j] = plasmamain[mpi_i].fmax[mpi_j];
       minbandfreqhelper[mpi_i * NXBANDS + mpi_j] = plasmamain[mpi_i].fmin[mpi_j];
@@ -231,12 +235,16 @@ communicate_estimators_para ()
     plasmamain[mpi_i].rad_force_ff[1] = redhelper2[mpi_i + 36 * NPLASMA];
     plasmamain[mpi_i].rad_force_ff[2] = redhelper2[mpi_i + 37 * NPLASMA];
     plasmamain[mpi_i].rad_force_ff[3] = redhelper2[mpi_i + 38 * NPLASMA];
+    plasmamain[mpi_i].rad_force_ka[0] = redhelper2[mpi_i + 39 * NPLASMA];
+    plasmamain[mpi_i].rad_force_ka[1] = redhelper2[mpi_i + 40 * NPLASMA];
+    plasmamain[mpi_i].rad_force_ka[2] = redhelper2[mpi_i + 41 * NPLASMA];
+    plasmamain[mpi_i].rad_force_ka[3] = redhelper2[mpi_i + 42 * NPLASMA];
 
     for (mpi_j = 0; mpi_j < NXBANDS; mpi_j++)
     {
-      plasmamain[mpi_i].xj[mpi_j] = redhelper2[mpi_i + (39 + mpi_j) * NPLASMA];
-      plasmamain[mpi_i].xave_freq[mpi_j] = redhelper2[mpi_i + (39 + NXBANDS + mpi_j) * NPLASMA];
-      plasmamain[mpi_i].xsd_freq[mpi_j] = redhelper2[mpi_i + (39 + NXBANDS * 2 + mpi_j) * NPLASMA];
+      plasmamain[mpi_i].xj[mpi_j] = redhelper2[mpi_i + (43 + mpi_j) * NPLASMA];
+      plasmamain[mpi_i].xave_freq[mpi_j] = redhelper2[mpi_i + (43 + NXBANDS + mpi_j) * NPLASMA];
+      plasmamain[mpi_i].xsd_freq[mpi_j] = redhelper2[mpi_i + (43 + NXBANDS * 2 + mpi_j) * NPLASMA];
 
       /* 131213 NSH And unpack the min and max banded frequencies to the plasma array */
       plasmamain[mpi_i].fmax[mpi_j] = maxbandfreqhelper2[mpi_i * NXBANDS + mpi_j];
@@ -431,7 +439,7 @@ gather_spectra_para ()
     nspec = MSPEC;
   }
 
-  size_of_commbuffer = 4 * nspec * NWAVE_MAX;       //we need space for all 4 separate spectra we are normalizing
+  size_of_commbuffer = 4 * nspec * NWAVE_MAX;   //we need space for all 4 separate spectra we are normalizing
 
   redhelper = calloc (sizeof (double), size_of_commbuffer);
   redhelper2 = calloc (sizeof (double), size_of_commbuffer);

@@ -263,10 +263,32 @@ update_flux_estimators (xplasma, phot_mid, ds_obs, w_ave, ndom)
 {
   double flux[3];
   double p_dir_cos[3];
+  double dvdr;                  //The local velocity gradient along the photons path
+  double v_th;
+  double ka_force[3];
+
+  double k = 0.2;
+  double alpha = 0.6;
+  double force_const;
+  double M;
+
 
 /* The lines below compute the flux element of this photon */
 
   stuff_v (phot_mid->lmn, p_dir_cos);   //Get the direction of the photon packet
+
+  v_th = pow ((2. * BOLTZMANN * xplasma->t_e / MPROT), 0.5);    //We need the thermal velocity for hydrogen
+  dvdr = fabs (dvwind_ds_cmf (phot_mid));
+  M = k * pow (THOMPSON / MPROT * xplasma->rho * v_th / dvdr, -1.0 * alpha);
+//  M = 1.0;
+  if (M > 4400)
+  {
+    M = 4400;
+  }
+
+
+  force_const = M * (THOMPSON / MPROT) / VLIGHT;
+//  printf ("BOOM %e %e\n", dvdr, force_const);
 
   renorm (p_dir_cos, w_ave * ds_obs);   //Renormalise the direction into a flux element
   project_from_xyz_cyl (phot_mid->x, p_dir_cos, flux);  //Go from a direction cosine into a cartesian vector
@@ -301,6 +323,12 @@ update_flux_estimators (xplasma, phot_mid, ds_obs, w_ave, ndom)
     xplasma->F_UV[3] += length (flux);
   }
 
+  rescale (flux, force_const, ka_force);
+
+
+
+  vadd (xplasma->rad_force_ka, ka_force, xplasma->rad_force_ka);
+  xplasma->rad_force_ka[3] += length (ka_force);
 
   return (0);
 }
@@ -449,7 +477,7 @@ normalise_simple_estimators (xplasma)
   int i, nwind;
   double radiation_temperature, nh, wtest;
   double volume_obs, invariant_volume_time;
-  double electron_density_obs;
+  double electron_density_obs, density_obs;
   double freq_min, freq_max, dfreq;
 
   nwind = xplasma->nwind;
@@ -554,13 +582,18 @@ normalise_simple_estimators (xplasma)
 
   electron_density_obs = xplasma->ne / wmain[nwind].xgamma_cen; // Mihalas & Mihalas p146
   volume_obs = wmain[nwind].vol / wmain[nwind].xgamma_cen;
+  density_obs = xplasma->rho / wmain[nwind].xgamma_cen; //radiation force per unit mass
+
 
   for (i = 0; i < 4; i++)
   {
-    xplasma->rad_force_es[i] *= (volume_obs * electron_density_obs) / (volume_obs * VLIGHT);
+    xplasma->rad_force_es[i] *= (volume_obs * electron_density_obs) / (volume_obs * VLIGHT);    //electron scattering force on the cell
     xplasma->F_vis[i] /= volume_obs;
     xplasma->F_UV[i] /= volume_obs;
     xplasma->F_Xray[i] /= volume_obs;
+    xplasma->rad_force_ka[i] /= volume_obs;     //radiation force per unit mass
+    xplasma->rad_force_ka[i] *= volume_obs * density_obs;       //radiation force on the cell
+
   }
 
   return (0);
