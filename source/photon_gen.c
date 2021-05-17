@@ -902,12 +902,7 @@ photo_gen_star (p, r, t, weight, f1, f2, spectype, istart, nphot)
         Exit (0);
       }
     }
-
-//    randvcos (p[i].lmn, p[i].x);
-    p[i].lmn[0] = p[i].x[0] / length (p[i].x);
-    p[i].lmn[1] = p[i].x[1] / length (p[i].x);
-    p[i].lmn[2] = p[i].x[2] / length (p[i].x);
-
+    randvcos (p[i].lmn, p[i].x);
   }
   return (0);
 }
