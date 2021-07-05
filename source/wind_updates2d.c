@@ -69,7 +69,7 @@ WindPtr (w);
   double c_lum, n_lum, o_lum, fe_lum;   //1708- NSH and luminosities as well
   double cool_dr_metals;
   int nn;
-
+  double flux_helper[3];
   double volume;
   double vol;
   char string[LINELEN];
@@ -180,7 +180,7 @@ WindPtr (w);
 
     if (geo.rt_mode == RT_MODE_MACRO && geo.macro_simple == FALSE)      //test for macro atoms
     {
-      normalise_macro_estimators(nwind);
+      normalise_macro_estimators (nwind);
       macromain[n].kpkt_rates_known = -1;
     }
 
@@ -592,6 +592,39 @@ WindPtr (w);
   }
 
   /* Finished updating region outside of wind */
+
+
+  /* update the persistent fluxes */
+  printf ("BOOM %i\n", geo.wcycle);
+  for (nplasma = 0; nplasma < NPLASMA; nplasma++)
+  {
+    if (geo.wcycle == 0)
+    {
+      vadd (plasmamain[nplasma].F_vis_persistent, plasmamain[nplasma].F_vis, plasmamain[nplasma].F_vis_persistent);
+      vadd (plasmamain[nplasma].F_UV_persistent, plasmamain[nplasma].F_UV, plasmamain[nplasma].F_UV_persistent);
+      vadd (plasmamain[nplasma].F_Xray_persistent, plasmamain[nplasma].F_Xray, plasmamain[nplasma].F_Xray_persistent);
+
+    }
+    else
+    {
+      rescale (plasmamain[nplasma].F_vis_persistent, geo.wcycle, flux_helper);
+      vadd (flux_helper, plasmamain[nplasma].F_vis, plasmamain[nplasma].F_vis_persistent);
+      rescale (plasmamain[nplasma].F_vis_persistent, 1. / (geo.wcycle + 1), plasmamain[nplasma].F_vis_persistent);
+
+      rescale (plasmamain[nplasma].F_UV_persistent, geo.wcycle, flux_helper);
+      vadd (flux_helper, plasmamain[nplasma].F_UV, plasmamain[nplasma].F_UV_persistent);
+      rescale (plasmamain[nplasma].F_UV_persistent, 1. / (geo.wcycle + 1), plasmamain[nplasma].F_UV_persistent);
+
+      rescale (plasmamain[nplasma].F_Xray_persistent, geo.wcycle, flux_helper);
+      vadd (flux_helper, plasmamain[nplasma].F_Xray, plasmamain[nplasma].F_Xray_persistent);
+      rescale (plasmamain[nplasma].F_Xray_persistent, 1. / (geo.wcycle + 1), plasmamain[nplasma].F_Xray_persistent);
+    }
+    plasmamain[nplasma].F_vis_persistent[3] = length (plasmamain[nplasma].F_vis_persistent);
+    plasmamain[nplasma].F_UV_persistent[3] = length (plasmamain[nplasma].F_UV_persistent);
+    plasmamain[nplasma].F_Xray_persistent[3] = length (plasmamain[nplasma].F_Xray_persistent);
+
+  }
+
 
   num_updates++;
   strcpy (string, "");

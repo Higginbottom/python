@@ -914,6 +914,10 @@ typedef struct plasma
   double F_UV[4];
   double F_Xray[4];
 
+  double F_vis_persistent[4];
+  double F_UV_persistent[4];
+  double F_Xray_persistent[4];
+
   /* The term direct here means from photons which have not been scattered. These are photons which have been
      created by the central object, or the disk, or in the simple case the wind, but which have not undergone
      any kind of interaction which would change their direction
