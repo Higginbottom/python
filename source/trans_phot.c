@@ -211,6 +211,7 @@ trans_phot_single (WindPtr w, PhotPtr p, int iextract)
 
   stuff_phot (p, &pp);
   tau_scat = -log (1. - random_number (0.0, 1.0));
+  tau_scat = 1e99;
   weight_min = EPSILON * pp.w;
   istat = P_INWIND;
   tau = 0;
@@ -273,6 +274,8 @@ trans_phot_single (WindPtr w, PhotPtr p, int iextract)
 
         p->ds = 0;
         tau_scat = -log (1. - random_number (0.0, 1.0));
+        tau_scat = 1e99;
+
         istat = pp.istat = P_INWIND;    /* Set the status back to P_INWIND so the photon will continue */
         tau = 0;
         stuff_phot (&pp, p);
@@ -346,6 +349,8 @@ trans_phot_single (WindPtr w, PhotPtr p, int iextract)
         randvcos (pp.lmn, normal);
         p->ds = 0;
         tau_scat = -log (1. - random_number (0.0, 1.0));
+        tau_scat = 1e99;
+
         istat = pp.istat = P_INWIND;
         tau = 0;
         stuff_phot (&pp, p);
@@ -468,6 +473,8 @@ trans_phot_single (WindPtr w, PhotPtr p, int iextract)
 
       tau = 0;
       tau_scat = -log (1. - random_number (0.0, 1.0));
+      tau_scat = 1e99;
+
       pp.istat = P_INWIND;
       pp.ds = 0;
 

@@ -164,6 +164,7 @@ radiation (PhotPtr p, double ds)
 
   kappa_tot += frac_ind_comp = kappa_ind_comp (xplasma, freq);
 
+
   frac_tot = frac_z = 0;        /* 59a - ksl - Moved this line out of loop to avoid warning, but notes
                                    indicate this is all diagnostic and might be removed */
   frac_auger = 0;
@@ -408,6 +409,8 @@ radiation (PhotPtr p, double ds)
     p->w = w_out = w_in * (1. - tau + 0.5 * tau2);      /*Calculate to second order */
     w_ave_obs = w_in * (1. - 0.5 * tau + 0.1666667 * tau2);
   }
+
+  p->w = w_out = w_ave_obs = w_in;
 
   phot_mid.w = w_ave_obs;
   phot_mid_cmf.w = w_ave_cmf = w_ave_obs * phot_mid_cmf.freq / phot_mid.freq;
