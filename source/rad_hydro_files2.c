@@ -152,12 +152,12 @@ main (argc, argv)
   char parameter_file[LINELENGTH];
   char aline[LINELENGTH];       //, *fgets ();
   char word[LINELENGTH];
-  
-  int itemp,jtemp,test,nwind_tmp,icount;
-  double rtemp,ttemp;
-  double fvtemp[4],futemp[4],fxtemp[4],nh,ne;
-  
-  
+
+  int itemp, jtemp, test, nwind_tmp, icount;
+  double rtemp, ttemp;
+  double fvtemp[4], futemp[4], fxtemp[4], nh, ne;
+
+
   int ion_switch, nwind, nplasma;
   int i, j, ii, domain;
   double vol, kappa_es, lum_sum, cool_sum;
@@ -206,7 +206,7 @@ main (argc, argv)
   get_atomic_data (geo.atomic_filename);
 
   printf ("Read Atomic data from %s\n", geo.atomic_filename);
-  
+
   printf ("Reading in a flux file\n");
 //Open a model flux file 
   if ((flux_input = fopen ("model_fluxes.dat", "r")) == NULL)
@@ -214,39 +214,40 @@ main (argc, argv)
     Error ("Cannot read model fluxes file\n");
     exit (1);
   }
-  
+
   fgets (aline, LINELENGTH, flux_input);
   sscanf (aline, "%s", word);
-  icount=0;
+  icount = 0;
   while (fgets (aline, LINELENGTH, flux_input) != NULL)
   {
-      
-   test=sscanf (aline, "%i %i %le %le %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %le %le %le %le %le %le %le %le %le %le %le %le %*s %*s %*s %*s %*s %*s %*s %*s", &itemp,&jtemp,&rtemp,&ttemp,
-         &fvtemp[0],&fvtemp[1],&fvtemp[2],&fvtemp[3],
-         &futemp[0],&futemp[1],&futemp[2],&futemp[3],
-         &fxtemp[0],&fxtemp[1],&fxtemp[2],&fxtemp[3] );
-         if (test==16)
-         {
-      wind_ij_to_n (domain, itemp, jtemp,&nwind_tmp);
-      if (wmain[nwind_tmp].rcen-rtemp<1e3 && wmain[nwind_tmp].thetacen/RADIAN-ttemp<1e-6)
+
+    test =
+      sscanf (aline,
+              "%i %i %le %le %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %le %le %le %le %le %le %le %le %le %le %le %le %*s %*s %*s %*s %*s %*s %*s %*s",
+              &itemp, &jtemp, &rtemp, &ttemp, &fvtemp[0], &fvtemp[1], &fvtemp[2], &fvtemp[3], &futemp[0], &futemp[1], &futemp[2],
+              &futemp[3], &fxtemp[0], &fxtemp[1], &fxtemp[2], &fxtemp[3]);
+    if (test == 16)
+    {
+      wind_ij_to_n (domain, itemp, jtemp, &nwind_tmp);
+      if (wmain[nwind_tmp].rcen - rtemp < 1e3 && wmain[nwind_tmp].thetacen / RADIAN - ttemp < 1e-6)
       {
-          icount++;
-          nplasma=wmain[nwind_tmp].nplasma;
-          for (i=0;i<4;i++)
-          {
-              plasmamain[nplasma].F_vis_persistent[i]=fvtemp[i];
-              plasmamain[nplasma].F_UV_persistent[i]=futemp[i];
-              plasmamain[nplasma].F_Xray_persistent[i]=fxtemp[i];              
-          }          
+        icount++;
+        nplasma = wmain[nwind_tmp].nplasma;
+        for (i = 0; i < 4; i++)
+        {
+          plasmamain[nplasma].F_vis_persistent[i] = fvtemp[i];
+          plasmamain[nplasma].F_UV_persistent[i] = futemp[i];
+          plasmamain[nplasma].F_Xray_persistent[i] = fxtemp[i];
+        }
       }
+    }
   }
-     }
 
-     printf ("matched %i fluxes\n",icount);
+  printf ("matched %i fluxes\n", icount);
+  printf ("BOOM %e\n", rho2nh);
 
-
-  cool_sum = wind_cooling ();   /*We call wind_cooling here to obtain an up to date set of cooling rates */
-  lum_sum = wind_luminosity (0.0, VERY_BIG, MODE_CMF_TIME);     /*and we also call wind_luminosity to get the luminosities */
+//  cool_sum = wind_cooling ();   /*We call wind_cooling here to obtain an up to date set of cooling rates */
+//  lum_sum = wind_luminosity (0.0, VERY_BIG, MODE_CMF_TIME);     /*and we also call wind_luminosity to get the luminosities */
 
   fptr = fopen ("py_heatcool.dat", "w");
   fptr2 = fopen ("py_driving.dat", "w");
@@ -325,9 +326,9 @@ main (argc, argv)
     {
       nplasma = wmain[nwind].nplasma;
       wind_n_to_ij (domain, plasmamain[nplasma].nwind, &i, &j);
-      nh=plasmamain[nplasma].rho * rho2nh;
-      ne=nh*1.21; //Fully ionized
-      plasmamain[nplasma].ne=ne;
+      nh = plasmamain[nplasma].rho * rho2nh;
+      ne = nh * 1.21;           //Fully ionized
+      plasmamain[nplasma].ne = ne;
 
       if (zdom[domain].coord_type == SPHERICAL)
         i = i - 1;              //There is an extra radial 'ghost zone' in spherical coords in python, we need to make our i,j agree with zeus
